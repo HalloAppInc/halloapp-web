@@ -3,13 +3,13 @@ import { ref } from 'vue'
 
 const listData = [
     { 
-        title: "Toma sdf asdf asdf saf saf asdfs s f",
+        title: "Thou with no name",
         subtitle: "this is a link",
         timestamp: "now",
     },
     { 
-        title: "Freas fasd fasdf asdf sadfas fasdf asdfas fasfa sfasd fasd",
-        subtitle: "this is a link",
+        title: "Tree",
+        subtitle: "apple",
         timestamp: "now",
     },
     { 

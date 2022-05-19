@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+
+
+
+
 </script>
 
 <template>
@@ -10,6 +13,9 @@ import { ref } from 'vue'
     
   </div>
   <div id="content">
+
+ 
+
 
   </div>
 
@@ -25,9 +31,9 @@ import { ref } from 'vue'
 
   border-left: 1px solid #b8b7b7;
 
-  background-color: #e5e5f7;
-  opacity: 0.4;
-  background-image: repeating-radial-gradient( circle at 0 0, transparent 0, #e5e5f7 10px ), repeating-linear-gradient( #f2c18b55, #f2c18b );
+  background-color: rgb(229, 229, 247);
+
+  background-image: repeating-radial-gradient( circle at 0 0, transparent 0, #e5e5f7 10px ), repeating-linear-gradient( rgba(242, 193, 139, 0.33), rgb(242, 193, 139, 0.4) );
 
   display: flex;
   flex-direction: column;

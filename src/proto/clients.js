@@ -2726,6 +2726,8 @@ export const clients = $root.clients = (() => {
          * @property {clients.IText|null} [text] PostContainer text
          * @property {clients.IAlbum|null} [album] PostContainer album
          * @property {clients.IVoiceNote|null} [voiceNote] PostContainer voiceNote
+         * @property {clients.IMoment|null} [moment] PostContainer moment
+         * @property {Uint8Array|null} [commentKey] PostContainer commentKey
          */
 
         /**
@@ -2767,17 +2769,33 @@ export const clients = $root.clients = (() => {
          */
         PostContainer.prototype.voiceNote = null;
 
+        /**
+         * PostContainer moment.
+         * @member {clients.IMoment|null|undefined} moment
+         * @memberof clients.PostContainer
+         * @instance
+         */
+        PostContainer.prototype.moment = null;
+
+        /**
+         * PostContainer commentKey.
+         * @member {Uint8Array} commentKey
+         * @memberof clients.PostContainer
+         * @instance
+         */
+        PostContainer.prototype.commentKey = $util.newBuffer([]);
+
         // OneOf field names bound to virtual getters and setters
         let $oneOfFields;
 
         /**
          * PostContainer post.
-         * @member {"text"|"album"|"voiceNote"|undefined} post
+         * @member {"text"|"album"|"voiceNote"|"moment"|undefined} post
          * @memberof clients.PostContainer
          * @instance
          */
         Object.defineProperty(PostContainer.prototype, "post", {
-            get: $util.oneOfGetter($oneOfFields = ["text", "album", "voiceNote"]),
+            get: $util.oneOfGetter($oneOfFields = ["text", "album", "voiceNote", "moment"]),
             set: $util.oneOfSetter($oneOfFields)
         });
 
@@ -2811,6 +2829,10 @@ export const clients = $root.clients = (() => {
                 $root.clients.Album.encode(message.album, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
             if (message.voiceNote != null && Object.hasOwnProperty.call(message, "voiceNote"))
                 $root.clients.VoiceNote.encode(message.voiceNote, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+            if (message.moment != null && Object.hasOwnProperty.call(message, "moment"))
+                $root.clients.Moment.encode(message.moment, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+            if (message.commentKey != null && Object.hasOwnProperty.call(message, "commentKey"))
+                writer.uint32(/* id 5, wireType 2 =*/42).bytes(message.commentKey);
             return writer;
         };
 
@@ -2853,6 +2875,12 @@ export const clients = $root.clients = (() => {
                     break;
                 case 3:
                     message.voiceNote = $root.clients.VoiceNote.decode(reader, reader.uint32());
+                    break;
+                case 4:
+                    message.moment = $root.clients.Moment.decode(reader, reader.uint32());
+                    break;
+                case 5:
+                    message.commentKey = reader.bytes();
                     break;
                 default:
                     reader.skipType(tag & 7);
@@ -2918,6 +2946,19 @@ export const clients = $root.clients = (() => {
                         return "voiceNote." + error;
                 }
             }
+            if (message.moment != null && message.hasOwnProperty("moment")) {
+                if (properties.post === 1)
+                    return "post: multiple values";
+                properties.post = 1;
+                {
+                    let error = $root.clients.Moment.verify(message.moment);
+                    if (error)
+                        return "moment." + error;
+                }
+            }
+            if (message.commentKey != null && message.hasOwnProperty("commentKey"))
+                if (!(message.commentKey && typeof message.commentKey.length === "number" || $util.isString(message.commentKey)))
+                    return "commentKey: buffer expected";
             return null;
         };
 
@@ -2948,6 +2989,16 @@ export const clients = $root.clients = (() => {
                     throw TypeError(".clients.PostContainer.voiceNote: object expected");
                 message.voiceNote = $root.clients.VoiceNote.fromObject(object.voiceNote);
             }
+            if (object.moment != null) {
+                if (typeof object.moment !== "object")
+                    throw TypeError(".clients.PostContainer.moment: object expected");
+                message.moment = $root.clients.Moment.fromObject(object.moment);
+            }
+            if (object.commentKey != null)
+                if (typeof object.commentKey === "string")
+                    $util.base64.decode(object.commentKey, message.commentKey = $util.newBuffer($util.base64.length(object.commentKey)), 0);
+                else if (object.commentKey.length)
+                    message.commentKey = object.commentKey;
             return message;
         };
 
@@ -2964,6 +3015,14 @@ export const clients = $root.clients = (() => {
             if (!options)
                 options = {};
             let object = {};
+            if (options.defaults)
+                if (options.bytes === String)
+                    object.commentKey = "";
+                else {
+                    object.commentKey = [];
+                    if (options.bytes !== Array)
+                        object.commentKey = $util.newBuffer(object.commentKey);
+                }
             if (message.text != null && message.hasOwnProperty("text")) {
                 object.text = $root.clients.Text.toObject(message.text, options);
                 if (options.oneofs)
@@ -2979,6 +3038,13 @@ export const clients = $root.clients = (() => {
                 if (options.oneofs)
                     object.post = "voiceNote";
             }
+            if (message.moment != null && message.hasOwnProperty("moment")) {
+                object.moment = $root.clients.Moment.toObject(message.moment, options);
+                if (options.oneofs)
+                    object.post = "moment";
+            }
+            if (message.commentKey != null && message.hasOwnProperty("commentKey"))
+                object.commentKey = options.bytes === String ? $util.base64.encode(message.commentKey, 0, message.commentKey.length) : options.bytes === Array ? Array.prototype.slice.call(message.commentKey) : message.commentKey;
             return object;
         };
 
@@ -2994,6 +3060,315 @@ export const clients = $root.clients = (() => {
         };
 
         return PostContainer;
+    })();
+
+    clients.PostContainerBlob = (function() {
+
+        /**
+         * Properties of a PostContainerBlob.
+         * @memberof clients
+         * @interface IPostContainerBlob
+         * @property {clients.IPostContainer|null} [postContainer] PostContainerBlob postContainer
+         * @property {number|Long|null} [uid] PostContainerBlob uid
+         * @property {string|null} [postId] PostContainerBlob postId
+         * @property {number|Long|null} [timestamp] PostContainerBlob timestamp
+         * @property {string|null} [groupId] PostContainerBlob groupId
+         */
+
+        /**
+         * Constructs a new PostContainerBlob.
+         * @memberof clients
+         * @classdesc Represents a PostContainerBlob.
+         * @implements IPostContainerBlob
+         * @constructor
+         * @param {clients.IPostContainerBlob=} [properties] Properties to set
+         */
+        function PostContainerBlob(properties) {
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * PostContainerBlob postContainer.
+         * @member {clients.IPostContainer|null|undefined} postContainer
+         * @memberof clients.PostContainerBlob
+         * @instance
+         */
+        PostContainerBlob.prototype.postContainer = null;
+
+        /**
+         * PostContainerBlob uid.
+         * @member {number|Long} uid
+         * @memberof clients.PostContainerBlob
+         * @instance
+         */
+        PostContainerBlob.prototype.uid = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+
+        /**
+         * PostContainerBlob postId.
+         * @member {string} postId
+         * @memberof clients.PostContainerBlob
+         * @instance
+         */
+        PostContainerBlob.prototype.postId = "";
+
+        /**
+         * PostContainerBlob timestamp.
+         * @member {number|Long} timestamp
+         * @memberof clients.PostContainerBlob
+         * @instance
+         */
+        PostContainerBlob.prototype.timestamp = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+
+        /**
+         * PostContainerBlob groupId.
+         * @member {string} groupId
+         * @memberof clients.PostContainerBlob
+         * @instance
+         */
+        PostContainerBlob.prototype.groupId = "";
+
+        /**
+         * Creates a new PostContainerBlob instance using the specified properties.
+         * @function create
+         * @memberof clients.PostContainerBlob
+         * @static
+         * @param {clients.IPostContainerBlob=} [properties] Properties to set
+         * @returns {clients.PostContainerBlob} PostContainerBlob instance
+         */
+        PostContainerBlob.create = function create(properties) {
+            return new PostContainerBlob(properties);
+        };
+
+        /**
+         * Encodes the specified PostContainerBlob message. Does not implicitly {@link clients.PostContainerBlob.verify|verify} messages.
+         * @function encode
+         * @memberof clients.PostContainerBlob
+         * @static
+         * @param {clients.IPostContainerBlob} message PostContainerBlob message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        PostContainerBlob.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.postContainer != null && Object.hasOwnProperty.call(message, "postContainer"))
+                $root.clients.PostContainer.encode(message.postContainer, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+            if (message.uid != null && Object.hasOwnProperty.call(message, "uid"))
+                writer.uint32(/* id 2, wireType 0 =*/16).int64(message.uid);
+            if (message.postId != null && Object.hasOwnProperty.call(message, "postId"))
+                writer.uint32(/* id 3, wireType 2 =*/26).string(message.postId);
+            if (message.timestamp != null && Object.hasOwnProperty.call(message, "timestamp"))
+                writer.uint32(/* id 4, wireType 0 =*/32).int64(message.timestamp);
+            if (message.groupId != null && Object.hasOwnProperty.call(message, "groupId"))
+                writer.uint32(/* id 5, wireType 2 =*/42).string(message.groupId);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified PostContainerBlob message, length delimited. Does not implicitly {@link clients.PostContainerBlob.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof clients.PostContainerBlob
+         * @static
+         * @param {clients.IPostContainerBlob} message PostContainerBlob message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        PostContainerBlob.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a PostContainerBlob message from the specified reader or buffer.
+         * @function decode
+         * @memberof clients.PostContainerBlob
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {clients.PostContainerBlob} PostContainerBlob
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        PostContainerBlob.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.clients.PostContainerBlob();
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1:
+                    message.postContainer = $root.clients.PostContainer.decode(reader, reader.uint32());
+                    break;
+                case 2:
+                    message.uid = reader.int64();
+                    break;
+                case 3:
+                    message.postId = reader.string();
+                    break;
+                case 4:
+                    message.timestamp = reader.int64();
+                    break;
+                case 5:
+                    message.groupId = reader.string();
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a PostContainerBlob message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof clients.PostContainerBlob
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {clients.PostContainerBlob} PostContainerBlob
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        PostContainerBlob.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a PostContainerBlob message.
+         * @function verify
+         * @memberof clients.PostContainerBlob
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        PostContainerBlob.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.postContainer != null && message.hasOwnProperty("postContainer")) {
+                let error = $root.clients.PostContainer.verify(message.postContainer);
+                if (error)
+                    return "postContainer." + error;
+            }
+            if (message.uid != null && message.hasOwnProperty("uid"))
+                if (!$util.isInteger(message.uid) && !(message.uid && $util.isInteger(message.uid.low) && $util.isInteger(message.uid.high)))
+                    return "uid: integer|Long expected";
+            if (message.postId != null && message.hasOwnProperty("postId"))
+                if (!$util.isString(message.postId))
+                    return "postId: string expected";
+            if (message.timestamp != null && message.hasOwnProperty("timestamp"))
+                if (!$util.isInteger(message.timestamp) && !(message.timestamp && $util.isInteger(message.timestamp.low) && $util.isInteger(message.timestamp.high)))
+                    return "timestamp: integer|Long expected";
+            if (message.groupId != null && message.hasOwnProperty("groupId"))
+                if (!$util.isString(message.groupId))
+                    return "groupId: string expected";
+            return null;
+        };
+
+        /**
+         * Creates a PostContainerBlob message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof clients.PostContainerBlob
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {clients.PostContainerBlob} PostContainerBlob
+         */
+        PostContainerBlob.fromObject = function fromObject(object) {
+            if (object instanceof $root.clients.PostContainerBlob)
+                return object;
+            let message = new $root.clients.PostContainerBlob();
+            if (object.postContainer != null) {
+                if (typeof object.postContainer !== "object")
+                    throw TypeError(".clients.PostContainerBlob.postContainer: object expected");
+                message.postContainer = $root.clients.PostContainer.fromObject(object.postContainer);
+            }
+            if (object.uid != null)
+                if ($util.Long)
+                    (message.uid = $util.Long.fromValue(object.uid)).unsigned = false;
+                else if (typeof object.uid === "string")
+                    message.uid = parseInt(object.uid, 10);
+                else if (typeof object.uid === "number")
+                    message.uid = object.uid;
+                else if (typeof object.uid === "object")
+                    message.uid = new $util.LongBits(object.uid.low >>> 0, object.uid.high >>> 0).toNumber();
+            if (object.postId != null)
+                message.postId = String(object.postId);
+            if (object.timestamp != null)
+                if ($util.Long)
+                    (message.timestamp = $util.Long.fromValue(object.timestamp)).unsigned = false;
+                else if (typeof object.timestamp === "string")
+                    message.timestamp = parseInt(object.timestamp, 10);
+                else if (typeof object.timestamp === "number")
+                    message.timestamp = object.timestamp;
+                else if (typeof object.timestamp === "object")
+                    message.timestamp = new $util.LongBits(object.timestamp.low >>> 0, object.timestamp.high >>> 0).toNumber();
+            if (object.groupId != null)
+                message.groupId = String(object.groupId);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a PostContainerBlob message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof clients.PostContainerBlob
+         * @static
+         * @param {clients.PostContainerBlob} message PostContainerBlob
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        PostContainerBlob.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            let object = {};
+            if (options.defaults) {
+                object.postContainer = null;
+                if ($util.Long) {
+                    let long = new $util.Long(0, 0, false);
+                    object.uid = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.uid = options.longs === String ? "0" : 0;
+                object.postId = "";
+                if ($util.Long) {
+                    let long = new $util.Long(0, 0, false);
+                    object.timestamp = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.timestamp = options.longs === String ? "0" : 0;
+                object.groupId = "";
+            }
+            if (message.postContainer != null && message.hasOwnProperty("postContainer"))
+                object.postContainer = $root.clients.PostContainer.toObject(message.postContainer, options);
+            if (message.uid != null && message.hasOwnProperty("uid"))
+                if (typeof message.uid === "number")
+                    object.uid = options.longs === String ? String(message.uid) : message.uid;
+                else
+                    object.uid = options.longs === String ? $util.Long.prototype.toString.call(message.uid) : options.longs === Number ? new $util.LongBits(message.uid.low >>> 0, message.uid.high >>> 0).toNumber() : message.uid;
+            if (message.postId != null && message.hasOwnProperty("postId"))
+                object.postId = message.postId;
+            if (message.timestamp != null && message.hasOwnProperty("timestamp"))
+                if (typeof message.timestamp === "number")
+                    object.timestamp = options.longs === String ? String(message.timestamp) : message.timestamp;
+                else
+                    object.timestamp = options.longs === String ? $util.Long.prototype.toString.call(message.timestamp) : options.longs === Number ? new $util.LongBits(message.timestamp.low >>> 0, message.timestamp.high >>> 0).toNumber() : message.timestamp;
+            if (message.groupId != null && message.hasOwnProperty("groupId"))
+                object.groupId = message.groupId;
+            return object;
+        };
+
+        /**
+         * Converts this PostContainerBlob to JSON.
+         * @function toJSON
+         * @memberof clients.PostContainerBlob
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        PostContainerBlob.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        return PostContainerBlob;
     })();
 
     clients.CommentContainer = (function() {
@@ -6237,6 +6612,198 @@ export const clients = $root.clients = (() => {
         return EncryptedPayload;
     })();
 
+    clients.Moment = (function() {
+
+        /**
+         * Properties of a Moment.
+         * @memberof clients
+         * @interface IMoment
+         * @property {clients.IImage|null} [image] Moment image
+         */
+
+        /**
+         * Constructs a new Moment.
+         * @memberof clients
+         * @classdesc Represents a Moment.
+         * @implements IMoment
+         * @constructor
+         * @param {clients.IMoment=} [properties] Properties to set
+         */
+        function Moment(properties) {
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * Moment image.
+         * @member {clients.IImage|null|undefined} image
+         * @memberof clients.Moment
+         * @instance
+         */
+        Moment.prototype.image = null;
+
+        /**
+         * Creates a new Moment instance using the specified properties.
+         * @function create
+         * @memberof clients.Moment
+         * @static
+         * @param {clients.IMoment=} [properties] Properties to set
+         * @returns {clients.Moment} Moment instance
+         */
+        Moment.create = function create(properties) {
+            return new Moment(properties);
+        };
+
+        /**
+         * Encodes the specified Moment message. Does not implicitly {@link clients.Moment.verify|verify} messages.
+         * @function encode
+         * @memberof clients.Moment
+         * @static
+         * @param {clients.IMoment} message Moment message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Moment.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.image != null && Object.hasOwnProperty.call(message, "image"))
+                $root.clients.Image.encode(message.image, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+            return writer;
+        };
+
+        /**
+         * Encodes the specified Moment message, length delimited. Does not implicitly {@link clients.Moment.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof clients.Moment
+         * @static
+         * @param {clients.IMoment} message Moment message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Moment.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a Moment message from the specified reader or buffer.
+         * @function decode
+         * @memberof clients.Moment
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {clients.Moment} Moment
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Moment.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.clients.Moment();
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1:
+                    message.image = $root.clients.Image.decode(reader, reader.uint32());
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a Moment message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof clients.Moment
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {clients.Moment} Moment
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Moment.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a Moment message.
+         * @function verify
+         * @memberof clients.Moment
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        Moment.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.image != null && message.hasOwnProperty("image")) {
+                let error = $root.clients.Image.verify(message.image);
+                if (error)
+                    return "image." + error;
+            }
+            return null;
+        };
+
+        /**
+         * Creates a Moment message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof clients.Moment
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {clients.Moment} Moment
+         */
+        Moment.fromObject = function fromObject(object) {
+            if (object instanceof $root.clients.Moment)
+                return object;
+            let message = new $root.clients.Moment();
+            if (object.image != null) {
+                if (typeof object.image !== "object")
+                    throw TypeError(".clients.Moment.image: object expected");
+                message.image = $root.clients.Image.fromObject(object.image);
+            }
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a Moment message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof clients.Moment
+         * @static
+         * @param {clients.Moment} message Moment
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        Moment.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            let object = {};
+            if (options.defaults)
+                object.image = null;
+            if (message.image != null && message.hasOwnProperty("image"))
+                object.image = $root.clients.Image.toObject(message.image, options);
+            return object;
+        };
+
+        /**
+         * Converts this Moment to JSON.
+         * @function toJSON
+         * @memberof clients.Moment
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        Moment.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        return Moment;
+    })();
+
     clients.VoiceNote = (function() {
 
         /**
@@ -6945,6 +7512,8 @@ export const clients = $root.clients = (() => {
          * @memberof clients
          * @interface IPostIdContext
          * @property {string|null} [feedPostId] PostIdContext feedPostId
+         * @property {number|Long|null} [senderUid] PostIdContext senderUid
+         * @property {number|Long|null} [timestamp] PostIdContext timestamp
          */
 
         /**
@@ -6969,6 +7538,22 @@ export const clients = $root.clients = (() => {
          * @instance
          */
         PostIdContext.prototype.feedPostId = "";
+
+        /**
+         * PostIdContext senderUid.
+         * @member {number|Long} senderUid
+         * @memberof clients.PostIdContext
+         * @instance
+         */
+        PostIdContext.prototype.senderUid = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+
+        /**
+         * PostIdContext timestamp.
+         * @member {number|Long} timestamp
+         * @memberof clients.PostIdContext
+         * @instance
+         */
+        PostIdContext.prototype.timestamp = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
 
         /**
          * Creates a new PostIdContext instance using the specified properties.
@@ -6996,6 +7581,10 @@ export const clients = $root.clients = (() => {
                 writer = $Writer.create();
             if (message.feedPostId != null && Object.hasOwnProperty.call(message, "feedPostId"))
                 writer.uint32(/* id 1, wireType 2 =*/10).string(message.feedPostId);
+            if (message.senderUid != null && Object.hasOwnProperty.call(message, "senderUid"))
+                writer.uint32(/* id 2, wireType 0 =*/16).int64(message.senderUid);
+            if (message.timestamp != null && Object.hasOwnProperty.call(message, "timestamp"))
+                writer.uint32(/* id 3, wireType 0 =*/24).int64(message.timestamp);
             return writer;
         };
 
@@ -7032,6 +7621,12 @@ export const clients = $root.clients = (() => {
                 switch (tag >>> 3) {
                 case 1:
                     message.feedPostId = reader.string();
+                    break;
+                case 2:
+                    message.senderUid = reader.int64();
+                    break;
+                case 3:
+                    message.timestamp = reader.int64();
                     break;
                 default:
                     reader.skipType(tag & 7);
@@ -7071,6 +7666,12 @@ export const clients = $root.clients = (() => {
             if (message.feedPostId != null && message.hasOwnProperty("feedPostId"))
                 if (!$util.isString(message.feedPostId))
                     return "feedPostId: string expected";
+            if (message.senderUid != null && message.hasOwnProperty("senderUid"))
+                if (!$util.isInteger(message.senderUid) && !(message.senderUid && $util.isInteger(message.senderUid.low) && $util.isInteger(message.senderUid.high)))
+                    return "senderUid: integer|Long expected";
+            if (message.timestamp != null && message.hasOwnProperty("timestamp"))
+                if (!$util.isInteger(message.timestamp) && !(message.timestamp && $util.isInteger(message.timestamp.low) && $util.isInteger(message.timestamp.high)))
+                    return "timestamp: integer|Long expected";
             return null;
         };
 
@@ -7088,6 +7689,24 @@ export const clients = $root.clients = (() => {
             let message = new $root.clients.PostIdContext();
             if (object.feedPostId != null)
                 message.feedPostId = String(object.feedPostId);
+            if (object.senderUid != null)
+                if ($util.Long)
+                    (message.senderUid = $util.Long.fromValue(object.senderUid)).unsigned = false;
+                else if (typeof object.senderUid === "string")
+                    message.senderUid = parseInt(object.senderUid, 10);
+                else if (typeof object.senderUid === "number")
+                    message.senderUid = object.senderUid;
+                else if (typeof object.senderUid === "object")
+                    message.senderUid = new $util.LongBits(object.senderUid.low >>> 0, object.senderUid.high >>> 0).toNumber();
+            if (object.timestamp != null)
+                if ($util.Long)
+                    (message.timestamp = $util.Long.fromValue(object.timestamp)).unsigned = false;
+                else if (typeof object.timestamp === "string")
+                    message.timestamp = parseInt(object.timestamp, 10);
+                else if (typeof object.timestamp === "number")
+                    message.timestamp = object.timestamp;
+                else if (typeof object.timestamp === "object")
+                    message.timestamp = new $util.LongBits(object.timestamp.low >>> 0, object.timestamp.high >>> 0).toNumber();
             return message;
         };
 
@@ -7104,10 +7723,31 @@ export const clients = $root.clients = (() => {
             if (!options)
                 options = {};
             let object = {};
-            if (options.defaults)
+            if (options.defaults) {
                 object.feedPostId = "";
+                if ($util.Long) {
+                    let long = new $util.Long(0, 0, false);
+                    object.senderUid = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.senderUid = options.longs === String ? "0" : 0;
+                if ($util.Long) {
+                    let long = new $util.Long(0, 0, false);
+                    object.timestamp = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.timestamp = options.longs === String ? "0" : 0;
+            }
             if (message.feedPostId != null && message.hasOwnProperty("feedPostId"))
                 object.feedPostId = message.feedPostId;
+            if (message.senderUid != null && message.hasOwnProperty("senderUid"))
+                if (typeof message.senderUid === "number")
+                    object.senderUid = options.longs === String ? String(message.senderUid) : message.senderUid;
+                else
+                    object.senderUid = options.longs === String ? $util.Long.prototype.toString.call(message.senderUid) : options.longs === Number ? new $util.LongBits(message.senderUid.low >>> 0, message.senderUid.high >>> 0).toNumber() : message.senderUid;
+            if (message.timestamp != null && message.hasOwnProperty("timestamp"))
+                if (typeof message.timestamp === "number")
+                    object.timestamp = options.longs === String ? String(message.timestamp) : message.timestamp;
+                else
+                    object.timestamp = options.longs === String ? $util.Long.prototype.toString.call(message.timestamp) : options.longs === Number ? new $util.LongBits(message.timestamp.low >>> 0, message.timestamp.high >>> 0).toNumber() : message.timestamp;
             return object;
         };
 
@@ -7134,6 +7774,8 @@ export const clients = $root.clients = (() => {
          * @property {string|null} [commentId] CommentIdContext commentId
          * @property {string|null} [feedPostId] CommentIdContext feedPostId
          * @property {string|null} [parentCommentId] CommentIdContext parentCommentId
+         * @property {number|Long|null} [senderUid] CommentIdContext senderUid
+         * @property {number|Long|null} [timestamp] CommentIdContext timestamp
          */
 
         /**
@@ -7176,6 +7818,22 @@ export const clients = $root.clients = (() => {
         CommentIdContext.prototype.parentCommentId = "";
 
         /**
+         * CommentIdContext senderUid.
+         * @member {number|Long} senderUid
+         * @memberof clients.CommentIdContext
+         * @instance
+         */
+        CommentIdContext.prototype.senderUid = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+
+        /**
+         * CommentIdContext timestamp.
+         * @member {number|Long} timestamp
+         * @memberof clients.CommentIdContext
+         * @instance
+         */
+        CommentIdContext.prototype.timestamp = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+
+        /**
          * Creates a new CommentIdContext instance using the specified properties.
          * @function create
          * @memberof clients.CommentIdContext
@@ -7205,6 +7863,10 @@ export const clients = $root.clients = (() => {
                 writer.uint32(/* id 2, wireType 2 =*/18).string(message.feedPostId);
             if (message.parentCommentId != null && Object.hasOwnProperty.call(message, "parentCommentId"))
                 writer.uint32(/* id 3, wireType 2 =*/26).string(message.parentCommentId);
+            if (message.senderUid != null && Object.hasOwnProperty.call(message, "senderUid"))
+                writer.uint32(/* id 4, wireType 0 =*/32).int64(message.senderUid);
+            if (message.timestamp != null && Object.hasOwnProperty.call(message, "timestamp"))
+                writer.uint32(/* id 5, wireType 0 =*/40).int64(message.timestamp);
             return writer;
         };
 
@@ -7247,6 +7909,12 @@ export const clients = $root.clients = (() => {
                     break;
                 case 3:
                     message.parentCommentId = reader.string();
+                    break;
+                case 4:
+                    message.senderUid = reader.int64();
+                    break;
+                case 5:
+                    message.timestamp = reader.int64();
                     break;
                 default:
                     reader.skipType(tag & 7);
@@ -7292,6 +7960,12 @@ export const clients = $root.clients = (() => {
             if (message.parentCommentId != null && message.hasOwnProperty("parentCommentId"))
                 if (!$util.isString(message.parentCommentId))
                     return "parentCommentId: string expected";
+            if (message.senderUid != null && message.hasOwnProperty("senderUid"))
+                if (!$util.isInteger(message.senderUid) && !(message.senderUid && $util.isInteger(message.senderUid.low) && $util.isInteger(message.senderUid.high)))
+                    return "senderUid: integer|Long expected";
+            if (message.timestamp != null && message.hasOwnProperty("timestamp"))
+                if (!$util.isInteger(message.timestamp) && !(message.timestamp && $util.isInteger(message.timestamp.low) && $util.isInteger(message.timestamp.high)))
+                    return "timestamp: integer|Long expected";
             return null;
         };
 
@@ -7313,6 +7987,24 @@ export const clients = $root.clients = (() => {
                 message.feedPostId = String(object.feedPostId);
             if (object.parentCommentId != null)
                 message.parentCommentId = String(object.parentCommentId);
+            if (object.senderUid != null)
+                if ($util.Long)
+                    (message.senderUid = $util.Long.fromValue(object.senderUid)).unsigned = false;
+                else if (typeof object.senderUid === "string")
+                    message.senderUid = parseInt(object.senderUid, 10);
+                else if (typeof object.senderUid === "number")
+                    message.senderUid = object.senderUid;
+                else if (typeof object.senderUid === "object")
+                    message.senderUid = new $util.LongBits(object.senderUid.low >>> 0, object.senderUid.high >>> 0).toNumber();
+            if (object.timestamp != null)
+                if ($util.Long)
+                    (message.timestamp = $util.Long.fromValue(object.timestamp)).unsigned = false;
+                else if (typeof object.timestamp === "string")
+                    message.timestamp = parseInt(object.timestamp, 10);
+                else if (typeof object.timestamp === "number")
+                    message.timestamp = object.timestamp;
+                else if (typeof object.timestamp === "object")
+                    message.timestamp = new $util.LongBits(object.timestamp.low >>> 0, object.timestamp.high >>> 0).toNumber();
             return message;
         };
 
@@ -7333,6 +8025,16 @@ export const clients = $root.clients = (() => {
                 object.commentId = "";
                 object.feedPostId = "";
                 object.parentCommentId = "";
+                if ($util.Long) {
+                    let long = new $util.Long(0, 0, false);
+                    object.senderUid = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.senderUid = options.longs === String ? "0" : 0;
+                if ($util.Long) {
+                    let long = new $util.Long(0, 0, false);
+                    object.timestamp = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.timestamp = options.longs === String ? "0" : 0;
             }
             if (message.commentId != null && message.hasOwnProperty("commentId"))
                 object.commentId = message.commentId;
@@ -7340,6 +8042,16 @@ export const clients = $root.clients = (() => {
                 object.feedPostId = message.feedPostId;
             if (message.parentCommentId != null && message.hasOwnProperty("parentCommentId"))
                 object.parentCommentId = message.parentCommentId;
+            if (message.senderUid != null && message.hasOwnProperty("senderUid"))
+                if (typeof message.senderUid === "number")
+                    object.senderUid = options.longs === String ? String(message.senderUid) : message.senderUid;
+                else
+                    object.senderUid = options.longs === String ? $util.Long.prototype.toString.call(message.senderUid) : options.longs === Number ? new $util.LongBits(message.senderUid.low >>> 0, message.senderUid.high >>> 0).toNumber() : message.senderUid;
+            if (message.timestamp != null && message.hasOwnProperty("timestamp"))
+                if (typeof message.timestamp === "number")
+                    object.timestamp = options.longs === String ? String(message.timestamp) : message.timestamp;
+                else
+                    object.timestamp = options.longs === String ? $util.Long.prototype.toString.call(message.timestamp) : options.longs === Number ? new $util.LongBits(message.timestamp.low >>> 0, message.timestamp.high >>> 0).toNumber() : message.timestamp;
             return object;
         };
 

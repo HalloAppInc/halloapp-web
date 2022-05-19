@@ -1,0 +1,254 @@
+
+syntax = "proto3";
+
+package server;
+
+option java_package = "com.halloapp.proto.log_events";
+option java_multiple_files = true;
+
+message EventData {
+  uint64 uid = 1;
+  Platform platform = 2;  // client platform `android` or `ios`
+  string version = 3;  // client version (eg.`0.94`)
+  uint64 timestamp_ms = 4; // set by server to indicate when event was received
+  string cc = 5;  // 2 letter country code
+  reserved 6 to 9;  // for future fields like carrier or others
+  oneof edata {
+    MediaUpload media_upload = 10;
+    MediaDownload media_download = 11;
+    MediaComposeLoad media_compose_load = 12;
+    PushReceived push_received = 13;
+    DecryptionReport decryption_report = 14;
+    Permissions permissions = 15;
+    MediaObjectDownload media_object_download = 16;
+    GroupDecryptionReport group_decryption_report = 17;
+    Call call = 18;
+    FabAction fab_action = 19;
+    GroupHistoryReport group_history_report = 20;
+  }
+}
+
+enum Platform {
+  UNKNOWN = 0;
+  IOS = 1;
+  ANDROID = 2;
+}
+
+message MediaObjectDownload {
+  string id = 1;  // id of post or message
+  uint64 index = 2;  // 0-based index of the media item in the post/msg
+  enum Type {
+    POST = 0;
+    MESSAGE = 1;
+    COMMENT = 2;
+  }
+  Type type = 3;
+  enum MediaType {
+    PHOTO = 0;
+    VIDEO = 1;
+    AUDIO = 2;
+  }
+  MediaType media_type = 4;
+  uint64 duration_ms = 5;  // time in ms it took to download the media object
+  uint64 size = 6;  // byte size of the object
+  uint64 progress_bytes = 7;  // number of bytes downloaded during this attempt
+  enum Cdn {
+    UNKNOWN_CDN = 0;
+    CLOUDFRONT = 1;
+  }
+  Cdn cdn = 8;  // should be cloudfront for now
+  string cdn_pop = 9;  // value of the `x-amz-cf-pop` result header
+  string cdn_id = 10;  // value of the `x-amz-cf-id` result header
+  enum CdnCache {
+    UNKNOWN_CACHE = 0;
+    HIT = 1;
+    MISS = 2;
+    REFRESH_HIT = 3;
+    REFRESH_MISS = 4;
+  }
+  CdnCache cdn_cache = 11;
+  enum Status {
+    OK = 0;
+    FAIL = 1;
+  }
+  Status status = 12;
+  uint64 retry_count = 13;  // number of attempts to download, either so far or until status=ok
+}
+
+message MediaUpload {
+  string id = 1;  // the id of the post or message
+  enum Type {
+    POST = 0;  // post or group_post
+    MESSAGE = 1; // 1v1 message or group_message
+    COMMENT = 2;
+  }
+  Type type = 2;
+  uint32 duration_ms = 3; // time in ms it took to upload all the media and send iq/message
+  uint32 num_photos = 4;  // number of photos
+  uint32 num_videos = 5;  // number of videos
+  uint32 total_size = 6;  // the total size in bytes of all the media objects uploaded
+  enum Status {
+    OK = 0;
+    FAIL = 1;
+  }
+  Status status = 7;  // if the request was ok or failed over all
+  uint32 retry_count = 8; // 0 if upload worked from the first attempt
+}
+
+
+message MediaDownload {
+  string id = 1;  // the id of the post or message
+  enum Type {
+    POST = 0;  // post or group_post
+    MESSAGE = 1; // 1v1 message or group_message
+    COMMENT = 2;
+  }
+  Type type = 2;
+  uint32 duration_ms = 3; // time in ms it took to download all the media
+  uint32 num_photos = 4;  // number of photos
+  uint32 num_videos = 5;  // number of videos
+  uint32 total_size = 6;  // the total size in bytes of all the media objects downloaded
+  enum Status {
+    OK = 0;
+    FAIL = 1;
+  }
+  Status status = 7;  // if the request was ok or failed over all
+  uint32 retry_count = 8; // 0 if download worked from the first attempt
+}
+
+message MediaComposeLoad {
+  uint32 duration_ms = 1;  // time in ms it took to load all the media and transcode them.
+                           // Basically until the share button shows up.
+  uint32 num_photos = 2;  // number of photos
+  uint32 num_videos = 3;  // number of videos
+  uint32 total_size = 4;  // the total size in bytes of all the media objects
+}
+
+message PushReceived {
+  string id = 1;
+  uint64 client_timestamp = 2;
+}
+
+message DecryptionReport {
+  enum Status {
+    OK = 0;
+    FAIL = 1;
+  }
+  Status result = 1;
+  string reason = 2;
+  string msg_id = 3;
+  string original_version = 4; // at time message id was first encountered
+  Platform sender_platform = 5;
+  string sender_version = 6;
+  uint32 rerequest_count = 7;
+  uint32 time_taken_s = 8;
+  bool is_silent = 9;
+  enum ContentType {
+    CHAT = 0;
+    GROUP_HISTORY = 1;
+  }
+  ContentType content_type = 10;
+}
+
+
+message GroupDecryptionReport {
+  enum Status {
+    UNKNOWN_STATUS = 0;
+    OK = 1;
+    FAIL = 2;
+  }
+  Status result = 1;
+  string reason = 2;
+  string content_id = 3;
+  string gid = 4;
+  enum ItemType {
+    UNKNOWN_TYPE = 0;
+    POST = 1;
+    COMMENT = 2;
+    HISTORY_RESEND = 3;
+  }
+  ItemType item_type = 5;
+  string original_version = 6; // at time msg id was first encountered
+  uint32 rerequest_count = 7;
+  uint32 time_taken_s = 8;
+  Platform sender_platform = 9;
+  string sender_version = 10;
+  enum Schedule {
+    DAILY = 0;
+    RESULT_BASED = 1;
+  }
+  Schedule schedule = 11;
+}
+
+
+message GroupHistoryReport {
+  string gid = 1;
+  uint32 num_expected = 2;
+  uint32 num_decrypted = 3;
+  string original_version = 4;
+  uint32 rerequest_count = 5;
+  uint32 time_taken_s = 6;
+  enum Schedule {
+    DAILY = 0;
+    RESULT_BASED = 1;
+  }
+  Schedule schedule = 7;
+}
+
+
+message Permissions {
+  enum Type {
+    CONTACTS = 0;
+    NOTIFICATIONS = 1;
+  }
+  enum Status {
+    ALLOWED = 0;
+    DENIED = 1;
+  }
+  Type type = 1;
+  Status status = 2;
+}
+
+
+message Call {
+  enum CallType {
+    UNKNOWN_TYPE = 0;
+    AUDIO = 1;
+    VIDEO = 2;
+  }
+  enum CallDirection {
+    UNKNOWN_DIRECTION = 0;
+    OUTGOING = 1;
+    INCOMING = 2;
+  }
+  enum NetworkType {
+    UNKNOWN_NETWORK = 0;
+    WIFI = 1;
+    CELLULAR = 2;
+  }
+  string call_id = 1;
+  uint64 peer_uid = 2;
+  CallType type = 3;
+  CallDirection direction = 4;
+  bool answered = 5;              // true if the call was answered
+  bool connected = 6;             // true if the webrtc connects successful
+  uint64 duration_ms = 7;         // number of ms this call was in the in-call state
+  string end_call_reason = 9;     // string representation of the end call reason as defined in the EndCall.Reason
+  bool local_end_call = 10;       // true if the end call happened locally, or false if the end call was received remotely
+  NetworkType network_type = 11;  // wifi or cellular
+
+  string webrtc_stats = 20;       // json serialized version of the result of peer_connection.get_stats at the end of
+                                  // the call
+}
+
+
+message FabAction {
+    enum FabActionType {
+        UNKNOWN_TYPE = 0;
+        GALLERY = 1;
+        AUDIO = 2;
+        TEXT = 3;
+        CAMERA = 4;
+    }
+    FabActionType type = 1;
+}
