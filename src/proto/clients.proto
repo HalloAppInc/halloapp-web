@@ -99,7 +99,17 @@ message PostContainer {
     Text text = 1;
     Album album = 2;
     VoiceNote voice_note = 3;
+    Moment moment = 4;
   }
+  bytes comment_key = 5;
+}
+
+message PostContainerBlob {
+  PostContainer post_container = 1;
+  int64 uid = 2;
+  string post_id = 3;
+  int64 timestamp = 4;
+  string group_id = 5;
 }
 
 message CommentContainer {
@@ -183,6 +193,10 @@ message EncryptedPayload {
   }
 }
 
+message Moment {
+  Image image = 1;
+}
+
 message VoiceNote {
   EncryptedResource audio = 1;
 }
@@ -202,12 +216,16 @@ message MemberDetails {
 
 message PostIdContext {
   string feed_post_id = 1;
+  int64 sender_uid = 2;
+  int64 timestamp = 3;
 }
 
 message CommentIdContext {
   string comment_id = 1;
   string feed_post_id = 2;
   string parent_comment_id = 3;
+  int64 sender_uid = 4;
+  int64 timestamp = 5;
 }
 
 message ContentDetails {

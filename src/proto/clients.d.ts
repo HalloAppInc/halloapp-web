@@ -1088,6 +1088,12 @@ export namespace clients {
 
         /** PostContainer voiceNote */
         voiceNote?: (clients.IVoiceNote|null);
+
+        /** PostContainer moment */
+        moment?: (clients.IMoment|null);
+
+        /** PostContainer commentKey */
+        commentKey?: (Uint8Array|null);
     }
 
     /** Represents a PostContainer. */
@@ -1108,8 +1114,14 @@ export namespace clients {
         /** PostContainer voiceNote. */
         public voiceNote?: (clients.IVoiceNote|null);
 
+        /** PostContainer moment. */
+        public moment?: (clients.IMoment|null);
+
+        /** PostContainer commentKey. */
+        public commentKey: Uint8Array;
+
         /** PostContainer post. */
-        public post?: ("text"|"album"|"voiceNote");
+        public post?: ("text"|"album"|"voiceNote"|"moment");
 
         /**
          * Creates a new PostContainer instance using the specified properties.
@@ -1177,6 +1189,120 @@ export namespace clients {
 
         /**
          * Converts this PostContainer to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+    }
+
+    /** Properties of a PostContainerBlob. */
+    interface IPostContainerBlob {
+
+        /** PostContainerBlob postContainer */
+        postContainer?: (clients.IPostContainer|null);
+
+        /** PostContainerBlob uid */
+        uid?: (number|Long|null);
+
+        /** PostContainerBlob postId */
+        postId?: (string|null);
+
+        /** PostContainerBlob timestamp */
+        timestamp?: (number|Long|null);
+
+        /** PostContainerBlob groupId */
+        groupId?: (string|null);
+    }
+
+    /** Represents a PostContainerBlob. */
+    class PostContainerBlob implements IPostContainerBlob {
+
+        /**
+         * Constructs a new PostContainerBlob.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: clients.IPostContainerBlob);
+
+        /** PostContainerBlob postContainer. */
+        public postContainer?: (clients.IPostContainer|null);
+
+        /** PostContainerBlob uid. */
+        public uid: (number|Long);
+
+        /** PostContainerBlob postId. */
+        public postId: string;
+
+        /** PostContainerBlob timestamp. */
+        public timestamp: (number|Long);
+
+        /** PostContainerBlob groupId. */
+        public groupId: string;
+
+        /**
+         * Creates a new PostContainerBlob instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns PostContainerBlob instance
+         */
+        public static create(properties?: clients.IPostContainerBlob): clients.PostContainerBlob;
+
+        /**
+         * Encodes the specified PostContainerBlob message. Does not implicitly {@link clients.PostContainerBlob.verify|verify} messages.
+         * @param message PostContainerBlob message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: clients.IPostContainerBlob, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified PostContainerBlob message, length delimited. Does not implicitly {@link clients.PostContainerBlob.verify|verify} messages.
+         * @param message PostContainerBlob message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: clients.IPostContainerBlob, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a PostContainerBlob message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns PostContainerBlob
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): clients.PostContainerBlob;
+
+        /**
+         * Decodes a PostContainerBlob message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns PostContainerBlob
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): clients.PostContainerBlob;
+
+        /**
+         * Verifies a PostContainerBlob message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a PostContainerBlob message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns PostContainerBlob
+         */
+        public static fromObject(object: { [k: string]: any }): clients.PostContainerBlob;
+
+        /**
+         * Creates a plain object from a PostContainerBlob message. Also converts values to other types if specified.
+         * @param message PostContainerBlob
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: clients.PostContainerBlob, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this PostContainerBlob to JSON.
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
@@ -2499,6 +2625,96 @@ export namespace clients {
         public toJSON(): { [k: string]: any };
     }
 
+    /** Properties of a Moment. */
+    interface IMoment {
+
+        /** Moment image */
+        image?: (clients.IImage|null);
+    }
+
+    /** Represents a Moment. */
+    class Moment implements IMoment {
+
+        /**
+         * Constructs a new Moment.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: clients.IMoment);
+
+        /** Moment image. */
+        public image?: (clients.IImage|null);
+
+        /**
+         * Creates a new Moment instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns Moment instance
+         */
+        public static create(properties?: clients.IMoment): clients.Moment;
+
+        /**
+         * Encodes the specified Moment message. Does not implicitly {@link clients.Moment.verify|verify} messages.
+         * @param message Moment message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: clients.IMoment, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified Moment message, length delimited. Does not implicitly {@link clients.Moment.verify|verify} messages.
+         * @param message Moment message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: clients.IMoment, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a Moment message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns Moment
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): clients.Moment;
+
+        /**
+         * Decodes a Moment message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns Moment
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): clients.Moment;
+
+        /**
+         * Verifies a Moment message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a Moment message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns Moment
+         */
+        public static fromObject(object: { [k: string]: any }): clients.Moment;
+
+        /**
+         * Creates a plain object from a Moment message. Also converts values to other types if specified.
+         * @param message Moment
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: clients.Moment, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this Moment to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+    }
+
     /** Properties of a VoiceNote. */
     interface IVoiceNote {
 
@@ -2798,6 +3014,12 @@ export namespace clients {
 
         /** PostIdContext feedPostId */
         feedPostId?: (string|null);
+
+        /** PostIdContext senderUid */
+        senderUid?: (number|Long|null);
+
+        /** PostIdContext timestamp */
+        timestamp?: (number|Long|null);
     }
 
     /** Represents a PostIdContext. */
@@ -2811,6 +3033,12 @@ export namespace clients {
 
         /** PostIdContext feedPostId. */
         public feedPostId: string;
+
+        /** PostIdContext senderUid. */
+        public senderUid: (number|Long);
+
+        /** PostIdContext timestamp. */
+        public timestamp: (number|Long);
 
         /**
          * Creates a new PostIdContext instance using the specified properties.
@@ -2894,6 +3122,12 @@ export namespace clients {
 
         /** CommentIdContext parentCommentId */
         parentCommentId?: (string|null);
+
+        /** CommentIdContext senderUid */
+        senderUid?: (number|Long|null);
+
+        /** CommentIdContext timestamp */
+        timestamp?: (number|Long|null);
     }
 
     /** Represents a CommentIdContext. */
@@ -2913,6 +3147,12 @@ export namespace clients {
 
         /** CommentIdContext parentCommentId. */
         public parentCommentId: string;
+
+        /** CommentIdContext senderUid. */
+        public senderUid: (number|Long);
+
+        /** CommentIdContext timestamp. */
+        public timestamp: (number|Long);
 
         /**
          * Creates a new CommentIdContext instance using the specified properties.

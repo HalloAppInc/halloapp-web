@@ -1,0 +1,1471 @@
+
+syntax = "proto3";
+
+package server;
+
+option java_package = "com.halloapp.proto.server";
+option java_multiple_files = true;
+
+import "log_events.proto";
+
+
+// Avatar
+
+message UploadAvatar {
+    string id = 1 [deprecated = true];
+    bytes data = 2; // scaled-down binary jpeg data.
+    bytes full_data = 3; // full binary jpeg data.
+}
+
+message Avatar {
+    string id = 1;
+    int64 uid = 2;
+}
+
+message Avatars {
+    repeated Avatar avatars = 1;
+}
+
+
+message UploadGroupAvatar {
+    string gid = 1;
+    bytes data = 2; // scaled-down binary jpeg data.
+    bytes full_data = 3; // full binary jpeg data.
+}
+
+
+
+message CertMessage {
+    int64 timestamp = 1;
+    bytes server_key = 2;
+}
+
+
+
+// Client Mode and Client Version
+
+message ClientMode {
+    enum Mode {
+        ACTIVE = 0;
+        PASSIVE = 1;
+    }
+    Mode mode = 1;
+}
+
+message ClientVersion {
+    string version = 1;
+    int64 expires_in_seconds = 2;
+}
+
+
+message DeviceInfo {
+    string device = 1;    // Brand + ":" + Model Ex: "Iphone:12 Pro" / "OnePlus:KB2005".
+    string os_version = 2;    // "14.8" for iOS / "29" for API level in Android.
+}
+
+
+
+// Client Log
+
+message ClientLog {
+    repeated Count counts = 1;
+    repeated EventData events = 2;
+}
+
+message Count {
+    string namespace = 1;
+    string metric = 2;
+    int64 count = 3;
+    repeated Dim dims = 4;
+}
+
+message Dim {
+    string name = 1;
+    string value = 2;
+}
+
+
+
+// Contact-Sync
+
+message Contact {
+    enum Action {
+        ADD = 0;
+        DELETE = 1;
+    }
+    Action action = 1;
+    string raw = 2;
+    string normalized = 3;
+    int64 uid = 4;
+    string avatar_id = 5;
+    string name = 7;
+    int64 num_potential_friends = 8;
+    reserved 6; // can be used after Jan 31st.
+}
+
+message ContactList {
+    enum Type {
+        FULL = 0;
+        DELTA = 1;
+        NORMAL = 2;
+        FRIEND_NOTICE = 3;
+        INVITER_NOTICE = 4;
+        DELETE_NOTICE = 5;
+        CONTACT_NOTICE = 6;
+    }
+    Type type = 1;
+    string sync_id = 2;
+    int32 batch_index = 3;
+    bool is_last = 4;
+    repeated Contact contacts = 5;
+}
+
+message ContactHash {
+    bytes hash = 1;
+}
+
+message ContactSyncError {
+    int32 retry_after_secs = 1;
+}
+
+
+
+
+// Pubsub
+
+message MediaCounters {
+    int32 num_images = 1;
+    int32 num_videos = 2;
+    int32 num_audio = 3;
+}
+
+message Audience {
+    enum Type {
+        ALL = 0;
+        EXCEPT = 1;
+        ONLY = 2;
+    }
+    Type type = 1;
+    repeated int64 uids = 2;
+}
+
+message Post {
+    string id = 1;
+    int64 publisher_uid = 2;
+    bytes payload = 3;
+    Audience audience = 4;
+    int64 timestamp = 5;
+    string publisher_name = 6;
+    // Serialized EncryptedPayload (from client.proto).
+    bytes enc_payload = 7;
+    MediaCounters media_counters = 8;
+    enum Tag {
+        EMPTY = 0;
+        SECRET_POST = 1;
+    }
+    Tag tag = 9;
+}
+
+message Comment {
+    string id = 1;
+    string post_id = 2;
+    string parent_comment_id = 3;
+    int64 publisher_uid = 4;
+    string publisher_name = 5;
+    bytes payload = 6;
+    int64 timestamp = 7;
+    // Serialized EncryptedPayload (from client.proto).
+    bytes enc_payload = 8;
+    MediaCounters media_counters = 9;
+}
+
+
+message ShareStanza {
+    int64 uid = 1;
+    repeated string post_ids = 2;
+    string result = 3;
+    string reason = 4;
+}
+
+
+message FeedItem {
+    enum Action {
+        PUBLISH = 0;
+        RETRACT = 1;
+        SHARE = 2;
+    }
+    Action action = 1;
+    oneof item {
+        Post post = 2;
+        Comment comment = 3;
+    }
+    repeated ShareStanza share_stanzas = 4;
+
+    // Sent by the publisher.
+    repeated SenderStateBundle sender_state_bundles = 5;
+
+    // Meant for the receiver, computed by the server using `sender_state_bundles`.
+    SenderStateWithKeyInfo sender_state = 6;
+}
+
+message FeedItems {
+    int64 uid = 1;
+    repeated FeedItem items = 2;
+}
+
+message SenderStateWithKeyInfo {
+    bytes public_key = 1;
+    int64 one_time_pre_key_id = 2;
+    bytes enc_sender_state = 3;
+}
+
+message SenderStateBundle {
+    SenderStateWithKeyInfo sender_state = 1;
+    int64 uid = 2;
+}
+
+message GroupFeedItem {
+    enum Action {
+        PUBLISH = 0;
+        RETRACT = 1;
+        SHARE = 2;
+    }
+    Action action = 1;
+    string gid = 2;
+    string name = 3;
+    string avatar_id = 4;
+    oneof item {
+        Post post = 5;
+        Comment comment = 6;
+    }
+    // Sent by the publisher.
+    repeated SenderStateBundle sender_state_bundles = 7;
+
+    // Meant for the receiver, computed by the server using `sender_state_bundles`.
+    SenderStateWithKeyInfo sender_state = 8;
+
+    bytes audience_hash = 9;
+    bool is_resent_history = 10;
+
+    // Use >=16 for temporary elements since 1-15 encode smaller
+    string sender_log_info = 16;
+    string sender_client_version = 17; // ex: "HalloApp/Android0.127"
+}
+
+
+message GroupFeedItems {
+    string gid = 1;
+    string name = 2;
+    string avatar_id = 3;
+    repeated GroupFeedItem items = 4;
+}
+
+message GroupFeedHistory {
+    string gid = 1;
+    string id = 2;
+    bytes payload = 3;
+    // Serialized GroupFeedItems stanza and then encrypted using 1-1 channel.
+    bytes enc_payload = 4;
+    bytes public_key = 5;
+    int32 one_time_pre_key_id = 6;
+
+    // Use >=16 for temporary elements since 1-15 encode smaller
+    string sender_log_info = 16;
+    string sender_client_version = 17; // ex: "HalloApp/Android0.127"
+}
+
+
+// Definitions for group stanzas.
+
+message GroupMember {
+    enum Action {
+        ADD = 0;
+        REMOVE = 1;
+        PROMOTE = 2;
+        DEMOTE = 3;
+        LEAVE = 4;
+        JOIN = 5;
+    }
+    Action action = 1;
+    int64 uid = 2;
+
+    enum Type {
+        MEMBER = 0;
+        ADMIN = 1;
+    }
+    Type type = 3;
+    string name = 4;
+    string avatar_id = 5;
+    string result = 6;
+    string reason = 7;
+
+    // Identity key to be returned on `GET_MEMBER_IDENTITY_KEYS` IQ.
+    bytes identity_key = 8;
+}
+
+
+message GroupStanza {
+    enum Action {
+        SET = 0;
+        GET = 1;
+        CREATE = 2;
+        DELETE = 3;
+        LEAVE = 4;
+        CHANGE_AVATAR = 5;
+        CHANGE_NAME = 6;
+        MODIFY_ADMINS = 7;
+        MODIFY_MEMBERS = 8;
+        AUTO_PROMOTE_ADMINS = 9;
+        SET_NAME = 10;
+        JOIN = 11;
+        PREVIEW = 12;
+        SET_BACKGROUND = 13;
+        GET_MEMBER_IDENTITY_KEYS = 14;
+        CHANGE_DESCRIPTION = 15;
+    }
+    Action action = 1;
+    string gid = 2;
+    string name = 3;
+    string avatar_id = 4;
+    int64 sender_uid = 5;
+    string sender_name = 6;
+    repeated GroupMember members = 7;
+    string background = 8;
+
+    // Audience hash to be returned on `GET_MEMBER_IDENTITY_KEYS` IQ.
+    bytes audience_hash = 9;
+    string description = 10;
+    // HistoryResend to be sent or received only on adding-members iq.
+    HistoryResend history_resend = 11;
+}
+
+
+message GroupChat {
+    string gid = 1;
+    string name = 2;
+    string avatar_id = 3;
+    int64 sender_uid = 4;
+    string sender_name = 5;
+    int64 timestamp = 6;
+    bytes payload = 7;
+}
+
+message GroupsStanza {
+    enum Action {
+        GET = 0;
+    }
+    Action action = 1;
+    repeated GroupStanza group_stanzas = 2;
+}
+
+
+message GroupInviteLink {
+    enum Action {
+        UNKNOWN = 0;
+        GET = 1;
+        RESET = 2;
+        JOIN = 3;
+        PREVIEW = 4;
+    }
+    Action action = 1;
+    string gid = 2;
+    string link = 3;
+    string result = 4;
+    string reason = 5;
+    GroupStanza group = 6; //only present for action=JOIN
+}
+
+
+
+
+// Definitions for authentication packet.
+
+message AuthRequest {
+    int64 uid = 1;
+    string pwd = 2;
+    ClientMode client_mode = 3;
+    ClientVersion client_version = 4;
+    string resource = 5;
+    DeviceInfo device_info = 6;
+}
+
+// Left them to be string for now, will update these later as necessary.
+message AuthResult {
+    enum Result {
+        UNKNOWN = 0;
+        SUCCESS = 1;
+        FAILURE = 2;
+    }
+    enum Reason {
+        UNKNOWN_REASON = 0;
+        OK = 1;
+        SPUB_MISMATCH = 2;
+        INVALID_CLIENT_VERSION = 3;
+        INVALID_RESOURCE = 4;
+        ACCOUNT_DELETED = 5;
+        INVALID_UID_OR_PASSWORD = 6;
+    }
+    string result_string = 1;
+    string reason_string = 2;
+    bytes props_hash = 3;
+    int64 version_ttl = 4;
+    Result result = 5;
+    Reason reason = 6;
+}
+
+
+
+
+// Invites
+
+message Invite {
+    string phone = 1;
+    string result = 2;
+    string reason = 3;
+}
+
+
+message InvitesRequest {
+    repeated Invite invites = 1;
+}
+
+
+message InvitesResponse {
+    int32 invites_left = 1;
+    int64 time_until_refresh = 2;
+    repeated Invite invites = 3;
+}
+
+
+
+
+// Media Upload
+
+message MediaUrl {
+    string get = 1;
+    string put = 2;
+    string patch = 3;
+}
+
+message UploadMedia {
+    int64 size = 1;
+    MediaUrl url = 2;
+    string download_url = 3;
+    enum Type {
+        DEFAULT = 0;
+        RESUMABLE = 1;
+        DIRECT = 2;
+    }
+    Type type = 4;
+}
+
+
+// Chat
+
+message ChatStanza {
+    int64 timestamp = 1;
+    bytes payload = 2;
+    bytes enc_payload = 3;
+    // Temporarily added two payloads: one is for unencrypted and the other is encrypted.
+    // Clients currently send both of them at times.
+    bytes public_key = 4;
+    int64 one_time_pre_key_id = 5;
+    string sender_name = 6;
+    string sender_phone = 7;
+    MediaCounters media_counters = 8;
+
+    // Use >=16 for temporary elements since 1-15 encode smaller
+    string sender_log_info = 16;
+    string sender_client_version = 17;
+}
+
+// clients should decrypt, report stats, and then drop this message
+message SilentChatStanza {
+    ChatStanza chat_stanza = 1;
+}
+
+// Ping
+
+message Ping {
+}
+
+
+// Error
+
+message ErrorStanza {
+    string reason = 1;
+}
+
+
+// Name
+
+message Name {
+    int64 uid = 1;
+    string name = 2;
+}
+
+
+// End of Queue
+
+message EndOfQueue {
+    bool trimmed = 1;
+}
+
+
+// History Resend Message
+
+message HistoryResend {
+    string gid = 1;
+    string id = 2;
+
+    bytes payload = 4;
+    // Encrypted payload using the group feed channel.
+    bytes enc_payload = 5;
+
+    // Sent by the sender.
+    repeated SenderStateBundle sender_state_bundles = 6;
+
+    // Meant for the receiver, selected by the server from `sender_state_bundles`.
+    SenderStateWithKeyInfo sender_state = 7;
+
+    bytes audience_hash = 8;
+
+    // Use >=16 for temporary elements since 1-15 encode smaller
+    string sender_log_info = 16;
+    string sender_client_version = 17; // ex: "HalloApp/Android0.127"
+}
+
+// Calls
+enum CallType {
+    UNKNOWN_TYPE = 0;
+    AUDIO = 1;
+    VIDEO = 2;
+}
+
+message StunServer {
+    string host = 1;
+    uint32 port = 2;
+}
+
+message TurnServer {
+    string host = 1;
+    uint32 port = 2;
+    string username = 3;
+    string password = 4;
+}
+
+message GetCallServers {
+    string call_id = 1;
+    int64 peer_uid = 2;
+    CallType call_type = 3;
+}
+
+message GetCallServersResult {
+    enum Result {
+        UNKNOWN = 0;
+        OK = 1;
+        FAIL = 2;
+    }
+    Result result = 1;
+    repeated StunServer stun_servers = 2;
+    repeated TurnServer turn_servers = 3;
+    CallConfig call_config = 4;
+}
+
+message CallCapabilities {
+    bool pre_answer = 1;                    // true if the initiator supports pre-answering the call
+    bool sdp_restart = 2;                   // true if the initiator supports CallSdp ice restart
+}
+
+message StartCall {
+    string call_id = 1;
+    int64 peer_uid = 2;
+    CallType call_type = 3;
+    WebRtcSessionDescription webrtc_offer = 4;
+    int32 rerequest_count = 5;
+    CallCapabilities call_capabilities = 6;
+}
+
+message StartCallResult {
+    enum Result {
+        UNKNOWN = 0;
+        OK = 1;
+        FAIL = 2;  // TODO:(nikola) we will likely have to add some sort of reasons here
+    }
+    Result result = 1;
+    repeated StunServer stun_servers = 2;
+    repeated TurnServer turn_servers = 3;
+    int64 timestamp_ms = 4;
+}
+
+message WebRtcSessionDescription {
+    bytes enc_payload = 1;
+    bytes public_key = 2;
+    int32 one_time_pre_key_id = 3;
+}
+
+message IncomingCallPush {
+    string call_id = 1;
+    CallType call_type = 2;
+    repeated StunServer stun_servers = 3;
+    repeated TurnServer turn_servers = 4;
+    int64 timestamp_ms = 5;                 // ts when message is generated by the server
+    CallConfig call_config = 6;
+    CallCapabilities call_capabilities = 7;
+}
+
+message IncomingCall {
+    string call_id = 1;
+    CallType call_type = 2;
+    WebRtcSessionDescription webrtc_offer = 3;
+    repeated StunServer stun_servers = 4;
+    repeated TurnServer turn_servers = 5;
+    int64 timestamp_ms = 6;                 // ts when message is generated by the server
+    int64 server_sent_ts_ms = 7;            // ts when the message is send to receiver
+    CallConfig call_config = 8;
+    CallCapabilities call_capabilities = 9;
+}
+
+//RFC 4566 https://datatracker.ietf.org/doc/html/rfc4566#section-5.14
+message IceCandidate {
+    string call_id = 1;
+    string sdp_media_id = 2;
+    int32 sdp_media_line_index = 3;
+    string sdp = 4;
+}
+
+// send when the receiver of the calls starts ringing.
+message CallRinging {
+    string call_id = 1;
+    int64 timestamp_ms = 2;
+    WebRtcSessionDescription webrtc_answer = 3;
+}
+
+// send before the AnswerCall so we can connect the PeerConnection
+// DEPRECATED send the answer with the pre-answer with the ringing message.
+message PreAnswerCall {
+    string call_id = 1;
+    WebRtcSessionDescription webrtc_answer = 2;
+    int64 timestamp_ms = 3;
+}
+
+message AnswerCall {
+    string call_id = 1;
+    WebRtcSessionDescription webrtc_answer = 2;
+    int64 timestamp_ms = 3;
+    WebRtcSessionDescription webrtc_offer = 4;      // used when both sides have pre-answer capabilites
+}
+
+message CallSdp {
+    string call_id = 1;
+    oneof sdp {
+        WebRtcSessionDescription webrtc_offer = 2;
+        WebRtcSessionDescription webrtc_answer = 3;
+    }
+}
+
+message EndCall {
+    string call_id = 1;
+    enum Reason {
+        UNKNOWN = 0;
+        REJECT = 1;             // receiver rejects the incoming call
+        BUSY = 2;               // receiver is in another call
+        TIMEOUT = 3;            // sender or receiver times out the call after ringing for some time.
+        CALL_END = 4;           // initiator or receiver end the call.
+        CANCEL = 5;             // initiator hangups before the call connects.
+        DECRYPTION_FAILED = 6;  // receiver could not decrypt the content.
+        ENCRYPTION_FAILED = 7;  // receiver could not encrypt the answer.
+        SYSTEM_ERROR = 8;       // system errors or crashes.
+        VIDEO_UNSUPPORTED = 9;  // unsupported video calls.
+        CONNECTION_ERROR = 10;  // ice connection state error.
+    }
+    Reason reason = 2;
+    int64 timestamp_ms = 3;
+}
+
+// DEPRECATED
+message IceRestartOffer {
+    string call_id = 1;
+    int32 idx = 2;
+    WebRtcSessionDescription webrtc_offer = 3;
+}
+
+// DEPRECATED
+message IceRestartAnswer {
+    string call_id = 1;
+    int32 idx = 2;
+    WebRtcSessionDescription webrtc_answer = 3;
+}
+
+message HoldCall {
+    string call_id = 1;
+    bool hold = 2;
+    int64 timestamp_ms = 3;
+}
+
+message MuteCall {
+    string call_id = 1;
+    enum MediaType {
+        AUDIO = 0;
+        VIDEO = 1;
+    }
+    MediaType media_type = 2;
+    bool muted = 3;
+    int64 timestamp_ms = 4;
+}
+
+message CallConfig {
+    int32 audio_bitrate_max = 1;
+    int32 video_bitrate_max = 2;
+    int32 audio_codec = 3;
+    int32 video_codec = 4;
+    int32 video_width = 5;
+    int32 video_height = 6;
+    int32 video_fps = 7;
+    int32 audio_jitter_buffer_max_packets = 8;
+    bool audio_jitter_buffer_fast_accelerate = 9;
+    enum IceTransportPolicy {
+        ALL = 0;
+        RELAY = 1;
+    }
+    IceTransportPolicy ice_transport_policy = 10;
+    int32 ice_restart_delay_ms = 11;
+}
+
+
+// External Sharing
+message OgTagInfo {
+    string title = 1;
+    string description = 2;
+    string thumbnail_url = 3;
+    int32 thumbnail_width = 4;
+    int32 thumbnail_height = 5;
+}
+
+message ExternalSharePost {
+    enum Action {
+        STORE = 0;
+        DELETE = 1;
+        GET = 2;
+    }
+    Action action = 1;
+    string blob_id = 2;
+    bytes blob = 3;
+    int64 expires_in_seconds = 4;
+    OgTagInfo og_tag_info = 5;
+}
+
+message ExternalSharePostContainer {
+    int64 uid = 1;
+    bytes blob = 2;
+    OgTagInfo og_tag_info = 3;
+    string name = 4;
+    string avatar_id = 5;
+}
+
+message WebClientInfo {
+    enum Action {
+        UNKNOWN_ACTION = 0;
+        ADD_KEY = 1;  // Used by web client
+        IS_KEY_AUTHENTICATED = 2;  // Used by web client
+        AUTHENTICATE_KEY = 3;   // Used by mobile client
+        REMOVE_KEY = 4;   // Used by web client and mobile client
+    }
+    Action action = 1;
+    bytes static_key = 2;
+    enum Result {
+        UNKNOWN = 0;
+        OK = 1;
+        AUTHENTICATED = 2;
+        NOT_AUTHENTICATED = 3;
+    }
+    Result result = 3;
+}
+
+message WebStanza {
+    bytes static_key = 1;  // Used to identify the user. Must be set on every packet exchanged
+                           // between mobile and web client.
+    bytes content = 2;  // Noise encrypted content or it is encoded and serialized NoiseMessage.
+}
+
+// IQ
+
+message Iq {
+    string id = 1;
+    enum Type {
+        GET = 0;
+        SET = 1;
+        RESULT = 2;
+        ERROR = 3;
+    }
+    Type type = 2;
+    oneof payload {
+        UploadMedia upload_media = 3;
+        ContactList contact_list = 4;
+        UploadAvatar upload_avatar = 5;
+        Avatar avatar = 6;
+        Avatars avatars = 7;
+        ClientMode client_mode = 8;
+        ClientVersion client_version = 9;
+        PushRegister push_register = 10;
+        WhisperKeys whisper_keys = 11;
+        Ping ping = 12;
+        FeedItem feed_item = 13;
+        PrivacyList privacy_list = 14;
+        PrivacyLists privacy_lists = 16;
+        GroupStanza group_stanza = 17;
+        GroupsStanza groups_stanza = 18;
+        ClientLog client_log = 19;
+        Name name = 20;
+        ErrorStanza error_stanza = 21;
+        Props props = 22;
+        InvitesRequest invites_request = 23;
+        InvitesResponse invites_response = 24;
+        NotificationPrefs notification_prefs = 25;
+        GroupFeedItem group_feed_item = 26;
+        UploadGroupAvatar group_avatar = 27;
+        DeleteAccount delete_account = 28;
+        GroupInviteLink group_invite_link = 31;
+        HistoryResend history_resend = 32;
+        ExportData export_data = 33;
+        ContactSyncError contact_sync_error = 34;
+        ClientOtpRequest client_otp_request = 35; // only for sms_app gateway use
+        ClientOtpResponse client_otp_response = 36; // only for sms_app gateway use
+        WhisperKeysCollection whisper_keys_collection = 37;
+        GetCallServers get_call_servers = 38;
+        GetCallServersResult get_call_servers_result = 39;
+        StartCall start_call = 40;
+        StartCallResult start_call_result = 41;
+        TruncWhisperKeysCollection trunc_whisper_keys_collection = 42;
+        ExternalSharePost external_share_post = 43;
+        ExternalSharePostContainer external_share_post_container = 44;
+        WebClientInfo web_client_info = 45;
+    }
+    reserved 29;    // only for server use
+    reserved 30;    // only for server use
+    reserved 15;
+}
+
+
+// Message
+
+message Msg {
+    string id = 1;
+    enum Type {
+        NORMAL = 0;
+        ERROR = 1;
+        GROUPCHAT = 2;
+        HEADLINE = 3;
+        CHAT = 4;       // Not used yet.
+        CALL = 5;
+    }
+    Type type = 2;
+    int64 to_uid = 3;
+    int64 from_uid = 4;
+    oneof payload {
+        ContactList contact_list = 5;
+        Avatar avatar = 6;
+        WhisperKeys whisper_keys = 7;
+        SeenReceipt seen_receipt = 8;
+        DeliveryReceipt delivery_receipt = 9;
+        ChatStanza chat_stanza = 10;
+        FeedItem feed_item = 11;
+        FeedItems feed_items = 12;
+        ContactHash contact_hash = 13;
+        GroupStanza group_stanza = 14;
+        GroupChat group_chat = 15;
+        Name name = 16;
+        ErrorStanza error_stanza = 17;
+        GroupChatRetract groupchat_retract = 18;
+        ChatRetract chat_retract = 19;
+        GroupFeedItem group_feed_item = 20;
+        Rerequest rerequest = 22;
+        SilentChatStanza silent_chat_stanza = 23;
+        GroupFeedItems group_feed_items = 24;
+        EndOfQueue end_of_queue = 26;
+        InviteeNotice invitee_notice = 27;
+        GroupFeedRerequest group_feed_rerequest = 28;
+        HistoryResend history_resend = 29;
+        PlayedReceipt played_receipt = 30;
+        RequestLogs request_logs = 31;
+        WakeUp wakeup = 32; // only for use with SMSApp clients
+        HomeFeedRerequest home_feed_rerequest = 33;
+        IncomingCall incoming_call = 34;
+        CallRinging call_ringing = 35;
+        AnswerCall answer_call = 36;
+        EndCall end_call = 37;
+        IceCandidate ice_candidate = 38;
+        MarketingAlert marketing_alert = 39;    // only for server use
+        IceRestartOffer ice_restart_offer = 40;     // deprecated, use call_sdp
+        IceRestartAnswer ice_restart_answer = 41;   // deprecated, use call_sdp
+        GroupFeedHistory group_feed_history = 42;
+        PreAnswerCall pre_answer_call = 43;         // deprecated, set answer in ringing
+        HoldCall hold_call = 44;
+        MuteCall mute_call = 45;
+        IncomingCallPush incoming_call_push = 46;
+        CallSdp call_sdp = 47;
+        WebStanza web_stanza = 48;
+    }
+    int32 retry_count = 21;
+    int32 rerequest_count = 25;
+}
+
+
+// Presence
+
+message Presence {
+    string id = 1;
+    enum Type {
+        AVAILABLE = 0;
+        AWAY = 1;
+        SUBSCRIBE = 2;
+        UNSUBSCRIBE = 3;
+    }
+    Type type = 2;
+    int64 uid = 3 [deprecated = true]; // Clients must stop using this field.
+    int64 last_seen = 4;
+    int64 to_uid = 5;
+    int64 from_uid = 6;
+}
+
+
+// Chat State
+
+message ChatState {
+    enum Type {
+        AVAILABLE = 0;
+        TYPING = 1;
+    }
+    Type type = 1;
+    string thread_id = 2;
+    enum ThreadType {
+        CHAT = 0;
+        GROUP_CHAT = 1;
+    }
+    ThreadType thread_type = 3;
+    int64 from_uid = 4;
+    reserved 5;    // only for server use
+}
+
+
+// Ack
+
+message Ack {
+    string id = 1;
+    int64 timestamp = 2;
+    reserved 3;    // only for server use
+    reserved 4;    // only for server use
+}
+
+
+// Error packet: Only to be sent by the server to the client.
+
+message HaError {
+    string reason = 1;
+}
+
+
+// Super Packet
+
+message Packet {
+    oneof stanza {
+        Msg msg = 1;
+        Iq iq = 2;
+        Ack ack = 3;
+        Presence presence = 4;
+        HaError ha_error = 5;
+        ChatState chat_state = 6;
+    }
+}
+
+
+
+
+
+
+// Privacy-Lists
+
+message UidElement {
+    enum Action {
+        ADD = 0;
+        DELETE = 1;
+    }
+    Action action = 1;
+    int64 uid = 2;
+}
+
+message PhoneElement {
+    enum Action {
+        ADD = 0;
+        DELETE = 1;
+    }
+    Action action = 1;
+    string phone = 2;
+}
+
+message PrivacyList {
+    enum Type {
+        ALL = 0;
+        BLOCK = 1;
+        EXCEPT = 2;
+        MUTE = 3;
+        ONLY = 4;
+    }
+    Type type = 1;
+    repeated UidElement uid_elements = 2;
+    bytes hash = 3;
+    repeated PhoneElement phone_elements = 4;
+    bool using_phones = 5;
+}
+
+
+message PrivacyLists {
+    enum Type {
+        ALL = 0;
+        BLOCK = 1;
+        EXCEPT = 2;
+        ONLY = 3;
+    }
+    Type active_type = 1;
+    repeated PrivacyList lists = 2;
+}
+
+
+
+
+// Push Tokens
+
+message PushToken {
+    enum TokenType {
+        ANDROID = 0;
+        IOS = 1;
+        IOS_DEV = 2;
+        IOS_APPCLIP = 3;
+        IOS_VOIP = 4;
+    }
+    TokenType token_type = 1;
+    string token = 2;
+}
+
+message PushRegister {
+    PushToken push_token = 1;
+    string lang_id = 2;
+}
+
+message PushPref {
+    enum Name {
+        POST = 0;
+        COMMENT = 1;
+    }
+    Name name = 1;
+    bool value = 2;
+}
+
+message NotificationPrefs {
+    repeated PushPref push_prefs = 1;
+}
+
+
+
+// Rerequest
+
+message Rerequest {
+    string id = 1;
+    bytes identity_key = 2;
+    int64 signed_pre_key_id = 3;
+    int64 one_time_pre_key_id = 4;
+    bytes session_setup_ephemeral_key = 5;
+    bytes message_ephemeral_key = 6;
+    enum ContentType {
+        CHAT = 0;
+        CALL = 1;
+        GROUP_HISTORY = 2;
+    }
+    ContentType content_type = 7;
+}
+
+
+// Group Feed Rerequest
+
+message GroupFeedRerequest {
+    string gid = 1;
+    // Post id or Comment id or HistoryResend id
+    string id = 2;
+
+    // To capture the type of decryption failure.
+    enum RerequestType {
+        // Unable to decrypt post/comment/history-resend payload
+        PAYLOAD = 0;
+
+        // Unable to decrypt sender state.
+        SENDER_STATE = 1;
+    }
+    RerequestType rerequest_type = 3;
+
+    enum ContentType {
+        UNKNOWN = 0;
+        POST = 1;
+        COMMENT = 2;
+        HISTORY_RESEND = 3;
+    }
+    ContentType content_type = 4;
+}
+
+
+// Home Feed Rerequest
+
+message HomeFeedRerequest {
+    // Post id or Comment id.
+    string id = 1;
+
+    // To capture the type of decryption failure.
+    enum RerequestType {
+        UNKNOWN_TYPE = 0;
+
+        // Unable to decrypt post/comment's payload
+        PAYLOAD = 1;
+
+        // Unable to decrypt sender state.
+        SENDER_STATE = 2;
+    }
+    RerequestType rerequest_type = 2;
+
+    enum ContentType {
+        UNKNOWN = 0;
+        POST = 1;
+        COMMENT = 2;
+    }
+    ContentType content_type = 4;
+}
+
+
+// Seen, Delivery and Played Receipts
+
+message SeenReceipt {
+    string id = 1;
+    string thread_id = 2;
+    int64 timestamp = 3;
+}
+
+message DeliveryReceipt {
+    string id = 1;
+    string thread_id = 2;
+    int64 timestamp = 3;
+}
+
+message PlayedReceipt {
+    string id = 1;
+    string thread_id = 2;
+    int64 timestamp = 3;
+}
+
+
+
+// retract stanza
+
+message GroupChatRetract {
+    string id = 1;
+    string gid = 2;
+}
+
+message ChatRetract {
+    string id = 1;
+}
+
+
+
+
+// Definitions for server props.
+
+message Prop {
+    string name = 1;
+    string value = 2;
+}
+
+message Props {
+    bytes hash = 1;
+    repeated Prop props = 2;
+}
+
+
+
+
+// Whisper Encryption
+
+message WhisperKeys {
+    int64 uid = 1;
+    enum Action {
+        NORMAL = 0;
+        ADD = 1;
+        COUNT = 2;
+        GET = 3;
+        SET = 4 [deprecated = true];
+        UPDATE = 5;
+    }
+    Action action = 2;
+    bytes identity_key = 3;
+    bytes signed_key = 4;
+    int32 otp_key_count = 5;
+    repeated bytes one_time_keys = 6;
+}
+
+
+message TruncWhisperKeys {
+    int64 uid = 1;
+    // The following field is first 4 bytes of the public part of the identity key.
+    bytes trunc_public_identity_key = 2;
+}
+
+
+message WhisperKeysCollection {
+    // Action is always get.
+    repeated WhisperKeys collection = 1;
+}
+
+
+message TruncWhisperKeysCollection {
+    // Action is always get.
+    repeated TruncWhisperKeys collection = 1;
+}
+
+
+message NoiseMessage {
+    enum MessageType {
+        XX_A = 0;  // -> e
+        XX_B = 1;  // <- e, ee, s, es
+        XX_C = 2;  // -> s, se
+
+        IK_A = 3;  // (<- s ...) -> e, es, s, ss
+        IK_B = 4;  // <- e, ee, se
+
+        XX_FALLBACK_A = 5;  // (-> e ...) <- e, ee, s, es
+        XX_FALLBACK_B = 6;  // -> s, se
+    }
+    MessageType message_type = 1;
+
+    // Third party library we use for Noise handshake provides API to read/write Noise messages.
+    // The following content represent the bytes returned by write message and such content is
+    // correctly consumed by the receiving library for matching handshake pattern and handshake
+    // state.
+    bytes content = 2;
+}
+
+
+// Delete User Account
+
+message DeleteAccount {
+    string phone = 1;
+    enum Reason {
+        UNKNOWN_DELETE_REASON = 0;
+    }
+    Reason reason = 2;
+    string feedback = 3;
+}
+
+// User Data Export
+
+message ExportData {
+  int64 data_ready_ts = 1;
+  enum Status {
+    UNKNOWN = 0;
+    PENDING = 1;
+    READY = 2;
+    NOT_STARTED = 3;
+  }
+  Status status = 2;
+  string data_url = 3;
+  int64 available_until_ts = 4;
+}
+
+
+// PushContent
+message PushContent {
+    bytes certificate = 1;
+    bytes content = 2;
+}
+
+// Invitee Notice
+message InviteeNotice {
+    repeated Inviter inviters = 1;
+}
+
+// Inviter details
+message Inviter {
+    int64 uid = 1;
+    string name = 2;
+    string phone = 3;
+    int64 timestamp = 4;
+}
+
+// Identity Key
+message IdentityKey {
+  bytes public_key = 1;
+}
+
+// Logs request
+message RequestLogs {
+  int64 timestamp = 1;
+}
+
+// Registration
+
+message RegisterRequest {
+    oneof request {
+        OtpRequest otp_request = 1;
+        VerifyOtpRequest verify_request = 2;
+        HashcashRequest hashcash_request = 3;
+    }
+}
+
+message RegisterResponse {
+    oneof response {
+        OtpResponse otp_response = 1;
+        VerifyOtpResponse verify_response = 2;
+        HashcashResponse hashcash_response = 3;
+    }
+}
+
+message HashcashRequest {
+    string country_code = 1;
+}
+
+message HashcashResponse {
+    string hashcash_challenge = 1;
+}
+
+message OtpRequest {
+    string phone = 1;
+    enum Method {
+        SMS = 0;
+        VOICE_CALL = 1;
+    }
+    Method method = 2;
+    string lang_id = 3;
+    string group_invite_token = 4;
+    string user_agent = 5;
+    string hashcash_solution = 6;
+    int64 hashcash_solution_time_taken_ms = 7;
+    string campaign_id = 8;
+}
+
+message OtpResponse {
+    string phone = 1;
+    enum Result {
+        UNKNOWN_RESULT = 0;
+        SUCCESS = 1;
+        FAILURE = 2;
+    }
+    Result result = 2;
+    enum Reason {
+        UNKNOWN_REASON = 0;
+        INVALID_PHONE_NUMBER = 1;
+        INVALID_CLIENT_VERSION = 2;
+        BAD_METHOD = 3;
+        OTP_FAIL = 4;
+        NOT_INVITED = 5;
+        INVALID_GROUP_INVITE_TOKEN = 6;
+        RETRIED_TOO_SOON = 7;
+        BAD_REQUEST = 8;
+        INTERNAL_SERVER_ERROR = 9;
+        INVALID_HASHCASH_NONCE = 10;
+        WRONG_HASHCASH_SOLUTION = 11;
+    }
+    Reason reason = 3;
+    int64 retry_after_secs = 4;
+}
+
+message VerifyOtpRequest {
+    string phone = 1;
+    string code = 2;
+    string name = 3;
+    bytes static_key = 4;
+    bytes signed_phrase = 5;
+    bytes identity_key = 6;
+    bytes signed_key = 7;
+    repeated bytes one_time_keys = 8;
+    string group_invite_token = 9;
+    PushRegister push_register = 10; // Only for ios-appclip
+    string user_agent = 11;
+    string campaign_id = 12;
+}
+
+message VerifyOtpResponse {
+    string phone = 1;
+    int64 uid = 2;
+    string name = 3;
+    enum Result {
+        UNKNOWN_RESULT = 0;
+        SUCCESS = 1;
+        FAILURE = 2;
+    }
+    Result result = 4;
+    enum Reason {
+        UNKNOWN_REASON = 0;
+        INVALID_PHONE_NUMBER = 1;
+        INVALID_CLIENT_VERSION = 2;
+        WRONG_SMS_CODE = 3;
+        MISSING_PHONE = 4;
+        MISSING_CODE = 5;
+        MISSING_NAME = 6;
+        INVALID_NAME = 7;
+        MISSING_IDENTITY_KEY = 8;
+        MISSING_SIGNED_KEY = 9;
+        MISSING_ONE_TIME_KEYS = 10;
+        BAD_BASE64_KEY = 11;
+        INVALID_ONE_TIME_KEYS = 12;
+        TOO_FEW_ONE_TIME_KEYS = 13;
+        TOO_MANY_ONE_TIME_KEYS = 14;
+        TOO_BIG_IDENTITY_KEY = 15;
+        TOO_BIG_SIGNED_KEY = 16;
+        TOO_BIG_ONE_TIME_KEYS = 17;
+        INVALID_S_ED_PUB = 18;
+        INVALID_SIGNED_PHRASE = 19;
+        UNABLE_TO_OPEN_SIGNED_PHRASE = 20;
+        BAD_REQUEST = 21;
+        INTERNAL_SERVER_ERROR = 22;
+    }
+    Reason reason = 5;
+    string group_invite_result = 6;
+}
+
+message ClientOtpRequest {
+    enum Method {
+        SMS = 0;
+        VOICE_CALL = 1;
+    }
+    Method method = 1;
+    string phone = 2;
+    string content = 3;
+}
+
+message ClientOtpResponse {
+    enum Result {
+        UNKNOWN_RESULT = 0;
+        SUCCESS = 1;
+        FAILURE = 2;
+    }
+    Result result = 1;
+
+    enum Reason {
+        UNKNOWN_REASON = 0;
+        SETUP_ISSUE = 1;
+        PERMISSION_ISSUE = 2;
+        FORMATTING_ISSUE = 3;
+        // Client should retry a few times in this case.
+        NETWORKING_ISSUE = 4;
+    }
+    Reason reason = 2;
+}
+
+message WakeUp {
+}
+
+message MarketingAlert {
+    enum Type {
+        UNKNOWN = 0;
+        INVITE_FRIENDS = 1;
+        SHARE_POST = 2;
+    }
+    Type type = 1;
+}
+
