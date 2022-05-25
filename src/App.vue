@@ -4,6 +4,7 @@ import { ref, onMounted, onUpdated } from 'vue'
 import Sidebar from './components/Sidebar.vue'
 import Sidestrip from './components/Sidestrip.vue'
 import MainPanel from './components/MainPanel.vue'
+import Popup from "./components/Popup.vue"
 
 import hal from './common/halogger'
 import qrCodeStyling from 'qr-code-styling'
@@ -19,6 +20,7 @@ import { server } from "./proto/server.js"
 import { nanoid } from 'nanoid'
 
 const mainStore = useMainStore()
+const chooseColorScheme = ref(true) // for color scheme
 
 if (!mainStore.privateKeyBase64) {
     hal.log("App/keypair not found, generate keypair")
@@ -462,6 +464,10 @@ function generateQRCode() {
             <MainPanel/>
         </div>
 
+    </div>
+
+    <div v-if="chooseColorScheme&&mainStore.isConnected" id="ChooseColorSchemePopup">
+        <Popup/>
     </div>
 
 

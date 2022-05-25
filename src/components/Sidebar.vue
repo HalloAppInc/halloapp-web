@@ -1,6 +1,44 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
+import { computed } from 'vue'
+
+import { useMainStore } from '../stores/mainStore'
+
+const mainStore = useMainStore()
+
+const headerColor = ref(computed(() => {
+    // if mode is auto, follow OS's color schema
+    if (mainStore.preferColorScheme == 'auto-dark' || mainStore.preferColorScheme == 'auto-light'){
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            return "black";
+        }
+        else {
+            return "#f0f2f5";
+        }
+    }
+    // change color manually
+    else if (mainStore.preferColorScheme == 'dark'){
+        return "black";
+    }
+    else if (mainStore.preferColorScheme == 'light'){
+        return "#f0f2f5";
+    }
+}))
+
+// listen to the color scheme of the browser
+window.matchMedia('(prefers-color-scheme: dark)')
+    .addEventListener('change', event => {
+    if (mainStore.preferColorScheme == 'auto-dark' || mainStore.preferColorScheme == 'auto-light') {
+        if (event.matches) {
+            mainStore.preferColorScheme = "auto-dark";
+        } else {
+            mainStore.preferColorScheme = "auto-light";
+        }
+    }     
+})
+
+
 const listData = [
     { 
         title: "Thou with no name",
@@ -50,8 +88,8 @@ const listData = [
 <template>
 
 <div class="wrapper">
-    <div id="header"> 
-        
+    <div id="header">
+
     </div>
     <div id="listBox"> 
         <div v-for="value in listData" class="container">
@@ -108,7 +146,7 @@ const listData = [
 
 #header {
     flex: 0 0 50px;
-    background-color: #f0f2f5;
+    background-color: v-bind(headerColor);
     padding: 10px;
 }
 
@@ -188,5 +226,4 @@ const listData = [
 
     user-select: none;
 }
-
 </style>

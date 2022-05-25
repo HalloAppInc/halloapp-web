@@ -1,3 +1,4 @@
+import { faTurkishLira } from '@fortawesome/free-solid-svg-icons'
 import { defineStore } from 'pinia'
 
 export const useMainStore = defineStore('main', {
@@ -16,6 +17,9 @@ export const useMainStore = defineStore('main', {
     state: () => ({
         isConnected: false,
         counter: 0,
+
+        // for color schema
+        preferColorScheme: 'light',
 
         privateKeyBase64: '',
         publicKeyBase64: '',
@@ -44,6 +48,21 @@ export const useMainStore = defineStore('main', {
         },    
         logout() {
             this.isConnected = false
+        },
+        changePreferColorSchema(mode: string) {
+            // auto mode
+            if (mode == "auto") {
+                if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    this.preferColorScheme = "auto-dark";
+                }
+                else {
+                    this.preferColorScheme = "auto-light";
+                }
+            }
+            // change color manually
+            else {
+                this.preferColorScheme = mode;
+            }
         }
     },
 
