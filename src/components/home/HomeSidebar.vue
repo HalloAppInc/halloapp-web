@@ -37,7 +37,6 @@ window.matchMedia('(prefers-color-scheme: dark)')
         }
     }     
 })
-
 </script>
 
 <template>

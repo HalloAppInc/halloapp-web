@@ -19,8 +19,15 @@ import createNoise from "noise-c.wasm"
 import { server } from "./proto/server.js"
 import { nanoid } from 'nanoid'
 
+import { useI18n } from 'vue-i18n'
+
 const mainStore = useMainStore()
 const chooseColorScheme = ref(true) // for color scheme
+
+const { t } = useI18n({
+    inheritLocale: true,
+    useScope: 'global'
+})
 
 if (!mainStore.privateKeyBase64) {
     hal.log("App/keypair not found, generate keypair")
@@ -460,16 +467,15 @@ function generateQRCode() {
         <div id='qrCodeBanner'>
             <div id="howTo">
                 <div class="howToTitle">
-                    To use HalloApp on your computer:
+                    {{ t('login.howtoTitle') }}
                 </div>
                 <div class="howToBullet">
-                    1. Open HalloApp on your phone
+                    {{ t('login.howtoStepOne') }}
+                </div>
+                <div class="howToBullet" v-html="t('login.howtoStepTwo')">
                 </div>
                 <div class="howToBullet">
-                    2. Tap <b>Settings</b> and select <b>Linked Device</b>
-                </div>
-                <div class="howToBullet">
-                    3. Point your phone to this screen and scan the QR code
+                    {{ t('login.howtoStepThree') }}
                 </div>
             </div>
             <div id="qrCodeColumn">

@@ -1,0 +1,18 @@
+{
+    "login": {
+        "howtoTitle": "To use HalloApp on your computer:",
+        "howtoStepOne": "1. Open HalloApp on your phone",
+        "howtoStepTwo": "2. Tap <b>Settings</b> and select <b>Linked Device</b>",
+        "howtoStepThree": "3. Point your phone to this screen and scan the QR code"
+    },
+    "sidestrip": {
+        "home": "Home",
+        "groups": "Groups",
+        "chats": "Chats",
+        "settings": "Settings",
+        "exit": "Exit"
+    },
+    "mediaCarousel": {
+        "noVideoSupportText": "Your browser cannot play the provided video file."
+    }
+}

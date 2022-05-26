@@ -5,8 +5,16 @@ import { storeToRefs } from 'pinia'
 import { useMainStore } from '../stores/mainStore'
 import commonColors from "../common/colors"
 
+
+import { useI18n } from 'vue-i18n'
+
 const mainStore = useMainStore()
 const primaryBlue = commonColors.primaryBlue
+
+const { t } = useI18n({
+    inheritLocale: true,
+    useScope: 'global'
+})
 
 </script>
 
@@ -19,7 +27,7 @@ const primaryBlue = commonColors.primaryBlue
                 <font-awesome-icon :icon="['fas', 'house']" />
             </div>
             <div class="sideIconLabel">
-                Home
+                {{ t('sidestrip.home') }}
             </div>
         </div>
     </div>
@@ -30,7 +38,7 @@ const primaryBlue = commonColors.primaryBlue
                 <font-awesome-icon :icon="['fas', 'user-group']" />
             </div>
             <div class="sideIconLabel">
-                Groups
+                {{ t('sidestrip.groups') }}
             </div>
         </div>
     </div>    
@@ -41,7 +49,7 @@ const primaryBlue = commonColors.primaryBlue
                 <font-awesome-icon :icon="['fas', 'message']" />
             </div>
             <div class="sideIconLabel">
-                Chats
+                {{ t('sidestrip.chats') }}
             </div>
         </div>
     </div>
@@ -52,7 +60,7 @@ const primaryBlue = commonColors.primaryBlue
                 <font-awesome-icon :icon="['fas', 'gear']" />
             </div>
             <div class="sideIconLabel">
-                Settings
+                {{ t('sidestrip.settings') }}
             </div>
         </div>
     </div>    
@@ -63,7 +71,7 @@ const primaryBlue = commonColors.primaryBlue
                 <font-awesome-icon :icon="['fas', 'power-off']" />
             </div>
             <div class="sideIconLabel">
-                Exit
+                {{ t('sidestrip.exit') }}
             </div>
         </div>
     </div>
