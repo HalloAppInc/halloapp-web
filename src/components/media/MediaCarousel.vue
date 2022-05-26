@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, toRef } from "vue"
 
-import hal from "../common/halogger"
+import hal from "../../common/halogger"
 
 import { useI18n } from 'vue-i18n'
 

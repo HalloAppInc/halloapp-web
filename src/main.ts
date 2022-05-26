@@ -1,6 +1,8 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 
+import { i18n } from "./i18n"
+
 import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 
@@ -15,5 +17,6 @@ pinia.use(piniaPluginPersistedstate)
 
 createApp(App)
     .use(pinia)
+    .use(i18n)
     .component('font-awesome-icon', FontAwesomeIcon)
     .mount('#app')
