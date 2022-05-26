@@ -1,11 +1,7 @@
 <script setup lang="ts">
 
-import { useMainStore } from '../stores/mainStore'
+import { useMainStore } from '../../stores/mainStore'
 
-import HomeMain from './home/HomeMain.vue'
-import ChatsMain from './chats/ChatsMain.vue'
-
-const mainStore = useMainStore()
 
 </script>
 
@@ -13,8 +9,12 @@ const mainStore = useMainStore()
 
 <div id="wrapper">
 
-    <HomeMain v-if='mainStore.page == "home"' />
-    <ChatsMain v-else-if='mainStore.page == "chats"' />
+    <div id="header">  
+    </div>
+
+    <div id="content">
+        
+    </div>
 
 </div>
 
@@ -30,12 +30,11 @@ const mainStore = useMainStore()
 
     background-color: rgb(229, 229, 247);
 
+    background-image: repeating-radial-gradient( circle at 0 0, transparent 0, #e5e5f7 10px ), repeating-linear-gradient( rgba(242, 193, 139, 0.33), rgb(242, 193, 139, 0.4) );
 
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-
-  
 }
 
 #header {

@@ -1,22 +1,17 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-import { useMainStore } from '../stores/mainStore'
-
-import HomeSidebar from './home/HomeSidebar.vue'
-import ChatsSidebar from './chats/ChatsSidebar.vue'
-
-const mainStore = useMainStore()
-
 </script>
 
 <template>
 
 <div class="wrapper">
+    <div id="header"> 
 
-    <HomeSidebar v-if='mainStore.page == "home"' />
-    <ChatsSidebar v-else-if='mainStore.page == "chats"' />
+    </div>
+    <div id="listBox"> 
 
+    </div>
 </div>
 
 </template>
