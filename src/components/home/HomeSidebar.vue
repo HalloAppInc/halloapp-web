@@ -1,22 +1,54 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-import { useMainStore } from '../stores/mainStore'
+import { computed } from 'vue'
 
-import HomeSidebar from './home/HomeSidebar.vue'
-import ChatsSidebar from './chats/ChatsSidebar.vue'
+import { useMainStore } from '../../stores/mainStore'
 
 const mainStore = useMainStore()
+
+const headerColor = ref(computed(() => {
+    // if mode is auto, follow OS's color schema
+    if (mainStore.preferColorScheme == 'auto-dark' || mainStore.preferColorScheme == 'auto-light'){
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            return "black";
+        }
+        else {
+            return "#f0f2f5";
+        }
+    }
+    // change color manually
+    else if (mainStore.preferColorScheme == 'dark'){
+        return "black";
+    }
+    else if (mainStore.preferColorScheme == 'light'){
+        return "#f0f2f5";
+    }
+}))
+
+// listen to the color scheme of the browser
+window.matchMedia('(prefers-color-scheme: dark)')
+    .addEventListener('change', event => {
+    if (mainStore.preferColorScheme == 'auto-dark' || mainStore.preferColorScheme == 'auto-light') {
+        if (event.matches) {
+            mainStore.preferColorScheme = "auto-dark";
+        } else {
+            mainStore.preferColorScheme = "auto-light";
+        }
+    }     
+})
 
 </script>
 
 <template>
 
 <div class="wrapper">
+    <div id="header"> 
 
-    <HomeSidebar v-if='mainStore.page == "home"' />
-    <ChatsSidebar v-else-if='mainStore.page == "chats"' />
+    </div>
+    <div id="listBox"> 
 
+    </div>
 </div>
 
 </template>
@@ -49,6 +81,11 @@ const mainStore = useMainStore()
     overflow: hidden;
 }
 
+#header {
+    flex: 0 0 50px;
+    background-color: v-bind(headerColor);
+    padding: 10px;
+}
 
 #listBox {
     overflow-y: auto;
@@ -126,4 +163,5 @@ const mainStore = useMainStore()
 
     user-select: none;
 }
+
 </style>

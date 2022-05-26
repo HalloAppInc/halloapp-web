@@ -1,22 +1,79 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-import { useMainStore } from '../stores/mainStore'
+const listData = [
+    { 
+        title: "Thou with no name",
+        subtitle: "this is a link",
+        timestamp: "now",
+    },
+    { 
+        title: "Tree",
+        subtitle: "apple",
+        timestamp: "now",
+    },
+    { 
+        title: "Bob",
+        subtitle: "this is a link",
+        timestamp: "now",
+    },     
+    { 
+        title: "Jessy",
+        subtitle: "this is a link",
+        timestamp: "now",
+    },
+    { 
+        title: "Nathan",
+        subtitle: "this is a link",
+        timestamp: "now",
+    },
+    { 
+        title: "Kai",
+        subtitle: "this is a link",
+        timestamp: "now",
+    },
+    { 
+        title: "Rebecca",
+        subtitle: "this is a link",
+        timestamp: "now",
+    },     
+    { 
+        title: "Dylan",
+        subtitle: "this is a link",
+        timestamp: "now",
+    },          
+]
 
-import HomeSidebar from './home/HomeSidebar.vue'
-import ChatsSidebar from './chats/ChatsSidebar.vue'
-
-const mainStore = useMainStore()
 
 </script>
 
 <template>
 
 <div class="wrapper">
-
-    <HomeSidebar v-if='mainStore.page == "home"' />
-    <ChatsSidebar v-else-if='mainStore.page == "chats"' />
-
+    <div id="header"> 
+        
+    </div>
+    <div id="listBox"> 
+        <div v-for="value in listData" class="container">
+            <div class="avatarContainer">
+                <div class="avatar"></div>
+            </div>
+            <div class="content">
+                <div class="contentHeader">
+                    <div class="contentTitle">
+                        {{ value.title }}
+                    </div>
+                    <div class="contentTimestamp">
+                        {{ value.timestamp }}
+                    </div>
+                </div>
+                <div class="contentBody">
+                    {{ value.subtitle }}
+                </div>
+            </div>
+            
+        </div>
+    </div>
 </div>
 
 </template>
@@ -49,6 +106,11 @@ const mainStore = useMainStore()
     overflow: hidden;
 }
 
+#header {
+    flex: 0 0 50px;
+    background-color: #f0f2f5;
+    padding: 10px;
+}
 
 #listBox {
     overflow-y: auto;
@@ -126,4 +188,5 @@ const mainStore = useMainStore()
 
     user-select: none;
 }
+
 </style>

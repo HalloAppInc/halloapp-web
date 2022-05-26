@@ -1,22 +1,23 @@
 import { faTurkishLira } from '@fortawesome/free-solid-svg-icons'
 import { defineStore } from 'pinia'
+import hal from '../common/halogger'
 
 export const useMainStore = defineStore('main', {
-
     persist: {
         key: 'store-main',
         storage: window.localStorage,
         beforeRestore: context => {
-            // console.log('stores/main/before hydration...')
+            // hal.log('stores/main/before hydration...')
         },
         afterRestore: context => {
-            // console.log('stores/main/after hydration...')
+            // hal.log('stores/main/after hydration...')
         },
     },
-
     state: () => ({
-        isConnected: false,
-        counter: 0,
+        isMobile: false,
+        isIOS: false,
+        isAndroid: false,
+        isSafari: false, // mobile Safari and desktop Safari
 
         // for color schema
         preferColorScheme: 'light',
@@ -24,30 +25,27 @@ export const useMainStore = defineStore('main', {
         privateKeyBase64: '',
         publicKeyBase64: '',
 
-        connectionState: ''
+        connectionState: '',
+
+        isLoggedIntoApp: false,
+        isConnectedToServer: false,
+        isHandshakeCompleted: false,
+        haveMobilePublicKey: '',
+
+        page: 'home',
     }),
-
     getters: {
-        // getters receive the state as first parameter
-        doubleCount: (state) => state.counter * 2,
-        // use getters in other getters
-        doubleCountPlusOne(): number {
-        return this.doubleCount + 1
-        },
     },
-
     actions: {
-        add() {
-            this.counter++
-        },
-        reset() {
-            this.counter = 0
-        },
         login() {
-            this.isConnected = true
+            this.page = 'home'
+            this.isLoggedIntoApp = true
         },    
         logout() {
-            this.isConnected = false
+            this.isLoggedIntoApp = false
+        },
+        gotoPage(page: string) {
+            this.page = page
         },
         changePreferColorSchema(mode: string) {
             // auto mode
@@ -65,5 +63,4 @@ export const useMainStore = defineStore('main', {
             }
         }
     },
-
 })

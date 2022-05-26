@@ -34,11 +34,6 @@ console.log("App/publicKey: " + mainStore.publicKeyBase64)
 
 let isDebug = false
 
-let isMobile = ref(false)
-let isIOS = ref(false)
-let isAndroid = ref(false)
-let isSafari = ref(false) // mobile Safari and desktop Safari
-
 const gothamFontUrl = ref("https://halloapp.com/fonts/gotham/woff2/Gotham-Book_Web.woff2")
 const gothamMediumFontUrl = ref("https://halloapp.com/fonts/gotham/woff2/Gotham-Medium_Web.woff2")
 
@@ -55,7 +50,45 @@ if (process.env.NODE_ENV?.toString() == "development") {
 
 applyPlatformSpecifics()
 loadFonts()
+// init() // probably same as connect
+
 // connect()
+
+async function connectToServer() {
+    const server = "wss://ws-test.halloapp.net/ws"
+    const webSocket = new WebSocket(server)
+    webSocket.binaryType = "arraybuffer"
+
+    webSocket.onopen = function(event) {
+        hal.log("conn/opened: " + event)
+        return webSocket
+    }
+}
+
+async function init() {
+
+    let webSocket
+
+    hal.log('init/logged into app')
+    if (!mainStore.isConnectedToServer) {
+        hal.log('init/not connected to server')
+        // connect
+        webSocket = await connectToServer()
+    }
+    
+    if (!mainStore.isHandshakeCompleted) {
+
+        if(mainStore.haveMobilePublicKey) {
+            // start handshake as initiator
+        } else {
+            // start handshake as responder
+        }
+
+        // complete handshake
+        // log into app
+
+    }
+}
 
 function sendDemoWebStanza(websocket: any) {
 
@@ -201,7 +234,6 @@ function connect() {
         // removeKey(webSocket)
         // check(webSocket)
         
-
     }
 
 
@@ -317,18 +349,18 @@ function applyPlatformSpecifics() {
     const userAgent = navigator.userAgent || navigator.vendor || (<any>window).opera
 
     if ('ontouchstart' in document.documentElement && userAgent.match(/Mobi/)) {
-        isMobile.value = true
+        mainStore.isMobile = true
     }
 
     if (/iPad|iPhone|iPod/.test(userAgent) && !(<any>window).MSStream) {
-        isIOS.value = true
+        mainStore.isIOS = true
     }
     if (/android/i.test(userAgent)) {
-        isAndroid.value = true
+        mainStore.isAndroid = true
     }
 
     if (userAgent.indexOf('Safari') != -1 && userAgent.indexOf('Chrome') == -1) {
-        isSafari.value = true
+        mainStore.isSafari = true
     }
 }
 
@@ -343,7 +375,7 @@ function loadFonts() {
     let mediumFont = gothamMediumFontUrl.value
 
     // non-Safari browsers require a proxy server for font fetches
-    if (!isSafari.value) {
+    if (!mainStore.isSafari) {
         normalFont = devCORSWorkaroundUrlPrefix + normalFont
         mediumFont = devCORSWorkaroundUrlPrefix + mediumFont
     }
@@ -380,7 +412,7 @@ function generateQRCode() {
         height: 250,
         type: "svg",
         data: mainStore.publicKeyBase64,
-        // image: devCORSWorkaroundUrlPrefix + "https://halloapp.com/images/favicon.ico",
+        image: devCORSWorkaroundUrlPrefix + "https://halloapp.com/images/favicon.ico",
         dotsOptions: {
             color: "#4267b2",
             type: "rounded"
@@ -392,7 +424,7 @@ function generateQRCode() {
             crossOrigin: "anonymous",
             margin: 15
         }
-    });
+    })
 
     if ($qrCode.value) {
         const el = $qrCode.value as HTMLElement
@@ -412,7 +444,7 @@ function generateQRCode() {
 
 <template>
 
-    <div v-if="!mainStore.isConnected" id='signInWrapper'>
+    <div v-if="!mainStore.isLoggedIntoApp" id='signInWrapper'>
 
         <div id="signInWrapperHeader">
             <div id="logoBox">
@@ -460,13 +492,14 @@ function generateQRCode() {
         <div id="Sidebar">
             <Sidebar/>
         </div>
+
         <div id="MainPanel">
             <MainPanel/>
         </div>
 
     </div>
 
-    <div v-if="chooseColorScheme&&mainStore.isConnected" id="ChooseColorSchemePopup">
+    <div v-if="chooseColorScheme&&mainStore.isLoggedIntoApp" id="ChooseColorSchemePopup">
         <Popup/>
     </div>
 
