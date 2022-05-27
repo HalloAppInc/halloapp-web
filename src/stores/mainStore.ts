@@ -17,6 +17,7 @@ export const useMainStore = defineStore('main', {
         isIOS: false,
         isAndroid: false,
         isSafari: false, // mobile Safari and desktop Safari
+        isFirefox: false,
 
         privateKeyBase64: '',
         publicKeyBase64: '',

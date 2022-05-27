@@ -12,6 +12,15 @@
         "settings": "Settings",
         "exit": "Exit"
     },
+    "post": {
+        "more": "more",
+        "comment": "Comment",
+        "replyPrivately": "Reply Privately",
+        "noAudioSupportText": "Your browser does not support the audio tag.",
+        "postNoLongerAvailableTitle": "This post is no longer available",
+        "postNoLongerAvailable": "This post could have expired, been deleted, or something else."
+
+    },    
     "mediaCarousel": {
         "noVideoSupportText": "Your browser cannot play the provided video file."
     }
