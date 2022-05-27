@@ -4,6 +4,7 @@ import { ref } from 'vue'
 import { useMainStore } from '../stores/mainStore'
 
 import HomeSidebar from './home/HomeSidebar.vue'
+import GroupsSidebar from './groups/GroupsSidebar.vue'
 import ChatsSidebar from './chats/ChatsSidebar.vue'
 
 const mainStore = useMainStore()
@@ -14,8 +15,15 @@ const mainStore = useMainStore()
 
 <div class="wrapper">
 
-    <HomeSidebar v-if='mainStore.page == "home"' />
-    <ChatsSidebar v-else-if='mainStore.page == "chats"' />
+    <keep-alive>
+        <HomeSidebar v-if='mainStore.page == "home"' />
+    </keep-alive>
+    <keep-alive>
+        <GroupsSidebar v-if='mainStore.page == "groups"' />
+    </keep-alive>
+    <keep-alive>
+        <ChatsSidebar v-if='mainStore.page == "chats"' />
+    </keep-alive>
 
 </div>
 

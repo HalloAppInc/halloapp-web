@@ -3,6 +3,7 @@
 import { useMainStore } from '../stores/mainStore'
 
 import HomeMain from './home/HomeMain.vue'
+import GroupsMain from './groups/GroupsMain.vue'
 import ChatsMain from './chats/ChatsMain.vue'
 
 const mainStore = useMainStore()
@@ -13,8 +14,15 @@ const mainStore = useMainStore()
 
 <div id="wrapper">
 
-    <HomeMain v-if='mainStore.page == "home"' />
-    <ChatsMain v-else-if='mainStore.page == "chats"' />
+    <keep-alive>
+        <HomeMain v-if='mainStore.page == "home"' />
+    </keep-alive>
+    <keep-alive>
+        <GroupsMain v-if='mainStore.page == "groups"' />
+    </keep-alive>    
+    <keep-alive>
+        <ChatsMain v-if='mainStore.page == "chats"' />
+    </keep-alive>
 
 </div>
 
