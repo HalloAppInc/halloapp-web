@@ -1,43 +1,5 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-
-import { computed } from 'vue'
-
-import { useMainStore } from '../../stores/mainStore'
-
-const mainStore = useMainStore()
-
-const headerColor = ref(computed(() => {
-    // if mode is auto, follow OS's color schema
-    if (mainStore.preferColorScheme == 'auto-dark' || mainStore.preferColorScheme == 'auto-light'){
-        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            return "black";
-        }
-        else {
-            return "#f0f2f5";
-        }
-    }
-    // change color manually
-    else if (mainStore.preferColorScheme == 'dark'){
-        return "black";
-    }
-    else if (mainStore.preferColorScheme == 'light'){
-        return "#f0f2f5";
-    }
-}))
-
-// listen to the color scheme of the browser
-window.matchMedia('(prefers-color-scheme: dark)')
-    .addEventListener('change', event => {
-    if (mainStore.preferColorScheme == 'auto-dark' || mainStore.preferColorScheme == 'auto-light') {
-        if (event.matches) {
-            mainStore.preferColorScheme = "auto-dark";
-        } else {
-            mainStore.preferColorScheme = "auto-light";
-        }
-    }     
-})
-
 </script>
 
 <template>
@@ -83,7 +45,7 @@ window.matchMedia('(prefers-color-scheme: dark)')
 
 #header {
     flex: 0 0 50px;
-    background-color: v-bind(headerColor);
+    background-color: #f0f2f5;
     padding: 10px;
 }
 

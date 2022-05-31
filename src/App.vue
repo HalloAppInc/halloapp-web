@@ -4,7 +4,6 @@ import { ref, onMounted, onUpdated } from 'vue'
 import Sidebar from './components/Sidebar.vue'
 import Sidestrip from './components/Sidestrip.vue'
 import MainPanel from './components/MainPanel.vue'
-import Popup from "./components/Popup.vue"
 
 import hal from './common/halogger'
 import qrCodeStyling from 'qr-code-styling'
@@ -19,8 +18,14 @@ import createNoise from "noise-c.wasm"
 import { server } from "./proto/server.js"
 import { nanoid } from 'nanoid'
 
+import { useI18n } from 'vue-i18n'
+
 const mainStore = useMainStore()
-const chooseColorScheme = ref(true) // for color scheme
+
+const { t } = useI18n({
+    inheritLocale: true,
+    useScope: 'global'
+})
 
 if (!mainStore.privateKeyBase64) {
     hal.log("App/keypair not found, generate keypair")
@@ -460,16 +465,15 @@ function generateQRCode() {
         <div id='qrCodeBanner'>
             <div id="howTo">
                 <div class="howToTitle">
-                    To use HalloApp on your computer:
+                    {{ t('login.howtoTitle') }}
                 </div>
                 <div class="howToBullet">
-                    1. Open HalloApp on your phone
+                    {{ t('login.howtoStepOne') }}
+                </div>
+                <div class="howToBullet" v-html="t('login.howtoStepTwo')">
                 </div>
                 <div class="howToBullet">
-                    2. Tap <b>Settings</b> and select <b>Linked Device</b>
-                </div>
-                <div class="howToBullet">
-                    3. Point your phone to this screen and scan the QR code
+                    {{ t('login.howtoStepThree') }}
                 </div>
             </div>
             <div id="qrCodeColumn">
@@ -497,10 +501,6 @@ function generateQRCode() {
             <MainPanel/>
         </div>
 
-    </div>
-
-    <div v-if="chooseColorScheme&&mainStore.isLoggedIntoApp" id="ChooseColorSchemePopup">
-        <Popup/>
     </div>
 
 
@@ -706,6 +706,10 @@ h1, h2, h3, h4, h5, h6 {
 #MainPanel {
     flex: 0 0 70%;
     overflow: hidden;
+}
+
+#Settings {
+    display: flex;
 }
 
 </style>

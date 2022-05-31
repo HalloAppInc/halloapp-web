@@ -19,9 +19,6 @@ export const useMainStore = defineStore('main', {
         isAndroid: false,
         isSafari: false, // mobile Safari and desktop Safari
 
-        // for color schema
-        preferColorScheme: 'light',
-
         privateKeyBase64: '',
         publicKeyBase64: '',
 
@@ -33,6 +30,10 @@ export const useMainStore = defineStore('main', {
         haveMobilePublicKey: '',
 
         page: 'home',
+        settingPage: '',
+
+        sounds: false,
+        desktopAlerts: false,
     }),
     getters: {
     },
@@ -47,20 +48,8 @@ export const useMainStore = defineStore('main', {
         gotoPage(page: string) {
             this.page = page
         },
-        changePreferColorSchema(mode: string) {
-            // auto mode
-            if (mode == "auto") {
-                if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                    this.preferColorScheme = "auto-dark";
-                }
-                else {
-                    this.preferColorScheme = "auto-light";
-                }
-            }
-            // change color manually
-            else {
-                this.preferColorScheme = mode;
-            }
+        gotoSettingsPage(selection: string) {
+            this.settingPage = selection
         }
     },
 })

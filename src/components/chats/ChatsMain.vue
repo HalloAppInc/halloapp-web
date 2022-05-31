@@ -1,7 +1,16 @@
 <script setup lang="ts">
 
-import { useMainStore } from '../../stores/mainStore'
+import { useColorStore } from '../../stores/colorStore'
 
+import { computed } from '@vue/reactivity';
+
+import { ref } from 'vue'
+
+const colorStore = useColorStore()
+
+const contentBackgroundColor = computed(() => {
+    return  colorStore.homeMainBackground
+})
 
 </script>
 
@@ -45,6 +54,7 @@ import { useMainStore } from '../../stores/mainStore'
 
 #content {
     flex: 1 1 auto;
+    background-color: v-bind(contentBackgroundColor);
 }
 
 </style>

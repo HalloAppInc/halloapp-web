@@ -5,6 +5,7 @@ import { useMainStore } from '../stores/mainStore'
 
 import HomeSidebar from './home/HomeSidebar.vue'
 import ChatsSidebar from './chats/ChatsSidebar.vue'
+import SettingsSidebar from './settings/settingsSidebar.vue'
 
 const mainStore = useMainStore()
 
@@ -16,6 +17,7 @@ const mainStore = useMainStore()
 
     <HomeSidebar v-if='mainStore.page == "home"' />
     <ChatsSidebar v-else-if='mainStore.page == "chats"' />
+    <SettingsSidebar v-else-if='mainStore.page == "settings"' />
 
 </div>
 
@@ -25,17 +27,17 @@ const mainStore = useMainStore()
 
 
 *::-webkit-scrollbar {
-  width: 5px;
+    width: 5px;
 }
 
 *::-webkit-scrollbar-track {
-  background: white;        /* color of the tracking area */
+    background: white;        /* color of the tracking area */
 }
 
 *::-webkit-scrollbar-thumb {
-  background-color: rgb(172, 169, 169);    /* color of the scroll thumb */
-  
-  border: 0px solid white;  /* creates padding around scroll thumb */
+    background-color: rgb(172, 169, 169);    /* color of the scroll thumb */
+
+    border: 0px solid white;  /* creates padding around scroll thumb */
 }
 
 .wrapper {
@@ -57,14 +59,9 @@ const mainStore = useMainStore()
 }
 
 .container {
-    
-
     display: flex;
     flex-direction: horizontal;
     padding: 0px;
-    
- 
-
 }
 .container:hover {
     background-color: rgb(226, 226, 226);

@@ -1,7 +1,16 @@
 <script setup lang="ts">
 
-import { useMainStore } from '../../stores/mainStore'
-const mainStore = useMainStore()
+import { useColorStore } from '../../stores/colorStore'
+
+import { computed } from '@vue/reactivity';
+
+import { ref } from 'vue'
+
+const colorStore = useColorStore()
+
+const contentBackgroundColor = computed(() => {
+    return  colorStore.mainBackground
+})
 
 const listData = [
     { 
@@ -53,10 +62,11 @@ const listData = [
 <div id="wrapper">
 
     <div id="content">
-
+        color: {{ contentBackgroundColor }}
+        scheme: {{colorStore.preferColorScheme}}
 
         <div v-for="value in listData" class="container">
-
+            
             <!-- <MediaCarousel  
                 :isMobile="isMobile"
                 :isSafari="isSafari"
@@ -99,9 +109,11 @@ const listData = [
     padding: 10px;
 }
 
+
 #content {
     flex: 1 1 auto;
-    background-color: white;
+    background-color: v-bind(contentBackgroundColor);
 }
+
 
 </style>
