@@ -1,16 +1,10 @@
 <script setup lang="ts">
 
-import { useColorStore } from '../../stores/colorStore'
+import Post from './Post.vue'
+import { useMainStore } from '../../stores/mainStore'
+const mainStore = useMainStore()
 
-import { computed } from '@vue/reactivity';
-
-import { ref } from 'vue'
-
-const colorStore = useColorStore()
-
-const contentBackgroundColor = computed(() => {
-    return  colorStore.mainBackground
-})
+const scrollerGap = mainStore.isFirefox ? '50px' : '5px' // Firefox requires more space, should revisit why
 
 const listData = [
     { 
@@ -59,35 +53,34 @@ const listData = [
 
 <template>
 
-<div id="wrapper">
+    
 
-    <div id="content">
-        color: {{ contentBackgroundColor }}
-        scheme: {{colorStore.preferColorScheme}}
-
+    <div id="listBox"> 
         <div v-for="value in listData" class="container">
-            
-            <!-- <MediaCarousel  
-                :isMobile="isMobile"
-                :isSafari="isSafari"
-                :isAlbum="isAlbum"
-                :album="album.media"
-                :showPreviewImage="showPreviewImage"
-                :previewImageSrc="previewImageSrc"
-                :mediaBoxWidth="mediaBoxWidth"
-                :mediaBoxHeight="mediaBoxHeight">
-            </MediaCarousel> -->
-
+            <Post></Post>
         </div>
-
-
     </div>
+        
 
-</div>
+   
 
 </template>
 
 <style scoped>
+
+*::-webkit-scrollbar {
+    width: 50px;
+}
+
+*::-webkit-scrollbar-track {
+    background: white;        /* color of the tracking area */
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: rgb(172, 169, 169);    /* color of the scroll thumb */
+
+    border: 0px solid white;  /* creates padding around scroll thumb */
+}
 
 #wrapper {
     width: 100%;
@@ -95,24 +88,21 @@ const listData = [
 
     border-left: 1px solid #b8b7b7;
 
-    background-color: white;
-
-  
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-}
 
-#header {
-    flex: 0 0 50px;
-    background-color: #f0f2f5;
-    padding: 10px;
+    overflow: auto;
 }
 
 
-#content {
-    flex: 1 1 auto;
-    background-color: v-bind(contentBackgroundColor);
+#listBox {
+
+    width: calc(100% - v-bind(scrollerGap)); /* make space for scroller */
+    height: 100%;
+    
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 

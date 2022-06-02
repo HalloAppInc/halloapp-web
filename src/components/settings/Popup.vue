@@ -5,7 +5,7 @@ import { ref,computed } from "vue"
 
 import { useI18n } from 'vue-i18n'
 
-import { useMainStore } from '../../stores/mainStore';
+import { useMainStore } from '../../stores/mainStore'
 
 const { t } = useI18n({
     inheritLocale: true,
@@ -16,13 +16,14 @@ const mainStore = useMainStore()
 
 const colorStore = useColorStore()
 
-const mode = ref('')
+const mode = ref(mainStore.preferColorScheme)
+
 
 </script>
 
 <template>
     <transition>
-        <div v-if="mainStore.settingPage == 'theme'" class="modal-mask">
+        <div v-if="mainStore.page == 'settings-theme'" class="modal-mask">
             <div class="modal-wrapper">
                 <div class="modal-container">
                     <div class="modal-header">
@@ -30,23 +31,23 @@ const mode = ref('')
                     </div>
 
                     <div class="modal-body">
-                        <input type="radio" name="body" value="light" v-model="mode"> {{ t('popup.lightModeText') }} <br>
+                        <input type="radio" value="light" v-model="mode"> {{ t('popup.lightModeText') }} <br>
                     </div>
 
                     <div class="modal-body">
-                        <input type="radio" name="body" value="dark" v-model="mode"> {{ t('popup.darkModeText') }} <br>
+                        <input type="radio" value="dark" v-model="mode"> {{ t('popup.darkModeText') }} <br>
                     </div>
 
                     <div class="modal-body">
-                        <input type="radio" name="body" value="auto" v-model="mode"> {{ t('popup.autoModeText') }} <br>
+                        <input type="radio" value="auto" v-model="mode"> {{ t('popup.autoModeText') }} <br>
                     </div>
 
                     <div class="modal-footer">
-                        <div class="modal-default-button" @click="mainStore.gotoSettingsPage('')">
-                            {{ t('popup.cancelButton') }}
+                        <div class="modal-default-button" @click="mainStore.gotoPage('settings')">
+                            {{ t('button.cancelButton') }}
                         </div>
-                        <div class="modal-default-button" @click="colorStore.changePreferColorSchema(mode);mainStore.gotoSettingsPage('')">
-                            {{ t('popup.okButton') }}
+                        <div class="modal-default-button" @click="colorStore.changePreferColorSchema(mode);mainStore.gotoPage('settings')">
+                            {{ t('button.okButton') }}
                         </div>
                     </div>
                 </div>
@@ -56,7 +57,7 @@ const mode = ref('')
 
 </template>
 
-<style>
+<style scoped>
 .v-enter-active,
 .v-leave-active {
     transition: opacity 0.5s ease;

@@ -54,7 +54,7 @@ const { t } = useI18n({
     </div>
     
     <div class="sideIconWrapper sideIconWrapperTop">
-        <div :class="['sideIcon', {selected: mainStore.page == 'settings'}]" @click='mainStore.gotoPage("settings");mainStore.gotoSettingsPage("")'>
+        <div :class="['sideIcon', {selected: mainStore.page == 'settings'}]" @click='mainStore.gotoPage("settings")'>
             <div>
                 <font-awesome-icon :icon="['fas', 'gear']" />
             </div>

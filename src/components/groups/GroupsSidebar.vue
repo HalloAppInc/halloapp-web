@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-
-
 import timeformatter from '../../common/timeformatter'
 import { useI18n } from 'vue-i18n'
 
@@ -12,42 +10,42 @@ const { t, locale } = useI18n({
 
 const listData = [
     { 
-        title: "Thou with no name",
+        title: "Test group",
         subtitle: "this is a link",
         timestamp: "1649204213",
     },
     { 
-        title: "Tree",
+        title: "Group b",
         subtitle: "apple",
         timestamp: "1649204213",
     },
     { 
-        title: "Bob",
+        title: "Group b",
         subtitle: "this is a link",
         timestamp: "1649204213",
     },     
     { 
-        title: "Jessy",
+        title: "Group b",
         subtitle: "this is a link",
         timestamp: "1649204213",
     },
     { 
-        title: "Nathan",
+        title: "Group b",
         subtitle: "this is a link",
         timestamp: "1649204213",
     },
     { 
-        title: "Kai",
+        title: "Group b",
         subtitle: "this is a link",
         timestamp: "1649204213",
     },
     { 
-        title: "Rebecca",
+        title: "Group b",
         subtitle: "this is a link",
         timestamp: "1649204213",
     },     
     { 
-        title: "Dylan",
+        title: "Group b",
         subtitle: "this is a link",
         timestamp: "1649204213",
     },          
@@ -91,17 +89,17 @@ const listData = [
 
 
 *::-webkit-scrollbar {
-    width: 5px;
+  width: 5px;
 }
 
 *::-webkit-scrollbar-track {
-    background: white;        /* color of the tracking area */
+  background: white;        /* color of the tracking area */
 }
 
 *::-webkit-scrollbar-thumb {
-    background-color: rgb(172, 169, 169);    /* color of the scroll thumb */
+  background-color: rgb(172, 169, 169);    /* color of the scroll thumb */
   
-    border: 0px solid white;  /* creates padding around scroll thumb */
+  border: 0px solid white;  /* creates padding around scroll thumb */
 }
 
 .wrapper {

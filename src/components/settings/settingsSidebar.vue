@@ -19,9 +19,9 @@ const { t } = useI18n({
 
 const colorStore = useColorStore()
 
-const show = computed(() => {
-    return mainStore.settingPage == '' || mainStore.settingPage == 'theme'
-})
+/* const show = computed(() => {
+    return mainStore.page == 'settings' || mainStore.page == 'settings-theme'
+}) */
 
 const backgroundColor = computed(() => {
     return  colorStore.mainBackground
@@ -43,8 +43,12 @@ const borderlineStyle = computed(() => {
     return "1px solid " + colorStore.borderline
 })
 
-const text1Color = computed(() =>{
-    return colorStore.text1
+const secondaryTextColor = computed(() =>{
+    return colorStore.secondaryText
+})
+
+const iconColor = computed(() => {
+    return colorStore.icon
 })
 
 </script>
@@ -53,21 +57,21 @@ const text1Color = computed(() =>{
 <template>
 <div class="wrapper">
     <div id="header"> 
-        <div class="contentMenuTitle" v-show="mainStore.settingPage != '' && mainStore.settingPage != 'theme'">
-            <div class="iconContainer" @click="mainStore.gotoSettingsPage('')">
+        <div class="contentMenuTitle" v-show="mainStore.page != 'settings' && mainStore.page != 'settings-theme'">
+            <div class="iconContainer" @click="mainStore.gotoPage('settings')">
                 <font-awesome-icon :icon="['fas', 'arrow-left']" />
             </div>
             <div class="textContainerBig">
-                <div class="contentTextBodyBig" v-show="mainStore.settingPage == 'notifications'">
+                <div class="contentTextBodyBig" v-show="mainStore.page == 'settings-notifications'">
                     {{ t('settings.notifications') }}
                 </div>
-                <div class="contentTextBodyBig" v-show="mainStore.settingPage == 'privacy'">
+                <div class="contentTextBodyBig" v-show="mainStore.page == 'settings-privacy' ">
                     {{ t('settings.privacy') }}
                 </div>
-                <div class="contentTextBodyBig" v-show="mainStore.settingPage == 'security'">
+                <div class="contentTextBodyBig" v-show="mainStore.page == 'settings-security'">
                     {{ t('settings.security') }}
                 </div>
-                <div class="contentTextBodyBig" v-show="mainStore.settingPage == 'help'">
+                <div class="contentTextBodyBig" v-show="mainStore.page == 'settings-help'">
                     {{ t('settings.help') }}
                 </div>
             </div>
@@ -77,7 +81,7 @@ const text1Color = computed(() =>{
     <div class="content">
 
         <!--main menu -->
-        <div id="menu" v-show="mainStore.settingPage == '' || mainStore.settingPage == 'theme'"> 
+        <div id="menu" v-show="mainStore.page == 'settings' || mainStore.page == 'settings-theme'"> 
             <!-- user profile -->
             <div class="container">
                 <div class="profileContent">
@@ -97,18 +101,18 @@ const text1Color = computed(() =>{
             <!-- menu -->
             <div class="container">
                 <div class="iconContainer">
-                    <font-awesome-icon :icon="['fas', 'bell']" />
+                    <font-awesome-icon :icon="['fas', 'bell']" size="xl"/>
                 </div>
-                <div class="textContainer" @click="mainStore.gotoSettingsPage('notifications')">
+                <div class="textContainer" @click="mainStore.gotoPage('settings-notifications')">
                     <div class="contentTextBody">
                         {{ t('settings.notifications') }}
                     </div>
                 </div>
             </div>
 
-            <div class="container" @click="mainStore.gotoSettingsPage('privacy')">
+            <div class="container" @click="mainStore.gotoPage('settings-privacy')">
                 <div class="iconContainer">
-                    <font-awesome-icon :icon="['fas', 'lock']" />
+                    <font-awesome-icon :icon="['fas', 'lock']" size="xl"/>
                 </div>
                 <div class="textContainer">
                     <div class="contentTextBody">
@@ -117,9 +121,9 @@ const text1Color = computed(() =>{
                 </div>
             </div>
 
-            <div class="container" @click="mainStore.gotoSettingsPage('security')">
+            <div class="container" @click="mainStore.gotoPage('settings-security')">
                 <div class="iconContainer">
-                    <font-awesome-icon :icon="['fas', 'shield-halved']" />
+                    <font-awesome-icon :icon="['fas', 'shield-halved']" size="xl"/>
                 </div>
                 <div class="textContainer">
                     <div class="contentTextBody">
@@ -128,9 +132,9 @@ const text1Color = computed(() =>{
                 </div>
             </div>
 
-            <div class="container" @click="mainStore.gotoSettingsPage('theme')">
+            <div class="container" @click="mainStore.gotoPage('settings-theme')">
                 <div class="iconContainer">
-                    <font-awesome-icon :icon="['fas', 'circle-half-stroke']" />
+                    <font-awesome-icon :icon="['fas', 'circle-half-stroke']" size="xl"/>
                 </div>
                 <div class="textContainer">
                     <div class="contentTextBody">
@@ -139,9 +143,9 @@ const text1Color = computed(() =>{
                 </div>
             </div>
 
-            <div class="container" @click="mainStore.gotoSettingsPage('help')">
+            <div class="container" @click="mainStore.gotoPage('settings-help')">
                 <div class="iconContainer">
-                    <font-awesome-icon :icon="['fas', 'circle-question']" />
+                    <font-awesome-icon :icon="['fas', 'circle-question']" size="xl"/>
                 </div>
                 <div class="textContainer">
                     <div class="contentTextBody">
@@ -151,16 +155,16 @@ const text1Color = computed(() =>{
             </div>
         </div>
         <!-- help menu -->
-        <help v-show="mainStore.settingPage == 'help'"/>
+        <help v-show="mainStore.page == 'settings-help'"/>
         <!-- notifications menu -->
-        <notifications v-show="mainStore.settingPage == 'notifications'" />
+        <notifications v-show="mainStore.page == 'settings-notifications'" />
     </div>
 
     <popup />
 </div>
 </template>
 
-<style>
+<style scoped>
 *::-webkit-scrollbar {
   width: 5px;
 }
@@ -269,7 +273,7 @@ const text1Color = computed(() =>{
 }
 
 .contentBody {
-    color: v-bind(text1Color);
+    color: v-bind(secondaryTextColor);
     font-size: large;
     padding: 0px 15px 25px 15px;
 }
@@ -290,6 +294,7 @@ const text1Color = computed(() =>{
 .iconContainer {
     padding: 0px 30px 0px 30px;
     float: left;
+    color: v-bind(iconColor);
 }
 
 .contentTextBody {

@@ -2,89 +2,76 @@ import { defineStore } from 'pinia';
 
 import colors from '../common/colors';
 
-export const useColorStore = defineStore('color',{
+export const useColorStore = defineStore('color', {
+    persist: {
+        key: 'store-color',
+        storage: window.localStorage,
+        beforeRestore: context => {
+        },
+        afterRestore: context => {
+        },
+    },
     state: () => ({
         // for color schema
         preferColorScheme: 'light',
+        createListener: false,
 
         // color
-        mainBackground: colors.backgroundWhite,
-        header: colors.headerWhite,
-        hover: colors.hoverWhite,
+        mainBackground: colors.backgroundLight,
+        header: colors.headerLight,
+        hover: colors.hoverLight,
         text: colors.textLight,
         borderline: colors.borderlineLight,
-        text1: colors.text1Light,
+        secondaryText: colors.secondaryTextLight,
+        icon: colors.iconLight,
     }),
     getters: {
     },
     actions: {
-        init() {
-            // listen to the color scheme of the browser
-            window.matchMedia('(prefers-color-scheme: dark)')
-            .addEventListener('change', event => {
-                console.log("auto mode");
-                if (event.matches) {
-                    this.mainBackground = colors.backgroundBlack;
-                    this.header = colors.headerBlack;
-                    this.hover = colors.hoverBlack;
-                    this.text = colors.textDark;
-                    this.text1 = colors.text1Dark;
-                    this.borderline = colors.borderlineDark;
-                    this.preferColorScheme = "auto-dark";
-                } else {
-                    this.mainBackground = colors.backgroundWhite;
-                    this.header = colors.headerWhite;
-                    this.hover = colors.hoverWhite;
-                    this.text = colors.textLight;
-                    this.text1 = colors.text1Light;
-                    this.borderline = colors.borderlineLight;
-                    this.preferColorScheme = "auto-light";
-                }   
-            })
+
+        computeColors(mode: string) {
+            this.mainBackground = colors['background' + mode]
+            this.header = colors['header' + mode]
+            this.hover = colors['hover' + mode]
+            this.text = colors['text' + mode]
+            this.secondaryText = colors['secondaryText' + mode]
+            this.borderline = colors['borderline' + mode]
+            this.icon = colors['icon' + mode]
         },
 
         changePreferColorSchema(mode: string) {
             // auto mode
             if (mode == 'auto') {
+                this.preferColorScheme = 'auto'
                 if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                    this.mainBackground = colors.backgroundBlack;
-                    this.header = colors.headerBlack;
-                    this.hover = colors.hoverBlack;
-                    this.text = colors.textDark;
-                    this.text1 = colors.text1Dark;
-                    this.borderline = colors.borderlineDark;
-                    this.preferColorScheme = 'auto-dark';
+                    this.computeColors('Dark')
                 }
                 else {
-                    this.mainBackground = colors.backgroundWhite;
-                    this.header = colors.headerWhite;
-                    this.hover = colors.hoverbWhite;;
-                    this.text = colors.textLight;
-                    this.text1 = colors.text1Light;
-                    this.borderline = colors.borderlineLight;
-                    this.preferColorScheme = 'auto-light';
+                    this.computeColors('Light')
                 }
-                this.init();
+                // add listener to the color scheme of the browser
+                if (!this.createListener) {
+                    this.createListener = true // only add one listener
+                    window.matchMedia('(prefers-color-scheme: dark)')
+                        .addEventListener('change', event => {
+                            if (event.matches) {
+                                this.computeColors('Dark')
+                            } else {
+                                this.computeColors('Light')
+                            }
+                        })
+                }
             }
             // change color manually
             else if (mode == 'dark') {
-                this.mainBackground = colors.backgroundBlack;
-                this.header = colors.headerBlack;
-                this.hover = colors.hoverBlack;
-                this.text = colors.textDark;
-                this.text1 = colors.text1Dark;
-                this.borderline = colors.borderlineDark;
-                this.preferColorScheme = 'dark';
+                this.preferColorScheme = 'dark'
+                this.computeColors('Dark')
             }
-            else if (mode == 'light') {
-                this.mainBackground = colors.backgroundWhite;
-                this.header = colors.headerWhite;
-                this.hover = colors.hoverWhite;
-                this.text = colors.textLight;
-                this.text1 = colors.text1Light;
-                this.borderline = colors.borderlineLight;
-                this.preferColorScheme = 'light';
+            else if (mode== 'light') {
+                this.preferColorScheme = 'light'
+                this.computeColors('Light')
             }
-        },        
+            console.log(this.preferColorScheme)
+        }
     }
 })

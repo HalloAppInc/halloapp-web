@@ -366,6 +366,8 @@ function applyPlatformSpecifics() {
 
     if (userAgent.indexOf('Safari') != -1 && userAgent.indexOf('Chrome') == -1) {
         mainStore.isSafari = true
+    } else if (navigator.userAgent.indexOf('Firefox') != -1) {
+        mainStore.isFirefox = true
     }
 }
 
@@ -539,7 +541,7 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;    
     font-size: 16px;
-    overflow: hidden;
+   
 
     display: flex;
     flex-direction: column;
@@ -688,7 +690,7 @@ h1, h2, h3, h4, h5, h6 {
 
     display: flex;
     flex-direction: horizonal;
-    overflow: hidden;
+  
 }
 
 #Sidestrip {
@@ -705,7 +707,7 @@ h1, h2, h3, h4, h5, h6 {
 
 #MainPanel {
     flex: 0 0 70%;
-    overflow: hidden;
+   
 }
 
 #Settings {

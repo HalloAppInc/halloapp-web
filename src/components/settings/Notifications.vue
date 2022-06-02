@@ -4,13 +4,10 @@ import { useColorStore } from '../../stores/colorStore'
 
 import { useI18n } from 'vue-i18n'
 
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 
 const colorStore = useColorStore()
 const mainStore = useMainStore()
-
-const checkedSounds = ref(false)
-const checkedDesktopAlerts = ref(false)
 
 const { t } = useI18n({
     inheritLocale: true,
@@ -25,7 +22,13 @@ const textColor = computed(() => {
     return colorStore.text
 })
 
+const iconColor = computed(() => {
+    return colorStore.icon
+})
 
+const hoverColor = computed(() => {
+    return colorStore.hover
+})
 
 </script>
 
@@ -56,7 +59,7 @@ const textColor = computed(() => {
     </div>
 </template>
 
-<style>
+<style scoped>
 *::-webkit-scrollbar {
   width: 5px;
 }
@@ -82,4 +85,34 @@ const textColor = computed(() => {
     align-items: center;
 }
 
+.container:hover {
+    background-color: v-bind(hoverColor);
+    cursor: pointer;
+}
+.iconContainer {
+    padding: 0px 30px 0px 30px;
+    float: left;
+    color: v-bind(iconColor);
+}
+
+.textContainer {
+    color: v-bind(textColor);
+    margin-top: 10px;
+    width: 100%;
+    padding: 20px 20px 20px 10px;
+    border-bottom: 1px solid rgb(226, 224, 224);
+    
+
+    display: flex;
+    width: 100%;
+    align-items: center;
+}
+
+.contentTextBody {
+    font-size: larger;
+
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
 </style>

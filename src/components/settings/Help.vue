@@ -9,16 +9,18 @@ import { ref, computed } from 'vue'
 const colorStore = useColorStore()
 const mainStore = useMainStore()
 
-const language = ''
-
-const helpLink = ref('https://www.halloapp.com/'+language+'help/')
-const termsLink = ref('https://www.halloapp.com/'+language+'terms/')
-const privacyPolicyLink = ref('https://www.halloapp.com/'+language+'privacy/')
-
-const { t } = useI18n({
+const { t, locale } = useI18n({
     inheritLocale: true,
     useScope: 'global'
 })
+
+// get language settings from locale
+const language = t('language.'+locale.value)
+const helpLink = ref('https://www.halloapp.com/' + language + 'help/')
+const termsLink = ref('https://www.halloapp.com/' + language + 'terms/')
+const privacyPolicyLink = ref('https://www.halloapp.com/' + language + 'privacy/')
+
+
 
 const backgroundColor = computed(() => {
     return colorStore.mainBackground
@@ -30,6 +32,10 @@ const textColor = computed(() => {
 
 const hoverColor = computed(() => {
     return colorStore.hover
+})
+
+const iconColor = computed(() => {
+    return colorStore.icon
 })
 
 function gotoHelp() {
@@ -47,65 +53,54 @@ function gotoPrivacyPolicy() {
 
 <template>
     <div class="content">
-            <!-- Help Center -->
-            <div class="container">
-                <div class="iconContainer">
-                    <font-awesome-icon :icon="['fas', 'circle-question']" />
-                </div>
-                <div class="textContainer" @click="gotoHelp()">
-                    <div class="contentTextBody">
-                        {{ t('help.helpCenter') }}
-                    </div>
+        <!-- Help Center -->
+        <div class="container">
+            <div class="iconContainer">
+                <font-awesome-icon :icon="['fas', 'circle-question']" size="xl"/>
+            </div>
+            <div class="textContainer" @click="gotoHelp()">
+                <div class="contentTextBody">
+                    {{ t('help.helpCenter') }}
                 </div>
             </div>
-            <!-- Contact Us -->
-            <div class="container" @click="">
-                <div class="iconContainer">
-                    <font-awesome-icon :icon="['fas', 'users']" />
-                </div>
-                <div class="textContainer">
-                    <div class="contentTextBody">
-                        {{ t('help.contactUs') }}
-                    </div>
+        </div>
+        <!-- Contact Us -->
+        <div class="container" @click="">
+            <div class="iconContainer">
+                <font-awesome-icon :icon="['fas', 'users']" size="xl"/>
+            </div>
+            <div class="textContainer">
+                <div class="contentTextBody">
+                    {{ t('help.contactUs') }}
                 </div>
             </div>
-            <!-- Licenses -->
-            <div class="container" @click="">
-                <div class="iconContainer">
-                    <font-awesome-icon :icon="['fas', 'file-lines']" />
-                </div>
-                <div class="textContainer">
-                    <div class="contentTextBody">
-                        {{ t('help.licenses') }}
-                    </div>
+        </div>
+        <!-- Terms and Privacy Policy -->
+        <div class="container" @click="gotoTerms()">
+            <div class="iconContainer">
+                <font-awesome-icon :icon="['fas', 'file-lines']" size="xl"/>
+            </div>
+            <div class="textContainer">
+                <div class="contentTextBody">
+                    {{ t('help.terms') }}
                 </div>
             </div>
-            <!-- Terms and Privacy Policy -->
-            <div class="container" @click="gotoTerms()">
-                <div class="iconContainer">
-                    <font-awesome-icon :icon="['fas', 'file-lines']" />
-                </div>
-                <div class="textContainer">
-                    <div class="contentTextBody">
-                        {{ t('help.terms') }}
-                    </div>
+        </div>
+        <!-- privacy -->
+        <div class="container" @click="gotoPrivacyPolicy()">
+            <div class="iconContainer">
+                <font-awesome-icon :icon="['fas', 'file-lines']" size="xl"/>
+            </div>
+            <div class="textContainer">
+                <div class="contentTextBody">
+                    {{ t('help.privacyPolicy') }}
                 </div>
             </div>
-            <!-- privacy -->
-            <div class="container" @click="gotoPrivacyPolicy()">
-                <div class="iconContainer">
-                    <font-awesome-icon :icon="['fas', 'file-lines']" />
-                </div>
-                <div class="textContainer">
-                    <div class="contentTextBody">
-                        {{ t('help.privacyPolicy') }}
-                    </div>
-                </div>
-            </div>
+        </div>
     </div>
 </template>
 
-<style>
+<style scoped>
 .v-enter-active,
 .v-leave-active {
     transition: opacity 0.3s ease;
@@ -150,6 +145,7 @@ function gotoPrivacyPolicy() {
 .iconContainer {
     padding: 0px 30px 0px 30px;
     float: left;
+    color: v-bind(iconColor);
 }
 
 .iconContainer:hover {

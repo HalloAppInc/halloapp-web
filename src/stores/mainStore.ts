@@ -1,4 +1,3 @@
-import { faTurkishLira } from '@fortawesome/free-solid-svg-icons'
 import { defineStore } from 'pinia'
 import hal from '../common/halogger'
 
@@ -18,6 +17,7 @@ export const useMainStore = defineStore('main', {
         isIOS: false,
         isAndroid: false,
         isSafari: false, // mobile Safari and desktop Safari
+        isFirefox: false,
 
         privateKeyBase64: '',
         publicKeyBase64: '',
@@ -34,6 +34,8 @@ export const useMainStore = defineStore('main', {
 
         sounds: false,
         desktopAlerts: false,
+
+        preferColorScheme: '',
     }),
     getters: {
     },
@@ -48,8 +50,5 @@ export const useMainStore = defineStore('main', {
         gotoPage(page: string) {
             this.page = page
         },
-        gotoSettingsPage(selection: string) {
-            this.settingPage = selection
-        }
     },
 })

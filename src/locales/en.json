@@ -5,6 +5,11 @@
         "howtoStepTwo": "2. Tap <b>Settings</b> and select <b>Linked Device</b>",
         "howtoStepThree": "3. Point your phone to this screen and scan the QR code"
     },
+    "language": {
+        "en": "",
+        "de": "de/",
+        "nl": "nl/"
+    },
     "sidestrip": {
         "home": "Home",
         "groups": "Groups",
@@ -12,16 +17,27 @@
         "settings": "Settings",
         "exit": "Exit"
     },
+    "post": {
+        "more": "more",
+        "comment": "Comment",
+        "replyPrivately": "Reply Privately",
+        "noAudioSupportText": "Your browser does not support the audio tag.",
+        "postNoLongerAvailableTitle": "This post is no longer available",
+        "postNoLongerAvailable": "This post could have expired, been deleted, or something else."
+
+    },    
     "mediaCarousel": {
         "noVideoSupportText": "Your browser cannot play the provided video file."
+    },
+    "button": {
+        "okButton": "OK",
+        "cancelButton": "CANCEL"
     },
     "popup": {
         "popupHeaderText": "Choose theme",
         "lightModeText": "Light",
         "darkModeText": "Dark",
-        "autoModeText": "Auto",
-        "okButton": "OK",
-        "cancelButton": "CANCEL"
+        "autoModeText": "Auto"
     },
     "settings": {
         "notifications": "Notifications",
