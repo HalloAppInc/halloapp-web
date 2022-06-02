@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useColorStore } from '../../stores/colorStore'
 
-import { ref,computed } from "vue"
+import { ref, computed } from "vue"
 
 import { useI18n } from 'vue-i18n'
 
@@ -17,7 +17,6 @@ const mainStore = useMainStore()
 const colorStore = useColorStore()
 
 const mode = ref(mainStore.preferColorScheme)
-
 
 </script>
 
@@ -46,7 +45,8 @@ const mode = ref(mainStore.preferColorScheme)
                         <div class="modal-default-button" @click="mainStore.gotoPage('settings')">
                             {{ t('button.cancelButton') }}
                         </div>
-                        <div class="modal-default-button" @click="colorStore.changePreferColorSchema(mode);mainStore.gotoPage('settings')">
+                        <div class="modal-default-button"
+                            @click="colorStore.changePreferColorSchema(mode); mainStore.gotoPage('settings')">
                             {{ t('button.okButton') }}
                         </div>
                     </div>
@@ -122,7 +122,6 @@ const mode = ref(mainStore.preferColorScheme)
 
     font-family: "Gotham", Helvetica, "Helvetica Neue", Arial, Avenir, sans-serif;
     font-size: 10px;
-    font-weight: 400; 
+    font-weight: 400;
 }
-
 </style>

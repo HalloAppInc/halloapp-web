@@ -9,6 +9,7 @@ import hal from './common/halogger'
 import qrCodeStyling from 'qr-code-styling'
 
 import { useMainStore } from './stores/mainStore'
+import { useColorStore } from './stores/colorStore'
 
 import hacrypto from './common/hacrypto'
 import { Base64 } from "js-base64"
@@ -21,6 +22,7 @@ import { nanoid } from 'nanoid'
 import { useI18n } from 'vue-i18n'
 
 const mainStore = useMainStore()
+const colorStore = useColorStore()
 
 const { t } = useI18n({
     inheritLocale: true,
@@ -55,6 +57,7 @@ if (process.env.NODE_ENV?.toString() == "development") {
 
 applyPlatformSpecifics()
 loadFonts()
+colorStore.init() // initialized color scheme
 // init() // probably same as connect
 
 // connect()
