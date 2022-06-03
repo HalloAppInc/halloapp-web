@@ -6,11 +6,8 @@ import { useMainStore } from './mainStore';
 
 export const useColorStore = defineStore('color', {
     state: () => ({
-        // for color schema
-        createListener: false,
-
         // color
-        mainBackground: colors.backgroundLight,
+        background: colors.backgroundLight,
         header: colors.headerLight,
         hover: colors.hoverLight,
         text: colors.textLight,
@@ -24,25 +21,22 @@ export const useColorStore = defineStore('color', {
         init() {
             const mainStore = useMainStore()
             // add listener to the color scheme of the browser
-            if (!this.createListener) {
-                this.createListener = true // only create one listener
-                window.matchMedia('(prefers-color-scheme: dark)')
-                    .addEventListener('change', event => {
-                        if (mainStore.preferColorScheme == 'auto') {
-                            if (event.matches) {
-                                this.computeColors('Dark')
-                            } else {
-                                this.computeColors('Light')
-                            }
+            window.matchMedia('(prefers-color-scheme: dark)')
+                .addEventListener('change', event => {
+                    if (mainStore.preferColorScheme == 'auto') {
+                        if (event.matches) {
+                            this.computeColors('Dark')
+                        } else {
+                            this.computeColors('Light')
                         }
-                    })
-            }
+                    }
+                })
             // initialize colors
             this.changePreferColorSchema(mainStore.preferColorScheme)
         },
 
         computeColors(mode: string) {
-            this.mainBackground = colors['background' + mode]
+            this.background = colors['background' + mode]
             this.header = colors['header' + mode]
             this.hover = colors['hover' + mode]
             this.text = colors['text' + mode]
@@ -72,7 +66,6 @@ export const useColorStore = defineStore('color', {
                 mainStore.preferColorScheme = 'light'
                 this.computeColors('Light')
             }
-            console.log(mainStore.preferColorScheme)
         }
     }
 })

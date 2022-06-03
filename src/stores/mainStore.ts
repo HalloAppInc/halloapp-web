@@ -30,7 +30,7 @@ export const useMainStore = defineStore('main', {
         haveMobilePublicKey: '',
 
         page: 'home',
-        settingPage: '',
+        settingsPage: '',
 
         sounds: false,
         desktopAlerts: false,
@@ -50,5 +50,8 @@ export const useMainStore = defineStore('main', {
         gotoPage(page: string) {
             this.page = page
         },
+        gotoSettingsPage(page: string) {
+            this.settingsPage = page
+        }
     },
 })

@@ -14,8 +14,24 @@ const { t, locale } = useI18n({
     useScope: 'global'
 })
 
+const helpMenu = ref<HTMLDivElement>()
+
+// find the offset to the top
+const offsetTop = computed(() => {
+    var offset = helpMenu.value?.offsetTop
+    if (offset != undefined)
+        return -1 * offset + 50
+})
+
+function setLanguage(language: string) {
+    if (language === 'en') {
+        return ''
+    }
+    return language + '/'
+}
+
 // get language settings from locale
-const language = t('language.'+locale.value)
+const language = setLanguage(locale.value)
 const helpLink = ref('https://www.halloapp.com/' + language + 'help/')
 const termsLink = ref('https://www.halloapp.com/' + language + 'terms/')
 const privacyPolicyLink = ref('https://www.halloapp.com/' + language + 'privacy/')
@@ -23,7 +39,7 @@ const privacyPolicyLink = ref('https://www.halloapp.com/' + language + 'privacy/
 
 
 const backgroundColor = computed(() => {
-    return colorStore.mainBackground
+    return colorStore.background
 })
 
 const textColor = computed(() => {
@@ -52,82 +68,103 @@ function gotoPrivacyPolicy() {
 </script>
 
 <template>
-    <div class="content">
-        <!-- Help Center -->
-        <div class="container">
-            <div class="iconContainer">
-                <font-awesome-icon :icon="['fas', 'circle-question']" size="xl"/>
+    <transition>
+        <div v-if="mainStore.settingsPage == 'help'" id='menu' ref='helpMenu'>
+            <!-- Help Center -->
+            <div class="container">
+                <div class="iconContainer">
+                    <font-awesome-icon :icon="['fas', 'circle-question']" size="xl" />
+                </div>
+                <div class="textContainer" @click="gotoHelp()">
+                    <div class="contentTextBody">
+                        {{ t('help.helpCenter') }}
+                    </div>
+                </div>
             </div>
-            <div class="textContainer" @click="gotoHelp()">
-                <div class="contentTextBody">
-                    {{ t('help.helpCenter') }}
+            <!-- Contact Us -->
+            <div class="container" @click="">
+                <div class="iconContainer">
+                    <font-awesome-icon :icon="['fas', 'users']" size="xl" />
+                </div>
+                <div class="textContainer">
+                    <div class="contentTextBody">
+                        {{ t('help.contactUs') }}
+                    </div>
+                </div>
+            </div>
+            <!-- Terms and Privacy Policy -->
+            <div class="container" @click="gotoTerms()">
+                <div class="iconContainer">
+                    <font-awesome-icon :icon="['fas', 'file-lines']" size="xl" />
+                </div>
+                <div class="textContainer">
+                    <div class="contentTextBody">
+                        {{ t('help.terms') }}
+                    </div>
+                </div>
+            </div>
+            <!-- privacy -->
+            <div class="container" @click="gotoPrivacyPolicy()">
+                <div class="iconContainer">
+                    <font-awesome-icon :icon="['fas', 'file-lines']" size="xl" />
+                </div>
+                <div class="textContainer">
+                    <div class="contentTextBody">
+                        {{ t('help.privacyPolicy') }}
+                    </div>
                 </div>
             </div>
         </div>
-        <!-- Contact Us -->
-        <div class="container" @click="">
-            <div class="iconContainer">
-                <font-awesome-icon :icon="['fas', 'users']" size="xl"/>
-            </div>
-            <div class="textContainer">
-                <div class="contentTextBody">
-                    {{ t('help.contactUs') }}
-                </div>
-            </div>
-        </div>
-        <!-- Terms and Privacy Policy -->
-        <div class="container" @click="gotoTerms()">
-            <div class="iconContainer">
-                <font-awesome-icon :icon="['fas', 'file-lines']" size="xl"/>
-            </div>
-            <div class="textContainer">
-                <div class="contentTextBody">
-                    {{ t('help.terms') }}
-                </div>
-            </div>
-        </div>
-        <!-- privacy -->
-        <div class="container" @click="gotoPrivacyPolicy()">
-            <div class="iconContainer">
-                <font-awesome-icon :icon="['fas', 'file-lines']" size="xl"/>
-            </div>
-            <div class="textContainer">
-                <div class="contentTextBody">
-                    {{ t('help.privacyPolicy') }}
-                </div>
-            </div>
-        </div>
-    </div>
+    </transition>
+
 </template>
 
 <style scoped>
-.v-enter-active,
-.v-leave-active {
-    transition: opacity 0.3s ease;
+/* animation in from right to left, out from left to right */
+.v-enter-active {
+    transition: all 0.25s ease-in 0.25s;
 }
 
-.v-enter-from,
-.v-leave-to {
+.v-leave-active {
+    transition: all 0.25s ease-out;
+}
+
+.v-enter-from {
+    transform: translateX(200px);
+    /* get the height? */
     opacity: 0;
-    transform: scale(0.9);
+}
+
+.v-leave-from {
+    transform: translateY(v-bind(offsetTop+'px'));
+    opacity: 1;
+}
+
+.v-leave-to {
+    transform: translateX(200px) translateY(v-bind(offsetTop+'px'));
+    opacity: 0;
 }
 
 *::-webkit-scrollbar {
-  width: 5px;
+    width: 5px;
 }
 
 *::-webkit-scrollbar-track {
-  background: white;        /* color of the tracking area */
+    background: white;
+    /* color of the tracking area */
 }
 
 *::-webkit-scrollbar-thumb {
-  background-color: rgb(172, 169, 169);   /* color of the scroll thumb */
-  
-  border: 0px solid white;  /* creates padding around scroll thumb */
+    background-color: rgb(172, 169, 169);
+    /* color of the scroll thumb */
+
+    border: 0px solid white;
+    /* creates padding around scroll thumb */
 }
 
-.content {
+#menu {
     background-color: v-bind(backgroundColor);
+    height: 100%;
 }
 
 .container:hover {
@@ -166,11 +203,10 @@ function gotoPrivacyPolicy() {
     width: 100%;
     padding: 20px 20px 20px 10px;
     border-bottom: 1px solid rgb(226, 224, 224);
-    
+
 
     display: flex;
     width: 100%;
     align-items: center;
 }
-
 </style>

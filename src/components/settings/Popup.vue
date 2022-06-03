@@ -22,7 +22,7 @@ const mode = ref(mainStore.preferColorScheme)
 
 <template>
     <transition>
-        <div v-if="mainStore.page == 'settings-theme'" class="modal-mask">
+        <div v-if="mainStore.settingsPage == 'theme'" class="modal-mask">
             <div class="modal-wrapper">
                 <div class="modal-container">
                     <div class="modal-header">
@@ -46,7 +46,7 @@ const mode = ref(mainStore.preferColorScheme)
                             {{ t('button.cancelButton') }}
                         </div>
                         <div class="modal-default-button"
-                            @click="colorStore.changePreferColorSchema(mode); mainStore.gotoPage('settings')">
+                            @click="colorStore.changePreferColorSchema(mode); mainStore.gotoSettingsPage('')">
                             {{ t('button.okButton') }}
                         </div>
                     </div>
@@ -118,7 +118,7 @@ const mode = ref(mainStore.preferColorScheme)
     color: white;
     cursor: pointer;
     height: 20px;
-    width: fit;
+    width: fit-content;
 
     font-family: "Gotham", Helvetica, "Helvetica Neue", Arial, Avenir, sans-serif;
     font-size: 10px;

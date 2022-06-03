@@ -26,7 +26,7 @@ const mainStore = useMainStore()
         <ChatsSidebar v-if='mainStore.page == "chats"' />
     </keep-alive>
     <keep-alive>
-        <SettingsSidebar v-if='mainStore.page.substring(0,8) == "settings"' />
+        <SettingsSidebar v-if='mainStore.page == "settings"' />
     </keep-alive>
     
 </div>

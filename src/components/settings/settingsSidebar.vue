@@ -1,30 +1,26 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 
 import { useI18n } from 'vue-i18n'
 
 import popup from './Popup.vue'
-import help from './Help.vue'
-import notifications from './Notifications.vue'
+import mainMenu from './Main.vue'
+import helpMenu from './help.vue'
+import notificationsMenu from './Notifications.vue'
 
 import { useMainStore } from '../../stores/mainStore'
 import { useColorStore } from '../../stores/colorStore'
 
 const mainStore = useMainStore()
+const colorStore = useColorStore()
 
 const { t } = useI18n({
     inheritLocale: true,
     useScope: 'global'
 })
 
-const colorStore = useColorStore()
-
-/* const show = computed(() => {
-    return mainStore.page == 'settings' || mainStore.page == 'settings-theme'
-}) */
-
 const backgroundColor = computed(() => {
-    return  colorStore.mainBackground
+    return colorStore.background
 })
 
 const headerColor = computed(() => {
@@ -43,7 +39,7 @@ const borderlineStyle = computed(() => {
     return "1px solid " + colorStore.borderline
 })
 
-const secondaryTextColor = computed(() =>{
+const secondaryTextColor = computed(() => {
     return colorStore.secondaryText
 })
 
@@ -55,128 +51,59 @@ const iconColor = computed(() => {
 
 
 <template>
-<div class="wrapper">
-    <div id="header"> 
-        <div class="contentMenuTitle" v-show="mainStore.page != 'settings' && mainStore.page != 'settings-theme'">
-            <div class="iconContainer" @click="mainStore.gotoPage('settings')">
-                <font-awesome-icon :icon="['fas', 'arrow-left']" />
-            </div>
-            <div class="textContainerBig">
-                <div class="contentTextBodyBig" v-show="mainStore.page == 'settings-notifications'">
-                    {{ t('settings.notifications') }}
+    <div class="wrapper">
+        <div id="header">
+            <div class="contentMenuTitle" v-show="mainStore.settingsPage != '' && mainStore.settingsPage != 'theme'">
+                <div class="iconContainer" @click="mainStore.gotoSettingsPage('')">
+                    <font-awesome-icon :icon="['fas', 'arrow-left']" />
                 </div>
-                <div class="contentTextBodyBig" v-show="mainStore.page == 'settings-privacy' ">
-                    {{ t('settings.privacy') }}
-                </div>
-                <div class="contentTextBodyBig" v-show="mainStore.page == 'settings-security'">
-                    {{ t('settings.security') }}
-                </div>
-                <div class="contentTextBodyBig" v-show="mainStore.page == 'settings-help'">
-                    {{ t('settings.help') }}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="content">
-
-        <!--main menu -->
-        <div id="menu" v-show="mainStore.page == 'settings' || mainStore.page == 'settings-theme'"> 
-            <!-- user profile -->
-            <div class="container">
-                <div class="profileContent">
-                    <div class="avatarContainer">
-                        <div class="avatar"></div>
-                    </div>
-                    <div class="headerContent">
-                        <div class="contentTitle">
-                            User Name
-                        </div>
-                        <div class="contentBody">
-                            Available
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- menu -->
-            <div class="container">
-                <div class="iconContainer">
-                    <font-awesome-icon :icon="['fas', 'bell']" size="xl"/>
-                </div>
-                <div class="textContainer" @click="mainStore.gotoPage('settings-notifications')">
-                    <div class="contentTextBody">
+                <div class="textContainerBig">
+                    <div class="contentTextBodyBig" v-show="mainStore.settingsPage == 'notifications'">
                         {{ t('settings.notifications') }}
                     </div>
-                </div>
-            </div>
-
-            <div class="container" @click="mainStore.gotoPage('settings-privacy')">
-                <div class="iconContainer">
-                    <font-awesome-icon :icon="['fas', 'lock']" size="xl"/>
-                </div>
-                <div class="textContainer">
-                    <div class="contentTextBody">
+                    <div class="contentTextBodyBig" v-show="mainStore.settingsPage == 'privacy'">
                         {{ t('settings.privacy') }}
                     </div>
-                </div>
-            </div>
-
-            <div class="container" @click="mainStore.gotoPage('settings-security')">
-                <div class="iconContainer">
-                    <font-awesome-icon :icon="['fas', 'shield-halved']" size="xl"/>
-                </div>
-                <div class="textContainer">
-                    <div class="contentTextBody">
+                    <div class="contentTextBodyBig" v-show="mainStore.settingsPage == 'security'">
                         {{ t('settings.security') }}
                     </div>
-                </div>
-            </div>
-
-            <div class="container" @click="mainStore.gotoPage('settings-theme')">
-                <div class="iconContainer">
-                    <font-awesome-icon :icon="['fas', 'circle-half-stroke']" size="xl"/>
-                </div>
-                <div class="textContainer">
-                    <div class="contentTextBody">
-                        {{ t('settings.theme') }}
-                    </div>
-                </div>
-            </div>
-
-            <div class="container" @click="mainStore.gotoPage('settings-help')">
-                <div class="iconContainer">
-                    <font-awesome-icon :icon="['fas', 'circle-question']" size="xl"/>
-                </div>
-                <div class="textContainer">
-                    <div class="contentTextBody">
+                    <div class="contentTextBodyBig" v-show="mainStore.settingsPage == 'help'">
                         {{ t('settings.help') }}
                     </div>
                 </div>
             </div>
         </div>
-        <!-- help menu -->
-        <help v-show="mainStore.page == 'settings-help'"/>
-        <!-- notifications menu -->
-        <notifications v-show="mainStore.page == 'settings-notifications'" />
-    </div>
+        <div class="content">
 
-    <popup />
-</div>
+            <!--main menu -->
+            <mainMenu />
+            <!-- help menu -->
+            <helpMenu />
+            <!-- notifications menu -->
+            <notificationsMenu />
+
+        </div>
+
+        <popup />
+    </div>
 </template>
 
 <style scoped>
 *::-webkit-scrollbar {
-  width: 5px;
+    width: 5px;
 }
 
 *::-webkit-scrollbar-track {
-  background: white;        /* color of the tracking area */
+    background: white;
+    /* color of the tracking area */
 }
 
 *::-webkit-scrollbar-thumb {
-  background-color: rgb(172, 169, 169);   /* color of the scroll thumb */
-  
-  border: 0px solid white;  /* creates padding around scroll thumb */
+    background-color: rgb(172, 169, 169);
+    /* color of the scroll thumb */
+
+    border: 0px solid white;
+    /* creates padding around scroll thumb */
 }
 
 .wrapper {
@@ -197,26 +124,8 @@ const iconColor = computed(() => {
     padding: 10px;
 }
 
-#menu {
-    overflow-y: auto;
-    overflow-x: hidden;
-    height: 100%;
-}
-
 .content {
     background-color: v-bind(backgroundColor);
-}
-
-.container {
-    display: flex;
-    flex-direction: horizontal;
-    padding: 0px;
-    align-items: center;
-}
-
-.container:hover {
-    background-color: v-bind(hoverColor);
-    cursor: pointer;
 }
 
 .avatarContainer {
@@ -256,16 +165,16 @@ const iconColor = computed(() => {
 
 .contentTitle {
     color: v-bind(textColor);
-    font-weight: 600; 
+    font-weight: 600;
     font-size: large;
     padding: 25px 15px 0px 15px;
-    
+
 
     flex: 1 1 auto;
 
     min-width: 0;
     text-overflow: ellipsis;
-    white-space: nowrap; 
+    white-space: nowrap;
 
     user-select: none;
 
@@ -284,7 +193,7 @@ const iconColor = computed(() => {
     width: 100%;
     padding: 20px 20px 20px 10px;
     border-bottom: 1px solid rgb(226, 224, 224);
-    
+
 
     display: flex;
     width: 100%;
@@ -295,6 +204,10 @@ const iconColor = computed(() => {
     padding: 0px 30px 0px 30px;
     float: left;
     color: v-bind(iconColor);
+}
+
+.iconContainer:hover{
+    cursor: pointer;
 }
 
 .contentTextBody {
@@ -312,12 +225,12 @@ const iconColor = computed(() => {
     align-items: center;
 }
 
-.textContainerBig{
+.textContainerBig {
     color: v-bind(textColor);
     margin-top: 0px;
     width: 100%;
     padding: 2px 2px 2px 2px;
-    
+
 
     display: flex;
     width: 100%;

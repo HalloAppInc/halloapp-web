@@ -71,15 +71,15 @@ watch(messageNumber, () => {
         </div>
 
         <!-- chatting area -->
-        <div id="content" ref="content" onresize="scrollToBottom">
-            <div class="containerChat" v-for="value in messageList">
-                <div class="contentTextBody" :class="'contentTextBody-' + value.side">
-                    <div class="chat-bubble" :class="'chat-bubble-' + value.side">
-                        <div class="chatTextContainer" v-if="value.side != 'middle'">
+        <div id='content' ref='content' onresize='scrollToBottom'>
+            <div class='containerChat' v-for='value in messageList'>
+                <div class='contentTextBody' :class="'contentTextBody-' + value.side">
+                    <div class='chatBubble' :class="'chatBubble-' + value.side">
+                        <div class='chatTextContainer' v-if="value.side != 'middle'">
                             {{ value.message }}
                         </div>
                         <div :class="'timestampContainer-' + value.side">
-                            <div class="timestamp">
+                            <div class='timestamp'>
                                 {{ value.timestamp }}
                             </div>
                         </div>
@@ -89,20 +89,20 @@ watch(messageNumber, () => {
         </div>
 
         <!-- input tray -->
-        <div id="footer">
-            <div class="chat-box-tray">
-                <div class="iconContainer">
-                    <font-awesome-icon :icon="['fas', 'face-smile']" size="2xl" />
+        <div id='footer'>
+            <div class='chatBoxTray'>
+                <div class='iconContainer'>
+                    <font-awesome-icon :icon="['fas', 'face-smile']" size='2xl' />
                 </div>
-                <div class="iconContainer">
-                    <font-awesome-icon :icon="['fas', 'paperclip']" size="2xl" />
+                <div class='iconContainer'>
+                    <font-awesome-icon :icon="['fas', 'paperclip']" size='2xl' />
                 </div>
-                <div class="inputBoxContainer">
-                    <input type="text" v-model="inputMessage" class="input" placeholder="Type your message here..."
-                        size="85" v-on:keyup.enter="sendMessage">
+                <div class='inputBoxContainer'>
+                    <input type='text' v-model='inputMessage' class='input' placeholder='Type your message here...'
+                        size='85' v-on:keyup.enter='sendMessage'>
                 </div>
-                <div class="iconContainer">
-                    <font-awesome-icon :icon="['fas', 'microphone']" size="2xl" />
+                <div class='iconContainer'>
+                    <font-awesome-icon :icon="['fas', 'microphone']" size='2xl' />
                 </div>
             </div>
         </div>
@@ -187,7 +187,7 @@ watch(messageNumber, () => {
     justify-content: center;
 }
 
-.chat-bubble {
+.chatBubble {
     padding: 10px 14px;
     margin: 10px 30px;
     border-radius: 9px;
@@ -198,19 +198,15 @@ watch(messageNumber, () => {
     max-width: 50%;
 }
 
-/* .chat-bubble:hover {
-    cursor: default;
-} */
-
-.chat-bubble-left {
+.chatBubble-left {
     background: #FFFFFF;
 }
 
-.chat-bubble-right {
+.chatBubble-right {
     background: #74b9ff;
 }
 
-.chat-bubble-middle {
+.chatBubble-middle {
     background: #FFFFFF;
 }
 
@@ -218,7 +214,7 @@ watch(messageNumber, () => {
     color: #000000;
 }
 
-.chat-box-tray {
+.chatBoxTray {
     background-color: #f0f2f5;
     display: flex;
     align-items: baseline;
