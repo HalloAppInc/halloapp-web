@@ -14,6 +14,9 @@ export const useColorStore = defineStore('color', {
         borderline: colors.borderlineLight,
         secondaryText: colors.secondaryTextLight,
         icon: colors.iconLight,
+        wraper: colors.wraperLight,
+        shadow: colors.shadowLight,
+        line: colors.lineLight,
     }),
     getters: {
     },
@@ -43,6 +46,9 @@ export const useColorStore = defineStore('color', {
             this.secondaryText = colors['secondaryText' + mode]
             this.borderline = colors['borderline' + mode]
             this.icon = colors['icon' + mode]
+            this.wraper = colors['wraper' + mode]
+            this.shadow = colors['shadow' + mode]
+            this.line = colors['line' + mode]
         },
 
         changePreferColorSchema(mode: string) {

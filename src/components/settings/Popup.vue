@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { useColorStore } from '../../stores/colorStore'
+import { useMainStore } from '../../stores/mainStore'
 
-import { ref, computed } from "vue"
+import { ref, computed } from 'vue'
 
 import { useI18n } from 'vue-i18n'
-
-import { useMainStore } from '../../stores/mainStore'
 
 const { t } = useI18n({
     inheritLocale: true,
@@ -13,40 +12,55 @@ const { t } = useI18n({
 })
 
 const mainStore = useMainStore()
-
 const colorStore = useColorStore()
 
 const mode = ref(mainStore.preferColorScheme)
+
+const backgroundColor = computed(() => {
+    return colorStore.background
+})
+
+const textColor = computed(() => {
+    return colorStore.text
+})
+
+const wraperColor = computed(() => {
+    return colorStore.wraper
+})
+
+const shadowColor = computed(() => {
+    return colorStore.shadow
+})
 
 </script>
 
 <template>
     <transition>
-        <div v-if="mainStore.settingsPage == 'theme'" class="modal-mask">
-            <div class="modal-wrapper">
-                <div class="modal-container">
-                    <div class="modal-header">
-                        <slot name="header">{{ t('popup.popupHeaderText') }}</slot>
+        <div v-if="mainStore.settingsPage == 'theme'" class='mask'>
+            <div class='wrapper'>
+                <div class='container'>
+                    <div class='header'>
+                        <slot name='header'>{{ t('popup.popupHeaderText') }}</slot>
                     </div>
 
-                    <div class="modal-body">
-                        <input type="radio" value="light" v-model="mode"> {{ t('popup.lightModeText') }} <br>
+                    <div class='body'>
+                        <input type='radio' value='light' v-model='mode'> {{ t('popup.lightModeText') }} <br>
                     </div>
 
-                    <div class="modal-body">
-                        <input type="radio" value="dark" v-model="mode"> {{ t('popup.darkModeText') }} <br>
+                    <div class='body'>
+                        <input type='radio' value='dark' v-model='mode'> {{ t('popup.darkModeText') }} <br>
                     </div>
 
-                    <div class="modal-body">
-                        <input type="radio" value="auto" v-model="mode"> {{ t('popup.autoModeText') }} <br>
+                    <div class='body'>
+                        <input type='radio' value='auto' v-model='mode'> {{ t('popup.autoModeText') }} <br>
                     </div>
 
-                    <div class="modal-footer">
-                        <div class="modal-default-button" @click="mainStore.gotoPage('settings')">
+                    <div class='footer'>
+                        <div class='button' @click="mainStore.gotoSettingsPage('')">
                             {{ t('button.cancelButton') }}
                         </div>
-                        <div class="modal-default-button"
-                            @click="colorStore.changePreferColorSchema(mode); mainStore.gotoSettingsPage('')">
+                        <div class='button'
+                            @click="colorStore.changePreferColorSchema(mode);mainStore.gotoSettingsPage('')">
                             {{ t('button.okButton') }}
                         </div>
                     </div>
@@ -60,7 +74,7 @@ const mode = ref(mainStore.preferColorScheme)
 <style scoped>
 .v-enter-active,
 .v-leave-active {
-    transition: opacity 0.5s ease;
+    transition: opacity 0.2s ease;
 }
 
 .v-enter-from,
@@ -68,60 +82,66 @@ const mode = ref(mainStore.preferColorScheme)
     opacity: 0;
     transform: scale(0.9);
 }
-
-.modal-mask {
+.mask {
     position: fixed;
     z-index: 9998;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(255, 255, 255, 0.706);
+    background-color: v-bind(wraperColor);
     display: table;
-    transition: opacity 0.3s ease;
 }
 
-.modal-wrapper {
+.wrapper {
     display: table-cell;
     vertical-align: middle;
 }
 
-.modal-container {
+.container {
     width: 300px;
     margin: 0px auto;
     padding: 20px 30px;
-    background-color: #fff;
+    background-color: v-bind(backgroundColor);
     border-radius: 2px;
-    box-shadow: 0 2px 8px rgba(100, 100, 100, 0.33);
+    box-shadow: -2px 2px 8px v-bind(shadowColor);
     transition: all 0.3s ease;
 }
 
-.modal-header {
+.header {
     margin-top: 0;
+    color: v-bind(textColor);
+    font-size: large;
 }
 
-.modal-footer {
+.footer {
+    display: flex;
+    flex-direction: row-reverse;
+    align-content: flex-end;
     padding: 10px;
 }
 
-.modal-body {
+.body {
     margin: 20px 0;
+    color: v-bind(textColor);
 }
 
-.modal-default-button {
+.button {
     float: right;
-    margin-left: 10px;
-    margin-right: 10px;
     border-radius: 20px;
-    background-color: #007AFF;
-    padding: 5px 10px 4px 10px;
+    margin-left: 20px;
+    background-color: #5ba4fc;
+    padding: 5px 15px 5px 15px;
     color: white;
-    cursor: pointer;
-    height: 20px;
-    width: fit-content;
 
     font-family: "Gotham", Helvetica, "Helvetica Neue", Arial, Avenir, sans-serif;
     font-size: 10px;
-    font-weight: 400;
+    font-weight: bold;
+}
+
+.button:hover {
+    cursor: pointer;
+    background-color: gray;
+    box-shadow: -2px 2px 5px v-bind(shadowColor);
 }
 </style>

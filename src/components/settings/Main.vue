@@ -33,6 +33,10 @@ const secondaryTextColor = computed(() => {
 const iconColor = computed(() => {
     return colorStore.icon
 })
+
+const lineColor = computed(() => {
+    return colorStore.line
+})
 </script>
 
 <template>
@@ -236,7 +240,7 @@ const iconColor = computed(() => {
     margin-top: 10px;
     width: 100%;
     padding: 20px 20px 20px 10px;
-    border-bottom: 1px solid rgb(226, 224, 224);
+    border-bottom: 1px solid v-bind(lineColor);
 
 
     display: flex;

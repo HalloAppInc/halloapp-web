@@ -192,7 +192,7 @@ const iconColor = computed(() => {
     margin-top: 10px;
     width: 100%;
     padding: 20px 20px 20px 10px;
-    border-bottom: 1px solid rgb(226, 224, 224);
+    border-bottom: 1px solid;
 
 
     display: flex;
