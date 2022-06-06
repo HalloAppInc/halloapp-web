@@ -14,11 +14,11 @@ const { t } = useI18n({
     useScope: 'global'
 })
 
-const notificationMenu = ref<HTMLDivElement>()
+const securityMenu = ref<HTMLDivElement>()
 
 // find the offset to the top
 const offsetTop = computed(() => {
-    var offset = notificationMenu.value?.offsetTop
+    var offset = securityMenu.value?.offsetTop
     if (offset != undefined) {
         return -1 * offset
     }
@@ -32,12 +32,12 @@ const textColor = computed(() => {
     return colorStore.text
 })
 
-const iconColor = computed(() => {
-    return colorStore.icon
-})
-
 const hoverColor = computed(() => {
     return colorStore.hover
+})
+
+const iconColor = computed(() => {
+    return colorStore.icon
 })
 
 const lineColor = computed(() => {
@@ -50,8 +50,8 @@ const headerColor = computed(() => {
 </script>
 
 <template>
-    <transition name='notifications'>
-        <div v-if="mainStore.settingsPage == 'notifications'" ref='notificationMenu'>
+    <transition name='security'>
+        <div v-if="mainStore.settingsPage == 'security'" ref='securityMenu'>
             <div id='header'>
                 <div class='contentMenuTitle'>
                     <div class='iconContainer' @click="mainStore.gotoSettingsPage('')">
@@ -59,64 +59,41 @@ const headerColor = computed(() => {
                     </div>
                     <div class='textContainerBig'>
                         <div class='contentTextBodyBig'>
-                            {{ t('settings.notifications') }}
+                            {{ t('settings.security') }}
                         </div>
                     </div>
                 </div>
+            </div>
+            <div class='content'>
             </div>
 
-            <div class='content'>
-                <div id='menu'>
-                    <!-- sounds -->
-                    <div class='container'>
-                        <div class='iconContainer'>
-                            <input type='checkbox' id='sounds' v-model='mainStore.sounds'>
-                        </div>
-                        <div class='textContainer' @click=''>
-                            <div class='contentTextBody'>
-                                {{ t('notifications.sounds') }}
-                            </div>
-                        </div>
-                    </div>
-                    <!-- desktop alerts -->
-                    <div class='container'>
-                        <div class='iconContainer'>
-                            <input type='checkbox' id='desktopAlerts' v-model='mainStore.desktopAlerts'>
-                        </div>
-                        <div class='textContainer' @click=''>
-                            <div class='contentTextBody'>
-                                {{ t('notifications.desktopAlerts') }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
+
     </transition>
 
 </template>
 
 <style scoped>
 /* animation in from right to left, out from left to right */
-.notifications-enter-active {
+.security-enter-active {
     transition: all 0.25s ease-in 0.25s;
 }
 
-.notifications-leave-active {
+.security-leave-active {
     transition: all 0.25s ease-out;
 }
 
-.notifications-enter-from {
+.security-enter-from {
     transform: translateX(200px);
     opacity: 0;
 }
 
-.notifications-leave-from {
+.security-leave-from {
     transform: translateY(v-bind(offsetTop+'px'));
     opacity: 1;
 }
 
-.notifications-leave-to {
+.security-leave-to {
     transform: translateX(200px) translateY(v-bind(offsetTop+'px'));
     opacity: 0;
 }
@@ -160,14 +137,6 @@ const headerColor = computed(() => {
     align-items: center;
 }
 
-.contentTextBodyBig {
-    font-size: large;
-
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-}
-
 .textContainerBig {
     color: v-bind(textColor);
     margin-top: 0px;
@@ -180,16 +149,24 @@ const headerColor = computed(() => {
     align-items: center;
 }
 
-.container {
+.contentTextBodyBig {
+    font-size: large;
+
     display: flex;
-    flex-direction: horizontal;
-    padding: 0px;
+    justify-content: flex-start;
     align-items: center;
 }
 
 .container:hover {
     background-color: v-bind(hoverColor);
     cursor: pointer;
+}
+
+.container {
+    display: flex;
+    flex-direction: horizontal;
+    padding: 0px;
+    align-items: center;
 }
 
 .iconContainer {
@@ -204,6 +181,14 @@ const headerColor = computed(() => {
     cursor: pointer;
 }
 
+.contentTextBody {
+    font-size: large;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
 .textContainer {
     color: v-bind(textColor);
     width: 100%;
@@ -211,15 +196,8 @@ const headerColor = computed(() => {
     padding: 20px 20px 20px 10px;
     border-bottom: 1px solid v-bind(lineColor);
 
-    display: flex;
-    align-items: center;
-}
-
-.contentTextBody {
-    font-size: large;
 
     display: flex;
-    justify-content: flex-start;
     align-items: center;
 }
 </style>

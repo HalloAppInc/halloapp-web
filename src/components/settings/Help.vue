@@ -20,7 +20,7 @@ const helpMenu = ref<HTMLDivElement>()
 const offsetTop = computed(() => {
     var offset = helpMenu.value?.offsetTop
     if (offset != undefined) {
-        return (-1 * offset) + 50
+        return -1 * offset
     }
 })
 
@@ -59,6 +59,10 @@ const lineColor = computed(() => {
     return colorStore.line
 })
 
+const headerColor = computed(() => {
+    return colorStore.header
+})
+
 function gotoHelp() {
     (<any>window).open(helpLink.value)
 }
@@ -70,81 +74,100 @@ function gotoTerms() {
 function gotoPrivacyPolicy() {
     (<any>window).open(privacyPolicyLink.value)
 }
+
 </script>
 
 <template>
-    <transition>
-        <div v-if="mainStore.settingsPage == 'help'" id='menu' ref='helpMenu'>
-            <!-- Help Center -->
-            <div class="container">
-                <div class="iconContainer">
-                    <font-awesome-icon :icon="['fas', 'circle-question']" size="lg" />
-                </div>
-                <div class="textContainer" @click="gotoHelp()">
-                    <div class="contentTextBody">
-                        {{ t('help.helpCenter') }}
+    <transition name='help'>
+        <div v-if="mainStore.settingsPage == 'help'" ref='helpMenu'>
+            <div id='header'>
+                <div class='contentMenuTitle'>
+                    <div class='iconContainer' @click="mainStore.gotoSettingsPage('')">
+                        <font-awesome-icon :icon="['fas', 'arrow-left']" size='lg' />
+                    </div>
+                    <div class='textContainerBig'>
+                        <div class='contentTextBodyBig'>
+                            {{ t('settings.help') }}
+                        </div>
                     </div>
                 </div>
             </div>
-            <!-- Contact Us -->
-            <div class="container" @click="">
-                <div class="iconContainer">
-                    <font-awesome-icon :icon="['fas', 'users']" size="lg" />
-                </div>
-                <div class="textContainer">
-                    <div class="contentTextBody">
-                        {{ t('help.contactUs') }}
+            <div class='content'>
+                <div id='menu'>
+                    <!-- Help Center -->
+                    <div class='container'>
+                        <div class='iconContainer'>
+                            <font-awesome-icon :icon="['fas', 'circle-question']" size='lg' />
+                        </div>
+                        <div class='textContainer' @click='gotoHelp()'>
+                            <div class='contentTextBody'>
+                                {{ t('help.helpCenter') }}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Contact Us -->
+                    <div class='container' @click=''>
+                        <div class='iconContainer'>
+                            <font-awesome-icon :icon="['fas', 'users']" size='lg' />
+                        </div>
+                        <div class='textContainer'>
+                            <div class='contentTextBody'>
+                                {{ t('help.contactUs') }}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Terms and Privacy Policy -->
+                    <div class='container' @click='gotoTerms()'>
+                        <div class='iconContainer'>
+                            <font-awesome-icon :icon="['fas', 'file-lines']" size='lg' />
+                        </div>
+                        <div class='textContainer'>
+                            <div class='contentTextBody'>
+                                {{ t('help.terms') }}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- privacy -->
+                    <div class='container' @click='gotoPrivacyPolicy()'>
+                        <div class="iconContainer">
+                            <font-awesome-icon :icon="['fas', 'file-lines']" size='lg' />
+                        </div>
+                        <div class='textContainer'>
+                            <div class='contentTextBody'>
+                                {{ t('help.privacyPolicy') }}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <!-- Terms and Privacy Policy -->
-            <div class="container" @click="gotoTerms()">
-                <div class="iconContainer">
-                    <font-awesome-icon :icon="['fas', 'file-lines']" size="lg" />
-                </div>
-                <div class="textContainer">
-                    <div class="contentTextBody">
-                        {{ t('help.terms') }}
-                    </div>
-                </div>
-            </div>
-            <!-- privacy -->
-            <div class="container" @click="gotoPrivacyPolicy()">
-                <div class="iconContainer">
-                    <font-awesome-icon :icon="['fas', 'file-lines']" size="lg" />
-                </div>
-                <div class="textContainer">
-                    <div class="contentTextBody">
-                        {{ t('help.privacyPolicy') }}
-                    </div>
-                </div>
-            </div>
+
         </div>
+
     </transition>
 
 </template>
 
 <style scoped>
 /* animation in from right to left, out from left to right */
-.v-enter-active {
+.help-enter-active {
     transition: all 0.25s ease-in 0.25s;
 }
 
-.v-leave-active {
+.help-leave-active {
     transition: all 0.25s ease-out;
 }
 
-.v-enter-from {
+.help-enter-from {
     transform: translateX(200px);
     opacity: 0;
 }
 
-.v-leave-from {
+.help-leave-from {
     transform: translateY(v-bind(offsetTop+'px'));
     opacity: 1;
 }
 
-.v-leave-to {
+.help-leave-to {
     transform: translateX(200px) translateY(v-bind(offsetTop+'px'));
     opacity: 0;
 }
@@ -171,6 +194,43 @@ function gotoPrivacyPolicy() {
     height: 100%;
 }
 
+#header {
+    flex: 0 0 50px;
+    background-color: v-bind(headerColor);
+    padding: 10px;
+}
+
+.content {
+    background-color: v-bind(backgroundColor);
+}
+
+.contentMenuTitle {
+    display: flex;
+    flex-direction: row;
+    background-color: v-bind(headerColor);
+    align-items: center;
+}
+
+.textContainerBig {
+    color: v-bind(textColor);
+    margin-top: 0px;
+    width: 100%;
+    padding: 2px 2px 2px 2px;
+
+
+    display: flex;
+    width: 100%;
+    align-items: center;
+}
+
+.contentTextBodyBig {
+    font-size: large;
+
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
 .container:hover {
     background-color: v-bind(hoverColor);
     cursor: pointer;
@@ -185,10 +245,10 @@ function gotoPrivacyPolicy() {
 
 .iconContainer {
     margin-right: 20px;
-    padding: 10px 30px 10px 30px;
+    padding: 5px 30px 5px 30px;
     color: v-bind(iconColor);
-    width: 45px;
-    height: 45px;
+    width: 30px;
+    height: 30px;
 }
 
 .iconContainer:hover {

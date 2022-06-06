@@ -82,6 +82,7 @@ const shadowColor = computed(() => {
     opacity: 0;
     transform: scale(0.9);
 }
+
 .mask {
     position: fixed;
     z-index: 9998;
