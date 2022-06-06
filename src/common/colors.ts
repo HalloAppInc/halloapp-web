@@ -33,4 +33,10 @@ export default defineComponent({
 
     shadowLight: 'rgba(100, 100, 100, 0.3)',
     shadowDark: 'rgba(0, 0, 0, 0.3)',
+
+    myChatBubbleLight: '#FFF5D6',
+    myChatBubbleDark: '',
+
+    othersChatBubbleLight: '#FFFFFF',
+    othersChatBubbleDark: '',
 })

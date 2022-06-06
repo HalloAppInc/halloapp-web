@@ -35,10 +35,6 @@ const textColor = computed(() => {
     return colorStore.text
 })
 
-const borderlineStyle = computed(() => {
-    return "1px solid " + colorStore.borderline
-})
-
 const secondaryTextColor = computed(() => {
     return colorStore.secondaryText
 })
@@ -55,7 +51,7 @@ const iconColor = computed(() => {
         <div id="header">
             <div class="contentMenuTitle" v-show="mainStore.settingsPage != '' && mainStore.settingsPage != 'theme'">
                 <div class="iconContainer" @click="mainStore.gotoSettingsPage('')">
-                    <font-awesome-icon :icon="['fas', 'arrow-left']" />
+                    <font-awesome-icon :icon="['fas', 'arrow-left']" size='lg' />
                 </div>
                 <div class="textContainerBig">
                     <div class="contentTextBodyBig" v-show="mainStore.settingsPage == 'notifications'">
@@ -73,6 +69,7 @@ const iconColor = computed(() => {
                 </div>
             </div>
         </div>
+        
         <div class="content">
 
             <!--main menu -->
@@ -83,12 +80,14 @@ const iconColor = computed(() => {
             <notificationsMenu />
 
         </div>
+        
 
         <popup />
     </div>
 </template>
 
 <style scoped>
+
 *::-webkit-scrollbar {
     width: 5px;
 }
@@ -201,9 +200,11 @@ const iconColor = computed(() => {
 }
 
 .iconContainer {
-    padding: 0px 30px 0px 30px;
-    float: left;
+    margin-right: 20px;
+    padding: 10px 30px 10px 30px;
     color: v-bind(iconColor);
+    width: 45px;
+    height: 45px;
 }
 
 .iconContainer:hover{

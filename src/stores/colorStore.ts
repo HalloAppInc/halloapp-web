@@ -17,6 +17,7 @@ export const useColorStore = defineStore('color', {
         wraper: colors.wraperLight,
         shadow: colors.shadowLight,
         line: colors.lineLight,
+        chatBox: colors.chatBox,
     }),
     getters: {
     },
@@ -35,7 +36,12 @@ export const useColorStore = defineStore('color', {
                     }
                 })
             // initialize colors
-            this.changePreferColorSchema(mainStore.preferColorScheme)
+            if (mainStore.preferColorScheme == '') {
+                this.changePreferColorSchema('auto')
+            }
+            else {
+                this.changePreferColorSchema(mainStore.preferColorScheme)
+            }
         },
 
         computeColors(mode: string) {

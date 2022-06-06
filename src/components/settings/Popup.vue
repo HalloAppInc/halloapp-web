@@ -56,11 +56,11 @@ const shadowColor = computed(() => {
                     </div>
 
                     <div class='footer'>
-                        <div class='button' @click="mainStore.gotoSettingsPage('')">
+                        <div class='button' @click="mainStore.gotoSettingsPage(''); mode = mainStore.preferColorScheme">
                             {{ t('button.cancelButton') }}
                         </div>
                         <div class='button'
-                            @click="colorStore.changePreferColorSchema(mode);mainStore.gotoSettingsPage('')">
+                            @click="colorStore.changePreferColorSchema(mode); mainStore.gotoSettingsPage(''); mode = mainStore.preferColorScheme">
                             {{ t('button.okButton') }}
                         </div>
                     </div>
@@ -135,7 +135,7 @@ const shadowColor = computed(() => {
     color: white;
 
     font-family: "Gotham", Helvetica, "Helvetica Neue", Arial, Avenir, sans-serif;
-    font-size: 10px;
+    font-size: 15px;
     font-weight: bold;
 }
 

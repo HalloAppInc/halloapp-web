@@ -19,15 +19,16 @@ const helpMenu = ref<HTMLDivElement>()
 // find the offset to the top
 const offsetTop = computed(() => {
     var offset = helpMenu.value?.offsetTop
-    if (offset != undefined)
-        return -1 * offset + 50
+    if (offset != undefined) {
+        return (-1 * offset) + 50
+    }
 })
 
 function setLanguage(language: string) {
-    if (language === 'en') {
-        return ''
+    if (language != 'en' && language != 'id') {
+        return language + '/'
     }
-    return language + '/'
+    return ''
 }
 
 // get language settings from locale
@@ -77,7 +78,7 @@ function gotoPrivacyPolicy() {
             <!-- Help Center -->
             <div class="container">
                 <div class="iconContainer">
-                    <font-awesome-icon :icon="['fas', 'circle-question']" size="xl" />
+                    <font-awesome-icon :icon="['fas', 'circle-question']" size="lg" />
                 </div>
                 <div class="textContainer" @click="gotoHelp()">
                     <div class="contentTextBody">
@@ -88,7 +89,7 @@ function gotoPrivacyPolicy() {
             <!-- Contact Us -->
             <div class="container" @click="">
                 <div class="iconContainer">
-                    <font-awesome-icon :icon="['fas', 'users']" size="xl" />
+                    <font-awesome-icon :icon="['fas', 'users']" size="lg" />
                 </div>
                 <div class="textContainer">
                     <div class="contentTextBody">
@@ -99,7 +100,7 @@ function gotoPrivacyPolicy() {
             <!-- Terms and Privacy Policy -->
             <div class="container" @click="gotoTerms()">
                 <div class="iconContainer">
-                    <font-awesome-icon :icon="['fas', 'file-lines']" size="xl" />
+                    <font-awesome-icon :icon="['fas', 'file-lines']" size="lg" />
                 </div>
                 <div class="textContainer">
                     <div class="contentTextBody">
@@ -110,7 +111,7 @@ function gotoPrivacyPolicy() {
             <!-- privacy -->
             <div class="container" @click="gotoPrivacyPolicy()">
                 <div class="iconContainer">
-                    <font-awesome-icon :icon="['fas', 'file-lines']" size="xl" />
+                    <font-awesome-icon :icon="['fas', 'file-lines']" size="lg" />
                 </div>
                 <div class="textContainer">
                     <div class="contentTextBody">
@@ -135,7 +136,6 @@ function gotoPrivacyPolicy() {
 
 .v-enter-from {
     transform: translateX(200px);
-    /* get the height? */
     opacity: 0;
 }
 
@@ -184,9 +184,11 @@ function gotoPrivacyPolicy() {
 }
 
 .iconContainer {
-    padding: 0px 30px 0px 30px;
-    float: left;
+    margin-right: 20px;
+    padding: 10px 30px 10px 30px;
     color: v-bind(iconColor);
+    width: 45px;
+    height: 45px;
 }
 
 .iconContainer:hover {
@@ -194,23 +196,22 @@ function gotoPrivacyPolicy() {
 }
 
 .contentTextBody {
-    font-size: larger;
-
+    font-size: large;
     display: flex;
-    justify-content: flex-start;
+    flex-direction: row;
     align-items: center;
+    justify-content: center;
 }
 
 .textContainer {
     color: v-bind(textColor);
-    margin-top: 10px;
     width: 100%;
+    height: 4em;
     padding: 20px 20px 20px 10px;
     border-bottom: 1px solid v-bind(lineColor);
 
 
     display: flex;
-    width: 100%;
     align-items: center;
 }
 </style>

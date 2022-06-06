@@ -136,25 +136,22 @@ const lineColor = computed(() => {
 
 .iconContainer {
     padding: 0px 30px 0px 30px;
-    float: left;
     color: v-bind(iconColor);
 }
 
 .textContainer {
     color: v-bind(textColor);
-    margin-top: 10px;
     width: 100%;
+    height: 4em;
     padding: 20px 20px 20px 10px;
     border-bottom: 1px solid v-bind(lineColor);
 
-
     display: flex;
-    width: 100%;
     align-items: center;
 }
 
 .contentTextBody {
-    font-size: larger;
+    font-size: large;
 
     display: flex;
     justify-content: flex-start;
