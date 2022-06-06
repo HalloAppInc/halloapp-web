@@ -35,8 +35,17 @@ export default defineComponent({
     shadowDark: 'rgba(0, 0, 0, 0.3)',
 
     myChatBubbleLight: '#FFF5D6',
-    myChatBubbleDark: '',
+    myChatBubbleDark: '#111b21',
+
+    messageBubbleLight: '#FFEBAE',
+    messageBubbleDark: '#111b21',
 
     othersChatBubbleLight: '#FFFFFF',
-    othersChatBubbleDark: '',
+    othersChatBubbleDark: '#2a3942',
+
+    timestampLight: 'rgba(0, 0, 0, 0.5)',
+    timestampDark: 'rgba(255, 255, 255, 0.5)',
+
+    chatBackgroundLight: 'rgba(242, 193, 139, 0.33)',
+    chatBackgroundDark: 'rgba(8, 11, 20, 0.7)',
 })

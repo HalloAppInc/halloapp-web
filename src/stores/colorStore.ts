@@ -17,7 +17,11 @@ export const useColorStore = defineStore('color', {
         wraper: colors.wraperLight,
         shadow: colors.shadowLight,
         line: colors.lineLight,
-        chatBox: colors.chatBox,
+        myChatBubble: colors.myChatBubbleLight,
+        othersChatBubble: colors.othersChatBubbleLight,
+        messageBubble: colors.messageBubbleLight,
+        timestamp: colors.timestampLight,
+        chatBackground: colors.chatBackgroundLight
     }),
     getters: {
     },
@@ -55,6 +59,11 @@ export const useColorStore = defineStore('color', {
             this.wraper = colors['wraper' + mode]
             this.shadow = colors['shadow' + mode]
             this.line = colors['line' + mode]
+            this.myChatBubble = colors['myChatBubble' + mode],
+            this.othersChatBubble = colors['othersChatBubble' + mode]
+            this.messageBubble = colors['messageBubble' + mode]
+            this.timestamp = colors['timestamp' + mode]
+            this.chatBackground = colors['chatBackground' + mode]
         },
 
         changePreferColorSchema(mode: string) {
