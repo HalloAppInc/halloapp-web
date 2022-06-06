@@ -27,10 +27,6 @@ const headerColor = computed(() => {
     return colorStore.header
 })
 
-const hoverColor = computed(() => {
-    return colorStore.hover
-})
-
 const textColor = computed(() => {
     return colorStore.text
 })
