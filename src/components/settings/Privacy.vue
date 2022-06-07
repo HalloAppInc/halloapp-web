@@ -76,11 +76,11 @@ const headerColor = computed(() => {
 <style scoped>
 /* animation in from right to left, out from left to right */
 .privacy-enter-active {
-    transition: all 0.25s ease-in 0.25s;
+    transition: all 0.15s ease-in 0.15s;
 }
 
 .privacy-leave-active {
-    transition: all 0.25s ease-out;
+    transition: all 0.15s ease-out;
 }
 
 .privacy-enter-from {

@@ -99,11 +99,11 @@ const headerColor = computed(() => {
 <style scoped>
 /* animation in from right to left, out from left to right */
 .notifications-enter-active {
-    transition: all 0.25s ease-in 0.25s;
+    transition: all 0.15s ease-in 0.15s;
 }
 
 .notifications-leave-active {
-    transition: all 0.25s ease-out;
+    transition: all 0.15s ease-out;
 }
 
 .notifications-enter-from {

@@ -87,7 +87,7 @@ function videoLoaded(event: Event, index: number) {
 function clickPrevious(event: Event) {
     if (!$mediaCarousel.value) { return }
     const carousel = $mediaCarousel.value as HTMLElement
-    carousel.style.transition = "transform 0.25s"
+    carousel.style.transition = "transform 0.15s"
 
     if (selectedMedia.value <= 0) { return }
     selectedMedia.value -= 1
@@ -99,7 +99,7 @@ function clickPrevious(event: Event) {
 function clickNext(event: Event) {
     if (!$mediaCarousel.value) { return }
     const carousel = $mediaCarousel.value as HTMLElement
-    carousel.style.transition = "transform 0.25s"    
+    carousel.style.transition = "transform 0.15s"    
 
     if (selectedMedia.value >= (props.album.length - 1) ) { 
         return 
@@ -353,7 +353,7 @@ function touchEnd(event: Event) {
     display: flex;
     flex-direction: horizontal;
 
-    transition: transform 0.25s;
+    transition: transform 0.15s;
     transform: translateX(calc(-100% * v-bind(selectedMedia)));
 
     user-select: none;

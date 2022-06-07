@@ -133,11 +133,11 @@ const headerColor = computed(() => {
 <style scoped>
 /* animation in from left to right, out from right to left */
 .main-enter-active {
-    transition: all 0.25s ease-in 0.25s;
+    transition: all 0.15s ease-in 0.15s;
 }
 
 .main-leave-active {
-    transition: all 0.25s ease-out;
+    transition: all 0.15s ease-out;
 }
 
 .main-enter-from {
