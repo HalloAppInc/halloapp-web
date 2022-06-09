@@ -18,9 +18,9 @@ const helpMenu = ref<HTMLDivElement>()
 
 // find the offset to the top
 const offsetTop = computed(() => {
-    var offset = helpMenu.value?.offsetTop
+    let offset = helpMenu.value?.offsetTop
     if (offset != undefined) {
-        return -1 * offset
+        return (-1 * offset)
     }
 })
 
@@ -163,12 +163,12 @@ function gotoPrivacyPolicy() {
 }
 
 .help-leave-from {
-    transform: translateY(v-bind(offsetTop+'px'));
+    transform: translateY(v-bind(offsetTop + 'px'));
     opacity: 1;
 }
 
 .help-leave-to {
-    transform: translateX(200px) translateY(v-bind(offsetTop+'px'));
+    transform: translateX(200px) translateY(v-bind(offsetTop + 'px'));
     opacity: 0;
 }
 
@@ -177,16 +177,13 @@ function gotoPrivacyPolicy() {
 }
 
 *::-webkit-scrollbar-track {
-    background: white;
-    /* color of the tracking area */
+    background: white;      /* color of the tracking area */
 }
 
 *::-webkit-scrollbar-thumb {
-    background-color: rgb(172, 169, 169);
-    /* color of the scroll thumb */
-
-    border: 0px solid white;
-    /* creates padding around scroll thumb */
+    background-color: rgb(172, 169, 169);   /* color of the scroll thumb */
+    
+    border: 0px solid white;    /* creates padding around scroll thumb */
 }
 
 #menu {

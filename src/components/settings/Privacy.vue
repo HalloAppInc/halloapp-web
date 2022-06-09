@@ -89,12 +89,12 @@ const headerColor = computed(() => {
 }
 
 .privacy-leave-from {
-    transform: translateY(v-bind(offsetTop+'px'));
+    transform: translateY(v-bind(offsetTop + 'px'));
     opacity: 1;
 }
 
 .privacy-leave-to {
-    transform: translateX(200px) translateY(v-bind(offsetTop+'px'));
+    transform: translateX(200px) translateY(v-bind(offsetTop + 'px'));
     opacity: 0;
 }
 
@@ -103,16 +103,13 @@ const headerColor = computed(() => {
 }
 
 *::-webkit-scrollbar-track {
-    background: white;
-    /* color of the tracking area */
+    background: white;      /* color of the tracking area */
 }
 
 *::-webkit-scrollbar-thumb {
-    background-color: rgb(172, 169, 169);
-    /* color of the scroll thumb */
+    background-color: rgb(172, 169, 169);       /* color of the scroll thumb */
 
-    border: 0px solid white;
-    /* creates padding around scroll thumb */
+    border: 0px solid white;        /* creates padding around scroll thumb */
 }
 
 #menu {

@@ -57,7 +57,7 @@ if (process.env.NODE_ENV?.toString() == "development") {
 
 applyPlatformSpecifics()
 loadFonts()
-colorStore.init() // initialized color scheme
+colorStore.init() // initialize color scheme
 // init() // probably same as connect
 
 // connect()
