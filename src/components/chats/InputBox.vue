@@ -204,7 +204,6 @@ function analyzeInput() {
     }
     console.log('inputmessage=', inputMessage.value)
 
-    console.log(123)
     // check if mension someone in contacts
     if (inputMessage.value[inputMessage.value.length - 1] == '@') {
         showContacts.value = true
@@ -217,13 +216,15 @@ function analyzeInput() {
         console.log('innerText=', inputArea.value.innerText, 'innerHTML=', inputArea.value.innerHTML)
         inputArea.value.innerHTML = inputMessage.value
         // set cursor to the end
-        var range = document.createRange();
-        var sel = window.getSelection()
-        range.setStart(inputArea.value.childNodes[0], inputArea.value.innerText.length)
-        range.collapse(true)
-        if (sel) {
-            sel.removeAllRanges()
-            sel.addRange(range)
+        if (inputArea.value.innerText) {
+            var range = document.createRange();
+            var sel = window.getSelection()
+            range.setStart(inputArea.value.childNodes[0], inputArea.value.innerText.length)
+            range.collapse(true)
+            if (sel) {
+                sel.removeAllRanges()
+                sel.addRange(range)
+            }
         }
     }
 
@@ -233,8 +234,6 @@ function analyzeInput() {
 
 <template>
     <div class='chatBoxTray'>
-        {{ showContacts }}
-        {{ inputMessage }}
         <div class='iconContainer'>
             <font-awesome-icon :icon="['fas', 'face-smile']" size='2xl' />
         </div>
@@ -245,8 +244,8 @@ function analyzeInput() {
             <!-- <textarea cols='85' v-model='inputMessage' class='input' placeholder='Type your message here...'
                 @keydown.enter.exact.prevent='sendMessage' @keydown.shift.enter.exact.prevent='nextLine'
                 ref='inputArea'></textarea> -->
-            <div id='textarea' ref='inputArea' contenteditable='true'
-                @keydown.enter.exact.prevent='sendMessage' @keyup='analyzeInput'>
+            <div id='textarea' ref='inputArea' contenteditable='true' @keydown.enter.exact.prevent='sendMessage'
+                @keyup='analyzeInput'>
             </div>
         </div>
         <div class='iconContainer'>
