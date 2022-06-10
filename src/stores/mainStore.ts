@@ -30,6 +30,12 @@ export const useMainStore = defineStore('main', {
         haveMobilePublicKey: '',
 
         page: 'home',
+        settingsPage: '',
+
+        sounds: false,
+        desktopAlerts: false,
+
+        preferColorScheme: '',
     }),
     getters: {
     },
@@ -43,6 +49,9 @@ export const useMainStore = defineStore('main', {
         },
         gotoPage(page: string) {
             this.page = page
+        },
+        gotoSettingsPage(page: string) {
+            this.settingsPage = page
         }
     },
 })

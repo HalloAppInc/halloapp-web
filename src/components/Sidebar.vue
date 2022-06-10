@@ -6,6 +6,7 @@ import { useMainStore } from '../stores/mainStore'
 import HomeSidebar from './home/HomeSidebar.vue'
 import GroupsSidebar from './groups/GroupsSidebar.vue'
 import ChatsSidebar from './chats/ChatsSidebar.vue'
+import SettingsSidebar from './settings/settingsSidebar.vue'
 
 const mainStore = useMainStore()
 
@@ -24,7 +25,10 @@ const mainStore = useMainStore()
     <keep-alive>
         <ChatsSidebar v-if='mainStore.page == "chats"' />
     </keep-alive>
-
+    <keep-alive>
+        <SettingsSidebar v-if='mainStore.page == "settings"' />
+    </keep-alive>
+    
 </div>
 
 </template>
@@ -57,11 +61,6 @@ const mainStore = useMainStore()
     overflow: hidden;
 }
 
-#header {
-    flex: 0 0 50px;
-    background-color: #f0f2f5;
-    padding: 10px;
-}
 
 #listBox {
     overflow-y: auto;
@@ -134,5 +133,4 @@ const mainStore = useMainStore()
 
     user-select: none;
 }
-
 </style>
