@@ -108,6 +108,8 @@ const listData = [
 
     height: 100%;
 
+    border-right: 1px solid #b8b7b7;
+
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
