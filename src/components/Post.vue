@@ -6,6 +6,10 @@ import { Base64 } from "js-base64"
 import { clients } from "../proto/clients.js"
 import hal from "../common/halogger"
 
+import { useMainStore } from '../stores/mainStore'
+
+const mainStore = useMainStore()
+
 let isDebug = true
 
 let pushname = (<any>window).han
@@ -54,7 +58,6 @@ const showGooglePlay = ref(true)
 const showAppleStore = ref(true)
 
 init()
-applyPlatformSpecifics()
 
 async function init() {  
     const urlHashComponent = location.hash
@@ -413,19 +416,6 @@ function setMediaLengthDisplay(duration: number) {
     mediaLengthSeconds.value = seconds.toString().padStart(2, '0')
 }
 
-async function applyPlatformSpecifics() {
-    const userAgent = navigator.userAgent || navigator.vendor || (<any>window).opera
-    if (/iPad|iPhone|iPod/.test(userAgent) && !(<any>window).MSStream) {
-        showGooglePlay.value = false
-    }
-    if (/android/i.test(userAgent)) {
-        showAppleStore.value = false
-    }
-
-    if (navigator.userAgent.indexOf('Safari') != -1 && navigator.userAgent.indexOf('Chrome') == -1) {
-        isSafari.value = true
-    }
-}
 </script>
 
 <template>

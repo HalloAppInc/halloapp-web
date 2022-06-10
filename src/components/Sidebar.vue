@@ -35,23 +35,7 @@ const mainStore = useMainStore()
 
 <style scoped>
 
-
-*::-webkit-scrollbar {
-    width: 5px;
-}
-
-*::-webkit-scrollbar-track {
-    background: white;        /* color of the tracking area */
-}
-
-*::-webkit-scrollbar-thumb {
-    background-color: rgb(172, 169, 169);    /* color of the scroll thumb */
-
-    border: 0px solid white;  /* creates padding around scroll thumb */
-}
-
 .wrapper {
-
     height: 100%;
 
     display: flex;

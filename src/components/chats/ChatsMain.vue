@@ -26,8 +26,6 @@ import { useMainStore } from '../../stores/mainStore'
     width: 100%;
     height: 100%;
 
-    border-left: 1px solid #b8b7b7;
-
     background-color: rgb(229, 229, 247);
 
     background-image: repeating-radial-gradient( circle at 0 0, transparent 0, #e5e5f7 10px ), repeating-linear-gradient( rgba(242, 193, 139, 0.33), rgb(242, 193, 139, 0.4) );
