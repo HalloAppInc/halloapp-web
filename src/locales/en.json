@@ -23,5 +23,34 @@
     },    
     "mediaCarousel": {
         "noVideoSupportText": "Your browser cannot play the provided video file."
+    },
+    "button": {
+        "okButton": "OK",
+        "cancelButton": "CANCEL"
+    },
+    "popup": {
+        "popupHeaderText": "Choose theme",
+        "lightModeText": "Light",
+        "darkModeText": "Dark",
+        "autoModeText": "Auto"
+    },
+    "settings": {
+        "notifications": "Notifications",
+        "privacy": "Privacy",
+        "security": "Security",
+        "theme": "Theme",
+        "help": "Help"
+    },
+    "help": {
+        "help": "Help",
+        "helpCenter": "Help Center",
+        "contactUs": "Contact Us",
+        "licenses": "Licenses",
+        "terms": "Terms",
+        "privacyPolicy": "Privacy Policy"
+    },
+    "notifications": {
+        "sounds": "Sounds",
+        "desktopAlerts": "Desktop Alerts"
     }
 }
