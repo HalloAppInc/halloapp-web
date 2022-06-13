@@ -89,22 +89,23 @@ const listData = [
 
 
 *::-webkit-scrollbar {
-  width: 5px;
+    width: 5px;
 }
 
 *::-webkit-scrollbar-track {
-  background: white;        /* color of the tracking area */
+    background: white;        /* color of the tracking area */
 }
 
 *::-webkit-scrollbar-thumb {
-  background-color: rgb(172, 169, 169);    /* color of the scroll thumb */
+    background-color: rgb(172, 169, 169);    /* color of the scroll thumb */
   
-  border: 0px solid white;  /* creates padding around scroll thumb */
+    border: 0px solid white;  /* creates padding around scroll thumb */
 }
 
 .wrapper {
 
     height: 100%;
+    border-right: 1px solid #b8b7b7;
 
     display: flex;
     flex-direction: column;

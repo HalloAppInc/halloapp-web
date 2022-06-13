@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUpdated } from 'vue'
+import { ref, onMounted, onUpdated, ComputedRef, computed } from 'vue'
 
 import Sidebar from './components/Sidebar.vue'
 import Sidestrip from './components/Sidestrip.vue'
@@ -12,41 +12,51 @@ import { useMainStore } from './stores/mainStore'
 import { useColorStore } from './stores/colorStore'
 
 import hacrypto from './common/hacrypto'
-import { Base64 } from "js-base64"
+import { Base64 } from 'js-base64'
 
 import createNoise from "noise-c.wasm"
 
+import { network } from './common/network'
+
 import { server } from "./proto/server.js"
-import { nanoid } from 'nanoid'
 
 import { useI18n } from 'vue-i18n'
 
 const mainStore = useMainStore()
 const colorStore = useColorStore()
 
+let { addKey, removeKey, check, sendDemoWebStanza } = network()
+
 const { t } = useI18n({
     inheritLocale: true,
     useScope: 'global'
 })
 
-if (!mainStore.privateKeyBase64) {
-    hal.log("App/keypair not found, generate keypair")
-    const keypair = hacrypto.keygen()
-    mainStore.privateKeyBase64 = Base64.fromUint8Array(keypair.secretKey)
-    mainStore.publicKeyBase64 = Base64.fromUint8Array(keypair.publicKey)
-}
+const sideBarWidth: ComputedRef<string> = computed((): string => {
+    if (mainStore.page == 'home') {
+        return '5%'
+    } else {
+        return '30%'
+    }
+})
 
-console.log("App/privateKey: " + mainStore.privateKeyBase64)
-console.log("App/publicKey: " + mainStore.publicKeyBase64)
+function generatePublicKeyIfNeeded() {
+    if (!mainStore.privateKeyBase64) {
+        hal.log("generatePublicKeyIfNeeded/keypair not found, generate keypair")
+        const keypair = hacrypto.keygen()
+        mainStore.privateKeyBase64 = Base64.fromUint8Array(keypair.secretKey)
+        mainStore.publicKeyBase64 = Base64.fromUint8Array(keypair.publicKey)
+    }
+    hal.log("generatePublicKeyIfNeeded/privateKey: " + mainStore.privateKeyBase64)
+    hal.prod("generatePublicKeyIfNeeded/publicKey: " + mainStore.publicKeyBase64)
+}
 
 let isDebug = false
 
-const gothamFontUrl = ref("https://halloapp.com/fonts/gotham/woff2/Gotham-Book_Web.woff2")
-const gothamMediumFontUrl = ref("https://halloapp.com/fonts/gotham/woff2/Gotham-Medium_Web.woff2")
-
+const gothamFontUrl = ref("https://web.halloapp.com/fonts/gotham/woff2/Gotham-Book_Web.woff2")
+const gothamMediumFontUrl = ref("https://web.halloapp.com/fonts/gotham/woff2/Gotham-Medium_Web.woff2")
 
 const $qrCode = ref(null)
-
 
 let devCORSWorkaroundUrlPrefix = ""
 if (process.env.NODE_ENV?.toString() == "development") {
@@ -54,137 +64,176 @@ if (process.env.NODE_ENV?.toString() == "development") {
     devCORSWorkaroundUrlPrefix = "https://cors-anywhere.herokuapp.com/"
 }
 
+let webSocket: any
+let noise: any
+let handshakeState: any
+let cipherStateSend: { EncryptWithAd: (arg0: never[], arg1: string) => any }
+let cipherStateReceive: { DecryptWithAd: (arg0: never[], arg1: any) => any }
 
 applyPlatformSpecifics()
 loadFonts()
-colorStore.init() // initialized color scheme
-// init() // probably same as connect
 
-// connect()
-
-async function connectToServer() {
-    const server = "wss://ws-test.halloapp.net/ws"
-    const webSocket = new WebSocket(server)
-    webSocket.binaryType = "arraybuffer"
-
-    webSocket.onopen = function(event) {
-        hal.log("conn/opened: " + event)
-        return webSocket
-    }
-}
+colorStore.init() // initialize color scheme
+init()
 
 async function init() {
-
-    let webSocket
-
-    hal.log('init/logged into app')
     if (!mainStore.isConnectedToServer) {
         hal.log('init/not connected to server')
-        // connect
         webSocket = await connectToServer()
     }
-    
-    if (!mainStore.isHandshakeCompleted) {
+}
 
-        if(mainStore.haveMobilePublicKey) {
-            // start handshake as initiator
-        } else {
-            // start handshake as responder
+async function connectToServer() {
+    // const server = "wss://localhost:7071"
+    const server = 'wss://ws-test.halloapp.net/ws'
+    const webSocket = new WebSocket(server)
+    webSocket.binaryType = 'arraybuffer'
+
+    webSocket.onopen = function(event) {
+        hal.log("connectToServer/webSocket/onopen: " + event)
+
+        webSocket.removeEventListener('message', handleMsg)
+        webSocket.addEventListener('message', handleMsg)
+
+        if (!mainStore.haveAddedPublicKeyToServer) {
+            addKey(webSocket, function() {
+                hal.log('connectToServer/added public key successfully')
+                mainStore.haveAddedPublicKeyToServer = true
+            })
+        }
+    }
+}
+
+async function handleMsg(event: any) {
+    const eventDataBinArr = new Uint8Array(event.data)
+    const packet = await decodePacket(eventDataBinArr)
+    const iq = packet.iq
+    const id = iq?.id
+
+    const msg = packet?.msg
+    const webStanza = msg?.webStanza
+
+    if (webStanza) {
+
+        if (!noise) {
+            createNoise(function (noise: any) { noise = noise })
         }
 
-        // complete handshake
-        // log into app
+        if (mainStore.isPublicKeyAuthenticated && mainStore.haveInitialHandshakeCompleted) {
+            const decrypted = cipherStateReceive.DecryptWithAd([], eventDataBinArr)
+            const decoded = new TextDecoder().decode(decrypted)
+            hal.log('handleMsg/webStanza/decrypted: ' + decoded)
+        } else if (!mainStore.haveInitialHandshakeCompleted) {
+            if (!handshakeState) {
+                initHandshake(noise)
+            }
+            handleNoiseHandshakeMsg(webStanza.content)
+        }
+
+    } else {
+
+        for (let i = 0; i < mainStore.messageQueue.length; i++) {
+            if (mainStore.messageQueue[i].id == id) {
+                const callback = mainStore.messageQueue[i].callback
+                if (callback) {
+                    callback()
+                }
+                // remove message
+                mainStore.messageQueue.splice(i, 1)
+                break
+            }
+        }
 
     }
 }
 
-function sendDemoWebStanza(websocket: any) {
 
-    let id = nanoid()
-    let publicKey = Base64.toUint8Array(mainStore.publicKeyBase64)
+function handleNoiseHandshakeMsg(contentBinArr: any) {
+    let action = handshakeState.GetAction()
 
-    let webStanza = server.WebStanza.create({
-        staticKey: publicKey,
-        content: publicKey
-    })
+    if (action == noise.constants.NOISE_ACTION_FAILED) { // 16643
+        hal.prod('handleNoiseHandshakeMsg/action/failed')
 
-    // what about: toUid, fromUid, retryCount, rerequestCount
-    let msg = server.Msg.create({
-        id: id,
-        type: server.Msg.Type.NORMAL,
-        webStanza: webStanza
-    })
+    } else if (action == noise.constants.NOISE_ACTION_READ_MESSAGE) { // 16642
+        hal.prod('handleNoiseHandshakeMsg/action/read')
+        const fallbackSupported = false      
+        handshakeState.ReadMessage(contentBinArr, fallbackSupported)
 
-    let packet = server.Packet.create({ msg: msg })
-    let buffer = server.Packet.encode(packet).finish()
+    } else if (action == noise.constants.NOISE_ACTION_WRITE_MESSAGE) {
+        hal.prod('handleNoiseHandshakeMsg/action/write')
+        const writeMessage = handshakeState.WriteMessage()
+        // todo: need to send writeMessage as proto webstanza
+        // webSocket.send(writeMessage)
+    }
 
-    websocket.send(buffer.buffer)
-    console.log("--> sendDemoWebStanza ")
+    action = handshakeState.GetAction()
+
+    if (action == noise.constants.NOISE_ACTION_SPLIT) { // 16644
+        hal.prod('handleNoiseHandshakeMsg/action/split')
+
+        const remotePublicKey = handshakeState.GetRemotePublicKey()
+        const mobilePublicKeyBase64 = Base64.fromUint8Array(remotePublicKey)
+        hal.prod('handleNoiseHandshakeMsg/mobilePublicKeyBase64: ' + mobilePublicKeyBase64)
+    
+        const split = handshakeState.Split()
+        cipherStateSend = split[0]
+        cipherStateReceive = split[1]
+
+        mainStore.isPublicKeyAuthenticated = true
+        mainStore.haveInitialHandshakeCompleted = true
+
+        alert('Noise handshake successful, logging in')
+        mainStore.login()
+    }
 }
 
-function addKey(websocket: any) {
-    let id = nanoid()
+async function initHandshake(noise: any) {
 
-    let publicKey = Base64.toUint8Array(mainStore.publicKeyBase64)
-    let webClientInfo = server.WebClientInfo.create({
-        action: server.WebClientInfo.Action.ADD_KEY,
-        staticKey: publicKey
-    })
-    let iq = server.Iq.create({
-        id: id,
-        type: server.Iq.Type.SET,
-        webClientInfo: webClientInfo
-    })
-    let message = server.Packet.create({ iq: iq })
-    let buffer = server.Packet.encode(message).finish()
+    /* create public key */
+    // let [first, second] = noise.CreateKeyPair(noise.constants.NOISE_DH_CURVE25519)
+    // const newPrivateKey = new Uint8Array(first)
+    // const newPublicKey = new Uint8Array(second)
+    // const newBase64PrivateKey = Base64.fromUint8Array(newPrivateKey)
+    // const newBase64PublicKey = Base64.fromUint8Array(newPublicKey)
+    // console.log("1: " + newBase64PrivateKey)
+    // console.log("2: " + newBase64PublicKey)
 
-    websocket.send(buffer.buffer)
-    console.log("--> add key " + id)
+    const pattern   = 'IK'
+    const curve     = '25519'
+    const cipher    = 'ChaChaPoly'
+    const hash      = 'BLAKE2b'
+    const protocolName = `Noise_${pattern}_${curve}_${cipher}_${hash}`
+    handshakeState = noise.HandshakeState(protocolName, noise.constants.NOISE_ROLE_RESPONDER)
+    hal.log("initHandshake: ")
+    hal.dir(handshakeState)
+
+    // let cipherStateSend: { EncryptWithAd: (arg0: never[], arg1: string) => any }
+    // let cipherStateReceive: { DecryptWithAd: (arg0: never[], arg1: any) => any }
+
+    let prologue
+    let psk
+    let remotePublicKey
+    const privateKey = Base64.toUint8Array(mainStore.privateKeyBase64)
+
+    handshakeState.Initialize(
+        prologue,
+        privateKey,
+        remotePublicKey,
+        psk
+    )
+
+    // webSocket.removeEventListener('message', handleHandshakeMessage)
+    // webSocket.addEventListener('message', handleHandshakeMessage)
+
+    /* send message */
+    // let counter = 0
+    // setInterval(function () {
+    //     console.log('handleHandshakeMessage/action/split/sent...')
+    //     const encrypted = cipherStateSend.EncryptWithAd([], 'Tony is here ' + counter)
+    //     webSocket.send(encrypted)
+    //     counter++
+    // }, 3000)
 }
-
-function removeKey(websocket: any) {
-    let id = nanoid()
-
-    let publicKey = Base64.toUint8Array(mainStore.publicKeyBase64)
-    let webClientInfo = server.WebClientInfo.create({
-        action: server.WebClientInfo.Action.REMOVE_KEY,
-        staticKey: publicKey
-    })
-    let iq = server.Iq.create({
-        id: id,
-        type: server.Iq.Type.SET,
-        webClientInfo: webClientInfo
-    })
-    let message = server.Packet.create({ iq: iq })
-    let buffer = server.Packet.encode(message).finish()
-
-    websocket.send(buffer.buffer)
-    console.log("--> remove key " + id)
-}
-
-function check(websocket: any) {
-    let id = nanoid()
-
-    let publicKey = Base64.toUint8Array(mainStore.publicKeyBase64)
-    let webClientInfo = server.WebClientInfo.create({
-        action: server.WebClientInfo.Action.IS_KEY_AUTHENTICATED,
-        staticKey: publicKey
-    })
-    let iq = server.Iq.create({
-        id: id,
-        type: server.Iq.Type.GET,
-        webClientInfo: webClientInfo
-    })
-    let message = server.Packet.create({ iq: iq })
-    let buffer = server.Packet.encode(message).finish()
-
-    // console.log("message:")
-    // console.dir(message)
-
-    websocket.send(buffer.buffer)
-    console.log("--> check " + id)
-}
-
 
 async function decodeProtobufToPacket(binArray: Uint8Array) {
     const err = server.Packet.verify(binArray)
@@ -201,152 +250,8 @@ async function decodePacket(binArray: Uint8Array) {
 
     const iq = packet.iq
     console.log('decodePacket/packet/iq ' + iq)
+    return packet
     
-}
-
-function connect() {
-
-    /* 
-     * 
-     * startHandshake
-     * isAuthenticated
-     */
-    let state = ''
-
-    // const server = "wss://localhost:7071"
-    const server = "wss://ws-test.halloapp.net/ws"
-    // const server = "wss://demo.piesocket.com/v3/channel_1?api_key=oCdCMcMPQpbvNjUIzqtvF1d2X2okWpDQj4AwARJuAgtjhzKxVEjQU6IdCjwm&notify_self"
-    const webSocket = new WebSocket(server)
-    webSocket.binaryType = "arraybuffer"
-
-    webSocket.onmessage = function(event) {
-        console.log("got message")
-        if (state != 'startHandshake') {
-            hal.log("conn/inbound: " + event.data)
-            console.dir(event)
-
-            const array = new Uint8Array(event.data)
-            decodePacket(array)
-        }
-    }
-
-    webSocket.onopen = function(event) {
-        hal.log("conn/opened: " + event)
-        // console.dir(event)
-
-        if (mainStore.connectionState == 'isAuthenticated') {
-            // check(webSocket)
-        }
-        // sendDemoWebStanza(webSocket)
-        // addKey(webSocket)
-        // removeKey(webSocket)
-        // check(webSocket)
-        
-    }
-
-
-    function create() {
-        createNoise(function (noise: any) {
-
-            // let [first, second] = noise.CreateKeyPair(noise.constants.NOISE_DH_CURVE25519)
-            // const newPrivateKey = new Uint8Array(first)
-            // const newPublicKey = new Uint8Array(second)
-            // const newBase64PrivateKey = Base64.fromUint8Array(newPrivateKey)
-            // const newBase64PublicKey = Base64.fromUint8Array(newPublicKey)
-            // console.log("1: " + newBase64PrivateKey)
-            // console.log("2: " + newBase64PublicKey)
-
-
-            const pattern   = 'IK'
-            const curve     = '25519'
-            const cipher    = 'ChaChaPoly'
-            const hash      = 'BLAKE2b'
-            const protocolName = `Noise_${pattern}_${curve}_${cipher}_${hash}`
-            let handshakeState = noise.HandshakeState(protocolName, noise.constants.NOISE_ROLE_RESPONDER)
-            console.log("handshakeState: ")
-            console.dir(handshakeState)
-
-
-            let cipherStateSend: { EncryptWithAd: (arg0: never[], arg1: string) => any }
-            let cipherStateReceive: { DecryptWithAd: (arg0: never[], arg1: any) => any }
-
-
-            let prologue
-            let psk
-            let remotePublicKey
-            const privateKey = Base64.toUint8Array(mainStore.privateKeyBase64)
-
-            handshakeState.Initialize(
-                prologue,
-                privateKey,
-                remotePublicKey,
-                psk
-            )
-
-            // state = 'startHandshake'
-
-            function handleHandshakeMessage(event: any) {
-
-                if (state == 'isAuthenticated') {
-                    const gotten = new Uint8Array(event.data)
-                    console.log('gotten: ' + gotten)
-                    const decrypted = cipherStateReceive.DecryptWithAd([], gotten)
-                    
-
-                    const decoded = new TextDecoder().decode(decrypted)
-
-                    console.log('decrypted: ' + decoded)
-
-                    return
-                }
-
-
-                const action = handshakeState.GetAction()
-                if (action == noise.constants.NOISE_ACTION_FAILED) { // 16643
-                    console.log('handleHandshakeMessage/action/failed')
-                } else if (action == noise.constants.NOISE_ACTION_READ_MESSAGE) { // 16642
-                    console.log('handleHandshakeMessage/action/read')
-                
-                    const fallbackSupported = false
-                    const array = new Uint8Array(event.data)
-
-                    handshakeState.ReadMessage(array, fallbackSupported)
-
-                    handleHandshakeMessage(event)
-                } else if (action == noise.constants.NOISE_ACTION_WRITE_MESSAGE) {
-                    console.log('handleHandshakeMessage/action/write')
-                    const writeResponse = handshakeState.WriteMessage()
-                    webSocket.send(writeResponse)
-
-                    handleHandshakeMessage(event)
-                } else if (action == noise.constants.NOISE_ACTION_SPLIT) { // 16644
-                    console.log('handleHandshakeMessage/action/split')
-
-                    const remotePublicKey = handshakeState.GetRemotePublicKey()
-                    console.log('remotePublicKey: ' + Base64.fromUint8Array(remotePublicKey))
-                
-
-                    const split = handshakeState.Split()
-                    cipherStateSend = split[0]
-                    cipherStateReceive = split[1]
-
-                    let counter = 0
-                    setInterval(function () {
-                        console.log('handleHandshakeMessage/action/split/sent...')
-                        const encrypted = cipherStateSend.EncryptWithAd([], 'Tony is here ' + counter)
-                        webSocket.send(encrypted)
-                        counter++
-                    }, 3000)
-
-                    state = 'isAuthenticated'
-
-                }
-            }
-
-            webSocket.addEventListener('message', handleHandshakeMessage)
-        })
-    }
-
 }
 
 function fakeAuth() {
@@ -416,13 +321,30 @@ onUpdated(() => {
     generateQRCode()
 })
 
+
+
 function generateQRCode() {
+
+    generatePublicKeyIfNeeded()
+
+    let qrCodeArr = []
+
+    let version = 1
+    let versionBinArr = new Uint8Array(1)
+    versionBinArr[0] = version
+
+    qrCodeArr.push(versionBinArr)
+    qrCodeArr.push(Base64.toUint8Array(mainStore.publicKeyBase64))
+    
+    const qrCodeBinArr = hacrypto.combineBinaryArrays(qrCodeArr)
+    const qrCodeBase64 = Base64.fromUint8Array(qrCodeBinArr)
+
     const qrCode = new qrCodeStyling({
         width: 250,
         height: 250,
         type: "svg",
-        data: mainStore.publicKeyBase64,
-        image: devCORSWorkaroundUrlPrefix + "https://halloapp.com/images/favicon.ico",
+        data: qrCodeBase64,
+        image: devCORSWorkaroundUrlPrefix + "https://web.halloapp.com/assets/images/favicon.ico",
         dotsOptions: {
             color: "#4267b2",
             type: "rounded"
@@ -439,13 +361,6 @@ function generateQRCode() {
     if ($qrCode.value) {
         const el = $qrCode.value as HTMLElement
         qrCode.append(el)
-        hal.log("append QR code")
-
-
-
-
-    } else {
-        hal.log("skip append QR code")
     }
 }
 
@@ -619,7 +534,6 @@ h1, h2, h3, h4, h5, h6 {
     color: rgb(0, 0 , 0, 0.8);
 }
 
-
 #qrCodeBanner {
     margin-top: 50px;
     margin-bottom: 100px;
@@ -639,8 +553,6 @@ h1, h2, h3, h4, h5, h6 {
 
 
     overflow: hidden;  
-
-
 
     display: flex;
     flex-direction: horizontal;
@@ -685,32 +597,32 @@ h1, h2, h3, h4, h5, h6 {
     cursor: pointer;
 }
 
-
-
 #MainWrapper {
     width: 100%;
     height: 100%;
 
     display: flex;
     flex-direction: horizonal;
-  
 }
 
 #Sidestrip {
     background-color: black;
-    flex: 0 0 50px;
+    flex: 0 0 80px;
     overflow: hidden;
 }
 
 #Sidebar {
     background-color: white;
-    flex: 0 0 30%;
+    flex: 0 0 v-bind(sideBarWidth);
     overflow: hidden;
 }
 
 #MainPanel {
-    flex: 0 0 70%;
-   
+    flex: 1 1 auto;
+}
+
+#Settings {
+    display: flex;
 }
 
 #Settings {

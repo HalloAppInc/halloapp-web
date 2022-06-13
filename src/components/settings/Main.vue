@@ -37,107 +37,119 @@ const iconColor = computed(() => {
 const lineColor = computed(() => {
     return colorStore.line
 })
+
+const headerColor = computed(() => {
+    return colorStore.header
+})
 </script>
 
 <template>
-    <transition>
-        <div v-if="mainStore.settingsPage == '' || mainStore.settingsPage == 'theme'" id='menu' key='1'>
-            <!-- user profile -->
-            <div class="container">
-                <div class="profileContent">
-                    <div class="avatarContainer">
-                        <div class="avatar"></div>
-                    </div>
-                    <div class="headerContent">
-                        <div class="contentTitle">
-                            User Name
+    <transition name='main'>
+        <div v-if="mainStore.settingsPage == '' || mainStore.settingsPage == 'theme'">
+            <div id='header'>
+
+            </div>
+            <div class='content'>
+                <div id='menu'>
+                    <!-- user profile -->
+                    <div class="container">
+                        <div class="profileContent">
+                            <div class="avatarContainer">
+                                <div class="avatar"></div>
+                            </div>
+                            <div class="headerContent">
+                                <div class="contentTitle">
+                                    User Name
+                                </div>
+                                <div class="contentBody">
+                                    Available
+                                </div>
+                            </div>
                         </div>
-                        <div class="contentBody">
-                            Available
+                    </div>
+                    <!-- menu -->
+                    <div class="container">
+                        <div class="iconContainer">
+                            <font-awesome-icon :icon="['fas', 'bell']" size="lg" />
+                        </div>
+                        <div class="textContainer" @click="mainStore.gotoSettingsPage('notifications')">
+                            <div class="contentTextBody">
+                                {{ t('settings.notifications') }}
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-            <!-- menu -->
-            <div class="container">
-                <div class="iconContainer">
-                    <font-awesome-icon :icon="['fas', 'bell']" size="lg" />
-                </div>
-                <div class="textContainer" @click="mainStore.gotoSettingsPage('notifications')">
-                    <div class="contentTextBody">
-                        {{ t('settings.notifications') }}
-                    </div>
-                </div>
-            </div>
 
-            <div class="container" @click="mainStore.gotoSettingsPage('privacy')">
-                <div class="iconContainer">
-                    <font-awesome-icon :icon="['fas', 'lock']" size="lg" />
-                </div>
-                <div class="textContainer">
-                    <div class="contentTextBody">
-                        {{ t('settings.privacy') }}
+                    <div class="container" @click="mainStore.gotoSettingsPage('privacy')">
+                        <div class="iconContainer">
+                            <font-awesome-icon :icon="['fas', 'lock']" size="lg" />
+                        </div>
+                        <div class="textContainer">
+                            <div class="contentTextBody">
+                                {{ t('settings.privacy') }}
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
 
-            <div class="container" @click="mainStore.gotoSettingsPage('security')">
-                <div class="iconContainer">
-                    <font-awesome-icon :icon="['fas', 'shield-halved']" size="lg" />
-                </div>
-                <div class="textContainer">
-                    <div class="contentTextBody">
-                        {{ t('settings.security') }}
+                    <div class="container" @click="mainStore.gotoSettingsPage('security')">
+                        <div class="iconContainer">
+                            <font-awesome-icon :icon="['fas', 'shield-halved']" size="lg" />
+                        </div>
+                        <div class="textContainer">
+                            <div class="contentTextBody">
+                                {{ t('settings.security') }}
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
 
-            <div class="container" @click="mainStore.gotoSettingsPage('theme')">
-                <div class="iconContainer">
-                    <font-awesome-icon :icon="['fas', 'circle-half-stroke']" size="lg" />
-                </div>
-                <div class="textContainer">
-                    <div class="contentTextBody">
-                        {{ t('settings.theme') }}
+                    <div class="container" @click="mainStore.gotoSettingsPage('theme')">
+                        <div class="iconContainer">
+                            <font-awesome-icon :icon="['fas', 'circle-half-stroke']" size="lg" />
+                        </div>
+                        <div class="textContainer">
+                            <div class="contentTextBody">
+                                {{ t('settings.theme') }}
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
 
-            <div class="container" @click="mainStore.gotoSettingsPage('help')">
-                <div class="iconContainer">
-                    <font-awesome-icon :icon="['fas', 'circle-question']" size="lg" />
-                </div>
-                <div class="textContainer">
-                    <div class="contentTextBody">
-                        {{ t('settings.help') }}
+                    <div class="container" @click="mainStore.gotoSettingsPage('help')">
+                        <div class="iconContainer">
+                            <font-awesome-icon :icon="['fas', 'circle-question']" size="lg" />
+                        </div>
+                        <div class="textContainer">
+                            <div class="contentTextBody">
+                                {{ t('settings.help') }}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </transition>
 
+
+    </transition>
 </template>
 
 <style scoped>
 /* animation in from left to right, out from right to left */
-.v-enter-active {
-    transition: all 0.25s ease-in;
+.main-enter-active {
+    transition: all 0.15s ease-in 0.15s;
 }
 
-.v-leave-active {
-    transition: all 0.25s ease-out;
+.main-leave-active {
+    transition: all 0.15s ease-out;
 }
 
-.v-enter-from {
+.main-enter-from {
     transform: translateX(-200px);
     opacity: 0;
 }
 
-.v-leave-from {
+.main-leave-from {
     opacity: 1;
 }
 
-.v-leave-to {
+.main-leave-to {
     transform: translateX(-200px);
     opacity: 0;
 }
@@ -147,21 +159,29 @@ const lineColor = computed(() => {
 }
 
 *::-webkit-scrollbar-track {
-    background: white;
-    /* color of the tracking area */
+    background: white;      /* color of the tracking area */
 }
 
 *::-webkit-scrollbar-thumb {
-    background-color: rgb(172, 169, 169);
-    /* color of the scroll thumb */
+    background-color: rgb(172, 169, 169);      /* color of the scroll thumb */
 
-    border: 0px solid white;
-    /* creates padding around scroll thumb */
+    border: 0px solid white;        /* creates padding around scroll thumb */
 }
 
 #menu {
     background-color: v-bind(backgroundColor);
     height: 100%;
+}
+
+#header {
+    flex: 0 0 50px;
+    background-color: v-bind(headerColor);
+    padding: 10px;
+    height: 50px;
+}
+
+.content {
+    background-color: v-bind(backgroundColor);
 }
 
 .container {
@@ -249,10 +269,14 @@ const lineColor = computed(() => {
 
 .iconContainer {
     margin-right: 20px;
-    padding: 10px 30px 10px 30px;
+    padding: 5px 30px 5px 30px;
     color: v-bind(iconColor);
-    width: 45px;
-    height: 45px;
+    width: 30px;
+    height: 30px;
+}
+
+.iconContainer:hover {
+    cursor: pointer;
 }
 
 .contentTextBody {

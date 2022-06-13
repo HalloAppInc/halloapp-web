@@ -18,6 +18,9 @@ import MediaCarousel from '../media/MediaCarousel.vue'
 
 import MP4Box from 'mp4box'
 
+import { useMainStore } from '../../stores/mainStore'
+const mainStore = useMainStore()
+
 let isDebug = false
 
 let pushname = (<any>window).han
@@ -54,11 +57,11 @@ const imageInfo         = Base64.fromBase64("SGFsbG9BcHAgaW1hZ2U=")
 const videoInfo         = Base64.fromBase64("SGFsbG9BcHAgdmlkZW8=") 
 const voiceNoteInfo     = Base64.fromBase64("SGFsbG9BcHAgYXVkaW8=") 
 
-const gothamFontUrl = ref("https://halloapp.com/fonts/gotham/woff2/Gotham-Book_Web.woff2")
-const gothamMediumFontUrl = ref("https://halloapp.com/fonts/gotham/woff2/Gotham-Medium_Web.woff2")
+const gothamFontUrl = ref("https://web.halloapp.com/fonts/gotham/woff2/Gotham-Book_Web.woff2")
+const gothamMediumFontUrl = ref("https://web.halloapp.com/fonts/gotham/woff2/Gotham-Medium_Web.woff2")
 
 const avatarImageUrlPrefix = ref(devCORSWorkaroundUrlPrefix + "https://avatar-cdn.halloapp.net/")
-const avatarImageUrl = ref(devCORSWorkaroundUrlPrefix + "https://d1efjkqerxchlh.cloudfront.net/es/assets/avatar.svg")
+const avatarImageUrl = ref(devCORSWorkaroundUrlPrefix + "https://web.halloapp.com/assets/avatar.svg")
 
 const postTimestamp = ref("")
 let postText: string
@@ -66,7 +69,6 @@ let postMentions: any
 
 const isTextPost = ref(false)
 const isTextPostTextOnly = ref(false)
-const moreMarginForPost = ref(false)
 
 const isTruncatedText = ref(false)
 
@@ -102,7 +104,6 @@ const postVoiceNoteSrc = ref("")
 
 applyPlatformSpecifics()
 setPostSize()
-loadFonts()
 init()
 
 async function init() {  
@@ -110,44 +111,20 @@ async function init() {
     let base64Key = urlHashComponent.slice(2) // strip out "#" and "k"
     let base64Blob = (<any>window).hab
 
-    if (isDebug) {
+    // if (isDebug) {
         /* hardcoded tests */
         
         /* pushname and avatar */
         // avatar = "Hvhqsmhx-uKSX2oAEYpKe5xK"
-        // pushname = "Test Tony"
-
-        /* text only (containerBlob) */
-        // base64Key = "1crhORb2-zpiYiP1FpIj"
-        // base64Blob = "tmAByxD_n3aHWTERMWmvCUwu2hsxd93HznAdEobwYFzE_WDmif_cfC1hklandhd1XVjwGPZE2NgXGJhmcnDeSLwiAI_Xe41wZlYZSubQerc_AyNTfclb0UcLjqEIxQtsr1JfzjyT5RyzvENk4yHnXdGSwoTOIyUBn-qzy9n8LFyygfb7je6hz8Wzn5H_UDXCOLQmW5pqnr2yFpYMlIaqYuSnn591pnbhlfQruonWks1O64AjwGtPVtvBFJmguybkTRRI4_O_zFereoFKh3l3cCIoJiIfKoCBlWVYKAhudc1iCErBv9R3JVFXW7OavHPOkpw-Kfxs-VpE9gtDEY7R2C4lMMI4tcXDSKS5MC-OgGMzOgsAhmauxuO5xq3aP1-194msfvFIqS_D_BUEKehkP8MmB4inBxaVpUdeKGQIml7rXn_Um94lYJE9shzZisWE06NJrcUU2kq8kKfR1ne737IxZGrPxJgqMEGrInwlie0petpgLVSVD6tTahR9LRL8"
+        pushname = "Test User"
 
         /* preview link with no img (containerBlob) */
-        // base64Key = "ni-rEmBOXV4bUpuX1NGh"
-        // base64Blob = "c8lxbGwFwYBOomnApInTTqiIX8rB7DGR9p6WSeDMFBQFK4qs4YUj8E5E7TVd28tbqgP6_jRWqEm19sat-99mMA2u-_tHJxHG5N9QuklFJ47vEePHV70OwcSZj8LcNRVwbbVLXFLmwsWR3X3kIgsU87P-x1BNxTOJOGMtIB8kcXXthGGGfVJXlWd7H0LqCPsvmV7t1a5v6WEA7ww0ymuqwJ4OyqW7DksxOaISfhPOw2ryo78KMc6-bY9cZU7g9zdYAozdcle65pZcDh4RdQyAdzstQhK67HbuLVLRwkfa6tq2Sx-zzWKQjy8j6_G7h5lKNRhIkKzVDFDS1MMuH_qqqVc16rMvy5PgZ0HVEwrGUV5wXj-8LQ570bmOGxGg68wDH-feQW44ONo7QTx-hCj-oW99y8KJ55vD93n19oH76aV8sSYIJ59dY3L3zLG3b3Xb3hCieXnVrbJP-aBR1ozxRA0kk5MzcuzcKcB1DtuIKnjdyWse4YE8O81J-dyYyj_x3BugFj_6zcH3uzEtfvUnt5Myikn33qihk6k1sD-GMV0"
+        base64Key = "ni-rEmBOXV4bUpuX1NGh"
+        base64Blob = "c8lxbGwFwYBOomnApInTTqiIX8rB7DGR9p6WSeDMFBQFK4qs4YUj8E5E7TVd28tbqgP6_jRWqEm19sat-99mMA2u-_tHJxHG5N9QuklFJ47vEePHV70OwcSZj8LcNRVwbbVLXFLmwsWR3X3kIgsU87P-x1BNxTOJOGMtIB8kcXXthGGGfVJXlWd7H0LqCPsvmV7t1a5v6WEA7ww0ymuqwJ4OyqW7DksxOaISfhPOw2ryo78KMc6-bY9cZU7g9zdYAozdcle65pZcDh4RdQyAdzstQhK67HbuLVLRwkfa6tq2Sx-zzWKQjy8j6_G7h5lKNRhIkKzVDFDS1MMuH_qqqVc16rMvy5PgZ0HVEwrGUV5wXj-8LQ570bmOGxGg68wDH-feQW44ONo7QTx-hCj-oW99y8KJ55vD93n19oH76aV8sSYIJ59dY3L3zLG3b3Xb3hCieXnVrbJP-aBR1ozxRA0kk5MzcuzcKcB1DtuIKnjdyWse4YE8O81J-dyYyj_x3BugFj_6zcH3uzEtfvUnt5Myikn33qihk6k1sD-GMV0"
 
-        /* link (containerBlob) */
-        // base64Key = "q_7-0tj8FwD4EGCFIVE3"
-        // base64Blob = "ByPDFckM0eLcOtWuUxPTEi9gbcOFirPblouY5ruQWGaAQMW78VuKBwQX6i7hWuRx-dnoZhXZKEDNYiWcdUD9Ty9oDCqO7pwFEKM-QrCTE_9hv605-BXzgMVfyoUvwgFiUZJZHhP0KuYxh-jsDEXxk-BlFgP2txQ-cXVpLHpt6_xfz0opYfjxXQGKOzhYq_VR_RjiSXej5qNG6iZk7Ek1KE03EXxRFQe0Y5lSThxuSBqj1klar7VV_obu9h_alDWYMz8iGUwZhPvFS66qcscyJgpY9v04oYMFchzuzY8Ud4NKQo5fKezR5HbFUWK_1T90TOoDVna_U_zJTfkIHDuzNTxaTB-7MXwo5hT7N64hWQ4aI8J9gyxdYyGPay-MuX5LdwaiVmrsBWd9RtnBpmaCPA"
-
-        /* one landscape image (containerBlob) */
-        // base64Key = "CAC5YiVKS-b4mgGNU6ma"
-        // base64Blob = "7rdxgS-S_GbBpAQSP5QWtfQRFmNQQZxhFYZ_xH5aSpL6G6AHE3oRHQdHsSAFSIZAW4TI_z65eJeRybOjGGr64r1m7hZ-rm86l47yd1i1rLVSZLyk6HSC5RnOFW2Iv8tbEX6eWZWpSd2p16dLOCW_Re1lrlODu-dUUwJHGg47PzykMPPNvRDvkPK-rnV-_Q83ESVmieNilM00A0PP4eQolmZTwgDFEylRF1zzoI2YtPgfDGTMM5gOJKl7D74StW9SVOjHlLyemUnrQBMrNSmHWaOOXUk2S1W-ql2W2SkJZFwRCkZMJ2kjbfvxmZKM7Dff"
-
-        /* one image and one voicenote (containerBlob + timestamp) */
-        // base64Key = "2VsrkbHtkp87bTFsFgmS"
-        // base64Blob = "mXDlo3Q-LO5sglf_3YrhZvDW9RaVulgu0sXDGfJYbKeRs8fTrOjqqkm3FIpukbHJ-cFyaH52kXjSB9y9w3BTXWCnKvNm4-xHgT44vLcHZ_FljO6K_xEP-5YY9zN3Gc4mm-AOjTUy41ud1D4XDZoWZv7dFN5aenXhMZTqfzN-NHKtsG5XU8NWFqnQp_dukX7JfOFDhsE5n9XWhEyqaMy4oiDx6uScNdblzjImeBm0CcPNBCA7_zPQ-QpHoL00ZOfhZTBcRh8Ft5oJPwhjuK7LhIIt9HvUcpSd7N28KrcUeCqfmrE3zfe0Q0RhTuD6FyQ8WYHrwxoTve9XlneRyAOZ2KsSL8dnd7YCpLpfvdq2nh1k09gN7IxRKyQ7vivKPORxrsi6ZMQnxF3_KWumn5VqmXSB86vlvopWT6p-OACo02sANK9ztqSd6mVpkt4ZguoFDmMEwGCzUXkW0g8tQS8K2A"
-
-        /* text only */
+        /* old container text only */
         // base64Key = "06kaXk7TsDYQz0cYgIvO"
         // base64Blob = "uIGPNSl9ynuliYIqq8yRzsBygO6RDrdC6952_KusY9brjOod4uNcBOU5tyOSqM7FAiQonU7nAtDH0F_yjklQfTtUwMfAhGHER5BHepuzwWDxyNSGVMlcKvFFmI7wQGit"
-
-        /* text link */
-        // base64Key = "C443nzVbfx-7EtmkG_ra"
-        // base64Blob = "jXAp16t_XAh5aNy_I1yYXtQ0xti05WiUkdTqIfMgwPoy5Fd-MUZ06LHY3pjmHJpDmQIUGJaCpvrieRraAOeeocxAzkoRg682Be3BXYWnPXmjCgNZ9VIwuCvP5Wq8fx-YaNnxnhJgaIbX0jCAbuNPCC7OtPPwSVq4-B2yb5Iun58zeTapNhME-ZXijEr9ngNBL7a6F8WAzHX4WcgSUqLH3YQ6G0AiaNxqwC0SqN4kilVRiqqmAuHQdIzZ0gEnwtWoqnanYiNBGlGPXv7-KRb9IT4aaagX79uBr2xJBLn8pHM"
-
-        /* tall text with newlines and an image, edge case */
-        // base64Key = "3ecOetpiHz4qyk1ZpnhW"
-        // base64Blob = "7XsGiBTrQorsga4q3stGvZT_0zGjhvkqLuiCUTl1U1z5x6w1BVVD7V2LkYpr8dVhYvWzy7S469NkS4UAxCblV2nr9Jss3VBJJ0mSh0Ow6YRVtJ_T0WksLmki2vCdCx74IiLZtPC6SMM6DnaYXl0MDgHvc5d80wq1CZrqIBw6XBzEeRDVh7JPcfvt9ShhaO9nmW7v3ecUib-ncx6DWAQ0KywH6cM52XCDZn8FlFfnH5xmlqrIxvuK2ew4KoJ4KyQlPPtnJHdhWUHYuCWxqrIdf-AhLmYsnCmggVyq2UeY3WJw_PcQt8IMl4QTfhdi-7zh"
 
         /* long text that's more than 3 lines */
         // base64Key = "WTBSeqmjvaylUdmbqvUZ"
@@ -164,27 +141,7 @@ async function init() {
         /* album video HDR */
         // base64Key = "_YuLwY6EXrQ-hugnvcCR"
         // base64Blob = "nXq-WmvjeH6YKE6GR9kVfxWrfZX6-XgL11Isr7hi_dL3YopD0j6FsNakniKEXLhi9Tz3xuCNFBaWcu7YvGHnVLHpYxvg6eb0ejT2cNxo6-dh8ZGKby7eG6knroY26Tcy6kLRpiypC8eA0WEvHWXpz2XV6lBUPL0nP6yijS5Mgq03guHloBbsql_18DfvLc1Pm5IXqLTB8ZQvl0HjUHbIdJT8qjec461O5EoOBPFUjOOoBVWbvBOCsRCnG9TuSFjYfdohVTDwYdFiOz5F-g-rflp3rx8QeQHYp6Sjtnt7LLcdHAXmU7Siz7vnAPYFCw_st1oo77FypBZ9PzpOG2qook54PJ5cjMYaUbeQ7Xuaq1w"
-
-        /* album multiple image/video */
-        // base64Key = "i0UShAio3htmgUKaXqMk"
-        // base64Blob = "a7q7iGWpsxhZFG_8GwKVtbudbmQ4uRKxCXxd7S5siNSHKMi5z3TxajzKwq30yip1ST9pR2PkU9_Rsu6rt2yPZnGaqoBZKQwj7Bmng9WJCf8hNvJ3KAlWeRpUXLjyl_XGYnhKiK1JV8968fa1rJBQeVMIYC5a-KIf11WwrcKxQiDyhw_PFUbMgkCkavQWQf7LaktAvLwHhU-jeWI4oKUmpmgtS3-u8TXkBML9TMZZeW2Z3xlYOkgYhg0waUoV3JTcD0VMjAa1TlPlaM7Zm-jZ-Zv3q1palBJkIDSfEWOs6mXDNZwgH1oEafQiTzcL7DnXinJ6K2wKVd_UrJgJi5NdTOqc6c9bg6D2HwjDBVIKNtcVFpH2jkKEGqWOIbf8HT0j-Ng_kn6kEK8WPUkYIoCFDmFrUguuTsUUZzTUPMXEFKWkywD1JvDsEdEiSwKD-rdKo66-FLZtvt6iX4xGwULXb9Vj4kJP5qLE3g6cGwAXpuPD_Trbuk7nhEFiGCkuL_faoH4hnPWN4UkE8HZJGhVQOhdraV7nx5wxo1fbdLET1Exr6RZk61Lufn1aGtqj8ywJmM1weiJ7XsGbSAUPSk-THqNzOso9vE2Fuw2TS2u8EF4"
-
-        /* album multiple image/video, another example */
-        // base64Key = "OkZQ4mAR7aZbTT-2Jqhf"
-        // base64Blob = "5V_N-7N8VDvKwWvTPQZYweMwXhX9IBAFtioFHRLNc_01Pth-1IO7SZvpnEl62p5GymMEGAddyEgCrHfY77goBI83nLhWpNymYhPc9hMs8fZOA4e7pncAZsLX-vb5ii0rMKYt-WnYjaTxbtfNwKhiabv81nkCk8vZHwjdv3tMQ2ibgFfj7d5TXdVn1cEwNiTtA_h4IFH-PA_Zch_Y3GE2U_KEQ4FjprOu6jZLydhkIsF8hx3C8-Twt8gU3pMX26DZE8RHGDBcuqLG308s4MqfMLFJxDv9z7t9acceOHr0V8fHPhALLLBFXw8bKpjo6ZCWKqdwC2DAk20TQOSRMJo2ldpkJ0Wee-oB5mvQxlcu6FB8ZryGwXfi-LjMyzpip1XZIDmtZVEVDTk-BB6fcn0KlTD7QcIpy_mu67X7jJDThqPTxuODlLGaKftdx7vhsubRB8h2M3H35OrzbyOvLhQXIMZcZZkPr1EXRhfhYvqLgXWuaWKKCranahKctaZNRnbp3_U0ZagTGSFgWBlJavK3JjUgkNogFEjEedM4eYN3zKKvbCUpxLBEom6mwpzRNaFROlZAat7mm3fdQol0bDlMwEepn0ftDBwkda77-Q53GFoL4kkjR5WaSxLA1zq7FTVofA9sLwnmYuBpxgFwu4_vXLGryX0d3DI5xGsxx7lCmkRODOgmhvHlsbz8pCw3smy368gsFNfR1UsSkWVKcZ2O6LfDzV8cmDBgd6b_j7RWVds9ikkrxOPhBq8FQE7Ib3I2"
-
-        /* album 1 portrait image with ratio greater than 3/4 fits exactly with audio note */
-        // base64Key = "WuMHusEbVQWjuciqKFs9"
-        // base64Blob = "PtUYOfiREgXNJsqdrre2eW1NwRXEEnyOUk4YAHcn2sar2s65XZrHWNasdyjzgcZD4B_5MORircrsAtuG3uaei6OiviAiBvfyusbU8wo86nVqft8DezbtBMYq8UoFEhOfnP9CU8T-Y94QJ1hlb1nzs4e7QrJZqGyYlz_n7Uwvd240jJqGablWW1frmSe-ycn4aEIYeXmjPlc42VaiSIxtJHZ-BWJMyoIGeeGURQUuJkbo73UE1uY6Vxp9ZFzp_FRRCfP-Y-GEEG1dpfcmTaObtx8IOW95S-xBW1fBjVYNkq6e7eIXpzFsUVf-BjNbbLK1geEBgyr4zLSx6WAvvajyfPF_F4wFNCFD7grePWselMHiO-PZ5s5RlMhg30UPeyPXySAQjVuvMdna-3Ki0vjSb70HONayesr2wgPC5BQGiFrwA_HO8lB_2R9Xj_58pVWb58rmg8iwefdeOkhUlLp_4w"
-
-        /* album 1 landscape video */
-        // base64Key = "O-aWqrkm7a4-6jVQyrTb"
-        // base64Blob = "pL6bvxLi5BsxKyNjfOJMPe4aH6GmYhYAISWOW7jcLGdFjiJg6yYBsaO7taz67bgiLgMwhN306XNX1nOX82_PrnKKcbsSpyF0SK5BaAeQ1rhkA8Uk1l5DIXaYB1wfrRy5JCNxiKiZRSbNgz263Y1ujxkjlgbvmqZDtGBW9Oi9uDBTvREMaieCkjcVgy9FGgTAFgDGC87nO51JD5x49KdnbXprFmXu37SLTab86DXJseBs50jmus6XHc3J5VwFHb9I0IJsYuDFzC6BQDOVD45OdB2AFY8bFvrKSt-j75_o7Ye1ytlvyWDSoW6kfZpgSINm"
-
-        /* only voicenote */
-        // base64Key = "Epk6C8x3Lnd2I2ai_Ag0"
-        // base64Blob = "AQOrEK5VazQ8KQYvNr6G4T0rZbJpregNSHJ7etoKrpQVwrWQ7NiTGJMvYt1v7I2CsduY3cf0RYQ3aDQGV7KGxzS3dFtkcVYnh0HnetWemmkC-r6pEGIW7bpuIkqIT-oSaFbXYc3vdN98Zj-oXgPmGdEcBJppGOYqQkHuxan2y25ayOmGK8zACeAj_TBbVuBnB4IWF7WpMenNNgNqYhTeQQ"
-    }
+    // }
 
     if (!base64Key || !base64Blob) {
         isAvailable.value = false
@@ -584,11 +541,6 @@ function processText(text: any, mentions: any, isTextPostTextOnly: boolean, trun
         truncatedText.text += '...'
     }
 
-    // if text only && there's not too much text, give more margin to post
-    if (isTextPostTextOnly && truncatedText.countedChars < 190) {
-        moreMarginForPost.value = true
-    }
-
     textToBeSanitized = truncatedText.text
 
     const santizedHtml = sanitizeHtml(textToBeSanitized)
@@ -914,41 +866,6 @@ function applyPlatformSpecifics() {
     }
 }
 
-/* 
-    Fonts are loaded dynamically to make development on localhost easier 
-        1. Assets on AWS are cors enabled and thus a proxy server is needed on localhost
-        2. There's no way to use variables in @font-face src's url in css
-*/
-function loadFonts() {
-
-    let normalFont = gothamFontUrl.value
-    let mediumFont = gothamMediumFontUrl.value
-
-    // non-Safari browsers require a proxy server for font fetches
-    if (!isSafari.value) {
-        normalFont = devCORSWorkaroundUrlPrefix + normalFont
-        mediumFont = devCORSWorkaroundUrlPrefix + mediumFont
-    }
-
-    let style = document.createElement('style')
-
-    style.appendChild(document.createTextNode("\
-    @font-face {\
-        font-family: 'Gotham';\
-        src: url('" + normalFont + "') format('woff2');\
-        font-weight: 300;\
-        font-style: normal;\
-    }\
-    @font-face {\
-        font-family: 'Gotham';\
-        src: url('" + mediumFont + "') format('woff2');\
-        font-weight: 500;\
-        font-style: normal;\
-    }\
-    "))
-    document.head.appendChild(style)
-}
-
 function setPostSize() {
     const maxPostWidth = 400    // max width of entire card allowed
     const minPostWidth = 200    // min width of card
@@ -1038,7 +955,7 @@ function expandText() {
 
     <!-- post row -->
     <div v-if="isAvailable" id="postRow">
-        <div :class="['post', {morePostMargin: moreMarginForPost}]">
+        <div :class="['post']">
 
             <!-- postHeader row -->
             <div id="postHeader">
@@ -1054,8 +971,8 @@ function expandText() {
             </div>
 
             <MediaCarousel  
-                :isMobile="isMobile"
-                :isSafari="isSafari"
+                :isMobile="mainStore.isMobile"
+                :isSafari="mainStore.isSafari"
                 :isAlbum="isAlbum"
                 :album="album.media"
                 :showPreviewImage="showPreviewImage"

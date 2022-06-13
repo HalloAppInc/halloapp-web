@@ -34,16 +34,13 @@ const mainStore = useMainStore()
     width: 100%;
     height: 100%;
 
-    border-left: 1px solid #b8b7b7;
+    border-left: 0px solid #b8b7b7;
 
     background-color: rgb(229, 229, 247);
-
 
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-
-  
 }
 
 #header {

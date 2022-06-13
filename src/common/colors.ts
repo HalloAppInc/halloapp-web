@@ -37,8 +37,8 @@ export default defineComponent({
     myChatBubbleLight: '#FFF5D6',
     myChatBubbleDark: '#111b21',
 
-    messageBubbleLight: '#FFEBAE',
-    messageBubbleDark: '#111b21',
+    timeBubbleLight: '#FFEBAE',
+    timeBubbleDark: '#111b21',
 
     othersChatBubbleLight: '#FFFFFF',
     othersChatBubbleDark: '#2a3942',

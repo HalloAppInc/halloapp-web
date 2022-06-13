@@ -4,8 +4,6 @@ import Post from './Post.vue'
 import { useMainStore } from '../../stores/mainStore'
 const mainStore = useMainStore()
 
-const scrollerGap = mainStore.isFirefox ? '50px' : '5px' // Firefox requires more space, should revisit why
-
 const listData = [
     { 
         title: "Thou with no name",
@@ -69,7 +67,7 @@ const listData = [
 <style scoped>
 
 *::-webkit-scrollbar {
-    width: 50px;
+    width: 5px;
 }
 
 *::-webkit-scrollbar-track {
@@ -86,7 +84,7 @@ const listData = [
     width: 100%;
     height: 100%;
 
-    border-left: 1px solid #b8b7b7;
+    border-left: 0px solid #b8b7b7;
 
     display: flex;
     flex-direction: column;
@@ -95,10 +93,8 @@ const listData = [
     overflow: auto;
 }
 
-
 #listBox {
-
-    width: calc(100% - v-bind(scrollerGap)); /* make space for scroller */
+    width: 100%;
     height: 100%;
     
     overflow-y: auto;

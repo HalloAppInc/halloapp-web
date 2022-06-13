@@ -5,9 +5,7 @@ import { ref } from 'vue'
 <template>
 
 <div class="wrapper">
-    <div id="header"> 
 
-    </div>
     <div id="listBox"> 
 
     </div>
@@ -33,8 +31,9 @@ import { ref } from 'vue'
 }
 
 .wrapper {
-
     height: 100%;
+
+    background-color: rgb(243, 243, 240);
 
     display: flex;
     flex-direction: column;
@@ -56,14 +55,9 @@ import { ref } from 'vue'
 }
 
 .container {
-    
-
     display: flex;
     flex-direction: horizontal;
     padding: 0px;
-    
- 
-
 }
 .container:hover {
     background-color: rgb(226, 226, 226);

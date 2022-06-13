@@ -180,55 +180,18 @@ function processText(text: any, truncateText: boolean = false) {
 }
 
 function sendMessage() {
-    if (inputArea.value?.innerText != '') {
+    if (inputMessage.value != '') {
         props.messageList.push({
             side: 'right',
-            message: processText(inputArea.value?.innerText),
+            message: processText(inputMessage.value),
             timestamp: '1649204213',
         })
-        if (inputArea.value) {
-            inputArea.value.innerText = ''
-        }
-
-
+        inputMessage.value = ''
     }
 }
 
 function nextLine() {
     inputMessage.value += '\n'
-}
-
-function analyzeInput() {
-    if (inputArea.value) {
-        inputMessage.value = processText(inputArea.value?.innerText)
-    }
-    console.log('inputmessage=', inputMessage.value)
-
-    // check if mension someone in contacts
-    if (inputMessage.value[inputMessage.value.length - 1] == '@') {
-        showContacts.value = true
-    }
-    else {
-        showContacts.value = false
-    }
-    // show markdown 
-    if (inputArea.value) {
-        console.log('innerText=', inputArea.value.innerText, 'innerHTML=', inputArea.value.innerHTML)
-        inputArea.value.innerHTML = inputMessage.value
-        // set cursor to the end
-        if (inputArea.value.innerText) {
-            var range = document.createRange();
-            var sel = window.getSelection()
-            range.setStart(inputArea.value.childNodes[0], inputArea.value.innerText.length)
-            range.collapse(true)
-            if (sel) {
-                sel.removeAllRanges()
-                sel.addRange(range)
-            }
-        }
-    }
-
-
 }
 </script>
 
@@ -241,12 +204,9 @@ function analyzeInput() {
             <font-awesome-icon :icon="['fas', 'paperclip']" size='2xl' />
         </div>
         <div class='inputBoxContainer'>
-            <!-- <textarea cols='85' v-model='inputMessage' class='input' placeholder='Type your message here...'
+            <textarea cols='85' v-model='inputMessage' class='input' placeholder='Type your message here...'
                 @keydown.enter.exact.prevent='sendMessage' @keydown.shift.enter.exact.prevent='nextLine'
-                ref='inputArea'></textarea> -->
-            <div id='textarea' ref='inputArea' contenteditable='true' @keydown.enter.exact.prevent='sendMessage'
-                @keyup='analyzeInput'>
-            </div>
+                ref='inputArea'></textarea>
         </div>
         <div class='iconContainer'>
             <font-awesome-icon :icon="['fas', 'microphone']" size='2xl' />

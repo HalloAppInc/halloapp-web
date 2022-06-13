@@ -28,8 +28,8 @@ const otherChatBubble = computed(() => {
     return colorStore.othersChatBubble
 })
 
-const messageBubble = computed(() => {
-    return colorStore.messageBubble
+const timeBubble = computed(() => {
+    return colorStore.timeBubble
 })
 
 const timestamp = computed(() => {
@@ -103,7 +103,7 @@ const timestamp = computed(() => {
 }
 
 .chatBubble-middle {
-    background: v-bind(messageBubble);
+    background: v-bind(timeBubble);
     border: 0.5px solid rgba(101, 61, 61, 0.2);
     box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.1);
     border-radius: 7px;

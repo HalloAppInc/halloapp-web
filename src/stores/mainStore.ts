@@ -24,10 +24,18 @@ export const useMainStore = defineStore('main', {
 
         connectionState: '',
 
+        messageQueue: <any>[], 
+
         isLoggedIntoApp: false,
         isConnectedToServer: false,
-        isHandshakeCompleted: false,
-        haveMobilePublicKey: '',
+        haveAddedPublicKeyToServer: false,
+
+        // isPublicKeyAuthenticated is inferred to be true once handshake complete,
+        // but can be revoked independently afterwards
+        isPublicKeyAuthenticated: false,
+
+        haveInitialHandshakeCompleted: false,
+        mobilePublicKeyBase64: '', 
 
         page: 'home',
         settingsPage: '',
