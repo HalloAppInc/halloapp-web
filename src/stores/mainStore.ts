@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import hal from '../common/halogger'
 
+
 export const useMainStore = defineStore('main', {
     persist: {
         key: 'store-main',
@@ -13,6 +14,9 @@ export const useMainStore = defineStore('main', {
         },
     },
     state: () => ({
+        isDebug: false,
+        devCORSWorkaroundUrlPrefix: '',
+
         isMobile: false,
         isIOS: false,
         isAndroid: false,
@@ -22,11 +26,12 @@ export const useMainStore = defineStore('main', {
         privateKeyBase64: '',
         publicKeyBase64: '',
 
-        connectionState: '',
+        messageQueue: <any>[], 
 
         messageQueue: <any>[], 
 
         isLoggedIntoApp: false,
+        isWaitingForUserToRegenKey: false,
         isConnectedToServer: false,
         haveAddedPublicKeyToServer: false,
 
@@ -51,8 +56,14 @@ export const useMainStore = defineStore('main', {
         login() {
             this.page = 'home'
             this.isLoggedIntoApp = true
-        },    
+        },
         logout() {
+            this.privateKeyBase64 = ''
+            this.mobilePublicKeyBase64 = ''
+            this.isPublicKeyAuthenticated = false
+            this.haveInitialHandshakeCompleted = false
+            // todo: delete all saved data
+            // todo: remove public key from server? (what if there's no connection)
             this.isLoggedIntoApp = false
         },
         gotoPage(page: string) {

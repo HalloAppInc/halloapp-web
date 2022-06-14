@@ -10,15 +10,8 @@ import { useMainStore } from '../stores/mainStore'
 
 const mainStore = useMainStore()
 
-let isDebug = true
-
 let pushname = (<any>window).han
 let avatar = (<any>window).haa
-
-let devCORSWorkaroundUrlPrefix = ""
-if (process.env.NODE_ENV?.toString() == "development" || isDebug) { 
-    devCORSWorkaroundUrlPrefix = "https://cors-anywhere.herokuapp.com/"
-}
 
 let isSafari = ref(false)
 
@@ -64,7 +57,7 @@ async function init() {
     let base64Key = urlHashComponent.slice(2) // strip out "#" and "k"
     let base64Blob = (<any>window).hab    
 
-    if (isDebug) {
+    if (mainStore.isDebug) {
         /* test hardcoded text and avatar */
         // base64Key = "06kaXk7TsDYQz0cYgIvO"
         // base64Blob = "uIGPNSl9ynuliYIqq8yRzsBygO6RDrdC6952_KusY9brjOod4uNcBOU5tyOSqM7FAiQonU7nAtDH0F_yjklQfTtUwMfAhGHER5BHepuzwWDxyNSGVMlcKvFFmI7wQGit"
@@ -202,7 +195,7 @@ async function fetchAndDecrypt(derivedKey: Uint8Array, url: any, ciphertextHash:
     const AESKey = derivedKey.slice(16, 48)
     const SHA256Key = derivedKey.slice(48, 80)
 
-    const response = await fetch(devCORSWorkaroundUrlPrefix + url)
+    const response = await fetch(mainStore.devCORSWorkaroundUrlPrefix + url)
     const encryptedBuffer = await response.arrayBuffer()
     const encryptedArrayWithMAC = new Uint8Array(encryptedBuffer)
 
