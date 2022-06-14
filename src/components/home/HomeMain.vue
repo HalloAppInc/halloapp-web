@@ -101,5 +101,4 @@ const listData = [
     overflow-x: hidden;
 }
 
-
 </style>
