@@ -21,17 +21,8 @@ import MP4Box from 'mp4box'
 import { useMainStore } from '../../stores/mainStore'
 const mainStore = useMainStore()
 
-let isDebug = false
-
 let pushname = (<any>window).han
 let avatar = (<any>window).haa
-
-let devCORSWorkaroundUrlPrefix = ""
-if (process.env.NODE_ENV?.toString() == "development") {
-    isDebug = true 
-    devCORSWorkaroundUrlPrefix = "https://cors-anywhere.herokuapp.com/"
-    // devCORSWorkaroundUrlPrefix = "https://localhost:4000/"
-}
 
 let isAvailable = ref(true)
 let isMobile = ref(false)
@@ -60,8 +51,8 @@ const voiceNoteInfo     = Base64.fromBase64("SGFsbG9BcHAgYXVkaW8=")
 const gothamFontUrl = ref("https://web.halloapp.com/fonts/gotham/woff2/Gotham-Book_Web.woff2")
 const gothamMediumFontUrl = ref("https://web.halloapp.com/fonts/gotham/woff2/Gotham-Medium_Web.woff2")
 
-const avatarImageUrlPrefix = ref(devCORSWorkaroundUrlPrefix + "https://avatar-cdn.halloapp.net/")
-const avatarImageUrl = ref(devCORSWorkaroundUrlPrefix + "https://web.halloapp.com/assets/avatar.svg")
+const avatarImageUrlPrefix = ref(mainStore.devCORSWorkaroundUrlPrefix + "https://avatar-cdn.halloapp.net/")
+const avatarImageUrl = ref(mainStore.devCORSWorkaroundUrlPrefix + "https://web.halloapp.com/assets/avatar.svg")
 
 const postTimestamp = ref("")
 let postText: string
@@ -283,7 +274,7 @@ async function getChunkedMediaBlob(media: any, info: string, chunkSize: number) 
     const downloadUrl = media.downloadUrl
 
     /* download blob */
-    const response = await fetch(devCORSWorkaroundUrlPrefix + downloadUrl)
+    const response = await fetch(mainStore.devCORSWorkaroundUrlPrefix + downloadUrl)
     const encryptedBuffer = await response.arrayBuffer()
     const encryptedArray = new Uint8Array(encryptedBuffer)
 
@@ -325,7 +316,7 @@ async function fetchAndDecrypt(derivedKey: Uint8Array, url: any, ciphertextHash:
     const AESKey = derivedKey.slice(16, 48)
     const SHA256Key = derivedKey.slice(48, 80)
 
-    const response = await fetch(devCORSWorkaroundUrlPrefix + url)
+    const response = await fetch(mainStore.devCORSWorkaroundUrlPrefix + url)
 
     const encryptedBuffer = await response.arrayBuffer()
     const encryptedArrayWithMAC = new Uint8Array(encryptedBuffer)
@@ -573,7 +564,7 @@ async function fetchAndDecryptStream(media: any, videoInfo: string, blobSize: nu
     const encryptionKey = media.encryptionKey
     const downloadUrl = media.downloadUrl
 
-    const response: any = await fetch(devCORSWorkaroundUrlPrefix + downloadUrl)
+    const response: any = await fetch(mainStore.devCORSWorkaroundUrlPrefix + downloadUrl)
     const reader = response.body.getReader()
 
     const fullBinArr = new Uint8Array(blobSize)

@@ -3,7 +3,8 @@
         "howtoTitle": "To use HalloApp on your computer:",
         "howtoStepOne": "1. Open HalloApp on your phone",
         "howtoStepTwo": "2. Tap <b>Settings</b> and select <b>Linked Device</b>",
-        "howtoStepThree": "3. Point your phone to this screen and scan the QR code"
+        "howtoStepThree": "3. Point your phone to this screen and scan the QR code",
+        "getQRCode": "Get QR Code"
     },
     "sidestrip": {
         "home": "Home",
