@@ -5,6 +5,7 @@ import { ref, computed, watch } from 'vue'
 import InputBox from './InputBox.vue'
 import ChatBubble from './ChatBubble.vue'
 import { useColorStore } from '../../stores/colorStore';
+import ChatHeader from './ChatHeader.vue';
 
 const colorStore = useColorStore()
 
@@ -33,9 +34,19 @@ const messageList = ref([
     }
 ])
 
+const contactList = ref([
+    "A",
+    "B",
+    "abcd",
+    "?sss"
+])
+
 const messageNumber = computed(() => {
     return messageList.value.length
 })
+
+const chatName = ref('chat1')
+const chatInformation = ref('chatInfo')
 
 watch(messageNumber, () => {
     // notifyMe() // uncomment it to allow notification
@@ -47,44 +58,45 @@ const chatBackground = computed(() => {
 })
 
 function notifyMe() {
-  // check if the browser supports notifications
-  if (!("Notification" in window)) {
-    alert("This browser does not support desktop notification");
-  }
+    // check if the browser supports notifications
+    if (!('Notification' in window)) {
+        alert('This browser does not support desktop notification');
+    }
 
-  // check whether notification permissions have already been granted
-  else if (Notification.permission === "granted") {
-    var notification = new Notification("You have a new message!");
-  }
+    // check whether notification permissions have already been granted
+    else if (Notification.permission === 'granted') {
+        var notification = new Notification('You have a new message!');
+    }
 
-  // ask the user for permission
-  else if (Notification.permission !== "denied") {
-    Notification.requestPermission().then(function (permission) {
-      // user accepts
-      if (permission === "granted") {
-        var notification = new Notification("You have a new message!");
-      }
-    });
-  }
+    // ask the user for permission
+    else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then(function (permission) {
+            // user accepts
+            if (permission === 'granted') {
+                var notification = new Notification('You have a new message!');
+            }
+        });
+    }
 }
 
 </script>
 
 <template>
 
-    <div id="wrapper">
+    <div id='wrapper'>
 
-        <div id="header">
+        <div id='header'>
+            <ChatHeader :chat-name='chatName' :chat-information='chatInformation'/>
         </div>
 
         <!-- chatting area -->
         <div id='content' ref='content'>
-            <ChatBubble :message-list='messageList'/>
+            <ChatBubble :message-list='messageList' />
         </div>
 
         <!-- input tray -->
         <div id='footer'>
-            <InputBox :message-list='messageList'/>
+            <InputBox :message-list='messageList' :contact-list='contactList' />
         </div>
 
     </div>
@@ -124,7 +136,6 @@ function notifyMe() {
 #header {
     flex: 1 1 50px;
     background-color: #f0f2f5;
-    padding: 10px;
 }
 
 #footer {
@@ -133,10 +144,96 @@ function notifyMe() {
 }
 
 #content {
-    width: calc(100% - 50px);
+    width: 100%;
     height: 100%;
     overflow-y: auto;
     overflow-x: auto;
     background-color: v-bind(chatBackground);
+}
+
+#listBox {
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 100%;
+}
+
+.container {
+    display: flex;
+    flex-direction: horizontal;
+    padding: 0px;
+}
+
+.avatarContainer {
+    flex: 0 0 70px;
+    padding: 5px 0px 5px 20px;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+
+    background-color: lightgray;
+    border-radius: 50%;
+}
+
+.content {
+    width: 100%;
+    padding: 0px 10px;
+
+    color: #3b4a54;
+
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+
+    user-select: none;
+
+    overflow: hidden;
+}
+
+.contentHeader {
+    margin-top: 8px;
+    display: flex;
+    /* background-color: aqua; */
+
+    justify-content: flex-start;
+}
+
+.contentTitle {
+    color: #111b21;
+    font-weight: 600;
+
+    flex: 1 1 auto;
+
+    min-width: 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    user-select: none;
+
+    overflow: hidden;
+}
+
+.contentBody {
+    /* background-color: aquamarine; */
+    margin-top: 2px;
+    margin-bottom: 3px;
+
+    color: #111b21;
+    font-size: small;
+}
+
+.iconContainer {
+    padding: 12px 30px 12px 0px;
+}
+
+.iconContainer:hover {
+    cursor: pointer;
+}
+
+.verticalLine {
+    border-right: 1px solid rgb(200, 200, 200);
+    height: 30px;
+    margin: 10px 30px;
 }
 </style>

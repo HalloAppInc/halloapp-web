@@ -53,5 +53,10 @@
     "notifications": {
         "sounds": "Sounds",
         "desktopAlerts": "Desktop Alerts"
+    },
+    "chatSettings": {
+        "groupInformation": "Group Information",
+        "changeBackgroundColor": "Change Background Color",
+        "exitGroup": "Exit Group"
     }
 }
