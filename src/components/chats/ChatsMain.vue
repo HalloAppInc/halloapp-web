@@ -4,7 +4,6 @@ import { ref, computed, watch, nextTick } from 'vue'
 import { useColorStore } from '../../stores/colorStore';
 import InputBox from './InputBox.vue'
 import ChatPanel from './ChatBubble.vue'
-import JumpDown from './JumpDown.vue';
 import ChatHeader from './ChatHeader.vue';
 
 const colorStore = useColorStore()
@@ -94,8 +93,6 @@ function notifyMe() {
         <!-- chatting area -->
         <div id='content' ref='content'>
             <ChatPanel :message-list='messageList' />
-            <!-- jump back down -->
-            <JumpDown />
         </div>
 
         <!-- input tray -->
@@ -155,89 +152,4 @@ function notifyMe() {
     background-color: v-bind(chatBackground);
 }
 
-#listBox {
-    overflow-y: auto;
-    overflow-x: hidden;
-    height: 100%;
-}
-
-.container {
-    display: flex;
-    flex-direction: horizontal;
-    padding: 0px;
-}
-
-.avatarContainer {
-    flex: 0 0 70px;
-    padding: 5px 0px 5px 20px;
-}
-
-.avatar {
-    width: 40px;
-    height: 40px;
-
-    background-color: lightgray;
-    border-radius: 50%;
-}
-
-.content {
-    width: 100%;
-    padding: 0px 10px;
-
-    color: #3b4a54;
-
-    display: flex;
-    width: 100%;
-    flex-direction: column;
-
-    user-select: none;
-
-    overflow: hidden;
-}
-
-.contentHeader {
-    margin-top: 8px;
-    display: flex;
-    /* background-color: aqua; */
-
-    justify-content: flex-start;
-}
-
-.contentTitle {
-    color: #111b21;
-    font-weight: 600;
-
-    flex: 1 1 auto;
-
-    min-width: 0;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-
-    user-select: none;
-
-    overflow: hidden;
-}
-
-.contentBody {
-    /* background-color: aquamarine; */
-    margin-top: 2px;
-    margin-bottom: 3px;
-
-    color: #111b21;
-    font-size: small;
-}
-
-.iconContainer {
-    padding: 12px 30px 12px 0px;
-}
-
-.iconContainer:hover {
-    cursor: pointer;
-}
-
-.verticalLine {
-    border-right: 1px solid rgb(200, 200, 200);
-    height: 30px;
-    margin: 10px 30px;
-}
 </style>
