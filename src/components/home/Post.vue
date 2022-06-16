@@ -15,20 +15,20 @@ import GraphemeSplitter from 'grapheme-splitter'
 import { useI18n } from 'vue-i18n'
 
 import MediaCarousel from '../media/MediaCarousel.vue'
+import Avatar from '../media/Avatar.vue'
 
 import MP4Box from 'mp4box'
 
 import { useMainStore } from '../../stores/mainStore'
+
+
+
 const mainStore = useMainStore()
 
 let pushname = (<any>window).han
 let avatar = (<any>window).haa
 
 let isAvailable = ref(true)
-let isMobile = ref(false)
-let isIOS = ref(false)
-let isAndroid = ref(false)
-let isSafari = ref(false) // mobile Safari and desktop Safari
 
 const { t, locale } = useI18n({
     inheritLocale: true,
@@ -47,9 +47,6 @@ const externalShareInfo = Base64.fromBase64("SGFsbG9BcHAgU2hhcmUgUG9zdA==")
 const imageInfo         = Base64.fromBase64("SGFsbG9BcHAgaW1hZ2U=")
 const videoInfo         = Base64.fromBase64("SGFsbG9BcHAgdmlkZW8=") 
 const voiceNoteInfo     = Base64.fromBase64("SGFsbG9BcHAgYXVkaW8=") 
-
-const gothamFontUrl = ref("https://web.halloapp.com/fonts/gotham/woff2/Gotham-Book_Web.woff2")
-const gothamMediumFontUrl = ref("https://web.halloapp.com/fonts/gotham/woff2/Gotham-Medium_Web.woff2")
 
 const avatarImageUrlPrefix = ref(mainStore.devCORSWorkaroundUrlPrefix + "https://avatar-cdn.halloapp.net/")
 const avatarImageUrl = ref(mainStore.devCORSWorkaroundUrlPrefix + "https://web.halloapp.com/assets/avatar.svg")
@@ -93,14 +90,12 @@ const $postVoiceNote = ref(null)
 const showVoiceNote = ref(false)
 const postVoiceNoteSrc = ref("")
 
-applyPlatformSpecifics()
 setPostSize()
 init()
 
 async function init() {  
-    const urlHashComponent = location.hash
-    let base64Key = urlHashComponent.slice(2) // strip out "#" and "k"
-    let base64Blob = (<any>window).hab
+    let base64Key
+    let base64Blob
 
     // if (isDebug) {
         /* hardcoded tests */
@@ -135,7 +130,6 @@ async function init() {
     // }
 
     if (!base64Key || !base64Blob) {
-        isAvailable.value = false
         return
     }
 
@@ -429,7 +423,7 @@ function truncateTextIfNeeded(text: string, maxCharacters: number) {
     for (let i = 0; i < graphemes.length; i++) {
         if (charCount >= maxCharacters) { break }       
 
-        /* if matcing closing tags are found, pop them off the queue */
+        /* if matching closing tags are found, pop them off the queue */
         if ((i + 5) < graphemes.length) {
             const subStr = graphemes.slice(i, i + 6).join('')
             const lastClosingTag = closingTagsQueue[closingTagsQueue.length - 1]
@@ -838,25 +832,6 @@ async function processPostContainer(postContainer: any) {
 
 }
 
-function applyPlatformSpecifics() {
-    const userAgent = navigator.userAgent || navigator.vendor || (<any>window).opera
-
-    if ('ontouchstart' in document.documentElement && userAgent.match(/Mobi/)) {
-        isMobile.value = true
-    }
-
-    if (/iPad|iPhone|iPod/.test(userAgent) && !(<any>window).MSStream) {
-        isIOS.value = true
-    }
-    if (/android/i.test(userAgent)) {
-        isAndroid.value = true
-    }
-
-    if (userAgent.indexOf('Safari') != -1 && userAgent.indexOf('Chrome') == -1) {
-        isSafari.value = true
-    }
-}
-
 function setPostSize() {
     const maxPostWidth = 400    // max width of entire card allowed
     const minPostWidth = 200    // min width of card
@@ -950,7 +925,8 @@ function expandText() {
 
             <!-- postHeader row -->
             <div id="postHeader">
-                <img id="avatarImage" crossorigin="" :src="avatarImageUrl" alt="Avatar">
+                <!-- <img id="avatarImage" crossorigin="" :src="avatarImageUrl" alt="Avatar"> -->
+                <Avatar></Avatar>
                 <div id="nameBox">
                     <div id="name">
                         {{ pushname }}
@@ -991,8 +967,8 @@ function expandText() {
 
             <!-- postFooter row -->
             <div id="postFooter">
-                <div id="commentButton" @click="">
-                    <img id="commentIcon" src="https://d1efjkqerxchlh.cloudfront.net/es/assets/Comment.png" alt="Comment Icon">
+                <div class="commentButton" @click="$emit('commentsClick')">
+                    <img class="commentIcon" src="https://d1efjkqerxchlh.cloudfront.net/es/assets/Comment.png" alt="Comment Icon">
                     <div>
                         {{ t('post.comment') }}
                     </div>
@@ -1007,15 +983,6 @@ function expandText() {
                 </div>
             </div>
 
-        </div>
-    </div>
-
-    <div v-else id="postNotAvailableRow">
-        <div id="postNotAvailableHeading">
-            {{ t('post.postNoLongerAvailableTitle') }}
-        </div>
-        <div id="postNotAvailableBody">
-            {{ t('post.postNoLongerAvailable') }}
         </div>
     </div>
 
@@ -1229,32 +1196,27 @@ function expandText() {
         color: rgba(255, 255, 255, 0.75)
     }
 }
-#commentButton {
+.commentButton {
     display: flex;
     flex-direction: horizontal;
     align-items: center;
 
-    color: gray;
-
     user-select: none;
-    /* cursor: pointer; */
+    cursor: pointer;
 }
 @media (pointer: fine) {
-    /* #commentButton:hover {
-        color: v-bind(primaryBlue);
-    } */
+    .commentButton:hover {
+        filter: invert(50%) sepia(68%) saturate(7495%) hue-rotate(201deg) brightness(104%) contrast(104%);
+    }
 }
 
-#commentIcon {
+.commentIcon {
     width: 14px;
     height: 14px;
     margin-right: 5px;
-
-    color: gray;
-    filter: invert(40%);
 }
 @media (prefers-color-scheme: dark) {
-    #commentIcon {
+    .commentIcon {
         filter: invert(100%);
     }
 }

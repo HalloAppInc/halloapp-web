@@ -26,7 +26,9 @@ export const useMainStore = defineStore('main', {
         privateKeyBase64: '',
         publicKeyBase64: '',
 
-        messageQueue: <any>[], 
+        messageQueue: <any>[],
+        pushnames: {},
+        pushnumbers: {},
 
         isLoggedIntoApp: false,
         isWaitingForUserToRegenKey: false,
@@ -63,6 +65,12 @@ export const useMainStore = defineStore('main', {
             // todo: delete all saved data
             // todo: remove public key from server? (what if there's no connection)
             this.isLoggedIntoApp = false
+            
+            /* manual reset instead of $reset() so we can preserve the states we want */
+            this.page = 'home'
+            this.settingsPage = ''
+            // todo: might have to stop in-flight messages
+            this.messageQueue.splice(0, this.messageQueue.length) // clear messages
         },
         gotoPage(page: string) {
             this.page = page
