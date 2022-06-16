@@ -15,7 +15,7 @@ import { useI18n } from 'vue-i18n'
 import qrCodeStyling from 'qr-code-styling'
 
 const mainStore = useMainStore()
-const connectStore = useConnStore()
+const connStore = useConnStore()
 
 const primaryBlue = commonColors.primaryBlue
 
@@ -43,7 +43,7 @@ onBeforeUnmount(() => {
 
 function generateQRCodeAndConnect() {
     
-    connectStore.generatePublicKeyIfNeeded()
+    connStore.generatePublicKeyIfNeeded()
     showQRCode.value = true
 
     clearTimeout(qrCodeTimer)
@@ -90,7 +90,7 @@ function generateQRCodeAndConnect() {
         qrCodeStylingWithOptions.update(options)
     }
 
-    connectStore.connectToServerIfNeeded()
+    connStore.connectToServerIfNeeded()
 }
 
 function fakeAuth() {
@@ -98,13 +98,13 @@ function fakeAuth() {
 }
 
 function getNewQRCode() {
-    connectStore.setWaitForUserToRegenKey(false)
+    connStore.setWaitForUserToRegenKey(false)
     generateQRCodeAndConnect()
 }
 
 function deleteQRCodeAndWait() {
     hal.log('com/QRCode/deleteQRCodeAndWait')
-    connectStore.waitForUserToRegenKey()
+    connStore.waitForUserToRegenKey()
     showQRCode.value = false
 }
 
