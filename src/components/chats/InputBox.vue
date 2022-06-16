@@ -2,8 +2,7 @@
 
 import { ref, computed } from 'vue'
 
-import Autolinker from 'autolinker'
-import GraphemeSplitter from 'grapheme-splitter'
+import haText from '../../common/haText'
 
 const props = defineProps(['messageList', 'contactList'])
 
@@ -28,200 +27,11 @@ const inputAreaHeight = computed(() => {
     }
 })
 
-// format input message
-function populateTextWithMentions(text: any, mentions: any) {
-    let result = ''
-
-    if (mentions) {
-        const textArray = [...text]
-        let mentionsStartingIndex = 0
-
-        textArray.forEach( (char, idx) => {
-            if (char == "@") {
-                let isMention = false
-                let pushname = ''
-                for (let i = mentionsStartingIndex; i < mentions.length; i++) {
-                    if (mentions[i].index == idx) {
-                        isMention = true
-                        pushname = mentions[i].name
-                        mentionsStartingIndex++
-                        break
-                    }
-                }
-
-                if (isMention) {
-                    result += "[[b]]" + "@" + pushname + "[[/b]]"
-                } else {
-                    result += char
-                }
-            } else {
-                result += char
-            }
-        })
-    } else {
-        result = text
-    }
-    return result
-}
-
-function decorateTextWithMarkdownPlaceholders(text: any) {
-    let result = text
-        .replace(/((?:^|[^\\])(?:\\.)*)\_(?=[^\s])((\\.|[^_])*)\_/g, '$1[[i]]$2[[/i]]')
-        .replace(/((?:^|[^\\])(?:\\.)*)\~(?=[^\s])((\\.|[^~])*)\~/g, '$1[[s]]$2[[/s]]')
-        .replace(/((?:^|[^\\])(?:\\.)*)\*(?=[^\s])((\\.|[^*])*)\*/g, '$1[[b]]$2[[/b]]')
-    return result
-}
-
-function decorateTextWithLinks(text: string) {
-    const autolinker = new Autolinker({
-        stripPrefix: false,
-        urls: {
-            schemeMatches: true,
-            wwwMatches: true,
-            tldMatches: true
-        },
-        stripTrailingSlash: false,
-        replaceFn: function (match) {
-            let tag = new Autolinker.HtmlTag({
-                tagName: '[[a]]',
-                attrs: { 'href': match.getAnchorHref(), 'target': '_blank', 'rel': 'noopener noreferrer' },
-                innerHtml: match.getMatchedText()
-            })
-            return tag
-        }
-    })
-
-    /* looks for links, phone numbers, and emails */
-    let textWithAutoLinkerLinks = autolinker.link(text)
-
-    /* convert <[[a]] to [[a]] since AutoLinker custom tags always have '<' */
-    let textWithHALinks = textWithAutoLinkerLinks
-        .replaceAll('<[[a]]', '[[a]]')
-        .replaceAll('</[[a]]>', '[[/a]]')
-
-    return textWithHALinks
-}
-
-function truncateTextIfNeeded(text: string, maxCharacters: number) {
-    let charCount = 0
-    let isTruncated = false
-    let truncatedText = ''
-
-    let splitter = new GraphemeSplitter()
-    const graphemes = splitter.splitGraphemes(text)
-
-    let closingTagsQueue = [] // could be holding [[/b]], [[/s]], [[/i]], or [[/a]]
-
-    for (let i = 0; i < graphemes.length; i++) {
-        if (charCount >= maxCharacters) { break }
-
-        /* if matcing closing tags are found, pop them off the queue */
-        if ((i + 5) < graphemes.length) {
-            const subStr = graphemes.slice(i, i + 6).join('')
-            const lastClosingTag = closingTagsQueue[closingTagsQueue.length - 1]
-            if (subStr == lastClosingTag) {
-                closingTagsQueue.pop()
-                truncatedText += subStr
-                i += 5
-                continue
-            }
-        }
-
-        if ((i + 4) < graphemes.length) {
-            const subStr = graphemes.slice(i, i + 5).join('')
-            const openingTags = ['[[b]]', '[[s]]', '[[i]]', '[[a]]']
-
-            if (openingTags.includes(subStr)) {
-                const closingTag = subStr.slice(0, 2) + '/' + subStr.slice(2)
-                closingTagsQueue.push(closingTag)
-                truncatedText += subStr
-                i += 4
-
-                /* handle anchor tags, expect attributes inside */
-                if (subStr == '[[a]]') {
-                    let linkIndex = i + 1
-                    let anchorAttrStr = ''
-                    while (linkIndex < graphemes.length) {
-                        const closingAnchorTag = ['>']
-                        if ((linkIndex + 1) < graphemes.length) {
-                            const subAnchorStr = graphemes.slice(linkIndex, linkIndex + 1).join('')
-                            if (closingAnchorTag.includes(subAnchorStr)) {
-                                truncatedText += '[[aAttr]]' + anchorAttrStr + '[[/aAttr]]'
-                                i = linkIndex
-                                break
-                            }
-                        }
-                        anchorAttrStr += graphemes[linkIndex]
-                        linkIndex++
-                    }
-                }
-                continue
-            }
-        }
-
-        truncatedText += graphemes[i]
-        charCount++
-    }
-
-    if (charCount >= maxCharacters) {
-        isTruncated = true
-        /* append all leftover closing tags to truncatedText so all tags will be closed */
-        for (let i = 0; i < closingTagsQueue.length; i++) {
-            truncatedText += closingTagsQueue.pop()
-        }
-    }
-
-    return { text: truncatedText, isTruncated: isTruncated, countedChars: charCount }
-}
-
-function sanitizeHtml(text: string) {
-    let element = document.createElement('div')
-    element.textContent = text // prefer textContent over innerText, more standardardized and doesn't change newlines to <br>
-    return element.innerHTML
-}
-
-function populateTextWithHtml(text: string) {
-    var result = text
-        .replaceAll('\n', '<br>')
-        .replaceAll('[[i]]', '<i>')
-        .replaceAll('[[/i]]', '</i>')
-        .replaceAll('[[s]]', '<s>')
-        .replaceAll('[[/s]]', '</s>')
-        .replaceAll('[[b]]', '<b>')
-        .replaceAll('[[/b]]', '</b>')
-
-        .replaceAll('[[a]]', '<a')
-        .replaceAll('[[aAttr]]', '')
-        .replaceAll('[[/aAttr]]', '>')
-        .replaceAll('[[/a]]', '</a>')
-    return result
-}
-
-function processText(text: any, mentions: any, truncateText: boolean = false) {
-    const textWithMentions = populateTextWithMentions(text, mentions)
-    const decoratedTextWithMarkdown = decorateTextWithMarkdownPlaceholders(text)
-    let textToBeSanitized = decorateTextWithLinks(decoratedTextWithMarkdown)
-
-    // rough estimate of 330 chars for 12 lines and 110 for 3 lines
-    let maxCharsForTextOnlyPosts = 330
-
-    let truncatedText = truncateTextIfNeeded(textToBeSanitized, maxCharsForTextOnlyPosts)
-    if (truncatedText.isTruncated) {
-        truncatedText.text += '...'
-    }
-
-    textToBeSanitized = truncatedText.text
-
-    const santizedHtml = sanitizeHtml(textToBeSanitized)
-    const html = populateTextWithHtml(santizedHtml)
-    return html
-}
-
 function sendMessage() {
     if (inputMessage.value != '') {
         props.messageList.push({
-            side: 'right',
-            message: processText(inputMessage.value, props.contactList),
+            type: 'outbound',
+            message: haText.processText(inputMessage.value, props.contactList),
             timestamp: '1649204213',
         })
         inputMessage.value = ''
@@ -242,7 +52,6 @@ function analyzeInput(e: any) {
     }
     else {
         showContacts.value = false
-        populateTextWithMentions(inputArea.value, props.contactList.value)
         // check whether there exist an @
         let idx = inputMessage.value.indexOf('@')
         let idx_old = -1
@@ -291,14 +100,14 @@ function addContactToInputBox(contact: string) {
     </div>
 
     <div class='chatBoxTray'>
-        <div class='iconContainer'>
-            <font-awesome-icon :icon="['fas', 'face-smile']" size='2xl' />
+        <!-- <div class='iconContainer'>
+            <font-awesome-icon :icon="['fas', 'face-smile']" size='2x' />
         </div>
         <div class='iconContainer'>
-            <font-awesome-icon :icon="['fas', 'paperclip']" size='2xl' />
-        </div>
+            <font-awesome-icon :icon="['fas', 'paperclip']" size='2x' />
+        </div> -->
         <div class='inputBoxContainer'>
-            <textarea id='textarea' cols='85' v-model='inputMessage' class='input'
+            <textarea id='textarea' cols='80' v-model='inputMessage' class='input'
                 placeholder='Type your message here...' 
                 @keydown.enter.exact.prevent='sendMessage'
                 @keydown.shift.enter.exact.prevent='nextLine' 
@@ -307,9 +116,9 @@ function addContactToInputBox(contact: string) {
                 ref='inputArea'>
                 </textarea>
         </div>
-        <div class='iconContainer'>
-            <font-awesome-icon :icon="['fas', 'microphone']" size='2xl' />
-        </div>
+        <!-- <div class='iconContainer'>
+            <font-awesome-icon :icon="['fas', 'microphone']" size='2x' />
+        </div> -->
     </div>
 </template>
 
@@ -327,6 +136,7 @@ function addContactToInputBox(contact: string) {
 }
 
 textarea {
+    width: auto;
     padding: 10px 15px;
     overflow-y: scroll;
     resize: none;

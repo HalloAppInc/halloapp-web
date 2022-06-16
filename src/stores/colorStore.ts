@@ -19,8 +19,8 @@ export const useColorStore = defineStore('color', {
         line: colors.lineLight,
         chatBox: colors.chatBox,
         chatBackground: colors.chatBackgroundLight,
-        myChatBubble: colors.myChatBubbleLight,
-        othersChatBubble: colors.othersChatBubbleLight,
+        outboundMsgBubble: colors.outboundMsgBubbleLight,
+        inboundMsgBubble: colors.inboundMsgBubbleLight,
         timestamp: colors.timestampLight,
         timeBubble: colors.timeBubbleLight
     }),
@@ -62,8 +62,8 @@ export const useColorStore = defineStore('color', {
             this.line = colors['line' + mode]
             this.chatBox = colors['chatBox' + mode]
             this.chatBackground = colors['chatBackground' + mode]
-            this.myChatBubble = colors['myChatBubble' + mode]
-            this.othersChatBubble = colors['othersChatBubble' +  mode]
+            this.outboundMsgBubble = colors['outboundMsgBubble' + mode]
+            this.inboundMsgBubble = colors['inboundMsgBubble' +  mode]
             this.timestamp = colors['timestamp' + mode]
             this.timeBubble = colors['timeBubble' + mode]
         },

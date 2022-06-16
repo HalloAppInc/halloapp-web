@@ -46,13 +46,13 @@ const props = defineProps(['chatName', 'chatInformation'])
             </div>
             <div class='verticalLine'> </div>
             <div class='iconContainer'>
-                <div class='iconShadow'>
-                    <font-awesome-icon :icon="['fas', 'magnifying-glass']" size='l' />
-                </div>
+                <!-- <div class='iconShadow'>
+                    <font-awesome-icon :icon="['fas', 'magnifying-glass']" size='lg' />
+                </div> -->
             </div>
             <div class='iconContainer' @click='showChatSettings = !showChatSettings'>
                 <div class='iconShadow'>
-                    <font-awesome-icon :icon="['fas', 'angle-down']" size='l' />
+                    <font-awesome-icon :icon="['fas', 'angle-down']" size='lg' />
                 </div>
             </div>
         </div>

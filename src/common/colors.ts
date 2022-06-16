@@ -34,14 +34,14 @@ export default defineComponent({
     shadowLight: 'rgba(100, 100, 100, 0.3)',
     shadowDark: 'rgba(0, 0, 0, 0.3)',
 
-    myChatBubbleLight: '#FFF5D6',
-    myChatBubbleDark: '#111b21',
+    outboundMsgBubbleLight: '#FFF5D6',
+    outboundMsgBubbleDark: '#111b21',
 
     timeBubbleLight: '#FFEBAE',
     timeBubbleDark: '#111b21',
 
-    othersChatBubbleLight: '#FFFFFF',
-    othersChatBubbleDark: '#2a3942',
+    inboundMsgBubbleLight: '#FFFFFF',
+    inboundMsgBubbleDark: '#2a3942',
 
     timestampLight: 'rgba(0, 0, 0, 0.5)',
     timestampDark: 'rgba(255, 255, 255, 0.5)',

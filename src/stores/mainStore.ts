@@ -26,9 +26,7 @@ export const useMainStore = defineStore('main', {
         privateKeyBase64: '',
         publicKeyBase64: '',
 
-        messageQueue: <any>[], 
-
-        messageQueue: <any>[], 
+        messageQueue: <any>[],
 
         isLoggedIntoApp: false,
         isWaitingForUserToRegenKey: false,

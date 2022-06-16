@@ -1,10 +1,10 @@
 <script setup lang="ts">
 
-import { ref, computed, watch } from 'vue'
-
-import InputBox from './InputBox.vue'
-import ChatBubble from './ChatBubble.vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { useColorStore } from '../../stores/colorStore';
+import InputBox from './InputBox.vue'
+import ChatPanel from './ChatBubble.vue'
+import JumpDown from './JumpDown.vue';
 import ChatHeader from './ChatHeader.vue';
 
 const colorStore = useColorStore()
@@ -13,32 +13,32 @@ const content = ref<HTMLElement | null>(null)
 
 const messageList = ref([
     {
-        side: "middle",
+        type: "timestamp",
         message: "",
         timestamp: "1649204213",
     },
     {
-        side: "left",
+        type: "inbound",
         message: "Short text testing:<br> ~123~ <s>123</s>,_123_<i>123</i>,*123*<b>123</b>",
         timestamp: "1649204213",
     },
     {
-        side: "right",
+        type: "outbound",
         message: "Long text testing: The item is sized according to its width and height properties, The item is sized according to its width and height properties, The item is sized according to its width and height properties",
         timestamp: "1649204213",
     },
     {
-        side: "left",
+        type: "inbound",
         message: "Long text testing: The item is sized according to its width and height properties, The item is sized according to its width and height properties, The item is sized according to its width and height properties",
         timestamp: "1649204213",
-    }
+    },
 ])
 
 const contactList = ref([
-    "A",
-    "B",
-    "abcd",
-    "?sss"
+    "UserA",
+    "UserB",
+    "abcd123",
+    "?@#$%^&"
 ])
 
 const messageNumber = computed(() => {
@@ -49,8 +49,10 @@ const chatName = ref('chat1')
 const chatInformation = ref('chatInfo')
 
 watch(messageNumber, () => {
-    // notifyMe() // uncomment it to allow notification
-    content.value?.scrollTo(10000, content.value?.clientHeight)
+    // notifyMe()
+    nextTick(() => {
+        content.value?.scrollTo(10000, content.value?.scrollHeight)
+    });
 })
 
 const chatBackground = computed(() => {
@@ -86,12 +88,14 @@ function notifyMe() {
     <div id='wrapper'>
 
         <div id='header'>
-            <ChatHeader :chat-name='chatName' :chat-information='chatInformation'/>
+            <ChatHeader :chat-name='chatName' :chat-information='chatInformation' />
         </div>
 
         <!-- chatting area -->
         <div id='content' ref='content'>
-            <ChatBubble :message-list='messageList' />
+            <ChatPanel :message-list='messageList' />
+            <!-- jump back down -->
+            <JumpDown />
         </div>
 
         <!-- input tray -->
