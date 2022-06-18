@@ -27,6 +27,8 @@ export const useMainStore = defineStore('main', {
         publicKeyBase64: '',
 
         messageQueue: <any>[],
+        pushnames: {},
+        pushnumbers: {},
 
         isLoggedIntoApp: false,
         isWaitingForUserToRegenKey: false,
