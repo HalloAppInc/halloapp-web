@@ -12,6 +12,10 @@ const { t } = useI18n({
 
 const colorStore = useColorStore()
 
+const showChatSettings = ref(false)
+
+const props = defineProps(['chatName', 'chatInformation'])
+
 const hoverColor = computed(() => {
     return colorStore.hover
 })
@@ -23,14 +27,13 @@ const lineColor = computed(() => {
 const textColor = computed(() => {
     return colorStore.text
 })
-
-const showChatSettings = ref(false)
-const props = defineProps(['chatName', 'chatInformation'])
 </script>
 
 <template>
+
     <div id='chatHeader'>
         <div class='container'>
+            <!-- show user profile photo and chat information -->
             <div class='avatarContainer'>
                 <div class='avatar'></div>
             </div>
@@ -44,20 +47,24 @@ const props = defineProps(['chatName', 'chatInformation'])
                     {{ props.chatInformation }}
                 </div>
             </div>
+
+            <!-- show chat menu -->
             <div class='verticalLine'> </div>
-            <div class='iconContainer'>
-                <!-- <div class='iconShadow'>
-                    <font-awesome-icon :icon="['fas', 'magnifying-glass']" size='lg' />
-                </div> -->
-            </div>
-            <div class='iconContainer' @click='showChatSettings = !showChatSettings'>
+            <!-- <div class='iconContainer'>
                 <div class='iconShadow'>
-                    <font-awesome-icon :icon="['fas', 'angle-down']" size='lg' />
+                    <font-awesome-icon :icon="['fas', 'magnifying-glass']" size='lg' />
                 </div>
+            </div> -->
+            <div class='iconContainer' tabindex='0' @focus='showChatSettings = !showChatSettings'
+                @focusout='showChatSettings = false'>
+                    <div class='iconShadow'>
+                        <font-awesome-icon :icon="['fas', 'angle-down']" size='lg' />
+                    </div>
             </div>
         </div>
     </div>
 
+    <!-- chat settings menu -->
     <div class='chatSettings' v-if='showChatSettings'>
         <div class='menu'>
             <div class='menuContainer'>
@@ -77,12 +84,13 @@ const props = defineProps(['chatName', 'chatInformation'])
             <div class='menuContainer'>
                 <div class="textContainer">
                     <div class="contentTextBody">
-                       {{ t('chatSettings.exitGroup') }}
+                        {{ t('chatSettings.exitGroup') }}
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
 </template>
 
 <style scoped>
@@ -150,7 +158,6 @@ const props = defineProps(['chatName', 'chatInformation'])
 }
 
 .contentBody {
-    /* background-color: aquamarine; */
     margin-top: 2px;
     margin-bottom: 3px;
 
@@ -191,6 +198,8 @@ const props = defineProps(['chatName', 'chatInformation'])
 }
 
 .menu {
+
+    z-index: 1;
     width: 300px;
     padding: 0px;
     position: fixed;

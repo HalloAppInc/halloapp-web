@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useColorStore } from '../../stores/colorStore';
 import InputBox from './InputBox.vue'
 import ChatPanel from './ChatBubble.vue'
@@ -17,19 +17,54 @@ const messageList = ref([
         timestamp: "1649204213",
     },
     {
-        type: "inbound",
+        type: "inBound",
         message: "Short text testing:<br> ~123~ <s>123</s>,_123_<i>123</i>,*123*<b>123</b>",
         timestamp: "1649204213",
     },
     {
-        type: "outbound",
+        type: "outBound",
         message: "Long text testing: The item is sized according to its width and height properties, The item is sized according to its width and height properties, The item is sized according to its width and height properties",
         timestamp: "1649204213",
     },
     {
-        type: "inbound",
+        type: "inBound",
         message: "Long text testing: The item is sized according to its width and height properties, The item is sized according to its width and height properties, The item is sized according to its width and height properties",
         timestamp: "1649204213",
+    },
+    {
+        type: "timestamp",
+        message: "",
+        timestamp: "1655527924",
+    },
+    {
+        type: "inBound",
+        message: "asdfasdfsadfasdflsadkfl;sdakf;lasdkf;asdkf;lasdkf;lsadkf;lsadkf;sadkf;lasdfksd;lfksd;lfdsf",
+        timestamp: "1655527924",
+    },
+    {
+        type: "inBound",
+        message: "😍😍😍😍",
+        timestamp: "1655527924",
+    },
+    {
+        type: "inBound",
+        message: "😍!",
+        timestamp: "1655527924",
+    },
+    {
+        type: "inBound",
+        message: "😍",
+        timestamp: "1655527924",
+    },
+    {
+        type: "inBound",
+        message: "☺️", // this emoji can't be displayed 
+        timestamp: "1655527924",
+    },
+    {
+        type: "inBound",
+        message: "❤️",  // this emoji can't be detected
+        timestamp: "1655527924",
     },
 ])
 
@@ -49,9 +84,6 @@ const chatInformation = ref('chatInfo')
 
 watch(messageNumber, () => {
     // notifyMe()
-    nextTick(() => {
-        content.value?.scrollTo(10000, content.value?.scrollHeight)
-    });
 })
 
 const chatBackground = computed(() => {
@@ -79,7 +111,6 @@ function notifyMe() {
         });
     }
 }
-
 </script>
 
 <template>
@@ -105,21 +136,6 @@ function notifyMe() {
 </template>
 
 <style scoped>
-*::-webkit-scrollbar {
-    width: 5px;
-}
-
-*::-webkit-scrollbar-track {
-    background: white;
-}
-
-*::-webkit-scrollbar-thumb {
-    background-color: rgb(172, 169, 169);
-
-    border: 0px solid white;
-    /* creates padding around scroll thumb */
-}
-
 #wrapper {
     width: 100%;
     height: 100%;
@@ -147,9 +163,8 @@ function notifyMe() {
 #content {
     width: 100%;
     height: 100%;
-    overflow-y: auto;
-    overflow-x: auto;
+    overflow-y: hidden;
+    overflow-x: hidden;
     background-color: v-bind(chatBackground);
 }
-
 </style>

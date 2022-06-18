@@ -9,7 +9,9 @@ const props = defineProps(['messageList', 'contactList'])
 const inputMessage = ref('')
 
 const showContacts = ref(false)
+
 const contactPosition = ref(-1)
+
 const cursorPosition = ref(0)
 
 const inputArea = ref(<HTMLElement | null>(null))
@@ -30,9 +32,9 @@ const inputAreaHeight = computed(() => {
 function sendMessage() {
     if (inputMessage.value != '') {
         props.messageList.push({
-            type: 'outbound',
+            type: 'outBound',
             message: haText.processText(inputMessage.value, props.contactList),
-            timestamp: '1649204213',
+            timestamp: '1655527924',
         })
         inputMessage.value = ''
     }
@@ -68,7 +70,7 @@ function analyzeInput(e: any) {
                     break
                 }
             }
-            contactPosition.value = idx_old+1
+            contactPosition.value = idx_old + 1
         }
     }
 }
@@ -107,7 +109,7 @@ function addContactToInputBox(contact: string) {
             <font-awesome-icon :icon="['fas', 'paperclip']" size='2x' />
         </div> -->
         <div class='inputBoxContainer'>
-            <textarea id='textarea' cols='80' v-model='inputMessage' class='input'
+            <textarea id='textarea' v-model='inputMessage' class='input'
                 placeholder='Type your message here...' 
                 @keydown.enter.exact.prevent='sendMessage'
                 @keydown.shift.enter.exact.prevent='nextLine' 
@@ -123,6 +125,7 @@ function addContactToInputBox(contact: string) {
 </template>
 
 <style scoped>
+
 .chatBoxTray {
     background-color: #f0f2f5;
     display: flex;
@@ -132,11 +135,12 @@ function addContactToInputBox(contact: string) {
 }
 
 .iconContainer {
-    padding: 10px 15px 10px 15px;
+    padding: 10px 15px;
 }
 
 textarea {
-    width: auto;
+    flex: 1;
+    min-width: 0;
     padding: 10px 15px;
     overflow-y: scroll;
     resize: none;
@@ -154,8 +158,9 @@ textarea:focus {
 }
 
 .inputBoxContainer {
-    padding: 5px 10px 0px 10px;
-    display: inline-block;
+    width: 100%;
+    margin: 5px 5px;
+    display: flex;
 }
 
 .contactList {
