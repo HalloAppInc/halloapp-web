@@ -24,7 +24,7 @@ const mainStore = useMainStore()
 
 const showChatSettings = ref(false)
 
-const props = defineProps(['chatName', 'chatInformation','messageList'])
+const props = defineProps(['chatName', 'chatInformation'])
 
 const hoverColor = computed(() => {
     return colorStore.hover
@@ -78,10 +78,10 @@ const backgroundColor = computed(() => {
                 </div>
             </div> -->
             <div class='iconContainer' tabindex='0' @click='showChatSettings = !showChatSettings'
-                @focusout='showChatSettings=false'>
-                    <div class='iconShadow'>
-                        <font-awesome-icon :icon="['fas', 'angle-down']" size='lg' />
-                    </div>
+                @focusout='showChatSettings = false'>
+                <div class='iconShadow'>
+                    <font-awesome-icon :icon="['fas', 'angle-down']" size='lg' />
+                </div>
             </div>
         </div>
     </div>
@@ -89,13 +89,6 @@ const backgroundColor = computed(() => {
     <!-- chat settings menu -->
     <div class='chatSettings' v-if='showChatSettings'>
         <div class='menu' ref='menu'>
-            <div class='menuContainer'>
-                <div class='textContainer'>
-                    <div class='contentTextBody'>
-                        {{ t('chatSettings.groupInformation') }}
-                    </div>
-                </div>
-            </div>
             <div class='menuContainer' @mousedown="mainStore.gotoChatPage('settings')">
                 <div class='textContainer'>
                     <div class='contentTextBody'>
@@ -113,7 +106,7 @@ const backgroundColor = computed(() => {
         </div>
     </div>
 
-    <Popup @clear-messages="$emit('clearMessages')"/>
+    <Popup @clear-messages="$emit('clearMessages')" />
 
 </template>
 
@@ -169,9 +162,7 @@ const backgroundColor = computed(() => {
 .contentTitle {
     color: v-bind(textColor);
     font-weight: 600;
-
     flex: 1 1 auto;
-
     min-width: 0;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -250,7 +241,6 @@ const backgroundColor = computed(() => {
     height: 2em;
     padding: 20px;
     border-bottom: 1px solid v-bind(lineColor);
-
 
     display: flex;
     align-items: center;

@@ -55,9 +55,8 @@
         "desktopAlerts": "Desktop Alerts"
     },
     "chatSettings": {
-        "groupInformation": "Group Information",
         "changeBackgroundColor": "Change Chat Background Color",
-        "clearMessgae": "Clear Messages"
+        "clearMessgae": "Clear Message"
     },
     "clearMessagesPopup": {
         "popupHeaderText": "Changes to clearing or deleting a chat",

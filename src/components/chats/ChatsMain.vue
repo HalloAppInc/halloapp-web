@@ -4,7 +4,7 @@ import { ref, computed, watch } from 'vue'
 import { useColorStore } from '../../stores/colorStore'
 import { useMainStore  } from '../../stores/mainStore'
 import InputBox from './InputBox.vue'
-import ChatPanel from './ChatBubble.vue'
+import ChatPanel from './ChatPanel.vue'
 import ChatHeader from './ChatHeader.vue'
 import ChatSettings from './ChatSettings.vue'
 
@@ -108,12 +108,12 @@ const chatBackground = computed(() => {
 function notifyMe() {
     // check if the browser supports notifications
     if (!('Notification' in window)) {
-        alert('This browser does not support desktop notification');
+        alert('This browser does not support desktop notification')
     }
 
     // check whether notification permissions have already been granted
     else if (Notification.permission === 'granted') {
-        var notification = new Notification('You have a new message!');
+        let notification = new Notification('You have a new message!')
     }
 
     // ask the user for permission
@@ -121,9 +121,9 @@ function notifyMe() {
         Notification.requestPermission().then(function (permission) {
             // user accepts
             if (permission === 'granted') {
-                var notification = new Notification('You have a new message!');
+                let notification = new Notification('You have a new message!')
             }
-        });
+        })
     }
 }
 </script>

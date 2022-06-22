@@ -23,8 +23,6 @@ const props = defineProps(['messageList'])
 
 const content = ref<HTMLElement | null>(null)
 
-const showFloatingTimestamp = ref(true)
-
 const showJumpDownButton = ref(false)
 
 // set floating time stamp's content
@@ -107,7 +105,6 @@ watch(messageNumber, () => {
 // when scroll the scroll bar get the scroll bar's current height
 // get the value of timestamp of the msg bubble at current floating timestamp's height
 function checkHeight() {
-    showFloatingTimestamp.value = true
     if (content.value &&
         content.value.scrollTop + content.value.clientHeight < content.value.scrollHeight - 30) {
         showJumpDownButton.value = true
@@ -213,7 +210,7 @@ function gotoProfile(e: any) {
         </div>
 
         <!-- floating timestamp -->
-        <div class='containerFloatingTimestamp' v-show='showFloatingTimestamp'>
+        <div class='containerFloatingTimestamp'>
             <div class='contentTextBody contentTextBodyTime'>
                 <div class='chatBubble chatBubbleTime'>
                     <div class='timestampContainerBig'>
