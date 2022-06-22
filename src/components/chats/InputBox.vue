@@ -4,6 +4,10 @@ import { ref, computed } from 'vue'
 
 import haText from '../../common/haText'
 
+import { useColorStore } from '../../stores/colorStore'
+
+const colorStore = useColorStore()
+
 const props = defineProps(['messageList', 'contactList'])
 
 const inputMessage = ref('')
@@ -15,6 +19,34 @@ const contactPosition = ref(-1)
 const cursorPosition = ref(0)
 
 const inputArea = ref(<HTMLElement | null>(null))
+
+const headerColor = computed(() => {
+    return colorStore.header
+})
+
+const inBoundMsgBubbleColor = computed(() => {
+    return colorStore.inBoundMsgBubble
+})
+
+const cursorColor = computed(() => {
+    return colorStore.cursor
+})
+
+const textColor = computed(() => {
+    return colorStore.text
+})
+
+const backgroundColor = computed(() => {
+    return colorStore.background
+})
+
+const lineColor = computed(() => {
+    return colorStore.line
+})
+
+const hoverColor = computed(() => {
+    return colorStore.hover
+})
 
 // adjust the height of textArea
 const inputAreaHeight = computed(() => {
@@ -34,7 +66,7 @@ function sendMessage() {
         props.messageList.push({
             type: 'outBound',
             message: haText.processText(inputMessage.value, props.contactList),
-            timestamp: '1655527924',
+            timestamp: '1655862547',
         })
         inputMessage.value = ''
     }
@@ -77,19 +109,20 @@ function analyzeInput(e: any) {
 
 function addContactToInputBox(contact: string) {
     inputMessage.value = inputMessage.value.substring(0,contactPosition.value) 
-                        + contact + inputMessage.value.substring(cursorPosition.value)
+                        + contact + inputMessage.value.substring(cursorPosition.value) + ' '
     showContacts.value = false
+    inputArea.value?.focus()
 }
 </script>
 
 <template>
     <div class='contactList' v-if='showContacts'>
         <div id='listBox'>
-            <div v-for='value in contactList' class='container' @click='addContactToInputBox(value)'>
+            <div v-for='(value, idx) in contactList' class='container' @click='addContactToInputBox(value)'>
                 <div class='avatarContainer'>
                     <div class='avatar'></div>
                 </div>
-                <div class='content'>
+                <div class='content' :class="{'contentLastElement': idx == contactList.length-1}">
                     <div class='contentHeader'>
                         <div class='contentTitle'>
                             {{ value }}
@@ -125,9 +158,8 @@ function addContactToInputBox(contact: string) {
 </template>
 
 <style scoped>
-
 .chatBoxTray {
-    background-color: #f0f2f5;
+    background-color: v-bind(headerColor);
     display: flex;
     flex-direction: row;
     padding: 5px 10px 5px 10px;
@@ -139,7 +171,7 @@ function addContactToInputBox(contact: string) {
 }
 
 textarea {
-    flex: 1;
+    width: 100%;
     min-width: 0;
     padding: 10px 15px;
     overflow-y: scroll;
@@ -147,10 +179,13 @@ textarea {
     height: v-bind(inputAreaHeight + 'px');
     text-align: left;
 
-    background: #FFFFFF;
+    background: v-bind(inBoundMsgBubbleColor);
     border: 0.5px solid rgba(0, 0, 0, 0.15);
     box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.05);
     border-radius: 15px;
+
+    caret-color: v-bind(cursorColor);
+    color: v-bind(textColor);
 }
 
 textarea:focus {
@@ -165,13 +200,14 @@ textarea:focus {
 
 .contactList {
     background-color: #f0f2f5;
-    border-bottom: 1px solid rgb(226, 224, 224);
+    border-bottom: 1px solid v-bind(lineColor);
 }
 
 #listBox {
     overflow-y: auto;
     overflow-x: hidden;
     height: 100%;
+    background-color: v-bind(backgroundColor);
 }
 
 .container {
@@ -180,7 +216,7 @@ textarea:focus {
     padding: 0px;
 }
 .container:hover {
-    background-color: rgb(226, 226, 226);
+    background-color: v-bind(hoverColor);
     cursor: pointer;
 }
 .avatarContainer {
@@ -199,7 +235,7 @@ textarea:focus {
     margin-top: 5px;
     width: 100%;
     padding: 10px 10px 10px 5px;
-    border-bottom: 1px solid rgb(226, 224, 224);
+    border-bottom: 1px solid v-bind(lineColor);
 
     color: #3b4a54;
 
@@ -213,6 +249,10 @@ textarea:focus {
     overflow: hidden;
 }
 
+.contentLastElement {
+    border-bottom: 0px;
+}
+
 .contentHeader {
     display: flex;
     
@@ -220,7 +260,7 @@ textarea:focus {
 }
 
 .contentTitle {
-    color: #111b21;
+    color: v-bind(textColor);
     font-weight: 600; 
 
     flex: 1 1 auto;

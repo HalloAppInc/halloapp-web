@@ -49,6 +49,8 @@ export const useMainStore = defineStore('main', {
         desktopAlerts: false,
 
         preferColorScheme: '',
+
+        chatPage: 'chat',
     }),
     getters: {
     },
@@ -71,6 +73,9 @@ export const useMainStore = defineStore('main', {
         },
         gotoSettingsPage(page: string) {
             this.settingsPage = page
+        },
+        gotoChatPage(page: string) {
+            this.chatPage = page
         }
     },
 })

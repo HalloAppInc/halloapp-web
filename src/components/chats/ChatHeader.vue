@@ -3,18 +3,28 @@ import { ref, computed } from 'vue'
 
 import { useColorStore } from '../../stores/colorStore'
 
+import { useMainStore } from '../../stores/mainStore'
+
 import { useI18n } from 'vue-i18n'
+
+import Popup from './Popup.vue'
+
+const emits = defineEmits(["clearMessages"])
 
 const { t } = useI18n({
     inheritLocale: true,
     useScope: 'global'
 })
 
+const menu = ref<HTMLElement | null>(null)
+
 const colorStore = useColorStore()
+
+const mainStore = useMainStore()
 
 const showChatSettings = ref(false)
 
-const props = defineProps(['chatName', 'chatInformation'])
+const props = defineProps(['chatName', 'chatInformation','messageList'])
 
 const hoverColor = computed(() => {
     return colorStore.hover
@@ -26,6 +36,18 @@ const lineColor = computed(() => {
 
 const textColor = computed(() => {
     return colorStore.text
+})
+
+const headerColor = computed(() => {
+    return colorStore.header
+})
+
+const iconColor = computed(() => {
+    return colorStore.icon
+})
+
+const backgroundColor = computed(() => {
+    return colorStore.background
 })
 </script>
 
@@ -55,8 +77,8 @@ const textColor = computed(() => {
                     <font-awesome-icon :icon="['fas', 'magnifying-glass']" size='lg' />
                 </div>
             </div> -->
-            <div class='iconContainer' tabindex='0' @focus='showChatSettings = !showChatSettings'
-                @focusout='showChatSettings = false'>
+            <div class='iconContainer' tabindex='0' @click='showChatSettings = !showChatSettings'
+                @focusout='showChatSettings=false'>
                     <div class='iconShadow'>
                         <font-awesome-icon :icon="['fas', 'angle-down']" size='lg' />
                     </div>
@@ -66,30 +88,32 @@ const textColor = computed(() => {
 
     <!-- chat settings menu -->
     <div class='chatSettings' v-if='showChatSettings'>
-        <div class='menu'>
+        <div class='menu' ref='menu'>
             <div class='menuContainer'>
-                <div class="textContainer">
-                    <div class="contentTextBody">
+                <div class='textContainer'>
+                    <div class='contentTextBody'>
                         {{ t('chatSettings.groupInformation') }}
                     </div>
                 </div>
             </div>
-            <div class='menuContainer'>
-                <div class="textContainer">
-                    <div class="contentTextBody">
+            <div class='menuContainer' @mousedown="mainStore.gotoChatPage('settings')">
+                <div class='textContainer'>
+                    <div class='contentTextBody'>
                         {{ t('chatSettings.changeBackgroundColor') }}
                     </div>
                 </div>
             </div>
             <div class='menuContainer'>
-                <div class="textContainer">
-                    <div class="contentTextBody">
-                        {{ t('chatSettings.exitGroup') }}
+                <div class='textContainer textContainerlastElement' @mousedown="mainStore.gotoChatPage('clear')">
+                    <div class='contentTextBody'>
+                        {{ t('chatSettings.clearMessgae') }}
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <Popup @clear-messages="$emit('clearMessages')"/>
 
 </template>
 
@@ -97,6 +121,7 @@ const textColor = computed(() => {
 #chatHeader {
     overflow-y: auto;
     overflow-x: hidden;
+    background-color: v-bind(headerColor);
     height: 100%;
 }
 
@@ -137,13 +162,12 @@ const textColor = computed(() => {
 .contentHeader {
     margin-top: 8px;
     display: flex;
-    /* background-color: aqua; */
 
     justify-content: flex-start;
 }
 
 .contentTitle {
-    color: #111b21;
+    color: v-bind(textColor);
     font-weight: 600;
 
     flex: 1 1 auto;
@@ -161,12 +185,13 @@ const textColor = computed(() => {
     margin-top: 2px;
     margin-bottom: 3px;
 
-    color: #111b21;
+    color: v-bind(textColor);
     font-size: small;
 }
 
 .iconContainer {
     padding: 5px 20px 5px 0px;
+    color: v-bind(iconColor);
 }
 
 .iconContainer:hover {
@@ -198,13 +223,12 @@ const textColor = computed(() => {
 }
 
 .menu {
-
-    z-index: 1;
+    z-index: 3;
     width: 300px;
     padding: 0px;
     position: fixed;
     right: 10px;
-    background-color: aliceblue;
+    background-color: v-bind(backgroundColor);
     border-radius: 5px;
     box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.08);
 }
@@ -230,6 +254,10 @@ const textColor = computed(() => {
 
     display: flex;
     align-items: center;
+}
+
+.textContainerlastElement {
+    border-bottom: 0px;
 }
 
 .contentTextBody {

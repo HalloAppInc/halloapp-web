@@ -48,4 +48,38 @@ export default defineComponent({
 
     chatBackgroundLight: 'rgba(242, 193, 139, 0.33)',
     chatBackgroundDark: 'rgba(8, 11, 20, 0.7)',
+
+    colorListLight: [
+        "rgba(242, 193, 139, 0.33)",
+        "#479C50",
+        "#3C82D5",
+        "#EB8C34",
+        "#AAA13B",
+        "#3DB2EE",
+        "#792F2F",
+        "#BE4A9B",
+        "#083B9E",
+        "#00AFA0",
+        "#846DC7",
+        "#B94040",
+        "#E34F76",
+    ],
+    colorListDark: [
+        "rgba(8, 11, 20, 0.7)",
+        "#2B5E30",
+        "#244E80",
+        "#8D541F",
+        "#666123",
+        "#256B8F",
+        "#491C1C",
+        "#722C5D",
+        "#05235F",
+        "#006960",
+        "#4F4177",
+        "#6F2626",
+        "#882F47"
+    ],
+
+    cursorLight: "#000000",
+    cursorDark: "#FFFFFF",
 })

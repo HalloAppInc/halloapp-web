@@ -1,12 +1,16 @@
 <script setup lang="ts">
 
 import { ref, computed, watch } from 'vue'
-import { useColorStore } from '../../stores/colorStore';
+import { useColorStore } from '../../stores/colorStore'
+import { useMainStore  } from '../../stores/mainStore'
 import InputBox from './InputBox.vue'
 import ChatPanel from './ChatBubble.vue'
-import ChatHeader from './ChatHeader.vue';
+import ChatHeader from './ChatHeader.vue'
+import ChatSettings from './ChatSettings.vue'
 
 const colorStore = useColorStore()
+
+const mainStore = useMainStore()
 
 const content = ref<HTMLElement | null>(null)
 
@@ -66,6 +70,16 @@ const messageList = ref([
         message: "❤️",  // this emoji can't be detected
         timestamp: "1655527924",
     },
+    {
+        type: "timestamp",
+        message: "",
+        timestamp: "1655862547",
+    },
+    {
+        type: "inBound",
+        message: "asdfasdfsadfasdflsadkfl;sdakf;lasdkf;asdkf;lasdkf;lsadkf;",
+        timestamp: "1655862547",
+    }
 ])
 
 const contactList = ref([
@@ -80,6 +94,7 @@ const messageNumber = computed(() => {
 })
 
 const chatName = ref('chat1')
+
 const chatInformation = ref('chatInfo')
 
 watch(messageNumber, () => {
@@ -115,10 +130,10 @@ function notifyMe() {
 
 <template>
 
-    <div id='wrapper'>
+    <div id='wrapper' v-if="mainStore.chatPage == 'chat' || mainStore.chatPage == 'clear'">
 
         <div id='header'>
-            <ChatHeader :chat-name='chatName' :chat-information='chatInformation' />
+            <ChatHeader :chat-name='chatName' :chat-information='chatInformation' @clear-messages='messageList = []' />
         </div>
 
         <!-- chatting area -->
@@ -132,6 +147,8 @@ function notifyMe() {
         </div>
 
     </div>
+
+    <ChatSettings v-if="mainStore.chatPage == 'settings'"/>
 
 </template>
 

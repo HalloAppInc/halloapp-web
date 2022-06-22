@@ -22,7 +22,9 @@ export const useColorStore = defineStore('color', {
         outBoundMsgBubble: colors.outBoundMsgBubbleLight,
         inBoundMsgBubble: colors.inBoundMsgBubbleLight,
         timestamp: colors.timestampLight,
-        timeBubble: colors.timeBubbleLight
+        timeBubble: colors.timeBubbleLight,
+        colorList: colors.colorListLight,
+        cursor: colors.cursorLight,
     }),
     getters: {
     },
@@ -66,6 +68,8 @@ export const useColorStore = defineStore('color', {
             this.inBoundMsgBubble = colors['inBoundMsgBubble' +  mode]
             this.timestamp = colors['timestamp' + mode]
             this.timeBubble = colors['timeBubble' + mode]
+            this.colorList = colors['colorList' + mode]
+            this.cursor = colors['cursor' + mode]
         },
 
         changePreferColorSchema(mode: string) {

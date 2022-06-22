@@ -12,7 +12,7 @@ export default defineComponent({
 
         if (contactList) {
             for (var i = 0; i < contactList.length; i++) {
-                result = result.replaceAll('@' + contactList[i],'[[b]]' + '@' + contactList[i] + '[[/b]]')
+                result = result.replaceAll('@' + contactList[i],'[[aa]]' + '@' + contactList[i] + '[[/aa]]')
             }
         }
 
@@ -144,6 +144,8 @@ export default defineComponent({
             .replaceAll('[[/s]]', '</s>')
             .replaceAll('[[b]]', '<b>')
             .replaceAll('[[/b]]', '</b>')
+            .replaceAll('[[aa]]', "<a class='mention'>")
+            .replaceAll('[[/aa]]', "</a>")
 
             .replaceAll('[[a]]', '<a')
             .replaceAll('[[aAttr]]', '')
