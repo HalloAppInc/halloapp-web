@@ -3,11 +3,13 @@ import { ref, toRefs } from 'vue'
 import { storeToRefs } from 'pinia'
 
 import { useMainStore } from '../stores/mainStore'
+import { useConnStore } from '../stores/connStore'
 import commonColors from "../common/colors"
 
 import { useI18n } from 'vue-i18n'
 
 const mainStore = useMainStore()
+const connStore = useConnStore()
 const primaryBlue = commonColors.primaryBlue
 
 const { t } = useI18n({
@@ -64,7 +66,7 @@ const { t } = useI18n({
         </div>
     </div>    
 
-    <div class="sideIconWrapper sideIconWrapperBottom" @click="mainStore.logout()">
+    <div class="sideIconWrapper sideIconWrapperBottom" @click="connStore.logout()">
         <div class="sideIcon">
             <div class="icon">
                 <font-awesome-icon :icon="['fas', 'power-off']" />
@@ -143,8 +145,14 @@ const { t } = useI18n({
 
 .sideIconLabel {
     font-size: 11px;
+    white-space: nowrap;
     justify-self: flex-start;
-    
+}
+
+@media only screen and (max-width: 800px) {
+    .sideIconLabel {
+        display: none;
+    }
 }
 
 </style>

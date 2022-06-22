@@ -16,9 +16,15 @@ import createNoise from "noise-c.wasm"
 export const useConnStore = defineStore('conn', () => {
 
     const mainStore = useMainStore()
-    let { addKey, removeKey, check, sendDemoWebStanza } = network()
+    let { sendPing, addKey, removeKey, check, sendDemoWebStanza, uploadMedia } = network()
 
-    let connectionTimer: any
+    let logoutRequested: boolean = false
+
+    let connectionTimer: any    // timer used for debouncing
+    let sendMessagesTimer: any  // timer used for debouncing
+    let isSendingMessages: boolean = false
+    let sendMessagesRetryNum: number = 0
+
     let webSocket: WebSocket
     let noise: any
     let handshakeState: any
@@ -48,23 +54,29 @@ export const useConnStore = defineStore('conn', () => {
         newWebSocket.binaryType = 'arraybuffer'
     
         newWebSocket.onopen = function(event) {
-            hal.log("connectToServer/webSocket/onopen: " + event)
+            hal.log('connStore/connectToServer/webSocket/onopen ')
     
             mainStore.isConnectedToServer = true
     
-            newWebSocket.removeEventListener('message', handleMsg)
-            newWebSocket.addEventListener('message', handleMsg)
+            newWebSocket.removeEventListener('message', handleInboundMsg)
+            newWebSocket.addEventListener('message', handleInboundMsg)
     
-            if (!mainStore.haveAddedPublicKeyToServer) {
-                addKey(newWebSocket, function() {
-                    hal.log('connectToServer/added public key successfully')
-                    mainStore.haveAddedPublicKeyToServer = true
-                })
-            }
+            addKeyToServer(function() {
+                hal.log('connStore/connectToServer/added public key successfully')
+                mainStore.haveAddedPublicKeyToServer = true
+            })
+
+            sendReadyMessagesInQueue()
         }
     
         newWebSocket.onclose = function(event) {
-            hal.log("connectToServer/webSocket/onclose: " + event)
+            hal.log('connStore/connectToServer/webSocket/onclose: ' + event)
+
+            if (logoutRequested) {
+                mainStore.logoutMain()
+                logoutRequested = false
+            }
+
             mainStore.isConnectedToServer = false
             if (!mainStore.isWaitingForUserToRegenKey) {
                 // connectToServerIfNeeded()
@@ -81,7 +93,7 @@ export const useConnStore = defineStore('conn', () => {
 
     function generatePublicKeyIfNeeded() {
         if (!mainStore.privateKeyBase64) {
-            hal.log("generatePublicKeyIfNeeded/keypair not found, generate keypair")
+            hal.log('connStore/generatePublicKeyIfNeeded/keypair not found, generate keypair')
             const keypair = hacrypto.keygen()
             mainStore.privateKeyBase64 = Base64.fromUint8Array(keypair.secretKey)
             mainStore.publicKeyBase64 = Base64.fromUint8Array(keypair.publicKey)
@@ -105,16 +117,24 @@ export const useConnStore = defineStore('conn', () => {
         disconnectFromServer()
     }
 
-    async function handleMsg(event: any) {
+    async function handleInboundMsg(event: any) {
+        hal.log('connStore/handleInboundMsg')
         const eventDataBinArr = new Uint8Array(event.data)
         const packet = await decodePacket(eventDataBinArr)
+        
         const iq = packet.iq
         const id = iq?.id
+
+        const ping = iq?.ping
     
         const msg = packet?.msg
         const webStanza = msg?.webStanza
-    
-        if (webStanza) {
+
+        if (ping) {
+
+            sendPing(webSocket)
+
+        } else if (webStanza) {
     
             if (!noise) {
                 createNoise(function (noise: any) { noise = noise })
@@ -123,7 +143,7 @@ export const useConnStore = defineStore('conn', () => {
             if (mainStore.isPublicKeyAuthenticated && mainStore.haveInitialHandshakeCompleted) {
                 const decrypted = cipherStateReceive.DecryptWithAd([], eventDataBinArr)
                 const decoded = new TextDecoder().decode(decrypted)
-                hal.log('handleMsg/webStanza/decrypted: ' + decoded)
+                hal.log('connStore/handleInboundMsg/webStanza/decrypted: ' + decoded)
             } else if (!mainStore.haveInitialHandshakeCompleted) {
                 if (!handshakeState) {
                     initHandshake(noise)
@@ -133,16 +153,25 @@ export const useConnStore = defineStore('conn', () => {
     
         } else {
     
+            let isFound = false
+
             for (let i = 0; i < mainStore.messageQueue.length; i++) {
                 if (mainStore.messageQueue[i].id == id) {
+                    hal.log('connStore/handleInboundMsg/found msg in queue:\n' + JSON.stringify(packet) + '\n\n')
+                    isFound = true
                     const callback = mainStore.messageQueue[i].callback
                     if (callback) {
                         callback()
                     }
                     // remove message
                     mainStore.messageQueue.splice(i, 1)
+                    
                     break
                 }
+            }
+
+            if (!isFound) {
+                hal.log('connStore/handleInboundMsg/unknown:\n    ' + JSON.stringify(packet))
             }
     
         }
@@ -184,7 +213,7 @@ export const useConnStore = defineStore('conn', () => {
             mainStore.haveInitialHandshakeCompleted = true
     
             alert('Noise handshake successful, logging in')
-            mainStore.login()
+            login()
         }
     }
     
@@ -247,18 +276,117 @@ export const useConnStore = defineStore('conn', () => {
 
     async function decodePacket(binArray: Uint8Array) {
         const packet = await decodeProtobufToPacket(binArray)
-        hal.log("decodePacket/packet: ", packet)
-    
         const iq = packet.iq
-        console.log('decodePacket/packet/iq ' + iq)
         return packet
     }
 
-    return { 
+    async function enqueue(packet: any, needAuth?: boolean, callback?: any) {
+        mainStore.messageQueue.push({ 
+            id: packet.iq?.id, 
+            packet: packet,
+            needAuth: needAuth,
+            callback: callback,            
+        })
+        sendReadyMessagesInQueue()
+    }
+
+    async function sendReadyMessagesInQueue() {
+        clearTimeout(sendMessagesTimer)
+        sendMessagesTimer = setTimeout(() => {
+            sendMessagesInQueue()
+        }, 100)
+    }
+
+    async function sendMessagesInQueue() {
+        if (!mainStore.isConnectedToServer) { return }
+
+        if (isSendingMessages) {
+            hal.log('connStore/sendMessagesInQueue/still sending messages, skip run')
+            return
+        }
+
+        isSendingMessages = true
+
+        hal.log('connStore/sendMessagesInQueue/num messages: ' + mainStore.messageQueue.length)
+        for (let i = 0; i < mainStore.messageQueue.length; i++) {
+            const message = mainStore.messageQueue[i]
+            const packet = message.packet
+
+            // temporary: send all messages for now regardless if it needs auth or not
+            // certain packets like addKey do not need authentication
+            // if (!mainStore.isPublicKeyAuthenticated && message.needAuth) {
+            //     hal.log('connStore/sendMessagesInQueue/' + i.toString() + '/not authenticated, skip: ' + packet.iq?.id)
+            //     continue
+            // }
+
+            hal.log('connStore/sendMessagesInQueue/' + i.toString() + '/send:\n' + JSON.stringify(packet) + '\n\n')
+ 
+            const packetProto = server.Packet.encode(packet).finish()
+            const buf = packetProto.buffer.slice(packetProto.byteOffset, packetProto.byteLength + packetProto.byteOffset)
+       
+            webSocket.send(buf)
+        }
+
+        isSendingMessages = false
+
+        /* waits 1 second before checking if the message queue is empty or not, if not, retry sending messages */
+        setTimeout(() => {
+            if (mainStore.messageQueue.length > 0) { 
+                hal.log('connStore/sendMessagesInQueue/still have messages in queue, retry num: ' + sendMessagesRetryNum)
+
+                if (sendMessagesRetryNum < 10) {
+                    sendMessagesRetryNum++
+                }
+                setTimeout(() => {
+                    sendMessagesInQueue()
+                }, sendMessagesRetryNum * 3000)
+            } else {
+                sendMessagesRetryNum = 0
+            }
+        }, 1000)
+    }
+
+    async function clearMessagesInQueue() {
+        hal.log('connStore/clearMessagesInQueue')
+        mainStore.messageQueue.splice(0, mainStore.messageQueue.length)
+    }    
+
+    async function addKeyToServer(callback?: Function) {
+        hal.log('connStore/addKey')
+        const packet = addKey()
+        enqueue(packet, false, callback)
+    }
+
+    async function getMediaUrl(size: number, callback?: Function) {
+        hal.log('connStore/getMediaUrl')
+        const packet = uploadMedia(size)
+        enqueue(packet, true, callback)
+    }
+
+    function login() {
+        mainStore.loginMain()
+    }
+
+    function logout() {
+        hal.log('connStore/logout/logging out...')
+        logoutRequested = true
+        disconnectFromServer()
+    }
+
+    return {
         connectToServerIfNeeded, 
         disconnectFromServer, 
         generatePublicKeyIfNeeded,
         clearPublicKey, 
         setWaitForUserToRegenKey, 
-        waitForUserToRegenKey }    
+        waitForUserToRegenKey,
+
+        addKeyToServer,
+
+        clearMessagesInQueue,
+        getMediaUrl,
+
+        login,
+        logout        
+    }
 })
