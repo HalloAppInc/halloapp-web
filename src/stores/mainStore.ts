@@ -53,11 +53,11 @@ export const useMainStore = defineStore('main', {
     getters: {
     },
     actions: {
-        login() {
+        loginMain() {
             this.page = 'home'
             this.isLoggedIntoApp = true
         },
-        logout() {
+        logoutMain() {
             this.privateKeyBase64 = ''
             this.mobilePublicKeyBase64 = ''
             this.isPublicKeyAuthenticated = false
@@ -71,6 +71,7 @@ export const useMainStore = defineStore('main', {
             this.settingsPage = ''
             // todo: might have to stop in-flight messages
             this.messageQueue.splice(0, this.messageQueue.length) // clear messages
+            hal.log('mainStore/logged out')
         },
         gotoPage(page: string) {
             this.page = page

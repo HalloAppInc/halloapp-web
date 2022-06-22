@@ -25,7 +25,7 @@ const { t } = useI18n({
 
 const sideBarWidth: ComputedRef<string> = computed((): string => {
     if (mainStore.page == 'home') {
-        return '5%'
+        return '0%'
     } else {
         return '30%'
     }
@@ -47,8 +47,18 @@ init()
 
 async function init() {
     hal.log('app/init')
+    connStore.clearMessagesInQueue()
+
     mainStore.isConnectedToServer = false // needs to be reset on refresh
     connStore.connectToServerIfNeeded()
+
+    /* temporary: used for testing uploadMedia 
+     * temporary: timeout used to send uploadMedia after addKeuy
+     */
+    setTimeout(() => {
+        // connStore.getMediaUrl(1000)
+    }, 3000)
+    
 }
 
 function applyPlatformSpecifics() {
@@ -319,7 +329,7 @@ h1, h2, h3, h4, h5, h6 {
 
 #Sidestrip {
     background-color: black;
-    flex: 0 0 80px;
+    flex: 0 0 auto;
     overflow: hidden;
 }
 

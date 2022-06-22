@@ -94,7 +94,7 @@ function generateQRCodeAndConnect() {
 }
 
 function fakeAuth() {
-    mainStore.login()
+    connStore.login()
 }
 
 function getNewQRCode() {
