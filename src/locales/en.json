@@ -50,5 +50,13 @@
     "notifications": {
         "sounds": "Sounds",
         "desktopAlerts": "Desktop Alerts"
+    },
+    "chatSettings": {
+        "changeBackgroundColor": "Change Chat Background Color",
+        "clearMessgae": "Clear Messages"
+    },
+    "clearMessagesPopup": {
+        "popupHeaderText": "Changes to clearing or deleting a chat",
+        "popupContent": "Clearing or deleting messages from this chat will remove messages on this device."
     }
 }
