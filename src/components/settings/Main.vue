@@ -79,7 +79,7 @@ const headerColor = computed(() => {
                         </div>
                     </div>
 
-                    <div class="container" @click="mainStore.gotoSettingsPage('privacy')">
+<!--                     <div class="container" @click="mainStore.gotoSettingsPage('privacy')">
                         <div class="iconContainer">
                             <font-awesome-icon :icon="['fas', 'lock']" size="lg" />
                         </div>
@@ -88,9 +88,9 @@ const headerColor = computed(() => {
                                 {{ t('settings.privacy') }}
                             </div>
                         </div>
-                    </div>
+                    </div> -->
 
-                    <div class="container" @click="mainStore.gotoSettingsPage('security')">
+<!--                     <div class="container" @click="mainStore.gotoSettingsPage('security')">
                         <div class="iconContainer">
                             <font-awesome-icon :icon="['fas', 'shield-halved']" size="lg" />
                         </div>
@@ -99,7 +99,7 @@ const headerColor = computed(() => {
                                 {{ t('settings.security') }}
                             </div>
                         </div>
-                    </div>
+                    </div> -->
 
                     <div class="container" @click="mainStore.gotoSettingsPage('theme')">
                         <div class="iconContainer">
