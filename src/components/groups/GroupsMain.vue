@@ -25,7 +25,7 @@ import { useMainStore } from '../../stores/mainStore'
 #wrapper {
     width: 100%;
     height: 100%;
-    
+
     border-left: 1px solid #b8b7b7;
 
     background-color: rgb(229, 229, 247);
