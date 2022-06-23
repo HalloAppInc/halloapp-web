@@ -3,23 +3,21 @@
         "howtoTitle": "To use HalloApp on your computer:",
         "howtoStepOne": "1. Open HalloApp on your phone",
         "howtoStepTwo": "2. Tap <b>Settings</b> and select <b>Linked Device</b>",
-        "howtoStepThree": "3. Point your phone to this screen and scan the QR code"
+        "howtoStepThree": "3. Point your phone to this screen and scan the QR code",
+        "getQRCode": "Get QR Code"
     },
     "sidestrip": {
         "home": "Home",
         "groups": "Groups",
         "chats": "Chats",
         "settings": "Settings",
-        "exit": "Exit"
+        "exit": "Log out"
     },
     "post": {
         "more": "more",
         "comment": "Comment",
         "replyPrivately": "Reply Privately",
-        "noAudioSupportText": "Your browser does not support the audio tag.",
-        "postNoLongerAvailableTitle": "This post is no longer available",
-        "postNoLongerAvailable": "This post could have expired, been deleted, or something else."
-
+        "noAudioSupportText": "Your browser does not support the audio tag."
     },    
     "mediaCarousel": {
         "noVideoSupportText": "Your browser cannot play the provided video file."
@@ -52,5 +50,13 @@
     "notifications": {
         "sounds": "Sounds",
         "desktopAlerts": "Desktop Alerts"
+    },
+    "chatSettings": {
+        "changeBackgroundColor": "Change Chat Background Color",
+        "clearMessgae": "Clear Messages"
+    },
+    "clearMessagesPopup": {
+        "popupHeaderText": "Changes to clearing or deleting a chat",
+        "popupContent": "Clearing or deleting messages from this chat will remove messages on this device."
     }
 }

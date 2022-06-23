@@ -9,8 +9,10 @@ import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome"
 import {
+    faAngleDown,
     faArrowLeft,
     faBell,
+    faCheckDouble,
     faChevronLeft,
     faChevronRight,
     faCircleHalfStroke,
@@ -20,18 +22,21 @@ import {
     faGear,
     faHouse,
     faLock,
+    faMagnifyingGlass,
     faMessage,
     faMicrophone,
     faPaperclip,
     faPowerOff,
     faShieldHalved,
     faUserGroup,
-    faUsers
+    faUsers,
 } from "@fortawesome/free-solid-svg-icons"
 
 library.add(
+    faAngleDown,
     faArrowLeft,
     faBell,
+    faCheckDouble,
     faChevronLeft,
     faChevronRight,
     faCircleHalfStroke,
@@ -41,6 +46,7 @@ library.add(
     faGear,
     faHouse,
     faLock,
+    faMagnifyingGlass,
     faMessage,
     faMicrophone,
     faPaperclip,

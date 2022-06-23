@@ -3,11 +3,13 @@ import { ref, toRefs } from 'vue'
 import { storeToRefs } from 'pinia'
 
 import { useMainStore } from '../stores/mainStore'
+import { useConnStore } from '../stores/connStore'
 import commonColors from "../common/colors"
 
 import { useI18n } from 'vue-i18n'
 
 const mainStore = useMainStore()
+const connStore = useConnStore()
 const primaryBlue = commonColors.primaryBlue
 
 const { t } = useI18n({
@@ -22,7 +24,7 @@ const { t } = useI18n({
 <div id="wrapper">
     <div class="sideIconWrapper" >
         <div :class="['sideIcon', {selected: mainStore.page == 'home'}]" @click='mainStore.gotoPage("home")'>
-            <div>
+            <div class="icon">
                 <font-awesome-icon :icon="['fas', 'house']" />
             </div>
             <div class="sideIconLabel">
@@ -33,7 +35,7 @@ const { t } = useI18n({
 
     <div class="sideIconWrapper">
         <div :class="['sideIcon', {selected: mainStore.page == 'groups'}]" @click='mainStore.gotoPage("groups")'>
-            <div>
+            <div class="icon">
                 <font-awesome-icon :icon="['fas', 'user-group']" />
             </div>
             <div class="sideIconLabel">
@@ -44,7 +46,7 @@ const { t } = useI18n({
 
     <div class="sideIconWrapper">
         <div :class="['sideIcon', {selected: mainStore.page == 'chats'}]" @click='mainStore.gotoPage("chats")'>
-            <div>
+            <div class="icon">
                 <font-awesome-icon :icon="['fas', 'message']" />
             </div>
             <div class="sideIconLabel">
@@ -55,7 +57,7 @@ const { t } = useI18n({
     
     <div class="sideIconWrapper sideIconWrapperTop">
         <div :class="['sideIcon', {selected: mainStore.page == 'settings'}]" @click='mainStore.gotoPage("settings")'>
-            <div>
+            <div class="icon">
                 <font-awesome-icon :icon="['fas', 'gear']" />
             </div>
             <div class="sideIconLabel">
@@ -64,9 +66,9 @@ const { t } = useI18n({
         </div>
     </div>    
 
-    <div class="sideIconWrapper sideIconWrapperBottom" @click="mainStore.logout()">
+    <div class="sideIconWrapper sideIconWrapperBottom" @click="connStore.logout()">
         <div class="sideIcon">
-            <div>
+            <div class="icon">
                 <font-awesome-icon :icon="['fas', 'power-off']" />
             </div>
             <div class="sideIconLabel">
@@ -85,8 +87,7 @@ const { t } = useI18n({
     height: 100%;
     color: white;
 
-    padding-top: 70px;
-    padding-bottom: 30px;
+    padding: 70px 10px 30px 10px;
 
     display: flex;
     flex-direction: column;
@@ -98,7 +99,7 @@ const { t } = useI18n({
 }
 
 .sideIconWrapper {
-
+    width: 100%;
     display: flex;
     flex-direction: column;
     
@@ -112,6 +113,7 @@ const { t } = useI18n({
 .sideIconWrapperBottom {
     flex: 0 0 auto;
     justify-self: flex-end;
+    
 }
 
 .selected {
@@ -119,12 +121,20 @@ const { t } = useI18n({
 }
 
 .sideIcon {
+    width: 100%;
     font-size: 14px;
 
     display: flex;
-    flex-direction: column;
-    
+    flex-direction: row;
+    justify-content: flex-start;
     align-items: center;
+    gap: 5px;
+}
+
+.icon {
+    flex: 0 0 30%;
+    justify-self: center;
+    text-align: center;
 }
 
 .sideIcon:hover {
@@ -135,7 +145,14 @@ const { t } = useI18n({
 
 .sideIconLabel {
     font-size: 11px;
+    white-space: nowrap;
+    justify-self: flex-start;
+}
 
+@media only screen and (max-width: 800px) {
+    .sideIconLabel {
+        display: none;
+    }
 }
 
 </style>
