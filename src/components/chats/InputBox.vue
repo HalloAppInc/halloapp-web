@@ -2,11 +2,11 @@
 
 import { ref, computed } from 'vue'
 
-import haText from '../../common/haText'
-
 import { useColorStore } from '../../stores/colorStore'
+import { useHAText } from '../../composables/haText'
 
 const colorStore = useColorStore()
+const { processText } = useHAText()
 
 const props = defineProps(['messageList', 'contactList'])
 
@@ -65,7 +65,7 @@ function sendMessage() {
     if (inputMessage.value != '') {
         props.messageList.push({
             type: 'outBound',
-            message: haText.processText(inputMessage.value, props.contactList),
+            message: processText(inputMessage.value, props.contactList),
             timestamp: '1655862547',
         })
         inputMessage.value = ''
