@@ -1,13 +1,11 @@
-import { defineComponent } from 'vue'
-
 import Autolinker from 'autolinker'
 import GraphemeSplitter from 'grapheme-splitter'
-import halogger from './halogger'
+import halogger from '../common/halogger'
 
-export default defineComponent({
+export function useHAText() {
     
     // format input message
-    populateTextWithMentions: function (text: any, contactList: any) {
+    function populateTextWithMentions(text: any, contactList: any) {
         let result = text
 
         if (contactList) {
@@ -17,17 +15,17 @@ export default defineComponent({
         }
 
         return result
-    },
+    }
 
-    decorateTextWithMarkdownPlaceholders: function (text: any) {
+    function decorateTextWithMarkdownPlaceholders(text: any) {
         let result = text
             .replace(/((?:^|[^\\])(?:\\.)*)\_(?=[^\s])((\\.|[^_])*)\_/g, '$1[[i]]$2[[/i]]')
             .replace(/((?:^|[^\\])(?:\\.)*)\~(?=[^\s])((\\.|[^~])*)\~/g, '$1[[s]]$2[[/s]]')
             .replace(/((?:^|[^\\])(?:\\.)*)\*(?=[^\s])((\\.|[^*])*)\*/g, '$1[[b]]$2[[/b]]')
         return result
-    },
+    }
 
-    decorateTextWithLinks: function (text: string) {
+    function decorateTextWithLinks(text: string) {
         const autolinker = new Autolinker({
             stripPrefix: false,
             urls: {
@@ -55,9 +53,9 @@ export default defineComponent({
             .replaceAll('</[[a]]>', '[[/a]]')
 
         return textWithHALinks
-    },
+    }
 
-    truncateTextIfNeeded: function (text: string, maxCharacters: number) {
+    function truncateTextIfNeeded(text: string, maxCharacters: number) {
         let charCount = 0
         let isTruncated = false
         let truncatedText = ''
@@ -127,15 +125,15 @@ export default defineComponent({
         }
 
         return { text: truncatedText, isTruncated: isTruncated, countedChars: charCount }
-    },
+    }
 
-    sanitizeHtml: function (text: string) {
+    function sanitizeHtml(text: string) {
         let element = document.createElement('div')
         element.textContent = text // prefer textContent over innerText, more standardardized and doesn't change newlines to <br>
         return element.innerHTML
-    },
+    }
 
-    populateTextWithHtml: function (text: string) {
+    function populateTextWithHtml(text: string) {
         var result = text
             .replaceAll('\n', '<br>')
             .replaceAll('[[i]]', '<i>')
@@ -152,11 +150,12 @@ export default defineComponent({
             .replaceAll('[[/aAttr]]', '>')
             .replaceAll('[[/a]]', '</a>')
         return result
-    },
-    processText: function (text: any, mentions: any, truncateText: boolean = false) {
-        const textWithMentions = this.populateTextWithMentions(text, mentions)
-        const decoratedTextWithMarkdown = this.decorateTextWithMarkdownPlaceholders(textWithMentions)
-        let textToBeSanitized = this.decorateTextWithLinks(decoratedTextWithMarkdown)
+    }
+
+    function processText(text: any, mentions: any, truncateText: boolean = false) {
+        const textWithMentions = populateTextWithMentions(text, mentions)
+        const decoratedTextWithMarkdown = decorateTextWithMarkdownPlaceholders(textWithMentions)
+        let textToBeSanitized = decorateTextWithLinks(decoratedTextWithMarkdown)
 
         // rough estimate of 330 chars for 12 lines and 110 for 3 lines
         let maxCharsForTextOnlyPosts = 330
@@ -168,15 +167,17 @@ export default defineComponent({
             // isTruncatedText.value = false
         }
 
-        let truncatedText = this.truncateTextIfNeeded(textToBeSanitized, maxCharsForTextOnlyPosts)
+        let truncatedText = truncateTextIfNeeded(textToBeSanitized, maxCharsForTextOnlyPosts)
         if (truncatedText.isTruncated) {
             truncatedText.text += '...'
         }
 
         textToBeSanitized = truncatedText.text
 
-        const santizedHtml = this.sanitizeHtml(textToBeSanitized)
-        const html = this.populateTextWithHtml(santizedHtml)
+        const santizedHtml = sanitizeHtml(textToBeSanitized)
+        const html = populateTextWithHtml(santizedHtml)
         return html
     }
-})
+
+    return { processText }
+}

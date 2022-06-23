@@ -2,10 +2,6 @@ import { DateTime } from "luxon"
 import { defineComponent } from 'vue'
 
 export default defineComponent({
-    log: function() {
-        if (process.env.NODE_ENV != 'development') { return () => {} }
-        return console.log.bind(window.console)
-    }(),
     format: function(seconds: number, locale: string) {
         let result = ""
         const dt = DateTime.fromSeconds(seconds)
@@ -24,6 +20,4 @@ export default defineComponent({
         }
         return result
     }
-
-
 })
