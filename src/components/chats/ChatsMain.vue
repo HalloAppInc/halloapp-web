@@ -2,7 +2,7 @@
 
 import { ref, computed, watch } from 'vue'
 import { useColorStore } from '../../stores/colorStore'
-import { useMainStore } from '../../stores/mainStore'
+import { useMainStore  } from '../../stores/mainStore'
 import InputBox from './InputBox.vue'
 import ChatPanel from './ChatPanel.vue'
 import ChatHeader from './ChatHeader.vue'
@@ -148,7 +148,7 @@ function notifyMe() {
 
     </div>
 
-    <ChatSettings v-if="mainStore.chatPage == 'settings'" />
+    <ChatSettings v-if="mainStore.chatPage == 'settings'"/>
 
 </template>
 

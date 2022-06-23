@@ -105,6 +105,17 @@ function gotoPrivacyPolicy() {
                             </div>
                         </div>
                     </div>
+                    <!-- Contact Us -->
+                    <!-- <div class='container' @click=''>
+                        <div class='iconContainer'>
+                            <font-awesome-icon :icon="['fas', 'users']" size='lg' />
+                        </div>
+                        <div class='textContainer'>
+                            <div class='contentTextBody'>
+                                {{ t('help.contactUs') }}
+                            </div>
+                        </div>
+                    </div> -->
                     <!-- Terms and Privacy Policy -->
                     <div class='container' @click='gotoTerms()'>
                         <div class='iconContainer'>
