@@ -1,42 +1,40 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-import { useMainStore } from '../stores/mainStore'
-
-import HomeSidebar from './home/HomeSidebar.vue'
-import GroupsSidebar from './groups/GroupsSidebar.vue'
-import ChatsSidebar from './chats/ChatsSidebar.vue'
-import SettingsSidebar from './settings/settingsSidebar.vue'
-
-const mainStore = useMainStore()
-
 </script>
 
 <template>
 
 <div class="wrapper">
 
-    <keep-alive>
-        <HomeSidebar v-if='mainStore.page == "home"' />
-    </keep-alive>
-    <keep-alive>
-        <GroupsSidebar v-if='mainStore.page == "groups"' />
-    </keep-alive>
-    <keep-alive>
-        <ChatsSidebar v-if='mainStore.page == "chats"' />
-    </keep-alive>
-    <keep-alive>
-        <SettingsSidebar v-if='mainStore.page == "settings"' />
-    </keep-alive>
-    
+    <div id="listBox"> 
+
+    </div>
 </div>
 
 </template>
 
 <style scoped>
 
+
+*::-webkit-scrollbar {
+  width: 5px;
+}
+
+*::-webkit-scrollbar-track {
+  background: white;        /* color of the tracking area */
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: rgb(172, 169, 169);    /* color of the scroll thumb */
+  
+  border: 0px solid white;  /* creates padding around scroll thumb */
+}
+
 .wrapper {
     height: 100%;
+
+    background-color: rgb(243, 243, 240);
 
     display: flex;
     flex-direction: column;
@@ -45,6 +43,11 @@ const mainStore = useMainStore()
     overflow: hidden;
 }
 
+#header {
+    flex: 0 0 50px;
+    background-color: #f0f2f5;
+    padding: 10px;
+}
 
 #listBox {
     overflow-y: auto;
@@ -117,4 +120,5 @@ const mainStore = useMainStore()
 
     user-select: none;
 }
+
 </style>

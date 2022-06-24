@@ -1,332 +1,84 @@
 <script setup lang="ts">
-import { ref, onMounted, onUpdated } from 'vue'
+import { ref, onMounted, ComputedRef, computed } from 'vue'
 
+import QRCode from './components/login/QRCode.vue'
 import Sidebar from './components/Sidebar.vue'
 import Sidestrip from './components/Sidestrip.vue'
 import MainPanel from './components/MainPanel.vue'
 
 import hal from './common/halogger'
-import qrCodeStyling from 'qr-code-styling'
 
 import { useMainStore } from './stores/mainStore'
+import { useConnStore } from './stores/connStore'
+import { useColorStore } from './stores/colorStore'
 
-import hacrypto from './common/hacrypto'
-import { Base64 } from "js-base64"
-
-import createNoise from "noise-c.wasm"
-
-import { server } from "./proto/server.js"
-import { nanoid } from 'nanoid'
+import { useI18n } from 'vue-i18n'
 
 const mainStore = useMainStore()
+const connStore = useConnStore()
+const colorStore = useColorStore()
 
-if (!mainStore.privateKeyBase64) {
-    hal.log("App/keypair not found, generate keypair")
-    const keypair = hacrypto.keygen()
-    mainStore.privateKeyBase64 = Base64.fromUint8Array(keypair.secretKey)
-    mainStore.publicKeyBase64 = Base64.fromUint8Array(keypair.publicKey)
+const { t } = useI18n({
+    inheritLocale: true,
+    useScope: 'global'
+})
+
+const sideBarWidth: ComputedRef<string> = computed((): string => {
+    if (mainStore.page == 'home') {
+        return '0%'
+    } else {
+        return '30%'
+    }
+})
+
+if (process.env.NODE_ENV?.toString() == 'development') {
+    mainStore.isDebug = true
+    mainStore.devCORSWorkaroundUrlPrefix = 'https://cors-anywhere.herokuapp.com/'
 }
 
-console.log("App/privateKey: " + mainStore.privateKeyBase64)
-console.log("App/publicKey: " + mainStore.publicKeyBase64)
-
-let isDebug = false
-
-let isMobile = ref(false)
-let isIOS = ref(false)
-let isAndroid = ref(false)
-let isSafari = ref(false) // mobile Safari and desktop Safari
-
-const gothamFontUrl = ref("https://halloapp.com/fonts/gotham/woff2/Gotham-Book_Web.woff2")
-const gothamMediumFontUrl = ref("https://halloapp.com/fonts/gotham/woff2/Gotham-Medium_Web.woff2")
-
-
-const $qrCode = ref(null)
-
-
-let devCORSWorkaroundUrlPrefix = ""
-if (process.env.NODE_ENV?.toString() == "development") {
-    isDebug = true 
-    devCORSWorkaroundUrlPrefix = "https://cors-anywhere.herokuapp.com/"
-}
-
+const gothamFontUrl = ref("https://web.halloapp.com/fonts/gotham/woff2/Gotham-Book_Web.woff2")
+const gothamMediumFontUrl = ref("https://web.halloapp.com/fonts/gotham/woff2/Gotham-Medium_Web.woff2")
 
 applyPlatformSpecifics()
 loadFonts()
-// connect()
 
-function sendDemoWebStanza(websocket: any) {
+colorStore.init() // initialize color scheme
+init()
 
-    let id = nanoid()
-    let publicKey = Base64.toUint8Array(mainStore.publicKeyBase64)
+async function init() {
+    hal.log('app/init')
+    connStore.clearMessagesInQueue()
 
-    let webStanza = server.WebStanza.create({
-        staticKey: publicKey,
-        content: publicKey
-    })
+    mainStore.isConnectedToServer = false // needs to be reset on refresh
+    connStore.connectToServerIfNeeded()
 
-    // what about: toUid, fromUid, retryCount, rerequestCount
-    let msg = server.Msg.create({
-        id: id,
-        type: server.Msg.Type.NORMAL,
-        webStanza: webStanza
-    })
-
-    let packet = server.Packet.create({ msg: msg })
-    let buffer = server.Packet.encode(packet).finish()
-
-    websocket.send(buffer.buffer)
-    console.log("--> sendDemoWebStanza ")
-}
-
-function addKey(websocket: any) {
-    let id = nanoid()
-
-    let publicKey = Base64.toUint8Array(mainStore.publicKeyBase64)
-    let webClientInfo = server.WebClientInfo.create({
-        action: server.WebClientInfo.Action.ADD_KEY,
-        staticKey: publicKey
-    })
-    let iq = server.Iq.create({
-        id: id,
-        type: server.Iq.Type.SET,
-        webClientInfo: webClientInfo
-    })
-    let message = server.Packet.create({ iq: iq })
-    let buffer = server.Packet.encode(message).finish()
-
-    websocket.send(buffer.buffer)
-    console.log("--> add key " + id)
-}
-
-function removeKey(websocket: any) {
-    let id = nanoid()
-
-    let publicKey = Base64.toUint8Array(mainStore.publicKeyBase64)
-    let webClientInfo = server.WebClientInfo.create({
-        action: server.WebClientInfo.Action.REMOVE_KEY,
-        staticKey: publicKey
-    })
-    let iq = server.Iq.create({
-        id: id,
-        type: server.Iq.Type.SET,
-        webClientInfo: webClientInfo
-    })
-    let message = server.Packet.create({ iq: iq })
-    let buffer = server.Packet.encode(message).finish()
-
-    websocket.send(buffer.buffer)
-    console.log("--> remove key " + id)
-}
-
-function check(websocket: any) {
-    let id = nanoid()
-
-    let publicKey = Base64.toUint8Array(mainStore.publicKeyBase64)
-    let webClientInfo = server.WebClientInfo.create({
-        action: server.WebClientInfo.Action.IS_KEY_AUTHENTICATED,
-        staticKey: publicKey
-    })
-    let iq = server.Iq.create({
-        id: id,
-        type: server.Iq.Type.GET,
-        webClientInfo: webClientInfo
-    })
-    let message = server.Packet.create({ iq: iq })
-    let buffer = server.Packet.encode(message).finish()
-
-    // console.log("message:")
-    // console.dir(message)
-
-    websocket.send(buffer.buffer)
-    console.log("--> check " + id)
-}
-
-
-async function decodeProtobufToPacket(binArray: Uint8Array) {
-    const err = server.Packet.verify(binArray)
-    if (err) {
-        throw err
-    }
-    const message = server.Packet.decode(binArray)
-    return message
-}
-
-async function decodePacket(binArray: Uint8Array) {
-    const packet = await decodeProtobufToPacket(binArray)
-    hal.log("decodePacket/packet: ", packet)
-
-    const iq = packet.iq
-    console.log('decodePacket/packet/iq ' + iq)
-    
-}
-
-function connect() {
-
-    /* 
-     * 
-     * startHandshake
-     * isAuthenticated
+    /* temporary: used for testing uploadMedia 
+     * temporary: timeout used to send uploadMedia after addKeuy
      */
-    let state = ''
-
-    // const server = "wss://localhost:7071"
-    const server = "wss://ws-test.halloapp.net/ws"
-    // const server = "wss://demo.piesocket.com/v3/channel_1?api_key=oCdCMcMPQpbvNjUIzqtvF1d2X2okWpDQj4AwARJuAgtjhzKxVEjQU6IdCjwm&notify_self"
-    const webSocket = new WebSocket(server)
-    webSocket.binaryType = "arraybuffer"
-
-    webSocket.onmessage = function(event) {
-        console.log("got message")
-        if (state != 'startHandshake') {
-            hal.log("conn/inbound: " + event.data)
-            console.dir(event)
-
-            const array = new Uint8Array(event.data)
-            decodePacket(array)
-        }
-    }
-
-    webSocket.onopen = function(event) {
-        hal.log("conn/opened: " + event)
-        // console.dir(event)
-
-        if (mainStore.connectionState == 'isAuthenticated') {
-            // check(webSocket)
-        }
-        // sendDemoWebStanza(webSocket)
-        // addKey(webSocket)
-        // removeKey(webSocket)
-        // check(webSocket)
-        
-
-    }
-
-
-    function create() {
-        createNoise(function (noise: any) {
-
-            // let [first, second] = noise.CreateKeyPair(noise.constants.NOISE_DH_CURVE25519)
-            // const newPrivateKey = new Uint8Array(first)
-            // const newPublicKey = new Uint8Array(second)
-            // const newBase64PrivateKey = Base64.fromUint8Array(newPrivateKey)
-            // const newBase64PublicKey = Base64.fromUint8Array(newPublicKey)
-            // console.log("1: " + newBase64PrivateKey)
-            // console.log("2: " + newBase64PublicKey)
-
-
-            const pattern   = 'IK'
-            const curve     = '25519'
-            const cipher    = 'ChaChaPoly'
-            const hash      = 'BLAKE2b'
-            const protocolName = `Noise_${pattern}_${curve}_${cipher}_${hash}`
-            let handshakeState = noise.HandshakeState(protocolName, noise.constants.NOISE_ROLE_RESPONDER)
-            console.log("handshakeState: ")
-            console.dir(handshakeState)
-
-
-            let cipherStateSend: { EncryptWithAd: (arg0: never[], arg1: string) => any }
-            let cipherStateReceive: { DecryptWithAd: (arg0: never[], arg1: any) => any }
-
-
-            let prologue
-            let psk
-            let remotePublicKey
-            const privateKey = Base64.toUint8Array(mainStore.privateKeyBase64)
-
-            handshakeState.Initialize(
-                prologue,
-                privateKey,
-                remotePublicKey,
-                psk
-            )
-
-            // state = 'startHandshake'
-
-            function handleHandshakeMessage(event: any) {
-
-                if (state == 'isAuthenticated') {
-                    const gotten = new Uint8Array(event.data)
-                    console.log('gotten: ' + gotten)
-                    const decrypted = cipherStateReceive.DecryptWithAd([], gotten)
-                    
-
-                    const decoded = new TextDecoder().decode(decrypted)
-
-                    console.log('decrypted: ' + decoded)
-
-                    return
-                }
-
-
-                const action = handshakeState.GetAction()
-                if (action == noise.constants.NOISE_ACTION_FAILED) { // 16643
-                    console.log('handleHandshakeMessage/action/failed')
-                } else if (action == noise.constants.NOISE_ACTION_READ_MESSAGE) { // 16642
-                    console.log('handleHandshakeMessage/action/read')
-                
-                    const fallbackSupported = false
-                    const array = new Uint8Array(event.data)
-
-                    handshakeState.ReadMessage(array, fallbackSupported)
-
-                    handleHandshakeMessage(event)
-                } else if (action == noise.constants.NOISE_ACTION_WRITE_MESSAGE) {
-                    console.log('handleHandshakeMessage/action/write')
-                    const writeResponse = handshakeState.WriteMessage()
-                    webSocket.send(writeResponse)
-
-                    handleHandshakeMessage(event)
-                } else if (action == noise.constants.NOISE_ACTION_SPLIT) { // 16644
-                    console.log('handleHandshakeMessage/action/split')
-
-                    const remotePublicKey = handshakeState.GetRemotePublicKey()
-                    console.log('remotePublicKey: ' + Base64.fromUint8Array(remotePublicKey))
-                
-
-                    const split = handshakeState.Split()
-                    cipherStateSend = split[0]
-                    cipherStateReceive = split[1]
-
-                    let counter = 0
-                    setInterval(function () {
-                        console.log('handleHandshakeMessage/action/split/sent...')
-                        const encrypted = cipherStateSend.EncryptWithAd([], 'Tony is here ' + counter)
-                        webSocket.send(encrypted)
-                        counter++
-                    }, 3000)
-
-                    state = 'isAuthenticated'
-
-                }
-            }
-
-            webSocket.addEventListener('message', handleHandshakeMessage)
-        })
-    }
-
-}
-
-function fakeAuth() {
-    mainStore.login()
+    setTimeout(() => {
+        // connStore.getMediaUrl(1000)
+    }, 3000)
+    
 }
 
 function applyPlatformSpecifics() {
     const userAgent = navigator.userAgent || navigator.vendor || (<any>window).opera
 
     if ('ontouchstart' in document.documentElement && userAgent.match(/Mobi/)) {
-        isMobile.value = true
+        mainStore.isMobile = true
     }
 
     if (/iPad|iPhone|iPod/.test(userAgent) && !(<any>window).MSStream) {
-        isIOS.value = true
+        mainStore.isIOS = true
     }
     if (/android/i.test(userAgent)) {
-        isAndroid.value = true
+        mainStore.isAndroid = true
     }
 
     if (userAgent.indexOf('Safari') != -1 && userAgent.indexOf('Chrome') == -1) {
-        isSafari.value = true
+        mainStore.isSafari = true
+    } else if (navigator.userAgent.indexOf('Firefox') != -1) {
+        mainStore.isFirefox = true
     }
 }
 
@@ -341,9 +93,9 @@ function loadFonts() {
     let mediumFont = gothamMediumFontUrl.value
 
     // non-Safari browsers require a proxy server for font fetches
-    if (!isSafari.value) {
-        normalFont = devCORSWorkaroundUrlPrefix + normalFont
-        mediumFont = devCORSWorkaroundUrlPrefix + mediumFont
+    if (!mainStore.isSafari) {
+        normalFont = mainStore.devCORSWorkaroundUrlPrefix + normalFont
+        mediumFont = mainStore.devCORSWorkaroundUrlPrefix + mediumFont
     }
 
     let style = document.createElement('style')
@@ -365,52 +117,11 @@ function loadFonts() {
     document.head.appendChild(style)
 }
 
-onMounted(() => {
-    generateQRCode()
-})
-onUpdated(() => {
-    generateQRCode()
-})
-
-function generateQRCode() {
-    const qrCode = new qrCodeStyling({
-        width: 250,
-        height: 250,
-        type: "svg",
-        data: mainStore.publicKeyBase64,
-        // image: devCORSWorkaroundUrlPrefix + "https://halloapp.com/images/favicon.ico",
-        dotsOptions: {
-            color: "#4267b2",
-            type: "rounded"
-        },
-        backgroundOptions: {
-            color: "#e9ebee",
-        },
-        imageOptions: {
-            crossOrigin: "anonymous",
-            margin: 15
-        }
-    });
-
-    if ($qrCode.value) {
-        const el = $qrCode.value as HTMLElement
-        qrCode.append(el)
-        hal.log("append QR code")
-
-
-
-
-    } else {
-        hal.log("skip append QR code")
-    }
-}
-
-
 </script>
 
 <template>
 
-    <div v-if="!mainStore.isConnected" id='signInWrapper'>
+    <div v-if="!mainStore.isLoggedIntoApp" id='signInWrapper'>
 
         <div id="signInWrapperHeader">
             <div id="logoBox">
@@ -426,25 +137,19 @@ function generateQRCode() {
         <div id='qrCodeBanner'>
             <div id="howTo">
                 <div class="howToTitle">
-                    To use HalloApp on your computer:
+                    {{ t('login.howtoTitle') }}
                 </div>
                 <div class="howToBullet">
-                    1. Open HalloApp on your phone
+                    {{ t('login.howtoStepOne') }}
+                </div>
+                <div class="howToBullet" v-html="t('login.howtoStepTwo')">
                 </div>
                 <div class="howToBullet">
-                    2. Tap <b>Settings</b> and select <b>Linked Device</b>
-                </div>
-                <div class="howToBullet">
-                    3. Point your phone to this screen and scan the QR code
+                    {{ t('login.howtoStepThree') }}
                 </div>
             </div>
-            <div id="qrCodeColumn">
-                <div id="qrCode" ref="$qrCode">
-                </div>
-                <div id="fakeAuthButton" @click="fakeAuth">
-                    Fake Phone Auth
-                </div>
-            </div>
+
+            <QRCode/>
         </div>
 
     </div>
@@ -458,6 +163,7 @@ function generateQRCode() {
         <div id="Sidebar">
             <Sidebar/>
         </div>
+
         <div id="MainPanel">
             <MainPanel/>
         </div>
@@ -500,7 +206,6 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;    
     font-size: 16px;
-    overflow: hidden;
 
     display: flex;
     flex-direction: column;
@@ -575,7 +280,6 @@ h1, h2, h3, h4, h5, h6 {
     color: rgb(0, 0 , 0, 0.8);
 }
 
-
 #qrCodeBanner {
     margin-top: 50px;
     margin-bottom: 100px;
@@ -596,8 +300,6 @@ h1, h2, h3, h4, h5, h6 {
 
     overflow: hidden;  
 
-
-
     display: flex;
     flex-direction: horizontal;
     justify-content: center;
@@ -616,32 +318,6 @@ h1, h2, h3, h4, h5, h6 {
     color: rgb(0, 0, 0, 0.80);
 }
 
-#qrCodeColumn {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-}
-#qrCode {
-    width: 250px;
-    height: 250px;
-}
-#fakeAuthButton {
-    
-    margin-top: 40px;
-    background-color: orange;
-    border-radius: 30px;
-    padding: 10px 30px 10px 30px;
-    color: white;
-    font-weight: bold;
-
-}
-#fakeAuthButton:hover {
-    background-color: gray;
-    cursor: pointer;
-}
-
-
 
 #MainWrapper {
     width: 100%;
@@ -649,24 +325,26 @@ h1, h2, h3, h4, h5, h6 {
 
     display: flex;
     flex-direction: horizonal;
-    overflow: hidden;
 }
 
 #Sidestrip {
     background-color: black;
-    flex: 0 0 50px;
+    flex: 0 0 auto;
     overflow: hidden;
 }
 
 #Sidebar {
     background-color: white;
-    flex: 0 0 30%;
+    flex: 0 0 v-bind(sideBarWidth);
     overflow: hidden;
 }
 
 #MainPanel {
-    flex: 0 0 70%;
-    overflow: hidden;
+    flex: 1 1 auto;
+}
+
+#Settings {
+    display: flex;
 }
 
 </style>

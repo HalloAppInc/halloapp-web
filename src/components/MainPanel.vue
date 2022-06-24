@@ -1,7 +1,12 @@
 <script setup lang="ts">
 
+import { useMainStore } from '../stores/mainStore'
 
+import HomeMain from './home/HomeMain.vue'
+import GroupsMain from './groups/GroupsMain.vue'
+import ChatsMain from './chats/ChatsMain.vue'
 
+const mainStore = useMainStore()
 
 </script>
 
@@ -9,15 +14,15 @@
 
 <div id="wrapper">
 
-  <div id="header">
-    
-  </div>
-  <div id="content">
-
- 
-
-
-  </div>
+    <keep-alive>
+        <HomeMain v-if='mainStore.page == "home"' />
+    </keep-alive>
+    <keep-alive>
+        <GroupsMain v-if='mainStore.page == "groups"' />
+    </keep-alive>    
+    <keep-alive>
+        <ChatsMain v-if='mainStore.page == "chats"' />
+    </keep-alive>
 
 </div>
 
@@ -26,30 +31,26 @@
 <style scoped>
 
 #wrapper {
-  width: 100%;
-  height: 100%;
+    width: 100%;
+    height: 100%;
 
-  border-left: 1px solid #b8b7b7;
+    border-left: 0px solid #b8b7b7;
 
-  background-color: rgb(229, 229, 247);
+    background-color: rgb(229, 229, 247);
 
-  background-image: repeating-radial-gradient( circle at 0 0, transparent 0, #e5e5f7 10px ), repeating-linear-gradient( rgba(242, 193, 139, 0.33), rgb(242, 193, 139, 0.4) );
-
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-
-  
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
 }
 
 #header {
-  flex: 0 0 50px;
-  background-color: #f0f2f5;
-  padding: 10px;
+    flex: 0 0 50px;
+    background-color: #f0f2f5;
+    padding: 10px;
 }
 
 #content {
-  flex: 1 1 auto;
+    flex: 1 1 auto;
 }
 
 </style>

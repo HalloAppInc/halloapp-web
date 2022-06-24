@@ -10,8 +10,15 @@
     "@fortawesome/fontawesome-svg-core": "^6.1.1",
     "@fortawesome/free-solid-svg-icons": "^6.1.1",
     "@fortawesome/vue-fontawesome": "^3.0.0-5",
+    "@intlify/vite-plugin-vue-i18n": "^3.4.0",
+    "@types/luxon": "^2.3.2",
+    "autolinker": "^3.15.0",
+    "dexie": "^3.2.2",
+    "grapheme-splitter": "^1.0.4",
     "js-base64": "^3.7.2",
     "js-crypto-hkdf": "^1.0.3",
+    "luxon": "^2.4.0",
+    "mp4box": "^0.5.2",
     "nanoid": "^3.3.4",
     "noise-c.wasm": "^0.4.0",
     "pinia": "^2.0.13",
@@ -20,6 +27,7 @@
     "qr-code-styling": "^1.6.0-rc.1",
     "tweetnacl": "^1.0.3",
     "vue": "^3.2.25",
+    "vue-i18n": "^9.1.10",
     "vue-router": "^4.0.14"
   },
   "devDependencies": {
