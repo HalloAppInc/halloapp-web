@@ -142,6 +142,8 @@ export function useHAText() {
             .replaceAll('[[/s]]', '</s>')
             .replaceAll('[[b]]', '<b>')
             .replaceAll('[[/b]]', '</b>')
+            .replaceAll('[[aa]]', "<a class='mention'>")
+            .replaceAll('[[/aa]]', "</a>")
 
             .replaceAll('[[a]]', '<a')
             .replaceAll('[[aAttr]]', '')
@@ -168,31 +170,30 @@ export function useHAText() {
         return result
     }
 
-    function processText(text: any, mentions: any, truncateText: boolean = false) {
+    function processText(text: any, mentions: any, truncateText: boolean = false, maxCharsWhenTruncated: number = 100, forInputBox: boolean = false) {
+        let isTruncated: boolean = false
+
         const textWithMentions = populateTextWithMentions(text, mentions)
         const decoratedTextWithMarkdown = decorateTextWithMarkdownPlaceholders(textWithMentions)
         let textToBeSanitized = decorateTextWithLinks(decoratedTextWithMarkdown)
 
-        // rough estimate of 330 chars for 12 lines and 110 for 3 lines
-        let maxCharsForTextOnlyPosts = 330
-        let maxChars = 110
+        let maxCharsAllowed: number = 5000
 
-        if (!truncateText) {
-            maxCharsForTextOnlyPosts = 5000
-            maxChars = 5000
-            // isTruncatedText.value = false
+        if (truncateText) {
+            maxCharsAllowed = maxCharsWhenTruncated
         }
 
-        let truncatedText = truncateTextIfNeeded(textToBeSanitized, maxCharsForTextOnlyPosts)
+        let truncatedText = truncateTextIfNeeded(textToBeSanitized, maxCharsAllowed)
         if (truncatedText.isTruncated) {
+            isTruncated = true
             truncatedText.text += '...'
         }
 
         textToBeSanitized = truncatedText.text
 
         const santizedHtml = sanitizeHtml(textToBeSanitized)
-        const html = populateTextWithHtmlForInputBox(santizedHtml)
-        return html
+        const html = forInputBox ? populateTextWithHtmlForInputBox(santizedHtml) : populateTextWithHtml(santizedHtml)
+        return { html: html, isTruncated: isTruncated }
     }
 
     return { processText }

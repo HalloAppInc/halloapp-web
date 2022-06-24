@@ -42,7 +42,7 @@ function sendMessage() {
     if (inputArea.value?.innerText.trim().length !== 0) {
         props.messageList.push({
             type: 'outBound',
-            message: processText(inputArea.value?.innerText.trim(), props.contactList),
+            message: processText(inputArea.value?.innerText.trim(), props.contactList).html,
             timestamp: '1649204213',
         })
         if (inputArea.value) {
@@ -84,7 +84,6 @@ function needUpdate() {
     // the input position is next to <span style="color=gray">
     else {
         let { idx, offset } = getChildNodeIdxAndOffset()
-        console.log(inputArea.value?.childNodes, idx, offset)
         if (inputArea.value?.childNodes[idx].nodeName == 'SPAN') {
             result = true
         }
@@ -160,13 +159,13 @@ function analyzeInput(e: any) {
     if (updateContent.value) {
         // update the input area
         if (inputArea.value) {
-            inputArea.value.innerHTML = processText(inputArea.value?.innerText, false, true)
+            inputArea.value.innerHTML = processText(inputArea.value?.innerText.trim(), props.contactList, false, 100, true).html
         }
         // set cursor to the end
         if (inputArea.value) {
-            inputArea.value.childNodes.forEach((val, key) => {
+            /* inputArea.value.childNodes.forEach((val, key) => {
                 console.log(key, val, val.textContent?.length)
-            })
+            }) */
             let range = document.createRange();
             let sel = window.getSelection()
             let { idx, offset } = getChildNodeIdxAndOffset()
@@ -238,7 +237,7 @@ function addContactToInputBox(contact: string) {
     if (inputArea.value) {
         let newText = inputArea.value.innerText.substring(0, contactPosition.value)
             + contact + inputArea.value.innerText.substring(cursorPosition.value) + ' '
-        inputArea.value.innerHTML = processText(newText, props.contactList)
+        inputArea.value.innerHTML = processText(newText, props.contactList, false, 100, true).html
         showContacts.value = false
         inputArea.value?.focus()
     }
@@ -388,12 +387,10 @@ function checkContacts() {
     flex-direction: horizontal;
     padding: 0px;
 }
-
 .container:hover {
     background-color: v-bind(hoverColor);
     cursor: pointer;
 }
-
 .avatarContainer {
     flex: 0 0 70px;
     padding: 10px 0px 10px 10px;
@@ -427,7 +424,6 @@ function checkContacts() {
 
 .contentHeader {
     display: flex;
-
     justify-content: flex-start;
 }
 
