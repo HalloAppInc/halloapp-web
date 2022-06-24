@@ -65,7 +65,7 @@ function sendMessage() {
     if (inputMessage.value != '') {
         props.messageList.push({
             type: 'outBound',
-            message: processText(inputMessage.value, props.contactList),
+            message: processText(inputMessage.value, props.contactList).html,
             timestamp: '1655862547',
         })
         inputMessage.value = ''
