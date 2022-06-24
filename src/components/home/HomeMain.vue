@@ -2,8 +2,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-import Post from './Post.vue'
 import { useMainStore } from '../../stores/mainStore'
+import Post from './Post.vue'
+import Comment from '../comment/CommentMain.vue'
 import hal from '../../common/halogger'
 const mainStore = useMainStore()
 
@@ -87,7 +88,7 @@ function commentsClick() {
  
     
     <div v-if="showComments" class="comments">
-
+        <Comment></Comment>
     </div>
   
 </div>

@@ -787,12 +787,12 @@ function expandText() {
                     <div id="newCommentIndicator">
                     </div>
                 </div>
-                <div id="replyButton" @click="">
+                <!-- <div id="replyButton" @click="">
                     <img id="replyIcon" src="https://d1efjkqerxchlh.cloudfront.net/es/assets/Reply.png" alt="Reply Icon">
                     <div>
                         {{ t('post.replyPrivately') }}
                     </div>
-                </div>
+                </div> -->
             </div>
 
         </div>
