@@ -7,16 +7,15 @@ import { useI18n } from 'vue-i18n'
 
 import { useColorStore } from '../../stores/colorStore'
 
-import { useMainStore } from '../../stores/mainStore'
-
 nextTick(() => {
     handleScroll()
     gotoBottom('auto')
+    new ResizeObserver(setChatPanelHeight).observe(content.value!)
 })
 
 const colorStore = useColorStore()
 
-const mainStore = useMainStore()
+const chatPanelHeight = ref(0)
 
 const { locale } = useI18n({
     inheritLocale: true,
@@ -51,10 +50,6 @@ const data = computed(() => {
     }
 
     return result
-})
-
-const page = computed(() => {
-    return mainStore.page
 })
 
 const textColor = computed(() => {
@@ -105,19 +100,21 @@ function appendSpaceForMsgInfo(msg: string, time: string, isOutBound: boolean) {
 // listen to msg list, when a new msg comes in, scroll to the bottom
 watch(messageNumber, () => {
     nextTick(() => {
-        content.value?.scrollTo(10000, content.value?.scrollHeight)
+        gotoBottom('smooth')
         handleScroll()
     });
 })
 
-watch(page, () => {
-    if (page.value == 'chats') {
-        nextTick(() => {
-            content.value?.scrollTo(10000, content.value?.scrollHeight)
-            handleScroll()
-        });
-    }
+watch(chatPanelHeight, () => { 
+    nextTick(() => {
+        gotoBottom('auto')
+    });
 })
+
+function setChatPanelHeight() {
+    chatPanelHeight.value = content.value ? content.value.clientHeight : 0
+    // console.log(chatPanelHeight.value)
+}
 
 function handleScroll() {
     clearTimeout(handleScrollTimer)
@@ -178,7 +175,7 @@ function debouncedHandleScroll() {
 
     /* toggle jump button visiblity */
     if (content.value &&
-        content.value.scrollTop + content.value.clientHeight < content.value.scrollHeight - 30) {
+        content.value.scrollTop + content.value.clientHeight < content.value.scrollHeight - 50) {
         showJumpDownButton.value = true
     }
     else {
