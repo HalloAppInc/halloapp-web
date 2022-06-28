@@ -27,19 +27,41 @@ const { t } = useI18n({
 const showQRCode = ref(true)
 
 let qrCodeTimer: any
+let countdownInterval: any
 
 const $qrCode = ref(null)
 
 let qrCodeStylingWithOptions: any
+
+let countdown = ref('')
 
 onMounted(() => {
     generateQRCodeAndConnect()
 })
 
 onBeforeUnmount(() => {
-    // timer should not fire after unmount but clearing anyways
+    // timers/intervals should not fire after unmount but clearing anyways
     clearTimeout(qrCodeTimer)
 })
+
+function setCountdown(distance: any) {
+    let secondsFromNow = distance + 2 // add 1 sec so component will change before it reaches 0
+    let countDownDate: any = new Date(new Date().getTime() + secondsFromNow)
+
+    countdownInterval = setInterval(function() {
+        let now = new Date().getTime()
+        let distance = countDownDate - now
+        let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
+        let seconds = Math.floor((distance % (1000 * 60)) / 1000)
+        let displaySeconds = seconds.toString()
+        if (seconds < 10) {
+            displaySeconds = '0' + displaySeconds
+        }
+        countdown.value = minutes + ":" + displaySeconds
+
+
+    }, 1000)
+}
 
 function generateQRCodeAndConnect() {
     
@@ -47,7 +69,9 @@ function generateQRCodeAndConnect() {
     showQRCode.value = true
 
     clearTimeout(qrCodeTimer)
-    qrCodeTimer = setTimeout(deleteQRCodeAndWait, 3*60000)
+    const secondsToWait = 3*60000
+    qrCodeTimer = setTimeout(deleteQRCodeAndWait, secondsToWait)
+    setCountdown(secondsToWait)
 
     let qrCodeArr = []
 
@@ -116,8 +140,13 @@ function deleteQRCodeAndWait() {
     <div v-show='showQRCode' id="qrCodeBox" ref="$qrCode">
     </div>
 
-    <div v-if='showQRCode' id="fakeAuthButton" @click="fakeAuth">
-        Fake Phone Auth
+    <div v-if='showQRCode'>
+        <div class="fakeAuthButton" @click="fakeAuth">
+            Fake Phone Auth
+        </div>
+        <div class="countdown">
+            {{ countdown }}
+        </div>
     </div>
     <div v-else id="getQRCodeButton" @click="getNewQRCode">
         {{ t('login.getQRCode') }}
@@ -138,7 +167,7 @@ function deleteQRCodeAndWait() {
     width: 250px;
     height: 250px;
 }
-#fakeAuthButton {
+.fakeAuthButton {
     margin-top: 40px;
     background-color: red;
     border-radius: 30px;
@@ -146,9 +175,14 @@ function deleteQRCodeAndWait() {
     color: white;
     font-weight: bold;
 }
-#fakeAuthButton:hover {
+.fakeAuthButton:hover {
     background-color: gray;
     cursor: pointer;
+}
+.countdown {
+    margin-top: 10px;
+    text-align: center;
+    color: gray;
 }
 #getQRCodeButton {
     margin-top: 40px;
