@@ -8,7 +8,8 @@ import { Base64 } from 'js-base64'
 
 import { useMainStore } from '../../stores/mainStore'
 import { useConnStore } from '../../stores/connStore'
-import commonColors from "../../common/colors"
+import commonColors from '../../common/colors'
+import { useTimeformatter } from '../../composables/timeformatter'
 
 import { useI18n } from 'vue-i18n'
 
@@ -16,6 +17,7 @@ import qrCodeStyling from 'qr-code-styling'
 
 const mainStore = useMainStore()
 const connStore = useConnStore()
+const { formatTimer } = useTimeformatter()
 
 const primaryBlue = commonColors.primaryBlue
 
@@ -42,25 +44,22 @@ onMounted(() => {
 onBeforeUnmount(() => {
     // timers/intervals should not fire after unmount but clearing anyways
     clearTimeout(qrCodeTimer)
+    clearInterval(countdownInterval)
 })
 
-function setCountdown(distance: any) {
-    let secondsFromNow = distance + 2 // add 1 sec so component will change before it reaches 0
-    let countDownDate: any = new Date(new Date().getTime() + secondsFromNow)
+function setCountdown(countdownTimeMs: any) {
+    const countDownDate: any = new Date(new Date().getTime() + countdownTimeMs)
+
+    countdown.value = formatTimer(countDownDate).display // run once first so re-runs won't show 00:00
 
     countdownInterval = setInterval(function() {
-        let now = new Date().getTime()
-        let distance = countDownDate - now
-        let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
-        let seconds = Math.floor((distance % (1000 * 60)) / 1000)
-        let displaySeconds = seconds.toString()
-        if (seconds < 10) {
-            displaySeconds = '0' + displaySeconds
+        const formattedTimer = formatTimer(countDownDate)
+        if (formattedTimer.timeDiffMs <= 1000) {
+            clearInterval(countdownInterval)
+        } else {
+             countdown.value = formattedTimer.display
         }
-        countdown.value = minutes + ":" + displaySeconds
-
-
-    }, 1000)
+    }, 750)
 }
 
 function generateQRCodeAndConnect() {
@@ -68,10 +67,11 @@ function generateQRCodeAndConnect() {
     connStore.generatePublicKeyIfNeeded()
     showQRCode.value = true
 
+    const countdownTimeMs = 3*60000
     clearTimeout(qrCodeTimer)
-    const secondsToWait = 3*60000
-    qrCodeTimer = setTimeout(deleteQRCodeAndWait, secondsToWait)
-    setCountdown(secondsToWait)
+    clearInterval(countdownInterval)
+    qrCodeTimer = setTimeout(deleteQRCodeAndWait, countdownTimeMs)
+    setCountdown(countdownTimeMs)
 
     let qrCodeArr = []
 
@@ -122,7 +122,6 @@ function fakeAuth() {
 }
 
 function getNewQRCode() {
-    connStore.setWaitForUserToRegenKey(false)
     generateQRCodeAndConnect()
 }
 
