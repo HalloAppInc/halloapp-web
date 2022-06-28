@@ -127,10 +127,15 @@ function enterDelete(e: any) {
         getCursorPosition()
         totalOffset = cursorPosition.value
         getChildNodeAndOffsetFromNestedNodes(inputArea.value!)
-        console.log(currentNode.value!.parentElement!.nodeName, currentNode.value)
+        console.log(currentNode.value!.parentElement!.nodeName, currentNode.value, nodeOffset.value)
         if (currentNode.value!.parentElement?.nodeName == 'SPAN' && currentNode.value?.textContent?.includes('@')) {
-            currentNode.value!.parentElement?.remove()
-            e.preventDefault(e)
+            if (nodeOffset.value == currentNode.value?.textContent!.length) {
+                currentNode.value!.parentElement?.remove()
+                e.preventDefault(e)
+            }
+            else {
+                result = true
+            }
         }
     }
 
