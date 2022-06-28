@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { validate } from '@babel/types';
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed } from 'vue'
 
 import { useHAText } from '../../composables/haText'
 
@@ -47,7 +46,7 @@ function sendMessage() {
         props.messageList.push({
             type: 'outBound',
             message: processText(inputArea.value?.innerText.trim(), props.contactList).html,
-            timestamp: '1649204213',
+            timestamp: Date.now() / 1000 | 0, //  get current time
         })
         if (inputArea.value) {
             inputArea.value.innerText = ''
@@ -89,9 +88,11 @@ function needUpdate() {
     else if (input && (input[cursorPosition.value - 2] == '*' ||
         input[cursorPosition.value - 2] == '~' ||
         input[cursorPosition.value - 2] == '_' ||
+        input[cursorPosition.value - 2] == '@' ||
         input[cursorPosition.value] == '*' ||
         input[cursorPosition.value] == '~' ||
-        input[cursorPosition.value] == '_')) {
+        input[cursorPosition.value] == '_' ||
+        input[cursorPosition.value] == '@')) {
         result = true
     }
     updateContent.value = result
@@ -99,7 +100,7 @@ function needUpdate() {
 
 
 // for keyDown delete, check if update is needed
-function enterDelete() {
+function enterDelete(e: any) {
     // if inputbox is empty
     if (inputArea.value?.innerText == '') {
         inputArea.value?.innerHTML == ''
@@ -109,13 +110,28 @@ function enterDelete() {
     let result = false
     const input = inputArea.value?.innerText.replaceAll('\n', '')
     if (input && input[cursorPosition.value - 1] == '*') {
-        result = true //havePairOfMarkDown(input, '*')
+        result = true // havePairOfMarkDown(input, '*')
     }
     else if (input && input[cursorPosition.value - 1] == '~') {
-        result = true //havePairOfMarkDown(input, '~')
+        console.log(111111)
+        result = true // havePairOfMarkDown(input, '~')
     }
     else if (input && input[cursorPosition.value - 1] == '_') {
-        result = true //havePairOfMarkDown(input, '_')
+        result = true // havePairOfMarkDown(input, '_')
+    }
+    else if (input && input[cursorPosition.value - 1] == '@') {
+        result = true // havePairOfMarkDown(input, '_')
+    }
+    // delete <span> @contact </span>
+    else {
+        getCursorPosition()
+        totalOffset = cursorPosition.value
+        getChildNodeAndOffsetFromNestedNodes(inputArea.value!)
+        console.log(currentNode.value!.parentElement!.nodeName, currentNode.value)
+        if (currentNode.value!.parentElement?.nodeName == 'SPAN' && currentNode.value?.textContent?.includes('@')) {
+            currentNode.value!.parentElement?.remove()
+            e.preventDefault(e)
+        }
     }
 
     updateContent.value = result
@@ -196,7 +212,7 @@ function analyzeInput(e: any) {
             // let { idx, offset } = getChildNodeIdxAndOffset()
             // console.log('input', idx, offset, inputArea.value.childNodes[idx].textContent)
 
-            off = cursorPosition.value
+            totalOffset = cursorPosition.value
             getChildNodeAndOffsetFromNestedNodes(inputArea.value)
             // console.log("^", currentNode.value, nodeOffset.value)
 
@@ -224,52 +240,27 @@ function click() {
     // get cursor position
     getCursorPosition()
 
-    // check if mension someone in contacts
+    // check if mention someone in contacts
     checkContacts()
 }
 
 
+
+let totalOffset = 0
 // get childnode idx and offset from cursorPosition
-/* function getChildNodeIdxAndOffset() {
-    let idx = 0
-    let offset = 0
-    let totalOffset = cursorPosition.value
-    if (inputArea.value) {
-        for (let i = 0; i < inputArea.value.childNodes.length; i++) {
-            let node = inputArea.value.childNodes[i]
-            if (node.textContent) {
-                if (totalOffset <= node.textContent.length) {
-                    idx = i
-                    offset = totalOffset
-                    break
-                }
-                else {
-                    totalOffset -= node.textContent.length
-                    offset = node.textContent.length
-                    idx = i
-                }
-            }
-        }
-    }
-
-    return { idx, offset }
-} */
-
-let off = 0
-
 function getChildNodeAndOffsetFromNestedNodes(node: Node) {
     if (node.nodeType == Node.TEXT_NODE) {
         let len = node.textContent!.length
-        // console.log(node, off, len)
-        if (off >= 0) {
-            if (off <= len) {
+        /* console.log("^&8",node, totalOffset, len) */
+        if (totalOffset > 0) {
+            if (totalOffset <= len) {
                 currentNode.value = node
-                nodeOffset.value = off
-                off -= len
+                nodeOffset.value = totalOffset
+                totalOffset -= len
                 return
             }
             else {
-                off -= len
+                totalOffset -= len
             }
         }
     }
@@ -304,7 +295,7 @@ function addContactToInputBox(contact: string) {
         let range = document.createRange();
         let sel = window.getSelection()
         // get current child node
-        off = cursorPosition.value
+        totalOffset = cursorPosition.value
         getChildNodeAndOffsetFromNestedNodes(inputArea.value)
         let childnode = currentNode.value?.parentNode?.nextSibling // get next node
         try {
@@ -388,11 +379,9 @@ function checkContacts() {
             <font-awesome-icon :icon="['fas', 'paperclip']" size='2x' />
         </div> -->
         <div class='inputBoxContainer'>
-            <div id='textarea' ref='inputArea' contenteditable='true' 
-                placeholder='Type a message...'
-                @keydown.enter.exact.prevent='sendMessage()'
-                @keydown.shift.enter="enterShiftEnter($event)"
-                @keydown.space="enterSpace($event)" @keydown.delete='enterDelete()' @keyup='analyzeInput($event)'
+            <div id='textarea' ref='inputArea' contenteditable='true' placeholder='Type a message...'
+                @keydown.enter.exact.prevent='sendMessage()' @keydown.shift.enter="enterShiftEnter($event)"
+                @keydown.space="enterSpace($event)" @keydown.delete='enterDelete($event)' @keyup='analyzeInput($event)'
                 @click='click()'>
             </div>
         </div>
@@ -439,10 +428,10 @@ function checkContacts() {
 }
 
 [contenteditable][placeholder]:empty:before {
-  content: attr(placeholder);
-  position: absolute;
-  color: gray;
-  background-color: transparent;
+    content: attr(placeholder);
+    position: absolute;
+    color: gray;
+    background-color: transparent;
 }
 
 .inputBoxContainer {
