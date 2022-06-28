@@ -7,13 +7,16 @@ import { useI18n } from 'vue-i18n'
 
 import { useColorStore } from '../../stores/colorStore'
 
+import { useMainStore } from '../../stores/mainStore'
+
 nextTick(() => {
-    checkHeight()
+    handleScroll()
     gotoBottom('auto')
-    new ResizeObserver(setChatPanelHeight).observe(content.value!)
 })
 
 const colorStore = useColorStore()
+
+const mainStore = useMainStore()
 
 const { locale } = useI18n({
     inheritLocale: true,
@@ -24,12 +27,12 @@ const props = defineProps(['messageList'])
 
 const content = ref<HTMLElement | null>(null)
 
+let handleScrollTimer: any
+
 const showJumpDownButton = ref(false)
 
 // set floating time stamp's content
 const currentMsgTimestamp = ref()
-
-const chatPanelHeight = ref(0)
 
 const messageNumber = computed(() => {
     return props.messageList.length
@@ -48,6 +51,10 @@ const data = computed(() => {
     }
 
     return result
+})
+
+const page = computed(() => {
+    return mainStore.page
 })
 
 const textColor = computed(() => {
@@ -95,50 +102,87 @@ function appendSpaceForMsgInfo(msg: string, time: string, isOutBound: boolean) {
     return [result, font]
 }
 
-// lisetn to msg list, when a new msg comes in, scroll to the bottom
+// listen to msg list, when a new msg comes in, scroll to the bottom
 watch(messageNumber, () => {
     nextTick(() => {
         content.value?.scrollTo(10000, content.value?.scrollHeight)
-        checkHeight()
+        handleScroll()
     });
 })
 
-watch(chatPanelHeight, () => { 
-    nextTick(() => {
-        content.value?.scrollTo(10000, content.value?.scrollHeight)
-        checkHeight()
-    });
+watch(page, () => {
+    if (page.value == 'chats') {
+        nextTick(() => {
+            content.value?.scrollTo(10000, content.value?.scrollHeight)
+            handleScroll()
+        });
+    }
 })
 
-function setChatPanelHeight() {
-    chatPanelHeight.value = content.value ? content.value.clientHeight : 0
-    // console.log(chatPanelHeight.value)
+function handleScroll() {
+    clearTimeout(handleScrollTimer)
+    handleScrollTimer = setTimeout(debouncedHandleScroll, 15) // 15 seems the best but can be tinkered with
 }
 
 // when scroll the scroll bar get the scroll bar's current height
 // get the value of timestamp of the msg bubble at current floating timestamp's height
-function checkHeight() {
+function debouncedHandleScroll() {
+    if (!content.value) { return }
+
+    let contentViewportOffset = content.value.getBoundingClientRect() // offset is relative to viewport
+
+    /* hide static timestamp bubbles when they're above the floating timestamp */
+    let staticTimestampList = content.value?.getElementsByClassName('staticTimestamp')
+    if (staticTimestampList) {
+
+        for (let i = staticTimestampList.length - 1; i >= 0; i--) { // start from most recent msg
+            let staticTimestamp = staticTimestampList[i] as HTMLElement
+
+            if (staticTimestamp.offsetHeight > 0) {
+
+                let staticTimestampViewportOffset = staticTimestamp.getBoundingClientRect()
+
+                const topAreaRelativeToContent = contentViewportOffset.top + 10
+
+                if (staticTimestampViewportOffset.top <= topAreaRelativeToContent) {
+                    staticTimestamp.style.visibility = 'hidden'
+                    // break to save a little bit of cycle since each run should hide at max one timestamp
+                    break
+                } else {
+                    staticTimestamp.style.visibility = 'visible'
+                }
+            }
+        }
+    }
+
+    /* change floating timestamp */
+    if (props.messageList.length != 0) {
+
+        let closestElement = document.elementFromPoint(contentViewportOffset.left, contentViewportOffset.top)
+
+        // find the timestamp in msg bubble
+        let timestampEl = closestElement?.getElementsByClassName('timestamp')[0] as HTMLDivElement
+
+        if (!timestampEl) {
+            // find the timestamp in static timestamp bubble
+            timestampEl = closestElement?.getElementsByClassName('timestampBig')[0] as HTMLDivElement
+        }
+
+        if (timestampEl) {
+            currentMsgTimestamp.value = timestampEl.textContent
+        }
+    }
+    else {
+        currentMsgTimestamp.value = "No Messages"
+    }
+
+    /* toggle jump button visiblity */
     if (content.value &&
         content.value.scrollTop + content.value.clientHeight < content.value.scrollHeight - 30) {
         showJumpDownButton.value = true
     }
     else {
         showJumpDownButton.value = false
-    }
-    if (props.messageList.length != 0 && content.value) {
-        let ele = document.elementFromPoint(window.outerWidth * 0.3 + 82, 60)
-        // get timestamp in this div
-        if (ele?.className.includes('Time')) {
-            let child = ele.childNodes[0].childNodes[0].childNodes[0]
-            currentMsgTimestamp.value = child.textContent
-        }
-        else {
-            let child = ele?.childNodes[0].childNodes[2].childNodes[0].childNodes[0]
-            currentMsgTimestamp.value = child?.textContent
-        }
-    }
-    else {
-        currentMsgTimestamp.value = "No Messages"
     }
 }
 
@@ -155,7 +199,7 @@ function gotoProfile(e: any) {
 </script>
 
 <template>
-    <div id='contents' ref='content' @scroll='checkHeight()'>
+    <div id='contents' ref='content' @scroll='handleScroll()'>
         <!-- chat msg -->
         <div class='containerChat' v-for='(value, idx) in data' id='panel'>
             <!-- inbound msg -->
@@ -211,7 +255,7 @@ function gotoProfile(e: any) {
             </div>
 
             <!-- timestamp -->
-            <div v-else-if="value.type == 'timestamp'" class='contentTextBody contentTextBodyTime'>
+            <div v-else-if="value.type == 'timestamp'" class='staticTimestamp contentTextBody contentTextBodyTime'>
                 <div class='chatBubble chatBubbleTime'>
                     <div class='timestampContainerBig'>
                         <div class='timestampBig'>
@@ -227,7 +271,7 @@ function gotoProfile(e: any) {
             <div class='contentTextBody contentTextBodyTime'>
                 <div class='chatBubble chatBubbleTime'>
                     <div class='timestampContainerBig'>
-                        <div class='timestampBig floatingTimestampBig'>
+                        <div class='timestampBig'>
                             {{ currentMsgTimestamp }}
                         </div>
                     </div>
@@ -260,7 +304,7 @@ function gotoProfile(e: any) {
 }
 
 *::-webkit-scrollbar {
-    width: 5px;
+    width: 10px;
 }
 
 *::-webkit-scrollbar-track {
@@ -279,6 +323,9 @@ function gotoProfile(e: any) {
     height: 100%;
     overflow-y: scroll;
     padding-bottom: 50px;
+
+    display: flex;
+    flex-direction: column;
 }
 
 .containerChat {
@@ -414,17 +461,10 @@ function gotoProfile(e: any) {
     color: v-bind(timestamp);
 }
 
-.floatingTimestampBig {
-    margin: 0px 5px;
-}
-
 .containerFloatingTimestamp {
     position: absolute;
-    top: 50px;
-    right: 50%;
-    transform: translateX(50%);
+    align-self: center;
     z-index: 1;
-    width: fit-content;
 }
 
 .buttonContainer {
