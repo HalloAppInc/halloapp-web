@@ -12,18 +12,19 @@ import { useMainStore } from './mainStore'
 import { server } from '../proto/server.js'
 
 import createNoise from "noise-c.wasm"
+import { EventEmitterListener } from 'protobufjs'
 
 export const useConnStore = defineStore('conn', () => {
 
     const mainStore = useMainStore()
     let { sendPing, addKey, removeKey, check, sendDemoWebStanza, uploadMedia } = network()
 
-    let logoutRequested: boolean = false
-
     let connectionTimer: any    // timer used for debouncing
     let sendMessagesTimer: any  // timer used for debouncing
     let isSendingMessages: boolean = false
     let sendMessagesRetryNum: number = 0
+
+    let isLoggingOut: boolean = false
 
     let webSocket: WebSocket
     let noise: any
@@ -45,6 +46,41 @@ export const useConnStore = defineStore('conn', () => {
         }, 100)
     }
 
+
+    async function websocketOnopen(event: any) {
+        hal.log('connStore/websocketOnopen/webSocket/onopen ')
+    
+        mainStore.isConnectedToServer = true
+
+        webSocket.removeEventListener('message', handleInboundMsg)
+        webSocket.addEventListener('message', handleInboundMsg)
+
+        addKeyToServer(function() {
+            hal.log('connStore/connectToServer/added public key successfully')
+            mainStore.haveAddedPublicKeyToServer = true
+        })
+
+        sendReadyMessagesInQueue()
+    }
+
+    async function wsOncloseWillReconnect(event: any) {
+        hal.log('connStore/wsOncloseWillReconnect')
+        mainStore.isConnectedToServer = false
+
+        /* try to reconnect */
+        // connectToServerIfNeeded()
+    }
+
+    async function wsOnclose(event: any) {
+        hal.log('connStore/wsOnclose ')
+        mainStore.isConnectedToServer = false
+
+        if (isLoggingOut) {
+            isLoggingOut = false
+            mainStore.logoutMain()
+        }
+    }    
+
     async function connectToServer() {
         hal.log('connStore/connectToServer')
 
@@ -53,41 +89,25 @@ export const useConnStore = defineStore('conn', () => {
         const newWebSocket = new WebSocket(server)
         newWebSocket.binaryType = 'arraybuffer'
     
-        newWebSocket.onopen = function(event) {
-            hal.log('connStore/connectToServer/webSocket/onopen ')
-    
-            mainStore.isConnectedToServer = true
-    
-            newWebSocket.removeEventListener('message', handleInboundMsg)
-            newWebSocket.addEventListener('message', handleInboundMsg)
-    
-            addKeyToServer(function() {
-                hal.log('connStore/connectToServer/added public key successfully')
-                mainStore.haveAddedPublicKeyToServer = true
-            })
+        newWebSocket.removeEventListener('open', websocketOnopen)
+        newWebSocket.addEventListener('open', websocketOnopen)
 
-            sendReadyMessagesInQueue()
-        }
-    
-        newWebSocket.onclose = function(event) {
-            hal.log('connStore/connectToServer/webSocket/onclose: ' + event)
-
-            if (logoutRequested) {
-                mainStore.logoutMain()
-                logoutRequested = false
-            }
-
-            mainStore.isConnectedToServer = false
-            if (!mainStore.isWaitingForUserToRegenKey) {
-                // connectToServerIfNeeded()
-            }
-        }
+        newWebSocket.removeEventListener('close', wsOncloseWillReconnect)
+        newWebSocket.addEventListener('close', wsOncloseWillReconnect)
     
         webSocket = newWebSocket
     }
 
     function disconnectFromServer() {
         hal.log('connStore/disconnectFromServer')
+    
+        /* remove reconnecting onclose handler */
+        webSocket.removeEventListener('close', wsOncloseWillReconnect)
+    
+        /* add onclose handler just to track closing of socket */
+        webSocket.removeEventListener('close', wsOnclose)
+        webSocket.addEventListener('close', wsOnclose)
+
         webSocket.close()
     }
 
@@ -98,7 +118,7 @@ export const useConnStore = defineStore('conn', () => {
             mainStore.privateKeyBase64 = Base64.fromUint8Array(keypair.secretKey)
             mainStore.publicKeyBase64 = Base64.fromUint8Array(keypair.publicKey)
         }
-        hal.log("generatePublicKeyIfNeeded/privateKey: " + mainStore.privateKeyBase64)
+        // hal.log("generatePublicKeyIfNeeded/privateKey: " + mainStore.privateKeyBase64)
         hal.prod("generatePublicKeyIfNeeded/publicKey: " + mainStore.publicKeyBase64)
     }
 
@@ -107,12 +127,7 @@ export const useConnStore = defineStore('conn', () => {
         mainStore.publicKeyBase64 = ''
     }
 
-    function setWaitForUserToRegenKey(wait: boolean) {
-        mainStore.isWaitingForUserToRegenKey = wait
-    }
-
     function waitForUserToRegenKey() {
-        setWaitForUserToRegenKey(true)
         clearPublicKey()
         disconnectFromServer()
     }
@@ -369,8 +384,16 @@ export const useConnStore = defineStore('conn', () => {
 
     function logout() {
         hal.log('connStore/logout/logging out...')
-        logoutRequested = true
-        disconnectFromServer()
+
+        /* wait to disconnect fully first as the login screen will connect right away */
+        if (mainStore.isConnectedToServer) {
+            isLoggingOut = true
+            disconnectFromServer()
+            return
+        } 
+
+        /* user can log out even if not connected to server in offline mode */
+        mainStore.logoutMain()
     }
 
     return {
@@ -378,7 +401,6 @@ export const useConnStore = defineStore('conn', () => {
         disconnectFromServer, 
         generatePublicKeyIfNeeded,
         clearPublicKey, 
-        setWaitForUserToRegenKey, 
         waitForUserToRegenKey,
 
         addKeyToServer,

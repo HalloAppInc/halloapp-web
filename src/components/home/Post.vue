@@ -7,8 +7,6 @@ import { clients } from "../../proto/clients.js"
 import { Base64 } from "js-base64"
 import hkdf from "js-crypto-hkdf"
 
-import timeformatter from '../../common/timeformatter'
-
 import { useI18n } from 'vue-i18n'
 
 import MediaCarousel from '../media/MediaCarousel.vue'
@@ -18,9 +16,11 @@ import MP4Box from 'mp4box'
 
 import { useMainStore } from '../../stores/mainStore'
 import { useHAText } from '../../composables/haText'
+import { useTimeformatter } from '../../composables/timeformatter'
 
 const mainStore = useMainStore()
 const { processText } = useHAText()
+const { formatTime, formatTimer } = useTimeformatter()
 
 let pushname = (<any>window).han
 let avatar = (<any>window).haa
@@ -208,7 +208,7 @@ async function decodeProtobufToPostContainer(binArray: Uint8Array) {
         if (postContainerBlob && postContainerBlob.hasOwnProperty("postContainer")) {
             const containerTimestamp = <number>postContainerBlob.timestamp
             if (containerTimestamp) {
-                postTimestamp.value = timeformatter.format(containerTimestamp, <string>locale.value)
+                postTimestamp.value = formatTime(containerTimestamp, <string>locale.value)
             }
             return postContainerBlob.postContainer
         } else {
