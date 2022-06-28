@@ -1,6 +1,6 @@
 <script setup lang="ts">
-
-import { ref, computed } from 'vue'
+import { validate } from '@babel/types';
+import { ref, computed, nextTick } from 'vue'
 
 import { useHAText } from '../../composables/haText'
 
@@ -21,6 +21,10 @@ const showContacts = ref(false)
 const contactPosition = ref(-1)
 
 const inputArea = ref(<HTMLElement | null>(null))
+
+const currentNode = ref(<Node | null>(null))
+
+const nodeOffset = ref(0)
 
 const cursorColor = computed(() => {
     return colorStore.cursor
@@ -82,11 +86,13 @@ function needUpdate() {
         result = havePairOfMarkDown(input, '~')
     }
     // the input position is next to <span style="color=gray">
-    else {
-        let { idx, offset } = getChildNodeIdxAndOffset()
-        if (inputArea.value?.childNodes[idx].nodeName == 'SPAN') {
-            result = true
-        }
+    else if (input && (input[cursorPosition.value - 2] == '*' ||
+        input[cursorPosition.value - 2] == '~' ||
+        input[cursorPosition.value - 2] == '_' ||
+        input[cursorPosition.value] == '*' ||
+        input[cursorPosition.value] == '~' ||
+        input[cursorPosition.value] == '_')) {
+        result = true
     }
     updateContent.value = result
 }
@@ -103,16 +109,34 @@ function enterDelete() {
     let result = false
     const input = inputArea.value?.innerText.replaceAll('\n', '')
     if (input && input[cursorPosition.value - 1] == '*') {
-        result = true//havePairOfMarkDown(input, '*')
+        result = true //havePairOfMarkDown(input, '*')
     }
     else if (input && input[cursorPosition.value - 1] == '~') {
-        result = true//havePairOfMarkDown(input, '~')
+        result = true //havePairOfMarkDown(input, '~')
     }
     else if (input && input[cursorPosition.value - 1] == '_') {
-        result = true//havePairOfMarkDown(input, '_')
+        result = true //havePairOfMarkDown(input, '_')
     }
 
     updateContent.value = result
+}
+
+
+// block first character to be space
+function enterSpace(e: any) {
+    // if inputArea is empty, do not allow to enter space
+    if (inputArea.value!.innerText.trim().length == 0) {
+        e.preventDefault(e)
+    }
+}
+
+
+// block first character to be enter
+function enterShiftEnter(e: any) {
+    // if inputArea is empty, do not allow to enter another line
+    if (inputArea.value!.innerText.trim().length == 0) {
+        e.preventDefault(e)
+    }
 }
 
 
@@ -142,8 +166,8 @@ function analyzeInput(e: any) {
     checkContacts()
 
     // if inputArea is empty, delete the remaining <span> and <div>
-    if (inputArea.value?.innerText == '') {
-        inputArea.value?.innerHTML == ''
+    if (inputArea.value!.innerText.trim().length == 0) {
+        inputArea.value!.innerHTML = ''
         return
     }
 
@@ -164,15 +188,21 @@ function analyzeInput(e: any) {
         }
         // set cursor to the end
         if (inputArea.value) {
-            inputArea.value.childNodes.forEach((val, key) => {
+            /* inputArea.value.childNodes.forEach((val, key) => {
                 console.log(key, val, val.textContent?.length)
-            })
+            }) */
             let range = document.createRange();
             let sel = window.getSelection()
-            let { idx, offset } = getChildNodeIdxAndOffset()
-            console.log('input', idx, offset, inputArea.value.childNodes[idx].textContent)
-            try { 
-                range.setStart(inputArea.value.childNodes[idx], offset)
+            // let { idx, offset } = getChildNodeIdxAndOffset()
+            // console.log('input', idx, offset, inputArea.value.childNodes[idx].textContent)
+
+            off = cursorPosition.value
+            getChildNodeAndOffsetFromNestedNodes(inputArea.value)
+            // console.log("^", currentNode.value, nodeOffset.value)
+
+            try {
+                // range.setStart(inputArea.value.childNodes[idx], offset)
+                range.setStart(currentNode.value!, nodeOffset.value)
             }
             catch (err: any) {
                 console.log(err.message)
@@ -200,16 +230,14 @@ function click() {
 
 
 // get childnode idx and offset from cursorPosition
-function getChildNodeIdxAndOffset() {
+/* function getChildNodeIdxAndOffset() {
     let idx = 0
     let offset = 0
     let totalOffset = cursorPosition.value
-    let stop = false
     if (inputArea.value) {
         for (let i = 0; i < inputArea.value.childNodes.length; i++) {
             let node = inputArea.value.childNodes[i]
             if (node.textContent) {
-                /* console.log('&',node.textContent,'totalL=',totalOffset) */
                 if (totalOffset <= node.textContent.length) {
                     idx = i
                     offset = totalOffset
@@ -223,9 +251,36 @@ function getChildNodeIdxAndOffset() {
             }
         }
     }
-    return { idx, offset }
-}
 
+    return { idx, offset }
+} */
+
+let off = 0
+
+function getChildNodeAndOffsetFromNestedNodes(node: Node) {
+    if (node.nodeType == Node.TEXT_NODE) {
+        let len = node.textContent!.length
+        // console.log(node, off, len)
+        if (off >= 0) {
+            if (off <= len) {
+                currentNode.value = node
+                nodeOffset.value = off
+                off -= len
+                return
+            }
+            else {
+                off -= len
+            }
+        }
+    }
+    else {
+        let node1 = node.firstChild
+        while (node1) {
+            getChildNodeAndOffsetFromNestedNodes(node1)
+            node1 = node1.nextSibling
+        }
+    }
+}
 
 
 function addContactToInputBox(contact: string) {
@@ -248,8 +303,13 @@ function addContactToInputBox(contact: string) {
         // update cursor position
         let range = document.createRange();
         let sel = window.getSelection()
-        let { idx, offset } = getChildNodeIdxAndOffset()
-        try { range.setStart(inputArea.value.childNodes[idx + 1], 1) }
+        // get current child node
+        off = cursorPosition.value
+        getChildNodeAndOffsetFromNestedNodes(inputArea.value)
+        let childnode = currentNode.value?.parentNode?.nextSibling // get next node
+        try {
+            range.setStart(childnode!, 1)
+        }
         catch (err: any) {
             console.log(err.message)
         }
@@ -328,17 +388,13 @@ function checkContacts() {
             <font-awesome-icon :icon="['fas', 'paperclip']" size='2x' />
         </div> -->
         <div class='inputBoxContainer'>
-            <div id='textarea' ref='inputArea' contenteditable='true' @keydown.enter.exact.prevent='sendMessage()'
-                @keydown.delete='enterDelete()' @keyup='analyzeInput($event)' @click='click()'>
+            <div id='textarea' ref='inputArea' contenteditable='true' 
+                placeholder='Type a message...'
+                @keydown.enter.exact.prevent='sendMessage()'
+                @keydown.shift.enter="enterShiftEnter($event)"
+                @keydown.space="enterSpace($event)" @keydown.delete='enterDelete()' @keyup='analyzeInput($event)'
+                @click='click()'>
             </div>
-            <!-- <textarea id='textarea' v-model='inputMessage' class='input'
-                placeholder='Type your message here...' 
-                @keydown.enter.exact.prevent='sendMessage'
-                @keydown.shift.enter.exact.prevent='nextLine' 
-                @keyup='analyzeInput($event)'
-                @click='analyzeInput($event)' 
-                ref='inputArea'>
-                </textarea> -->
         </div>
         <!-- <div class='iconContainer'>
             <font-awesome-icon :icon="['fas', 'microphone']" size='2x' />
@@ -380,6 +436,13 @@ function checkContacts() {
 
 #textarea:focus {
     outline: none;
+}
+
+[contenteditable][placeholder]:empty:before {
+  content: attr(placeholder);
+  position: absolute;
+  color: gray;
+  background-color: transparent;
 }
 
 .inputBoxContainer {
