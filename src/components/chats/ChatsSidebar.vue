@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-
-import timeformatter from '../../common/timeformatter'
+import { useTimeformatter } from '../../composables/timeformatter'
 import { useI18n } from 'vue-i18n'
+
+const { formatTime } = useTimeformatter()
 
 const { t, locale } = useI18n({
     inheritLocale: true,
@@ -73,7 +74,7 @@ const listData = [
                         {{ value.title }}
                     </div>
                     <div class="contentTimestamp">
-                        {{ timeformatter.format(parseInt(value.timestamp), locale) }}
+                        {{ formatTime(parseInt(value.timestamp), locale) }}
                     </div>
                 </div>
                 <div class="contentBody">

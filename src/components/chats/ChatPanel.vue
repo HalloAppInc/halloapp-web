@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, nextTick, watch } from 'vue'
 
-import timeformatter from '../../common/timeformatter'
-
 import { useI18n } from 'vue-i18n'
 
 import { useColorStore } from '../../stores/colorStore'
+import { useTimeformatter } from '../../composables/timeformatter'
 
 nextTick(() => {
     handleScroll()
@@ -14,6 +13,7 @@ nextTick(() => {
 })
 
 const colorStore = useColorStore()
+const { formatTime } = useTimeformatter()
 
 const chatPanelHeight = ref(0)
 
@@ -42,11 +42,10 @@ const data = computed(() => {
     let result = JSON.parse(JSON.stringify(props.messageList))
     for (var i = 0; i < result.length; i++) {
         if (result[i].type != 'timestamp') {
-            let time = timeformatter.format(parseInt(result[i].timestamp), <string>locale.value)
+            let time = formatTime(parseInt(result[i].timestamp), <string>locale.value)
             let res = appendSpaceForMsgInfo(props.messageList[i].message, time, result[i].type == 'outBound')
             result[i].message = res[0]
             result[i].font = res[1]
-            result[i].timestamp = time
         }
     }
 
@@ -217,7 +216,7 @@ function gotoProfile(e: any) {
                     <div class='msgInfoContainer'>
                         <div class='msgInfoContent'>
                             <div class='timestamp'>
-                                {{value.timestamp}}
+                                {{ formatTime(parseInt(value.timestamp), locale) }}
                             </div>
                         </div>
                     </div>
@@ -242,7 +241,7 @@ function gotoProfile(e: any) {
                     <div class='msgInfoContainer'>
                         <div class='msgInfoContent'>
                             <div class='timestamp'>
-                                {{value.timestamp}}
+                                {{ formatTime(parseInt(value.timestamp), locale) }}
                             </div>
                             <div class='iconContainer'>
                                 <font-awesome-icon :icon="['fas', 'check-double']" size='xs' />
@@ -257,7 +256,7 @@ function gotoProfile(e: any) {
                 <div class='chatBubble chatBubbleTime'>
                     <div class='timestampContainerBig'>
                         <div class='timestampBig'>
-                            {{ timeformatter.format(parseInt(value.timestamp), locale) }}
+                            {{ formatTime(parseInt(value.timestamp), locale) }}
                         </div>
                     </div>
                 </div>

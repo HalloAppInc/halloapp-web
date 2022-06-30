@@ -31,7 +31,6 @@ export const useMainStore = defineStore('main', {
         pushnumbers: {},
 
         isLoggedIntoApp: false,
-        isWaitingForUserToRegenKey: false,
         isConnectedToServer: false,
         haveAddedPublicKeyToServer: false,
 
@@ -64,7 +63,7 @@ export const useMainStore = defineStore('main', {
             this.mobilePublicKeyBase64 = ''
             this.isPublicKeyAuthenticated = false
             this.haveInitialHandshakeCompleted = false
-            // todo: delete all saved data
+            // todo: delete all saved data including from indexeddb
             // todo: remove public key from server? (what if there's no connection)
             this.isLoggedIntoApp = false
             
