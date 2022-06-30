@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue'
 import { useMainStore  } from '../../stores/mainStore'
 import { useColorStore } from '../../stores/colorStore'
 
+import CommentHeader from './CommentHeader.vue'
 import ChatPanel from '../chats/ChatPanel.vue'
 import InputBox from '../chats/InputBox.vue'
 
@@ -100,7 +101,10 @@ const chatInformation = ref('chatInfo')
 
     <div id='wrapper'>
 
-        <!-- chatting area -->
+        <div id='header'>
+            <CommentHeader @backClick="$emit('backClick')"/>
+        </div>
+
         <div id='content' ref='content'>
             <ChatPanel :message-list='messageList' />
         </div>

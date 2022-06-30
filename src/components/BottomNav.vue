@@ -55,7 +55,7 @@ const { t } = useI18n({
         </div>
     </div>
     
-    <div class="sideIconWrapper sideIconWrapperTop">
+    <div class="sideIconWrapper">
         <div :class="['sideIcon', {selected: mainStore.page == 'settings'}]" @click='mainStore.gotoPage("settings")'>
             <div class="icon">
                 <font-awesome-icon :icon="['fas', 'gear']" />
@@ -66,16 +66,6 @@ const { t } = useI18n({
         </div>
     </div>    
 
-    <div class="sideIconWrapper sideIconWrapperBottom" @click="connStore.logout()">
-        <div class="sideIcon">
-            <div class="icon">
-                <font-awesome-icon :icon="['fas', 'power-off']" />
-            </div>
-            <div class="sideIconLabel">
-                {{ t('general.logout') }}
-            </div>
-        </div>
-    </div>
 </div>
 
 </template>
@@ -85,13 +75,13 @@ const { t } = useI18n({
 #wrapper {
     width: 100%;
     height: 100%;
-    color: white;
+    color: gray;
 
-    padding: 70px 10px 30px 10px;
+    padding: 10px 10px 10px 10px;
 
     display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
+    flex-direction: row;
+    justify-content: space-evenly;
     align-items: center;
     gap: 20px;
 
@@ -105,16 +95,6 @@ const { t } = useI18n({
     
     align-items: center;
 }
-.sideIconWrapperTop {
-    flex: 1 0 auto;
-    justify-self: flex-end;
-}
-
-.sideIconWrapperBottom {
-    flex: 0 0 auto;
-    justify-self: flex-end;
-    
-}
 
 .selected {
     color: v-bind(primaryBlue);
@@ -125,8 +105,8 @@ const { t } = useI18n({
     font-size: 14px;
 
     display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
+    flex-direction: column;
+    justify-content: center;
     align-items: center;
     gap: 5px;
 }
@@ -138,7 +118,6 @@ const { t } = useI18n({
 }
 
 .sideIcon:hover {
-    /* color: v-bind(primaryBlue); */
     color: v-bind(primaryBlue);
     cursor: pointer;
 }
@@ -147,12 +126,6 @@ const { t } = useI18n({
     font-size: 11px;
     white-space: nowrap;
     justify-self: flex-start;
-}
-
-@media only screen and (max-width: 800px) {
-    .sideIconLabel {
-        display: none;
-    }
 }
 
 </style>

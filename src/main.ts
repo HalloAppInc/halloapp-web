@@ -10,6 +10,7 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome"
 import {
     faAngleDown,
+    faAngleLeft,
     faArrowLeft,
     faBell,
     faCheckDouble,
@@ -34,6 +35,7 @@ import {
 
 library.add(
     faAngleDown,
+    faAngleLeft,
     faArrowLeft,
     faBell,
     faCheckDouble,

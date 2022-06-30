@@ -62,14 +62,19 @@ const listData = [
     },          
 ]
 
-
 function commentsClick() {
     if (listBoxWidth.value == '100%') {
-        listBoxWidth.value = '500px'
+        let width = '500px'
+        if (mainStore.isMobile) {
+            width = '0px'
+        }
+        listBoxWidth.value = width
         showComments.value = true
+        mainStore.homePanel = 'comments'
     } else {
         listBoxWidth.value = '100%'
         showComments.value = false
+        mainStore.homePanel = ''
     }
 }
 
@@ -88,7 +93,7 @@ function commentsClick() {
  
     
     <div v-if="showComments" class="comments">
-        <Comment></Comment>
+        <Comment @backClick="commentsClick"></Comment>
     </div>
   
 </div>
