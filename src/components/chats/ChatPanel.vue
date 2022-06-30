@@ -46,6 +46,7 @@ const data = computed(() => {
             let res = appendSpaceForMsgInfo(props.messageList[i].message, time, result[i].type == 'outBound')
             result[i].message = res[0]
             result[i].font = res[1]
+            result[i].timestamp = time
         }
     }
 
@@ -216,7 +217,7 @@ function gotoProfile(e: any) {
                     <div class='msgInfoContainer'>
                         <div class='msgInfoContent'>
                             <div class='timestamp'>
-                                {{ timeformatter.format(parseInt(value.timestamp), locale) }}
+                                {{value.timestamp}}
                             </div>
                         </div>
                     </div>
@@ -241,7 +242,7 @@ function gotoProfile(e: any) {
                     <div class='msgInfoContainer'>
                         <div class='msgInfoContent'>
                             <div class='timestamp'>
-                                {{ timeformatter.format(parseInt(value.timestamp), locale) }}
+                                {{value.timestamp}}
                             </div>
                             <div class='iconContainer'>
                                 <font-awesome-icon :icon="['fas', 'check-double']" size='xs' />
