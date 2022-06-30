@@ -4,9 +4,11 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { useMainStore } from '../../stores/mainStore'
+import { useConnStore } from '../../stores/connStore'
 import { useColorStore } from '../../stores/colorStore'
 
 const mainStore = useMainStore()
+const connStore = useConnStore()
 const colorStore = useColorStore()
 
 const { t } = useI18n({
@@ -122,6 +124,18 @@ const headerColor = computed(() => {
                             </div>
                         </div>
                     </div>
+
+                    <div class="container" @click="connStore.logout()">
+                        <div class="iconContainer">
+                            <font-awesome-icon :icon="['fas', 'power-off']" size="lg" />
+                        </div>
+                        <div class="textContainer">
+                            <div class="contentTextBody">
+                                {{ t('general.logout') }}
+                            </div>
+                        </div>
+                    </div>
+                    
                 </div>
             </div>
         </div>
@@ -236,7 +250,6 @@ const headerColor = computed(() => {
     font-weight: 600;
     font-size: large;
     padding: 25px 15px 0px 15px;
-
 
     flex: 1 1 auto;
 

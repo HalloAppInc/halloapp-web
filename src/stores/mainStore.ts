@@ -42,6 +42,7 @@ export const useMainStore = defineStore('main', {
         mobilePublicKeyBase64: '', 
 
         page: 'home',
+        homePanel: '',
         settingsPage: '',
 
         sounds: false,

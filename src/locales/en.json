@@ -1,4 +1,7 @@
 {
+    "general": {
+        "logout": "Log out"
+    },
     "login": {
         "howtoTitle": "To use HalloApp on your computer:",
         "howtoStepOne": "1. Open HalloApp on your phone",
@@ -10,8 +13,7 @@
         "home": "Home",
         "groups": "Groups",
         "chats": "Chats",
-        "settings": "Settings",
-        "exit": "Log out"
+        "settings": "Settings"
     },
     "post": {
         "more": "more",
