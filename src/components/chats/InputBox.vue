@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 
 import { useHAText } from '../../composables/haText'
 
@@ -11,11 +11,15 @@ const { processText } = useHAText()
 
 const props = defineProps(['messageList', 'contactList'])
 
+const inputMessage = ref('')
+
 const updateContent = ref(false)
 
 const cursorPosition = ref(0)
 
 const showContacts = ref(false)
+
+const selectAllFromInputBox = ref(false)
 
 const contactPosition = ref(-1)
 
@@ -59,21 +63,16 @@ function sendMessage() {
 }
 
 
-// test if there are even number of */_/~ in input
-function havePairOfMarkDown(input: string, sign: string) {
+// test if there are even number of ~|_|* in input
+function havePairOfMarkDownOrNextToMarkDown(input: string, sign: string) {
     let numOfOccurrence = input.split(sign).length - 1
+    const signList = ['*', '~', '-', '@']
     if (numOfOccurrence % 2 == 0) {
         return true
     }
-    // if input ~/_/* is next to ~/_/*
-    else if (input && (input[cursorPosition.value - 2] == '*' ||
-        input[cursorPosition.value - 2] == '~' ||
-        input[cursorPosition.value - 2] == '_' ||
-        input[cursorPosition.value - 2] == '@' ||
-        input[cursorPosition.value] == '*' ||
-        input[cursorPosition.value] == '~' ||
-        input[cursorPosition.value] == '_' ||
-        input[cursorPosition.value] == '@')) {
+    // if input ~|_|* is next to ~|_|*
+    else if (signList.includes(input[cursorPosition.value - 2]) || 
+        signList.includes(input[cursorPosition.value])) {
         return true
     }
     return false
@@ -83,58 +82,77 @@ function havePairOfMarkDown(input: string, sign: string) {
 // if the input creates a new markdown sign pair, return true
 function needUpdate(inputChar: string) {
     let result = false
-
+    const signList = ['*', '~', '_', '@']
+    const keyList = ['`', '8', '-', '2']
     // get input and input character
-    const input = inputArea.value?.innerText.replaceAll('\n', '')
-    // if input is */_/~
-    if (input && input[cursorPosition.value - 1] == '*') {
-        result = havePairOfMarkDown(input, '*')
+    const input = inputArea.value?.innerText.replaceAll('\n', '')!
+    if (signList.includes(input[cursorPosition.value - 1]) && keyList.includes(inputChar)) {
+        inputChar = input[cursorPosition.value - 1]
     }
-    else if (input && input[cursorPosition.value - 1] == '_') {
-        result = havePairOfMarkDown(input, '_')
+
+    totalOffset = cursorPosition.value
+    currentNode.value = null
+    getChildNodeAndOffsetFromNestedNodes(inputArea.value!, false)
+    // console.log('in needUpdate:', currentNode.value, currentNode.value!.parentElement!.nodeName)
+
+    // if input is ~|_|*
+    if (inputChar == '*') {
+        result = havePairOfMarkDownOrNextToMarkDown(input, '*')
     }
-    else if (input && input[cursorPosition.value - 1] == '~') {
-        result = havePairOfMarkDown(input, '~')
+    else if (inputChar == '_') {
+        result = havePairOfMarkDownOrNextToMarkDown(input, '_')
+    }
+    else if (inputChar == '~') {
+        result = havePairOfMarkDownOrNextToMarkDown(input, '~')
+    }
+    // if cmd + A select all the text in input box, do not update content
+    else if (selectAllFromInputBox.value == true) {
+        selectAllFromInputBox.value = false
+        result = false
+    }
+    else if (currentNode.value!.parentElement!.nodeName == 'SPAN') {
+        result = true
     }
     // the input position is next to <span style="color=gray">
-    else if (input && (input[cursorPosition.value - 2] == '*' ||
-        input[cursorPosition.value - 2] == '~' ||
-        input[cursorPosition.value - 2] == '_' ||
-        input[cursorPosition.value - 2] == '@' ||
-        input[cursorPosition.value] == '*' ||
-        input[cursorPosition.value] == '~' ||
-        input[cursorPosition.value] == '_' ||
-        input[cursorPosition.value] == '@')) {
+    /* else if (signList.includes(input[cursorPosition.value - 2]) || 
+        signList.includes(input[cursorPosition.value])) {
         result = true
+    } */
+    else {
+        // chrome will automatically add a <font> to wrap the new input,
+        // if the deleted one starts with a valid markdown sign ~|*|_.
+        // delete the <font> by reparse the input text and update content.
+        for(let i = 0; i < inputArea.value!.childNodes.length; i++) {
+            if (inputArea.value!.childNodes[i].nodeName == 'FONT') {
+                console.log('bug!')
+                result= true
+                break
+            }
+        }
     }
 
     updateContent.value = result
 }
 
 
-// for keyDown delete, check if update is needed
 function enterDelete(e: any) {
     // if inputbox is empty
     if (inputArea.value?.innerText == '') {
-        while (inputArea.value.firstChild) {
-            inputArea.value.removeChild(inputArea.value.firstChild);
-        }
-        // inputArea.value?.innerHTML == ''
+        inputArea.value?.innerHTML == ''
         return
     }
-
     let result = false
-    const input = inputArea.value?.innerText.replaceAll('\n', '')
-    if (input && input[cursorPosition.value - 1] == '*') {
+    const input = inputArea.value?.innerText.replaceAll('\n', '')!
+    if (input[cursorPosition.value - 1] == '*') {
         result = true // havePairOfMarkDown(input, '*')
     }
-    else if (input && input[cursorPosition.value - 1] == '~') {
+    else if (input[cursorPosition.value - 1] == '~') {
         result = true // havePairOfMarkDown(input, '~')
     }
-    else if (input && input[cursorPosition.value - 1] == '_') {
+    else if (input[cursorPosition.value - 1] == '_') {
         result = true // havePairOfMarkDown(input, '_')
     }
-    else if (input && input[cursorPosition.value - 1] == '@') {
+    else if (input[cursorPosition.value - 1] == '@') {
         result = true // havePairOfMarkDown(input, '_')
     }
     // delete <span> @contact </span>
@@ -153,9 +171,35 @@ function enterDelete(e: any) {
             }
         }
     }
-
     updateContent.value = result
 }
+
+// for keyDown delete, check if update is needed
+/* function enterDelete(e: any) {
+    // if inputbox is empty
+    if (inputArea.value!.innerText.trim().length == 0) {
+        inputArea.value!.innerHTML = ''
+        return
+    }
+
+    let result = true
+    totalOffset = cursorPosition.value
+    currentNode.value = null
+    getChildNodeAndOffsetFromNestedNodes(inputArea.value!, false)
+    console.log('in eneterDelete:', currentNode.value, nodeOffset.value)
+    // delete <span> @contact </span>
+    if (currentNode.value!.parentElement!.nodeName == 'SPAN' &&
+        currentNode.value!.textContent!.includes('@')) {
+        if (nodeOffset.value == currentNode.value!.textContent!.length) {
+            currentNode.value!.parentElement?.remove()
+            e.preventDefault(e)
+            result = false
+        }
+        // if delete middle character in mention, do not delete the whole span
+    }
+
+    updateContent.value = true
+} */
 
 
 // block first character to be space
@@ -196,24 +240,25 @@ function getCursorLine() {
         return 1
     }
     // collapse selection to end
-    window.getSelection()!.collapseToEnd();
-    const sel = window.getSelection()!;
-    const range = sel.getRangeAt(0);
+    window.getSelection()!.collapseToEnd()
+    const sel = window.getSelection()!
+    const range = sel.getRangeAt(0)
     // select to top of editable
-    range.setStart(editable.firstChild!, 0);
+    range.setStart(editable.firstChild!, 0)
     // do not use 'this' sel anymore since the selection has changed
-    const content = window.getSelection()!.toString();
-    const text = JSON.stringify(content);
-    const lines = (text.match(/\\n/g) || []).length + 1;
+    const content = window.getSelection()!.toString()
+    const text = JSON.stringify(content)
+    const lines = (text.match(/\\n/g) || []).length + 1
 
     // clear selection
-    window.getSelection()!.collapseToEnd();
+    window.getSelection()!.collapseToEnd()
     return lines
 }
 
 
 // for keyUp, check if update is needed
 function analyzeInput(e: any) {
+
     // get cursor position
     getCursorPosition()
 
@@ -227,37 +272,37 @@ function analyzeInput(e: any) {
     }
     
     // check if update innerHTML is needed, do not respond to these keys
-    if (/* e.keyCode != 8 && */ // backspace
+    if (!updateContent.value &&
+        e.keyCode != 8 && // backspace
         e.keyCode != 13 && // Enter
         e.keyCode != 16 && // Shift
         e.keyCode != 37 && // ArrowLeft
         e.keyCode != 38 && // ArrowUp
         e.keyCode != 39 && // ArrowRight
-        e.keyCode != 40 // ArrowDown
-        /* e.keyCode != 91 && */ // left window key
+        e.keyCode != 40 && // ArrowDown
+        e.keyCode != 91 // cmd on mac
         /* e.keyCode != 93 */// select key (Context Menu)
         ) {
-        if (!updateContent.value) {
-            needUpdate(e.ctrlKey)
-        }
-
+        needUpdate(e.key)
     }
 
+    console.log('enter key=',e.key,'need update?=',updateContent.value)
+
     // if need to update, show markdown 
-    if (updateContent.value) {
+    if (updateContent.value){
         // update the input area
         if (inputArea.value) {
             inputArea.value.innerHTML = processText(inputArea.value?.innerText, props.contactList, false, 100, true).html
         }
         // set cursor to the end
         if (inputArea.value) {
-            let range = document.createRange();
+            let range = document.createRange()
             let sel = window.getSelection()
             totalOffset = cursorPosition.value
             currentNode.value = null
             nodeOffset.value = -1
             getChildNodeAndOffsetFromNestedNodes(inputArea.value)
-            // console.log("in Analysis", e.key,nodeOffset.value, currentNode.value)
+            // console.log("in Analysis", nodeOffset.value, currentNode.value)
             if (currentNode.value) {
                 range.setStart(currentNode.value!, nodeOffset.value)
                 range.collapse(true)
@@ -270,6 +315,8 @@ function analyzeInput(e: any) {
         updateContent.value = false
     }
 
+    inputMessage.value = inputArea.value!.innerText
+    console.log(inputMessage.value)
 }
 
 
@@ -286,11 +333,17 @@ function click() {
 
 let totalOffset = 0
 // get childnode idx and offset from cursorPosition
-function getChildNodeAndOffsetFromNestedNodes(node: Node) {
+function getChildNodeAndOffsetFromNestedNodes(node: Node, countBR: boolean = true) {
+    if (countBR && node.nodeName == 'BR') {
+        if (totalOffset == 0) {
+            currentNode.value = node
+            nodeOffset.value = totalOffset
+        }
+    }
     // only count textnode
     if (node.nodeType == Node.TEXT_NODE) {
         let len = node.textContent!.length
-        // console.log(node, totalOffset, len)
+        // console.log(node, totalOffset, len, currentNode.value?.parentElement)
         if (totalOffset > 0) {
             if (totalOffset <= len) {
                 currentNode.value = node
@@ -305,7 +358,7 @@ function getChildNodeAndOffsetFromNestedNodes(node: Node) {
     else {
         let nodeNextChild = node.firstChild
         while (nodeNextChild) {
-            getChildNodeAndOffsetFromNestedNodes(nodeNextChild)
+            getChildNodeAndOffsetFromNestedNodes(nodeNextChild, countBR)
             nodeNextChild = nodeNextChild.nextSibling
         }
     }
@@ -315,17 +368,15 @@ function getChildNodeAndOffsetFromNestedNodes(node: Node) {
 function addContactToInputBox(contact: string) {
     if (inputArea.value) {
         let numOfLine = getCursorLine()
-        // add a space to the end of mention
-        // if cusor is at the end of text
-        if (contactPosition.value == inputArea.value.innerText.length - (numOfLine - 1)) {
-            let newText = inputArea.value.innerText.substring(0, contactPosition.value + (numOfLine - 1))
-                + contact + inputArea.value.innerText.substring(cursorPosition.value + (numOfLine - 1))
+        // if cursor is at the end of text, add &nbsp after mention
+        if (inputArea.value.innerText.length - (numOfLine - 1) == contactPosition.value) {
+            let newText = inputArea.value.innerText.substring(0, contactPosition.value + (numOfLine - 1)) + contact
             inputArea.value.innerHTML = processText(newText, props.contactList, false, 100, true).html + '&nbsp;'
-
         }
+        // if cursor is at the middle of text, add space after mention
         else {
             let newText = inputArea.value.innerText.substring(0, contactPosition.value + (numOfLine - 1))
-                + contact + ' ' + inputArea.value.innerText.substring(cursorPosition.value + (numOfLine - 1))
+            + contact + ' ' + inputArea.value.innerText.substring(cursorPosition.value + (numOfLine - 1))
             inputArea.value.innerHTML = processText(newText, props.contactList, false, 100, true).html
         }
         showContacts.value = false
@@ -337,12 +388,11 @@ function addContactToInputBox(contact: string) {
         // get current child node
         totalOffset = cursorPosition.value
         getChildNodeAndOffsetFromNestedNodes(inputArea.value)
-        let childnode = currentNode.value?.parentNode?.nextSibling // get next node
+        let childnode = currentNode.value?.parentNode?.nextSibling! // get next node
         /* inputArea.value.childNodes.forEach((val, key) => {
             console.log(key, val, val.textContent?.length)
-        })
-        console.log(childnode) */
-        range.setStart(childnode!, 1)
+        } */
+        range.setStart(childnode, 1)
         range.collapse(true)
         if (sel) {
             sel.removeAllRanges()
@@ -359,8 +409,8 @@ function checkContacts() {
         const input = inputArea.value.innerText.replaceAll('\n', '')
         // cursor stops exactly at @
         if (input[cursorPosition.value - 1] == '@') {
-            showContacts.value = true
             chatBoxHeight.value = chatBox.value!.clientHeight // update offset of contact list
+            showContacts.value = true
             contactPosition.value = cursorPosition.value
         }
         // cursor stops after @
@@ -392,6 +442,7 @@ function checkContacts() {
 }
 
 function selectAll() {
+    selectAllFromInputBox.value = true
 }
 
 </script>
@@ -424,9 +475,11 @@ function selectAll() {
         </div> -->
         <div class='inputBoxContainer'>
             <div id='textarea' ref='inputArea' contenteditable='true' placeholder='Type a message...'
-                @keydown.enter.exact.prevent='sendMessage()' @keydown.shift.enter="enterShiftEnter($event)"
-                @keydown.space="enterSpace($event)" @keydown.delete='enterDelete($event)' @keyup='analyzeInput($event)'
-                @keydown.meta.ctrl='selectAll()'
+                @keydown.enter.exact.prevent='sendMessage()' 
+                @keydown.shift.enter="enterShiftEnter($event)"
+                @keydown.delete="enterDelete($event)"
+                @keydown.space="enterSpace($event)" @keyup='analyzeInput($event)'
+                @keydown.a.meta='selectAll()'
                 @click='click()'>
             </div>
         </div>
