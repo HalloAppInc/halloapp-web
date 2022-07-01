@@ -10,7 +10,7 @@ export function useHAText() {
 
         if (contactList) {
             for (var i = 0; i < contactList.length; i++) {
-                result = result.replaceAll('@' + contactList[i],'[[aa]]' + '@' + contactList[i] + '[[/aa]]')
+                result = result.replaceAll('@' + contactList[i], '[[aa]]' + '@' + contactList[i] + '[[/aa]]')
             }
         }
 
@@ -142,8 +142,8 @@ export function useHAText() {
             .replaceAll('[[/s]]', '</s>')
             .replaceAll('[[b]]', '<b>')
             .replaceAll('[[/b]]', '</b>')
-            .replaceAll('[[aa]]', "<a class='mention'>")
-            .replaceAll('[[/aa]]', "</a>")
+            .replaceAll('[[aa]]', '<a class="mention">')
+            .replaceAll('[[/aa]]', '</a>')
 
             .replaceAll('[[a]]', '<a')
             .replaceAll('[[aAttr]]', '')
@@ -162,6 +162,7 @@ export function useHAText() {
             .replaceAll('[[b]]', '<span style="color:gray">*</span><b>')
             .replaceAll('[[/b]]', '</b><span style="color:gray">*</span>')
             .replaceAll('[[aa]]', '<span style="color:#6495ED">')
+            .replaceAll('[[/aa]]&nbsp;', '[[/aa]]')
             .replaceAll('[[/aa]]', '</span>')
             .replaceAll('[[a]]', '<a')
             .replaceAll('[[aAttr]]', '')
