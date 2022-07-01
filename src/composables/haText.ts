@@ -17,11 +17,81 @@ export function useHAText() {
         return result
     }
 
+    function strReplaceCharAt(str: any, index: any, subStr: any) {
+        if (index > str.length - 1) { return str }
+        return str.substring(0, index) + subStr + str.substring(index + 1)
+    }
+
     function decorateTextWithMarkdownPlaceholders(text: any) {
-        let result = text
-            .replace(/((?:^|[^\\])(?:\\.)*)\_(?=[^\s])((\\.|[^_])*)\_/g, '$1[[i]]$2[[/i]]')
-            .replace(/((?:^|[^\\])(?:\\.)*)\~(?=[^\s])((\\.|[^~])*)\~/g, '$1[[s]]$2[[/s]]')
-            .replace(/((?:^|[^\\])(?:\\.)*)\*(?=[^\s])((\\.|[^*])*)\*/g, '$1[[b]]$2[[/b]]')
+        let splitter = new GraphemeSplitter()
+        const graphemes = splitter.splitGraphemes(text)
+        const markdownTags = ['~', '*', '_']
+        const unpaired = 'unpaired'
+        const opening = 'opening'
+        const closing = 'closing'
+    
+        let result = ''
+        let foundTags = []
+
+        for (let i = 0; i < graphemes.length; i++) {
+            
+            const char = graphemes[i]
+
+            if (char == '\n') {
+
+                /* remove any unpaired tags since we don't pair after newlines (ios logic) */
+                let w = foundTags.length
+                while (w--) {
+                    if (foundTags[w].type == unpaired) { 
+                        foundTags.splice(w, 1)
+                    } 
+                }
+
+            } else if (markdownTags.includes(char)) {
+
+                /* find an unpaired tag and close it if found */
+                let foundUnpaired = false
+                for (let j = foundTags.length - 1; j >= 0; j--) {
+                    let foundTag: any = foundTags[j]
+                    if (foundTag.tag == char && foundTag.type == unpaired) {
+                        foundTags[j].type = opening
+                        foundUnpaired = true
+                        break
+                    }
+                }
+
+                if (foundUnpaired) {
+                    foundTags.push({ tag: char, index: i, type: closing })
+                } else {
+                    foundTags.push({ tag: char, index: i, type: unpaired })
+                }
+            }
+    
+            result += char
+        }
+
+        while (foundTags.length > 0) {
+            const tag: any = foundTags.pop() // start from end or else indexes will not match after replacement
+            if (tag.type == unpaired) {
+                continue
+            }
+            let placeholderTag = ''
+            if (tag.tag == '*') {
+                placeholderTag = 'b]]'
+            } else if (tag.tag == '~') {
+                placeholderTag = 's]]'
+            } else if (tag.tag == '_') {
+                placeholderTag = 'i]]'
+            }
+
+            if (tag.type == opening) {
+                placeholderTag = '[[' + placeholderTag
+            } else if (tag.type == closing) {
+                placeholderTag = '[[/' + placeholderTag
+            }
+            result = strReplaceCharAt(result, tag.index, placeholderTag)
+        }
+
         return result
     }
 
@@ -68,7 +138,7 @@ export function useHAText() {
         for (let i = 0; i < graphemes.length; i++) {
             if (charCount >= maxCharacters) { break }
 
-            /* if matcing closing tags are found, pop them off the queue */
+            /* if matching closing tags are found, pop them off the queue */
             if ((i + 5) < graphemes.length) {
                 const subStr = graphemes.slice(i, i + 6).join('')
                 const lastClosingTag = closingTagsQueue[closingTagsQueue.length - 1]
