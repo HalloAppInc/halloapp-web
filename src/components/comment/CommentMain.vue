@@ -10,6 +10,8 @@ import InputBox from '../chats/InputBox.vue'
 const mainStore = useMainStore()
 const colorStore = useColorStore()
 
+const props = defineProps(['postID'])
+
 const content = ref<HTMLElement | null>(null)
 
 const messageList = ref([
@@ -91,10 +93,6 @@ const messageNumber = computed(() => {
     return messageList.value.length
 })
 
-const chatName = ref('chat1')
-
-const chatInformation = ref('chatInfo')
-
 </script>
 
 <template>
@@ -102,7 +100,7 @@ const chatInformation = ref('chatInfo')
     <div id='wrapper'>
 
         <div id='header'>
-            <CommentHeader @backClick="$emit('backClick')"/>
+            <CommentHeader :postID='postID' @backClick="$emit('backClick')"/>
         </div>
 
         <div id='content' ref='content'>

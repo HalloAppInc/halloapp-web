@@ -64,10 +64,6 @@ const hoverColor = computed(() => {
 
 // deal with different keydown: enter, enter+shift, cmd+a, space, delete
 function analyzeKeyDown(e: any) {
-    /* console.log('shift=', e.shiftKey, 'cmd=', e.metaKey, 'enter=', e.keyCode == 13,
-        'space=', e.keyCode == 32, 'delete=', e.keyCode == 8, 'A=', e.keyCode == 65, 
-        '`=', e.keyCode == 192, '-=', e.keyCode == 189, '8=', e.keyCode == 56) */
-
     // delete
     if (e.keyCode == 8) {
         // if inputbox is empty, clean all element inside
@@ -111,7 +107,6 @@ function analyzeKeyDown(e: any) {
     }
     // cmd + A, select all
     else if ((e.metaKey || e.ctrlKey) && e.keyCode == 65) {
-        // console.log('select All')
         disableUpdate.value = true
     }
     // space
@@ -174,12 +169,6 @@ function needUpdate(inputChar: string) {
     currentNode.value = null
     totalOffset = cursorPosition.value
     getChildNodeAndOffsetFromNestedNodes(inputArea.value!, false)
-    // console.log('curIdx=', cursorPosition.value, 'node=', currentNode.value, 'offset=', nodeOffset.value)
-    /* console.log(
-        numOfPairOldBTag, numOfPairNewBTag, '|', 
-        numOfPairOldITag, numOfPairNewITag, '|',
-        numOfPairOldSTag, numOfPairNewSTag, '|',
-        numOfMentionOld, numOfMentionNew) */
 
     // number of pari of ~|*|_ or mention changed, or maybe select area with ~|*|_ is replaced by ~|*|_ 
     if (numOfPairOldBTag != numOfPairNewBTag || (inputChar == '*' && numOfPairOldBTag == numOfPairNewBTag && numOfPairOldBTag > 0) ||
@@ -192,7 +181,6 @@ function needUpdate(inputChar: string) {
     else if (currentNode.value) {
         // if it is in wrong font color (the markdown sign's or mention's color)
         const node = currentNode.value as HTMLElement
-        // console.log('next to markdown or inside mention',inputArea.value!, currentNode.value!.parentElement)
         if (node.parentElement) {
             if (node.parentElement!.nodeName == 'SPAN') {
                 // update ~|*|_|mention's span
@@ -200,11 +188,6 @@ function needUpdate(inputChar: string) {
             }
         }
     }
-
-    /* console.log(
-        'inputChar=', inputChar, 'old=', oldInputMessage, 'new=', newInputMessage,  
-        'cursor=', cursorPosition.value,
-        'result=', result) */
 
     return result
 }
@@ -242,7 +225,6 @@ function analyzeKeyUp(e: any) {
             }
             // if need update
             if (needUpdate(inputChar)) {
-                // console.log('update')
                 updateInputContent()
                 updateCursorPosition()
             }
@@ -275,7 +257,6 @@ function updateCursorPosition(forAddMention: boolean = false) {
         node = currentNode.value!.parentNode!.nextSibling! // get next node
         offset = 1
     }
-    // console.log('node=',node,'offset=',offset)
     range.setStart(node, offset)
     range.collapse(true)
     sel.removeAllRanges()
@@ -332,7 +313,6 @@ function getChildNodeAndOffsetFromNestedNodes(node: Node, countBR: boolean = tru
     // only count textnode
     if (node.nodeType == Node.TEXT_NODE) {
         let len = node.textContent!.length
-        // console.log(node, 'totalOffset=',totalOffset,'len=',len, currentNode.value?.parentElement)
         if (totalOffset > 0) {
             if (totalOffset <= len) {
                 currentNode.value = node
