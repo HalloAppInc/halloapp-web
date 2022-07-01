@@ -13,6 +13,7 @@ import { useConnStore } from './stores/connStore'
 import { useColorStore } from './stores/colorStore'
 
 import { useI18n } from 'vue-i18n'
+import BottomNav from './components/BottomNav.vue'
 
 const mainStore = useMainStore()
 const connStore = useConnStore()
@@ -24,11 +25,27 @@ const { t } = useI18n({
 })
 
 const sideBarWidth: ComputedRef<string> = computed((): string => {
+    let widthPercent = '30%'
     if (mainStore.page == 'home') {
-        return '0%'
-    } else {
-        return '30%'
+        widthPercent = '0%'
+        return widthPercent
+    } 
+
+    if (mainStore.isMobile) {
+        widthPercent = '100%'
     }
+
+    return widthPercent
+})
+
+const showBottomNav: ComputedRef<boolean> = computed((): boolean => {
+    if (!mainStore.isMobile) { return false }
+
+    if (mainStore.homePanel == 'comments') {
+        return false
+    }
+
+    return true
 })
 
 if (process.env.NODE_ENV?.toString() == 'development') {
@@ -66,6 +83,8 @@ function applyPlatformSpecifics() {
 
     if ('ontouchstart' in document.documentElement && userAgent.match(/Mobi/)) {
         mainStore.isMobile = true
+    } else {
+        mainStore.isMobile = false
     }
 
     if (/iPad|iPhone|iPod/.test(userAgent) && !(<any>window).MSStream) {
@@ -135,7 +154,8 @@ function loadFonts() {
         </div>
 
         <div id='qrCodeBanner'>
-            <div id="howTo">
+            
+            <div v-if='!mainStore.isMobile' id="howTo">
                 <div class="howToTitle">
                     {{ t('login.howtoTitle') }}
                 </div>
@@ -156,7 +176,7 @@ function loadFonts() {
 
     <div v-else id="MainWrapper">
 
-        <div id="Sidestrip">
+        <div v-if='!mainStore.isMobile' id="Sidestrip">
             <Sidestrip/>
         </div>
 
@@ -166,6 +186,10 @@ function loadFonts() {
 
         <div id="MainPanel">
             <MainPanel/>
+        </div>
+
+        <div v-if='showBottomNav' id="BottomNav">
+            <BottomNav/>
         </div>
 
     </div>
@@ -341,6 +365,23 @@ h1, h2, h3, h4, h5, h6 {
 
 #MainPanel {
     flex: 1 1 auto;
+}
+
+#BottomNav {
+    position: absolute;
+    bottom: 0px;
+    z-index: 1;
+
+    width: 100%;
+
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px); /* mobile Safari */
+}
+
+@supports not ((-webkit-backdrop-filter: none) or (backdrop-filter: none)) {
+    #BottomNav {
+        background-color: rgb(243, 243, 240); /* firefox does not support backdrop-filter yet */
+    }
 }
 
 #Settings {
