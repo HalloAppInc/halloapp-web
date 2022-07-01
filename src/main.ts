@@ -31,6 +31,7 @@ import {
     faShieldHalved,
     faUserGroup,
     faUsers,
+    faXmark,
 } from "@fortawesome/free-solid-svg-icons"
 
 library.add(
@@ -55,7 +56,8 @@ library.add(
     faPowerOff,
     faShieldHalved,
     faUserGroup,
-    faUsers)
+    faUsers,
+    faXmark)
 
 const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)

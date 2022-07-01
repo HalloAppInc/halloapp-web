@@ -22,6 +22,8 @@ const mainStore = useMainStore()
 const { processText } = useHAText()
 const { formatTime, formatTimer } = useTimeformatter()
 
+const props = defineProps(['postID'])
+
 let pushname = (<any>window).han
 let avatar = (<any>window).haa
 
@@ -741,7 +743,7 @@ function expandText() {
                 <Avatar></Avatar>
                 <div id="nameBox">
                     <div id="name">
-                        {{ pushname }}
+                        {{ pushname }} - {{ props.postID }}
                     </div>
                     <div id="time">
                         {{ postTimestamp }}
