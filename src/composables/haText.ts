@@ -10,7 +10,7 @@ export function useHAText() {
 
         if (contactList) {
             for (var i = 0; i < contactList.length; i++) {
-                result = result.replaceAll('@' + contactList[i],'[[aa]]' + '@' + contactList[i] + '[[/aa]]')
+                result = result.replaceAll('@' + contactList[i], '[[aa]]' + '@' + contactList[i] + '[[/aa]]')
             }
         }
 
@@ -212,8 +212,8 @@ export function useHAText() {
             .replaceAll('[[/s]]', '</s>')
             .replaceAll('[[b]]', '<b>')
             .replaceAll('[[/b]]', '</b>')
-            .replaceAll('[[aa]]', "<a class='mention'>")
-            .replaceAll('[[/aa]]', "</a>")
+            .replaceAll('[[aa]]', '<a class="mention">')
+            .replaceAll('[[/aa]]', '</a>')
 
             .replaceAll('[[a]]', '<a')
             .replaceAll('[[aAttr]]', '')
@@ -222,7 +222,26 @@ export function useHAText() {
         return result
     }
 
-    function processText(text: any, mentions: any, truncateText: boolean = false, maxCharsWhenTruncated: number = 100) {
+    function populateTextWithHtmlForInputBox(text: string) {
+        let result = text
+            .replaceAll('\n', '<br>')
+            .replaceAll('[[i]]', '<span style="color:gray">_</span><i>')
+            .replaceAll('[[/i]]', '</i><span style="color:gray">_</span>')
+            .replaceAll('[[s]]', '<span style="color:gray">~</span><s>')
+            .replaceAll('[[/s]]', '</s><span style="color:gray">~</span>')
+            .replaceAll('[[b]]', '<span style="color:gray">*</span><b>')
+            .replaceAll('[[/b]]', '</b><span style="color:gray">*</span>')
+            .replaceAll('[[aa]]', '<span style="color:#6495ED">')
+            .replaceAll('[[/aa]]&nbsp;', '[[/aa]]')
+            .replaceAll('[[/aa]]', '</span>')
+            .replaceAll('[[a]]', '<a')
+            .replaceAll('[[aAttr]]', '')
+            .replaceAll('[[/aAttr]]', '>')
+            .replaceAll('[[/a]]', '</a>')
+        return result
+    }
+
+    function processText(text: any, mentions: any, truncateText: boolean = false, maxCharsWhenTruncated: number = 100, forInputBox: boolean = false) {
         let isTruncated: boolean = false
 
         const textWithMentions = populateTextWithMentions(text, mentions)
@@ -244,7 +263,7 @@ export function useHAText() {
         textToBeSanitized = truncatedText.text
 
         const santizedHtml = sanitizeHtml(textToBeSanitized)
-        const html = populateTextWithHtml(santizedHtml)
+        const html = forInputBox ? populateTextWithHtmlForInputBox(santizedHtml) : populateTextWithHtml(santizedHtml)
         return { html: html, isTruncated: isTruncated }
     }
 
