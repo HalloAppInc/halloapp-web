@@ -77,7 +77,6 @@ function analyzeKeyDown(e: any) {
             totalOffset = cursorPosition.value
             currentNode.value = null
             getChildNodeAndOffsetFromNestedNodes(inputArea.value!, false)
-            console.log('delete element=', inputArea.value!, currentNode.value)
             const node = currentNode.value! as HTMLElement
             if (node &&
                 node.parentElement!.nodeName == 'SPAN' &&
@@ -432,31 +431,26 @@ function checkContacts() {
 
 <style scoped>
 #textarea::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
+    width: 25px;
 }
 
 #textarea::-webkit-scrollbar-track-piece:start {
-    background: transparent;
     margin-top: 5px;
 }
 
 #textarea::-webkit-scrollbar-track-piece:end {
-    background: transparent;
     margin-bottom: 5px;
 }
 
 #textarea::-webkit-scrollbar-track {
-    background: transparent;
-    /* color of the tracking area */
+    box-shadow: inset 0 0 3px 3px transparent;
+    border: solid 5px transparent;
 }
 
 #textarea::-webkit-scrollbar-thumb {
-    background-color: rgb(172, 169, 169);
-    /* color of the scroll thumb */
-    border-radius: 5px;
-    border: 0px solid transparent;
-    /* creates padding around scroll thumb */
+    box-shadow: inset 0 0 10px 10px #bbbbbe;
+    border: solid 10px transparent;
+    border-radius: 100px;
 }
 
 .chatBoxTray {
@@ -484,7 +478,6 @@ function checkContacts() {
     border: 0.5px solid rgba(0, 0, 0, 0.15);
     box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.05);
     border-radius: 15px;
-    border-right: 5px solid transparent;
 
     caret-color: v-bind(cursorColor);
     color: v-bind(textColor);
