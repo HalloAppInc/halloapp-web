@@ -33,6 +33,14 @@ const nodeOffset = ref(0)
 
 const chatBoxHeight = ref(0)
 
+const headerColor = computed(() => {
+    return colorStore.header
+})
+
+const inBoundMsgBubbleColor = computed(() => {
+    return colorStore.inBoundMsgBubble
+})
+
 const cursorColor = computed(() => {
     return colorStore.cursor
 })
@@ -69,14 +77,17 @@ function analyzeKeyDown(e: any) {
         }
         // if delete mention <span>@contact</span>
         else {
+            getCursorPosition()
             totalOffset = cursorPosition.value
-            getChildNodeAndOffsetFromNestedNodes(inputArea.value!)
-            if (currentNode.value &&
-                currentNode.value!.parentElement!.nodeName == 'SPAN' &&
-                currentNode.value!.textContent!.includes('@')) {
-                if (nodeOffset.value == currentNode.value!.textContent!.length) {
-                    // console.log('delete element=', inputArea.value!, currentNode.value)
-                    currentNode.value!.parentElement?.remove()
+            currentNode.value = null
+            getChildNodeAndOffsetFromNestedNodes(inputArea.value!, false)
+            console.log('delete element=', inputArea.value!, currentNode.value)
+            const node = currentNode.value! as HTMLElement
+            if (node &&
+                node.parentElement!.nodeName == 'SPAN' &&
+                node.textContent!.includes('@')) {
+                if (nodeOffset.value == node.textContent!.length) {
+                    node.parentElement!.remove()
                     disableUpdate.value = true
                     e.preventDefault(e)
                 }
@@ -180,12 +191,12 @@ function needUpdate(inputChar: string) {
     // change if input next to ~|*|_|mention or inside mention
     else if (currentNode.value) {
         // if it is in wrong font color (the markdown sign's or mention's color)
-        // console.log('next to markdown or inside mention', currentNode.value!.parentElement)
-        if (currentNode.value.parentElement) {
-            if (currentNode.value.parentElement!.nodeName == 'SPAN') {
-                console.log('next to=', inputArea.value!, currentNode.value)
+        const node = currentNode.value as HTMLElement
+        // console.log('next to markdown or inside mention',inputArea.value!, currentNode.value!.parentElement)
+        if (node.parentElement) {
+            if (node.parentElement!.nodeName == 'SPAN') {
                 // update ~|*|_|mention's span
-                result = true
+                result = (newInputMessage != oldInputMessage)
             }
         }
     }
@@ -347,10 +358,9 @@ function addContactToInputBox(contact: string) {
     getCursorPosition()
     let numOfLine = getCursorLine()
     let newText = inputArea.value!.innerText.substring(0, contactPosition.value + (numOfLine - 1))
-        + contact + ' ' + inputArea.value!.innerText.substring(cursorPosition.value + (numOfLine - 1))
+        + contact + inputArea.value!.innerText.substring(cursorPosition.value + (numOfLine - 1))
     let newHTML = processText(newText, props.contactList, false, 100, true).html
     inputArea.value!.innerHTML = newHTML
-        console.log('"',newHTML, '"', console.log(inputArea.value))
     showContacts.value = false
     inputArea.value!.focus()
     // update cursor position
@@ -470,7 +480,7 @@ function checkContacts() {
 }
 
 .chatBoxTray {
-    background-color: #f0f2f5;
+    background-color: v-bind(headerColor);
     width: 100%;
     display: flex;
     flex-direction: row;
@@ -490,7 +500,7 @@ function checkContacts() {
     max-height: 110px;
     text-align: left;
 
-    background: #FFFFFF;
+    background: v-bind(inBoundMsgBubbleColor);
     border: 0.5px solid rgba(0, 0, 0, 0.15);
     box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.05);
     border-radius: 15px;
