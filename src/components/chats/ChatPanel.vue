@@ -8,11 +8,14 @@ import { useTimeformatter } from '../../composables/timeformatter'
 
 nextTick(() => {
     handleScroll()
-    gotoBottom()
+    gotoBottom('auto')
+    new ResizeObserver(setChatPanelHeight).observe(content.value!)
 })
 
 const colorStore = useColorStore()
 const { formatTime } = useTimeformatter()
+
+const chatPanelHeight = ref(0)
 
 const { locale } = useI18n({
     inheritLocale: true,
@@ -45,7 +48,7 @@ const data = computed(() => {
             result[i].font = res[1]
         }
     }
-    
+
     return result
 })
 
@@ -96,13 +99,22 @@ function appendSpaceForMsgInfo(msg: string, time: string, isOutBound: boolean) {
 
 // listen to msg list, when a new msg comes in, scroll to the bottom
 watch(messageNumber, () => {
-    // notifyMe()
     nextTick(() => {
-        content.value?.scrollTo(10000, content.value?.scrollHeight)
+        gotoBottom('smooth')
         handleScroll()
     });
-    
 })
+
+watch(chatPanelHeight, () => { 
+    nextTick(() => {
+        gotoBottom('auto')
+    });
+})
+
+function setChatPanelHeight() {
+    chatPanelHeight.value = content.value ? content.value.clientHeight : 0
+    // console.log(chatPanelHeight.value)
+}
 
 function handleScroll() {
     clearTimeout(handleScrollTimer)
@@ -122,7 +134,7 @@ function debouncedHandleScroll() {
 
         for (let i = staticTimestampList.length - 1; i >= 0; i--) { // start from most recent msg
             let staticTimestamp = staticTimestampList[i] as HTMLElement
-        
+
             if (staticTimestamp.offsetHeight > 0) {
 
                 let staticTimestampViewportOffset = staticTimestamp.getBoundingClientRect()
@@ -132,7 +144,7 @@ function debouncedHandleScroll() {
                 if (staticTimestampViewportOffset.top <= topAreaRelativeToContent) {
                     staticTimestamp.style.visibility = 'hidden'
                     // break to save a little bit of cycle since each run should hide at max one timestamp
-                    break 
+                    break
                 } else {
                     staticTimestamp.style.visibility = 'visible'
                 }
@@ -163,22 +175,22 @@ function debouncedHandleScroll() {
 
     /* toggle jump button visiblity */
     if (content.value &&
-        content.value.scrollTop + content.value.clientHeight < content.value.scrollHeight - 30) {
+        content.value.scrollTop + content.value.clientHeight < content.value.scrollHeight - 50) {
         showJumpDownButton.value = true
     }
     else {
         showJumpDownButton.value = false
-    }    
+    }
 }
 
 // jump to bottom
-function gotoBottom() {
-    // behavior can be instant/smooth/auto
-    content.value?.scrollTo({left: 0, top: content.value?.scrollHeight, behavior:'smooth'})
+function gotoBottom(type: ScrollBehavior | undefined) {
+    // behavior can be instant(auto)/smooth
+    content.value?.scrollTo({ left: 0, top: content.value?.scrollHeight, behavior: type })
 }
 
 function gotoProfile(e: any) {
-    let contactName = e.target.text.substring(1)
+    let contactName = e.target.innerText.substring(1)
     // go to user's profile page
 }
 </script>
@@ -197,7 +209,7 @@ function gotoProfile(e: any) {
                         </div>
                     </div>
                     <div class='chatTextContainer chatTextContainerInBound'>
-                        <!-- show message content appendSpaceForMsgInfo(value.message, timeformatter.format(parseInt(value.timestamp), locale), true)'-->
+                        <!-- show message content -->
                         <span v-html='value.message' :class="value.font ? 'onlyEmoji' : 'noOverflow'">
                         </span>
                     </div>
@@ -213,7 +225,7 @@ function gotoProfile(e: any) {
 
             <!-- outBound msg -->
             <div v-else-if="value.type == 'outBound'" class='contentTextBody contentTextBodyOutBound'
-                :class="idx == 0 || (idx != 0 && data[idx - 1].type != 'inBound') ? 'chatBubbleBigMargin' : 'chatBubbleSmallMargin'">
+                :class="idx == 0 || (idx != 0 && data[idx - 1].type != 'outBound') ? 'chatBubbleBigMargin' : 'chatBubbleSmallMargin'">
                 <div class='chatBubble chatBubbleoutBound'>
                     <div class='menuToggler menuTogglerOutBound'>
                         <div class='togglerIconContainer'>
@@ -221,7 +233,7 @@ function gotoProfile(e: any) {
                         </div>
                     </div>
                     <div class='chatTextContainer chatTextContainerOutBound'>
-                        <!-- show message content appendSpaceForMsgInfo(value.message, timeformatter.format(parseInt(value.timestamp), locale), true)-->
+                        <!-- show message content -->
                         <span v-html='value.message' :class="value.font ? 'onlyEmoji' : 'noOverflow'"
                             @click="gotoProfile($event)">
                         </span>
@@ -266,7 +278,7 @@ function gotoProfile(e: any) {
 
         <!-- jump down button -->
         <transition name='button'>
-            <div class='buttonContainer' v-show='showJumpDownButton' @click='gotoBottom()'>
+            <div class='buttonContainer' v-show='showJumpDownButton' @click="gotoBottom('smooth')">
                 <div class='buttonIconContainer' @click=''>
                     <font-awesome-icon :icon="['fas', 'angle-down']" size='lg' />
                 </div>

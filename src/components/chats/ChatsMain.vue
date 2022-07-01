@@ -86,7 +86,7 @@ const contactList = ref([
     "UserA",
     "UserB",
     "abcd123",
-    "?@#$%^&"
+    "?@#$%^&",
 ])
 
 const messageNumber = computed(() => {
