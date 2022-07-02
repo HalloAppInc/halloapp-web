@@ -78,14 +78,16 @@ function analyzeKeyDown(e: any) {
             totalOffset = cursorPosition.value
             currentNode.value = null
             getChildNodeAndOffsetFromNestedNodes(inputArea.value, false)
-            const node = currentNode.value! as HTMLElement
-            if (node &&
-                node.parentElement?.nodeName == 'SPAN' &&
-                node.textContent?.includes('@')) {
-                if (nodeOffset.value == node.textContent.length) {
-                    node.parentElement?.remove()
-                    disableUpdate.value = true
-                    e.preventDefault(e)
+            if (currentNode.value){
+                const node = currentNode.value as HTMLElement
+                if (node &&
+                    node.parentElement?.nodeName == 'SPAN' &&
+                    node.textContent?.includes('@')) {
+                    if (nodeOffset.value == node.textContent.length) {
+                        node.parentElement?.remove()
+                        disableUpdate.value = true
+                        e.preventDefault(e)
+                    }
                 }
             }
         }
@@ -253,17 +255,22 @@ function updateCursorPosition(forAddMention: boolean = false) {
     currentNode.value = null
     nodeOffset.value = -1
     getChildNodeAndOffsetFromNestedNodes(inputArea.value)
-    let node = currentNode.value!
-    let offset = nodeOffset.value
-    // if cursor is at front
-    if (!node) {
+    let node: Node
+    let offset: number
+    // normal situation
+    if (currentNode.value) {
+        node = currentNode.value
+        offset = nodeOffset.value
+        // if this is used for adding mention, move cursor one space after mention
+        if (forAddMention) {
+            node = node.parentNode?.nextSibling as Node// get next node
+            offset = 1
+        }
+    }
+    // if cursor is at front: currentNode.value == null 
+    else {
         node = inputArea.value?.childNodes[0] as Node
         offset = 0
-    }
-    // if this is used for adding mention, move cursor one space after mention
-    if (forAddMention) {
-        node = currentNode.value!.parentNode?.nextSibling as Node// get next node
-        offset = 1
     }
     range.setStart(node, offset)
     range.collapse(true)
