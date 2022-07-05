@@ -1,16 +1,15 @@
 <script setup lang="ts">
-
 import { ref, computed, watch } from 'vue'
+
 import { useColorStore } from '../../stores/colorStore'
 import { useMainStore  } from '../../stores/mainStore'
+
 import InputBox from './InputBox.vue'
 import ChatPanel from './ChatPanel.vue'
 import ChatHeader from './ChatHeader.vue'
 import ChatSettings from './ChatSettings.vue'
-import Popup from './Popup.vue'
 
 const colorStore = useColorStore()
-
 const mainStore = useMainStore()
 
 const content = ref<HTMLElement | null>(null)
@@ -90,20 +89,20 @@ const contactList = ref([
     "?@#$%^&",
 ])
 
-const messageNumber = computed(() => {
-    return messageList.value.length
-})
-
 const chatName = ref('chat1')
 
 const chatInformation = ref('chatInfo')
 
-watch(messageNumber, () => {
-    // notifyMe()
+const messageNumber = computed(() => {
+    return messageList.value.length
 })
 
 const chatBackground = computed(() => {
     return colorStore.chatBackground
+})
+
+watch(messageNumber, () => {
+    // notifyMe()
 })
 
 function notifyMe() {

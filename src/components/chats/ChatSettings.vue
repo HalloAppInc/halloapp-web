@@ -1,34 +1,29 @@
 <script setup lang="ts">
-
 import { ref, computed } from 'vue'
+
 import { useColorStore } from '../../stores/colorStore'
 import { useMainStore } from '../../stores/mainStore'
 
 const colorStore = useColorStore()
-
 const mainStore = useMainStore()
 
 const colorList = computed(() => {
     return colorStore.colorList
 })
-
 const chatBackground = computed(() => {
     return colorStore.chatBackground
 })
-
-const selectedColor = ref(chatBackground.value)
-
 const headerColor = computed(() => {
     return colorStore.header
 })
-
 const textColor = computed(() => {
     return colorStore.text
 })
-
 const iconColor = computed(() => {
     return colorStore.icon
 })
+
+const selectedColor = ref(chatBackground.value)
 
 function selectColor(color: string) {
     selectedColor.value = color

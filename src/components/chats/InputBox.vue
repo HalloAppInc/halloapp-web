@@ -2,7 +2,6 @@
 import { ref, computed } from 'vue'
 
 import { useHAText } from '../../composables/haText'
-
 import { useColorStore } from '../../stores/colorStore'
 
 const colorStore = useColorStore()
@@ -11,24 +10,19 @@ const { processText } = useHAText()
 
 const props = defineProps(['messageList', 'contactList'])
 
-const inputMessage = ref(<string>'')
-
-const inputMarkDownSign = ref('')
-
-const cursorPosition = ref(0)
-
-const showContacts = ref(false)
-
-const disableUpdate = ref(false)
-
-const contactPosition = ref(-1)
-
 const inputArea = ref(<HTMLElement | null>(null))
-
 const chatBox = ref(<HTMLElement | null>(null))
 
-const currentNode = ref(<Node | null>(null))
+// for input analyze
+const inputMessage = ref(<string>'')
+const inputMarkDownSign = ref('')
+const cursorPosition = ref(0)
+const contactPosition = ref(-1)
+const showContacts = ref(false)
+const disableUpdate = ref(false)
 
+// for cursor position
+const currentNode = ref(<Node | null>(null))
 const nodeOffset = ref(0)
 
 const chatBoxHeight = ref(0)
@@ -36,31 +30,24 @@ const chatBoxHeight = ref(0)
 const headerColor = computed(() => {
     return colorStore.header
 })
-
 const inBoundMsgBubbleColor = computed(() => {
     return colorStore.inBoundMsgBubble
 })
-
 const cursorColor = computed(() => {
     return colorStore.cursor
 })
-
 const textColor = computed(() => {
     return colorStore.text
 })
-
 const backgroundColor = computed(() => {
     return colorStore.background
 })
-
 const lineColor = computed(() => {
     return colorStore.line
 })
-
 const hoverColor = computed(() => {
     return colorStore.hover
 })
-
 
 // deal with different keydown: enter, enter+shift, cmd+a, space, delete
 function analyzeKeyDown(e: any) {
@@ -417,7 +404,6 @@ function checkContacts() {
     }
 
 }
-
 </script>
 
 <template>

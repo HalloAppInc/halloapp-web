@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { useColorStore } from '../../stores/colorStore'
-
-import { useMainStore } from '../../stores/mainStore'
-
 import { computed } from 'vue'
 
 import { useI18n } from 'vue-i18n'
+
+import { useColorStore } from '../../stores/colorStore'
+import { useMainStore } from '../../stores/mainStore'
 
 const { t } = useI18n({
     inheritLocale: true,
@@ -13,7 +12,6 @@ const { t } = useI18n({
 })
 
 const mainStore = useMainStore()
-
 const colorStore = useColorStore()
 
 const title = computed(() => {
@@ -37,15 +35,12 @@ const content = computed(() => {
 const backgroundColor = computed(() => {
     return colorStore.background
 })
-
 const textColor = computed(() => {
     return colorStore.text
 })
-
 const wraperColor = computed(() => {
     return colorStore.wraper
 })
-
 const shadowColor = computed(() => {
     return colorStore.shadow
 })
@@ -69,7 +64,7 @@ const shadowColor = computed(() => {
                     </div>
 
                     <div class='footer'>
-                        <div class='button' @click="$emit('OK');mainStore.gotoChatPage('chat')">
+                        <div class='button' @click="$emit('clickOk');mainStore.gotoChatPage('chat')">
                             {{ t('button.okButton') }}
                         </div>
                         <div class='button' @click="mainStore.gotoChatPage('chat')">

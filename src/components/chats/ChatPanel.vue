@@ -3,55 +3,38 @@ import { ref, computed, nextTick, watch, onMounted, onUnmounted } from 'vue'
 
 import { useI18n } from 'vue-i18n'
 
-import { useColorStore } from '../../stores/colorStore'
-
-import { useMainStore } from '../../stores/mainStore'
-
 import { useTimeformatter } from '../../composables/timeformatter'
+import { useColorStore } from '../../stores/colorStore'
+import { useMainStore } from '../../stores/mainStore'
 
 import Popup from './Popup.vue'
 
-const emits = defineEmits(["deleteMessage"])
-
-const { t } = useI18n({
-    inheritLocale: true,
-    useScope: 'global'
-})
-
-nextTick(() => {
-    handleScroll()
-    gotoBottom('auto')
-    new ResizeObserver(setChatPanelHeight).observe(content.value!)
-})
-
 const colorStore = useColorStore()
-
 const mainStore = useMainStore()
 
 const { formatTime } = useTimeformatter()
 
-const chatPanelHeight = ref(0)
-
-const { locale } = useI18n({
+const { t, locale } = useI18n({
     inheritLocale: true,
     useScope: 'global'
 })
 
 const props = defineProps(['messageList'])
 
+const emits = defineEmits(["deleteMessage"])
+
+const menu = ref<HTMLElement | null>(null)
 const content = ref<HTMLElement | null>(null)
+
+const floatMenuPositionX = ref(0)
+const floatMenuPositionY = ref(0)
+
+const chatPanelHeight = ref(0)
 
 let handleScrollTimer: any
 
-const menu = ref<HTMLElement | null>(null)
-
 const showJumpDownButton = ref(false)
-
 const showMenu = ref(false)
-
-const floatMenuPositionX = ref(0)
-
-const floatMenuPositionY = ref(0)
 
 const selectMessageId = ref(-1)
 
@@ -80,33 +63,32 @@ const data = computed(() => {
 const textColor = computed(() => {
     return colorStore.text
 })
-
 const outBoundMsgBubble = computed(() => {
     return colorStore.outBoundMsgBubble
 })
-
 const inBoundMsgBubble = computed(() => {
     return colorStore.inBoundMsgBubble
 })
-
 const timeBubble = computed(() => {
     return colorStore.timeBubble
 })
-
 const timestamp = computed(() => {
     return colorStore.timestamp
 })
-
 const hoverColor = computed(() => {
     return colorStore.hover
 })
-
 const lineColor = computed(() => {
     return colorStore.line
 })
-
 const backgroundColor = computed(() => {
     return colorStore.background
+})
+
+nextTick(() => {
+    handleScroll()
+    gotoBottom('auto')
+    new ResizeObserver(setChatPanelHeight).observe(content.value!)
 })
 
 // add extra space after text to fit time stamp and checkmarks
@@ -140,14 +122,14 @@ watch(messageNumber, (newVal, oldVal) => {
         nextTick(() => {
             gotoBottom('smooth')
             handleScroll()
-        });
+        })
     }
 })
 
 watch(chatPanelHeight, () => {
     nextTick(() => {
         gotoBottom('auto')
-    });
+    })
 })
 
 function setChatPanelHeight() {
@@ -235,6 +217,10 @@ function gotoProfile(e: any) {
 
 function openMenu(e: any, forInBound: boolean, idx: number) {
     showMenu.value = !showMenu.value
+    // if close menu
+    if (!showMenu.value) {
+        return
+    }
     selectMessageId.value = idx
 
     let bounds = e.target.getBoundingClientRect()
@@ -243,7 +229,11 @@ function openMenu(e: any, forInBound: boolean, idx: number) {
             floatMenuPositionX.value = window.outerWidth - bounds[key]
             // if its for inbound msg, make it align right; for outbound msg align left
             if (forInBound) {
-                floatMenuPositionX.value -= 200
+                nextTick(() => {
+                    if (menu.value) {
+                        floatMenuPositionX.value -= menu.value.clientWidth
+                    }
+                })
             }
         }
         else if (key == 'top') {
@@ -280,8 +270,9 @@ function closeMenu() {
     showMenu.value = false
 }
 
-onMounted(() => { document.addEventListener("click", closeMenu) }
-)
+onMounted(() => {
+    document.addEventListener("click", closeMenu)
+})
 
 onUnmounted(() => {
     document.removeEventListener("click", closeMenu)
@@ -401,7 +392,7 @@ onUnmounted(() => {
     </div>
 
     <!-- popup -->
-    <Popup @OK="$emit('deleteMessage', selectMessageId)" />
+    <Popup @click-ok="$emit('deleteMessage', selectMessageId)" />
 
 </template>
 
@@ -680,7 +671,7 @@ onUnmounted(() => {
 
 .menuContainer {
     display: flex;
-    flex-direction: vertical;
+    flex-direction: row;
     align-items: center;
 }
 
