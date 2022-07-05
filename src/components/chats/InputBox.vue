@@ -11,7 +11,7 @@ const { processText } = useHAText()
 
 const props = defineProps(['messageList', 'contactList'])
 
-const inputMessage = ref('')
+const inputMessage = ref(<string>'')
 
 const inputMarkDownSign = ref('')
 
@@ -32,6 +32,14 @@ const currentNode = ref(<Node | null>(null))
 const nodeOffset = ref(0)
 
 const chatBoxHeight = ref(0)
+
+const headerColor = computed(() => {
+    return colorStore.header
+})
+
+const inBoundMsgBubbleColor = computed(() => {
+    return colorStore.inBoundMsgBubble
+})
 
 const cursorColor = computed(() => {
     return colorStore.cursor
@@ -59,21 +67,27 @@ function analyzeKeyDown(e: any) {
     // delete
     if (e.keyCode == 8) {
         // if inputbox is empty, clean all element inside
+        // but due to webkit's bug, still can not clean <font> tag, need to detect it manually and delete it
         if (inputArea.value?.innerText == '') {
             inputArea.value?.innerHTML == ''
             return
         }
         // if delete mention <span>@contact</span>
         else {
+            getCursorPosition()
             totalOffset = cursorPosition.value
-            getChildNodeAndOffsetFromNestedNodes(inputArea.value!)
-            if (currentNode.value &&
-                currentNode.value!.parentElement!.nodeName == 'SPAN' &&
-                currentNode.value!.textContent!.includes('@')) {
-                if (nodeOffset.value == currentNode.value!.textContent!.length) {
-                    currentNode.value!.parentElement?.remove()
-                    disableUpdate.value = true
-                    e.preventDefault(e)
+            currentNode.value = null
+            getChildNodeAndOffsetFromNestedNodes(inputArea.value, false)
+            if (currentNode.value){
+                const node = currentNode.value as HTMLElement
+                if (node &&
+                    node.parentElement?.nodeName == 'SPAN' &&
+                    node.textContent?.includes('@')) {
+                    if (nodeOffset.value == node.textContent.length) {
+                        node.parentElement?.remove()
+                        disableUpdate.value = true
+                        e.preventDefault(e)
+                    }
                 }
             }
         }
@@ -83,7 +97,7 @@ function analyzeKeyDown(e: any) {
         // shift + enter, new line
         if (e.shiftKey) {
             // if input box is empty, not allow to enter new line
-            if (inputArea.value!.innerText.trim().length == 0) {
+            if (inputArea.value?.innerText.trim().length == 0) {
                 e.preventDefault(e)
             }
         }
@@ -100,7 +114,7 @@ function analyzeKeyDown(e: any) {
     // space
     else if (e.keyCode == 32) {
         // if input box is empty, not allow to enter space
-        if (inputArea.value!.innerText.trim().length == 0) {
+        if (inputArea.value?.innerText.trim().length == 0) {
             e.preventDefault(e)
         }
     }
@@ -126,7 +140,10 @@ function sendMessage() {
             message: processText(inputArea.value?.innerText.trim(), props.contactList).html,
             timestamp: Date.now() / 1000 | 0, //  get current time
         })
-        inputArea.value!.innerText = ''
+        // clean text inside input box
+        if (inputArea.value) {
+            inputArea.value.innerText = ''
+        }
     }
 }
 
@@ -142,9 +159,11 @@ function analyzeMouseMovement(e: any) {
 // check if the new input require update content or not
 function needUpdate(inputChar: string) {
     let result = false
+    // get the old and new input's HTML
     let newInputMessage = processText(inputArea.value?.innerText, props.contactList, false, 100, true).html
     let oldInputMessage = processText(inputMessage.value, props.contactList, false, 100, true).html
 
+    // count pair of ~|*|_ and number of mention
     let numOfPairOldBTag = oldInputMessage.split('<b>').length - 1
     let numOfPairNewBTag = newInputMessage.split('<b>').length - 1
     let numOfPairOldITag = oldInputMessage.split('<i>').length - 1
@@ -154,11 +173,12 @@ function needUpdate(inputChar: string) {
     let numOfMentionOld = oldInputMessage.split('<span style="color:#6495ED">@').length - 1
     let numOfMentionNew = newInputMessage.split('<span style="color:#6495ED">@').length - 1
 
+    // get element at cursor's position
     currentNode.value = null
     totalOffset = cursorPosition.value
-    getChildNodeAndOffsetFromNestedNodes(inputArea.value!, false)
+    getChildNodeAndOffsetFromNestedNodes(inputArea.value, false)
 
-    // number of pari of ~|*|_ or mention changed, or maybe select area with ~|*|_ is replaced by ~|*|_ 
+    // number of pair of ~|*|_ or mention changed, or maybe select area with ~|*|_ is replaced by new ~|*|_ 
     if (numOfPairOldBTag != numOfPairNewBTag || (inputChar == '*' && numOfPairOldBTag == numOfPairNewBTag && numOfPairOldBTag > 0) ||
         numOfPairOldITag != numOfPairNewITag || (inputChar == '_' && numOfPairOldITag == numOfPairNewITag && numOfPairOldITag > 0) ||
         numOfPairOldSTag != numOfPairNewSTag || (inputChar == '~' && numOfPairOldSTag == numOfPairNewSTag && numOfPairOldSTag > 0) ||
@@ -167,12 +187,12 @@ function needUpdate(inputChar: string) {
     }
     // change if input next to ~|*|_|mention or inside mention
     else if (currentNode.value) {
-        // if it is in wrong font color (the markdown sign's or mention's color)
+        // if in wrong font style because input inserted inside ~|*|_|mention's span
         const node = currentNode.value as HTMLElement
         if (node.parentElement) {
-            if (node.parentElement!.nodeName == 'SPAN') {
-                // update ~|*|_|mention's span
-                result = true
+            if (node.parentElement?.nodeName == 'SPAN') {
+                // update ~|*|_|mention's span to move the character outside of span
+                result = (newInputMessage != oldInputMessage)
             }
         }
     }
@@ -189,8 +209,8 @@ function analyzeKeyUp(e: any) {
     checkContacts()
 
     // if inputArea is empty, delete the remaining <span> and <div>
-    if (inputArea.value!.innerText.trim().length == 0) {
-        inputArea.value!.innerHTML = ''
+    if (inputArea.value && inputArea.value?.innerText.trim().length == 0) {
+        inputArea.value.innerHTML = ''
         return
     }
 
@@ -222,76 +242,94 @@ function analyzeKeyUp(e: any) {
             disableUpdate.value = false
         }
         // save the input text
-        inputMessage.value = inputArea.value!.innerText
+        if (inputArea.value) {
+            inputMessage.value = inputArea.value?.innerText
+        }
     }
 }
 
 function updateCursorPosition(forAddMention: boolean = false) {
     let range = document.createRange()
-    let sel = window.getSelection()!
+    let sel = window.getSelection()
     totalOffset = cursorPosition.value
     currentNode.value = null
     nodeOffset.value = -1
-    getChildNodeAndOffsetFromNestedNodes(inputArea.value!)
-    let node = currentNode.value!
-    let offset = nodeOffset.value
-    // if cursor is at front
-    if (!node) {
+    getChildNodeAndOffsetFromNestedNodes(inputArea.value)
+    let node: Node
+    let offset: number
+    // normal situation
+    if (currentNode.value) {
+        node = currentNode.value
+        offset = nodeOffset.value
+        // if this is used for adding mention, move cursor one space after mention
+        if (forAddMention) {
+            node = node.parentNode?.nextSibling as Node// get next node
+            offset = 1
+        }
+    }
+    // if cursor is at front: currentNode.value == null 
+    else {
         node = inputArea.value?.childNodes[0] as Node
         offset = 0
     }
-    // if this is used for adding mention, move cursor one space after mention
-    if (forAddMention) {
-        node = currentNode.value!.parentNode!.nextSibling! // get next node
-        offset = 1
-    }
     range.setStart(node, offset)
     range.collapse(true)
-    sel.removeAllRanges()
-    sel.addRange(range)
+    if (sel) {
+        sel.removeAllRanges()
+        sel.addRange(range)
+    }
 }
 
 function updateInputContent() {
-    inputArea.value!.innerHTML = processText(inputArea.value?.innerText, props.contactList, false, 100, true).html
+    if (inputArea.value) {
+        inputArea.value.innerHTML = processText(inputArea.value?.innerText, props.contactList, false, 100, true).html
+    }
 }
 
 // get cursor position 
 function getCursorPosition() {
-    let element = document.querySelector('[contenteditable]')!
-    let sel = window.getSelection()!
-    let range = sel.getRangeAt(0)
-    let preCursorRange = range.cloneRange()
-    preCursorRange.selectNodeContents(element)
-    preCursorRange.setEnd(range.endContainer, range.endOffset)
-    cursorPosition.value = preCursorRange.toString().length
+    let element = document.querySelector('[contenteditable]')
+    let sel = window.getSelection()
+    let range = sel?.getRangeAt(0)
+    let preCursorRange = range?.cloneRange()
+    if (range && element && preCursorRange) {
+        preCursorRange?.selectNodeContents(element)
+        preCursorRange?.setEnd(range.endContainer, range.endOffset)
+        cursorPosition.value = preCursorRange.toString().length
+    }
 }
 
 // get number of line before cursor
 function getCursorLine() {
     // our editable div
-    const editable = document.getElementById('textarea')! as Node
+    const editable = document.getElementById('textarea') as Node
     if (editable.childNodes.length == 0) {
-        return 1
+        return 1 // input is empty, count as 1 line
     }
     // collapse selection to end
-    window.getSelection()!.collapseToEnd()
-    const sel = window.getSelection()!
-    const range = sel.getRangeAt(0)
+    window.getSelection()?.collapseToEnd()
+    const sel = window.getSelection()
+    const range = sel?.getRangeAt(0)
     // select to top of editable
-    range.setStart(editable.firstChild!, 0)
-    // do not use 'this' sel anymore since the selection has changed
-    const content = window.getSelection()!.toString()
+    if (editable.firstChild) {
+        range?.setStart(editable.firstChild, 0)
+    }
+    const content = window.getSelection()?.toString()
     const text = JSON.stringify(content)
     const lines = (text.match(/\\n/g) || []).length + 1
-
     // clear selection
-    window.getSelection()!.collapseToEnd()
+    window.getSelection()?.collapseToEnd()
+    
+
     return lines
 }
 
 let totalOffset = 0
 // get childnode idx and offset from cursorPosition
-function getChildNodeAndOffsetFromNestedNodes(node: Node, countBR: boolean = true) {
+function getChildNodeAndOffsetFromNestedNodes(node: Node | null, countBR: boolean = true) {
+    if (!node) {
+        return
+    }
     if (countBR && node.nodeName == 'BR') {
         if (totalOffset == 0) {
             currentNode.value = node
@@ -300,8 +338,8 @@ function getChildNodeAndOffsetFromNestedNodes(node: Node, countBR: boolean = tru
     }
     // only count textnode
     if (node.nodeType == Node.TEXT_NODE) {
-        let len = node.textContent!.length
-        if (totalOffset > 0) {
+        let len = node.textContent?.length
+        if (len != undefined && totalOffset > 0) {
             if (totalOffset <= len) {
                 currentNode.value = node
                 nodeOffset.value = totalOffset
@@ -325,18 +363,20 @@ function getChildNodeAndOffsetFromNestedNodes(node: Node, countBR: boolean = tru
 function addContactToInputBox(contact: string) {
     getCursorPosition()
     let numOfLine = getCursorLine()
-    let newText = inputArea.value!.innerText.substring(0, contactPosition.value + (numOfLine - 1))
-        + contact + ' ' + inputArea.value!.innerText.substring(cursorPosition.value + (numOfLine - 1))
+    let newText = inputArea.value?.innerText.substring(0, contactPosition.value + (numOfLine - 1))
+        + contact + inputArea.value?.innerText.substring(cursorPosition.value + (numOfLine - 1))
     let newHTML = processText(newText, props.contactList, false, 100, true).html
-    inputArea.value!.innerHTML = newHTML
-    showContacts.value = false
-    inputArea.value!.focus()
-    // update cursor position
-    updateCursorPosition(true)
-    // check if needs update
-    getCursorPosition()
-    needUpdate('click')
-    inputMessage.value! = inputArea.value!.innerText
+    if (inputArea.value) {
+        inputArea.value.innerHTML = newHTML
+        showContacts.value = false
+        inputArea.value.focus()
+        // update cursor position
+        updateCursorPosition(true)
+        // check if needs update after insertion
+        getCursorPosition()
+        needUpdate('click')
+        inputMessage.value = inputArea.value.innerText
+    }
 }
 
 // check if input after @ is in contact
@@ -345,8 +385,8 @@ function checkContacts() {
     if (inputArea.value) {
         const input = inputArea.value.innerText.replaceAll('\n', '')
         // cursor stops exactly at @
-        if (input[cursorPosition.value - 1] == '@') {
-            chatBoxHeight.value = chatBox.value!.clientHeight // update offset of contact list
+        if (chatBox.value && input[cursorPosition.value - 1] == '@') {
+            chatBoxHeight.value = chatBox.value.clientHeight // update offset of contact list
             showContacts.value = true
             contactPosition.value = cursorPosition.value
         }
@@ -364,9 +404,9 @@ function checkContacts() {
                 let contact = input.substring(idx_old + 1, cursorPosition.value)
                 // if this contact is in contactList
                 for (idx = 0; idx < props.contactList.length; idx++) {
-                    if (props.contactList[idx].includes(contact)) {
+                    if (chatBox.value && props.contactList[idx].includes(contact)) {
                         showContacts.value = true
-                        chatBoxHeight.value = chatBox.value!.clientHeight // update offset of contact list
+                        chatBoxHeight.value = chatBox.value.clientHeight // update offset of contact list
                         break
                     }
                 }
@@ -420,35 +460,30 @@ function checkContacts() {
 
 <style scoped>
 #textarea::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
+    width: 25px;
 }
 
 #textarea::-webkit-scrollbar-track-piece:start {
-    background: transparent;
     margin-top: 5px;
 }
 
 #textarea::-webkit-scrollbar-track-piece:end {
-    background: transparent;
     margin-bottom: 5px;
 }
 
 #textarea::-webkit-scrollbar-track {
-    background: transparent;
-    /* color of the tracking area */
+    box-shadow: inset 0 0 3px 3px transparent;
+    border: solid 5px transparent;
 }
 
 #textarea::-webkit-scrollbar-thumb {
-    background-color: rgb(172, 169, 169);
-    /* color of the scroll thumb */
-    border-radius: 5px;
-    border: 0px solid transparent;
-    /* creates padding around scroll thumb */
+    box-shadow: inset 0 0 10px 10px #bbbbbe;
+    border: solid 10px transparent;
+    border-radius: 100px;
 }
 
 .chatBoxTray {
-    background-color: #f0f2f5;
+    background-color: v-bind(headerColor);
     width: 100%;
     display: flex;
     flex-direction: row;
@@ -468,11 +503,10 @@ function checkContacts() {
     max-height: 110px;
     text-align: left;
 
-    background: #FFFFFF;
+    background: v-bind(inBoundMsgBubbleColor);
     border: 0.5px solid rgba(0, 0, 0, 0.15);
     box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.05);
     border-radius: 15px;
-    border-right: 5px solid transparent;
 
     caret-color: v-bind(cursorColor);
     color: v-bind(textColor);
