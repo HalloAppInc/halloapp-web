@@ -1,10 +1,22 @@
 <script setup lang="ts">
-import { ref, computed, nextTick, watch } from 'vue'
+import { ref, computed, nextTick, watch, onMounted, onUnmounted } from 'vue'
 
 import { useI18n } from 'vue-i18n'
 
 import { useColorStore } from '../../stores/colorStore'
+
+import { useMainStore } from '../../stores/mainStore'
+
 import { useTimeformatter } from '../../composables/timeformatter'
+
+import Popup from './Popup.vue'
+
+const emits = defineEmits(["deleteMessage"])
+
+const { t } = useI18n({
+    inheritLocale: true,
+    useScope: 'global'
+})
 
 nextTick(() => {
     handleScroll()
@@ -13,6 +25,9 @@ nextTick(() => {
 })
 
 const colorStore = useColorStore()
+
+const mainStore = useMainStore()
+
 const { formatTime } = useTimeformatter()
 
 const chatPanelHeight = ref(0)
@@ -28,7 +43,17 @@ const content = ref<HTMLElement | null>(null)
 
 let handleScrollTimer: any
 
+const menu = ref<HTMLElement | null>(null)
+
 const showJumpDownButton = ref(false)
+
+const showMenu = ref(false)
+
+const floatMenuPositionX = ref(0)
+
+const floatMenuPositionY = ref(0)
+
+const selectMessageId = ref(-1)
 
 // set floating time stamp's content
 const currentMsgTimestamp = ref()
@@ -72,6 +97,18 @@ const timestamp = computed(() => {
     return colorStore.timestamp
 })
 
+const hoverColor = computed(() => {
+    return colorStore.hover
+})
+
+const lineColor = computed(() => {
+    return colorStore.line
+})
+
+const backgroundColor = computed(() => {
+    return colorStore.background
+})
+
 // add extra space after text to fit time stamp and checkmarks
 function appendSpaceForMsgInfo(msg: string, time: string, isOutBound: boolean) {
     let width = 0
@@ -98,14 +135,16 @@ function appendSpaceForMsgInfo(msg: string, time: string, isOutBound: boolean) {
 }
 
 // listen to msg list, when a new msg comes in, scroll to the bottom
-watch(messageNumber, () => {
-    nextTick(() => {
-        gotoBottom('smooth')
-        handleScroll()
-    });
+watch(messageNumber, (newVal, oldVal) => {
+    if (newVal > oldVal) {
+        nextTick(() => {
+            gotoBottom('smooth')
+            handleScroll()
+        });
+    }
 })
 
-watch(chatPanelHeight, () => { 
+watch(chatPanelHeight, () => {
     nextTick(() => {
         gotoBottom('auto')
     });
@@ -193,6 +232,60 @@ function gotoProfile(e: any) {
     let contactName = e.target.innerText.substring(1)
     // go to user's profile page
 }
+
+function openMenu(e: any, forInBound: boolean, idx: number) {
+    showMenu.value = !showMenu.value
+    selectMessageId.value = idx
+
+    let bounds = e.target.getBoundingClientRect()
+    for (let key in bounds) {
+        if (key == 'right') {
+            floatMenuPositionX.value = window.outerWidth - bounds[key]
+            // if its for inbound msg, make it align right; for outbound msg align left
+            if (forInBound) {
+                floatMenuPositionX.value -= 200
+            }
+        }
+        else if (key == 'top') {
+            // clientHeight + scrollTop = scrollHeight
+            if (content.value) {
+                floatMenuPositionY.value = -1 * (content.value?.scrollHeight - bounds[key] - content.value?.scrollTop) + 20
+                let bottomOffset = content.value?.clientHeight - bounds[key]
+                // visual offset, not let part of menu hidden under input box
+                if (bottomOffset <= 80) {
+                    let msgBubble
+                    // get msg bubble's height
+                    if (e.target.nodeName == 'svg') {
+                        msgBubble = e.target.parentElement.parentElement.parentElement
+                        floatMenuPositionY.value -= msgBubble.clientHeight
+                    }
+                    else if (e.target.nodeName == 'path') {
+                        msgBubble = e.target.parentElement.parentElement.parentElement.parentElement
+                        floatMenuPositionY.value -= msgBubble.clientHeight
+                    }
+                    else if (e.target.nodeName == 'DIV' && e.target.className == 'togglerIconContainer') {
+                        msgBubble = e.target.parentElement.parentElement
+                        floatMenuPositionY.value -= msgBubble.clientHeight
+                    }
+                    floatMenuPositionY.value -= 50
+                }
+            }
+        }
+    }
+}
+
+
+// add listener on floating menu
+function closeMenu() {
+    showMenu.value = false
+}
+
+onMounted(() => { document.addEventListener("click", closeMenu) }
+)
+
+onUnmounted(() => {
+    document.removeEventListener("click", closeMenu)
+})
 </script>
 
 <template>
@@ -204,7 +297,7 @@ function gotoProfile(e: any) {
                 :class="idx == 0 || (idx != 0 && data[idx - 1].type != 'inBound') ? 'chatBubbleBigMargin' : 'chatBubbleSmallMargin'">
                 <div class='chatBubble chatBubbleInBound'>
                     <div class='menuToggler menuTogglerInBound'>
-                        <div class='togglerIconContainer'>
+                        <div class='togglerIconContainer' @click.stop='openMenu($event, true, idx)'>
                             <font-awesome-icon :icon="['fas', 'angle-down']" size='xs' />
                         </div>
                     </div>
@@ -228,7 +321,7 @@ function gotoProfile(e: any) {
                 :class="idx == 0 || (idx != 0 && data[idx - 1].type != 'outBound') ? 'chatBubbleBigMargin' : 'chatBubbleSmallMargin'">
                 <div class='chatBubble chatBubbleoutBound'>
                     <div class='menuToggler menuTogglerOutBound'>
-                        <div class='togglerIconContainer'>
+                        <div class='togglerIconContainer' @click.stop='openMenu($event, false, idx)'>
                             <font-awesome-icon :icon="['fas', 'angle-down']" size='xs' />
                         </div>
                     </div>
@@ -279,12 +372,37 @@ function gotoProfile(e: any) {
         <!-- jump down button -->
         <transition name='button'>
             <div class='buttonContainer' v-show='showJumpDownButton' @click="gotoBottom('smooth')">
-                <div class='buttonIconContainer' @click=''>
+                <div class='buttonIconContainer'>
                     <font-awesome-icon :icon="['fas', 'angle-down']" size='lg' />
                 </div>
             </div>
         </transition>
+
+
+        <!-- floating menu -->
+        <div class='chatSettingsContanier' v-if='showMenu' @click.stop>
+            <div class='menu' ref='menu'>
+                <div class='menuContainer' @mousedown='mainStore.gotoChatPage("delete")'>
+                    <div class='textContainer'>
+                        <div class='contentTextBody contentTextBodyForSettings'>
+                            {{ t('chatMsgBubbleSettings.deleteMessage') }}
+                        </div>
+                    </div>
+                </div>
+                <div class='menuContainer'>
+                    <div class='textContainer textContainerlastElement'>
+                        <div class='contentTextBody contentTextBodyForSettings'>
+                            {{ t('chatMsgBubbleSettings.reply') }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- popup -->
+    <Popup @OK="$emit('deleteMessage', selectMessageId)" />
+
 </template>
 
 <style scoped>
@@ -319,6 +437,7 @@ function gotoProfile(e: any) {
     min-width: 100px;
     height: 100%;
     overflow-y: scroll;
+    overflow-x: hidden;
     padding-bottom: 50px;
 
     display: flex;
@@ -461,13 +580,13 @@ function gotoProfile(e: any) {
 .containerFloatingTimestamp {
     position: absolute;
     align-self: center;
-    z-index: 1;
+    z-index: 3;
 }
 
 .buttonContainer {
     position: fixed;
-    right: 10px;
-    bottom: 100px;
+    right: 20px;
+    bottom: 150px;
 
     height: 40px;
     width: 40px;
@@ -520,12 +639,12 @@ function gotoProfile(e: any) {
     box-shadow: 0px 0px 20px 20px v-bind(outBoundMsgBubble);
 }
 
-.menuToggler:hover {
-    cursor: pointer;
-}
-
 .togglerIconContainer {
     color: #1E90FF;
+}
+
+.togglerIconContainer:hover {
+    cursor: pointer;
 }
 
 .noOverflow :deep(.mention) {
@@ -537,5 +656,59 @@ function gotoProfile(e: any) {
     cursor: pointer;
     color: #6495ED;
     text-decoration: none;
+}
+
+
+.chatSettingsContanier {
+    position: relative;
+    top: v-bind(floatMenuPositionY + 'px');
+    right: v-bind(floatMenuPositionX + 'px');
+
+    z-index: 2;
+}
+
+.menu {
+    position: absolute;
+    width: 200px;
+    padding: 0px;
+    right: 10px;
+    background-color: v-bind(backgroundColor);
+    border-radius: 5px;
+    box-shadow: 0px 0px 5px 2px rgba(0, 0, 0, 0.1);
+}
+
+
+.menuContainer {
+    display: flex;
+    flex-direction: vertical;
+    align-items: center;
+}
+
+.menuContainer:hover {
+    background-color: v-bind(hoverColor);
+    cursor: pointer;
+}
+
+
+.textContainer {
+    color: v-bind(textColor);
+    width: 100%;
+    height: 2em;
+    padding: 20px;
+    border-bottom: 1px solid v-bind(lineColor);
+
+    display: flex;
+    align-items: center;
+}
+
+.textContainerlastElement {
+    border-bottom: 0px;
+}
+
+
+.contentTextBodyForSettings {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
 }
 </style>

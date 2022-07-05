@@ -7,6 +7,7 @@ import InputBox from './InputBox.vue'
 import ChatPanel from './ChatPanel.vue'
 import ChatHeader from './ChatHeader.vue'
 import ChatSettings from './ChatSettings.vue'
+import Popup from './Popup.vue'
 
 const colorStore = useColorStore()
 
@@ -126,19 +127,30 @@ function notifyMe() {
         })
     }
 }
+
+function clearOrDeleteMessage(idx: number = -1) {
+    // clear all msg
+    if (idx == -1) {
+        messageList.value = []
+    }
+    // delete msg at idx
+    else if (idx >= 0) {
+        messageList.value.splice(idx, 1)
+    }
+}
 </script>
 
 <template>
 
-    <div id='wrapper' v-if="mainStore.chatPage == 'chat' || mainStore.chatPage == 'clear'">
+    <div id='wrapper' v-if="mainStore.chatPage == 'chat' || mainStore.chatPage == 'clear' || mainStore.chatPage == 'delete'">
 
         <div id='header'>
-            <ChatHeader :chat-name='chatName' :chat-information='chatInformation' @clear-messages='messageList = []' />
+            <ChatHeader :chat-name='chatName' :chat-information='chatInformation' @clear-messages='clearOrDeleteMessage'/>
         </div>
 
         <!-- chatting area -->
         <div id='content' ref='content'>
-            <ChatPanel :message-list='messageList' />
+            <ChatPanel :message-list='messageList' @delete-message='clearOrDeleteMessage'/>
         </div>
 
         <!-- input tray -->

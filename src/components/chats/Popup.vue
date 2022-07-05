@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useColorStore } from '../../stores/colorStore'
+
 import { useMainStore } from '../../stores/mainStore'
 
 import { computed } from 'vue'
@@ -12,7 +13,26 @@ const { t } = useI18n({
 })
 
 const mainStore = useMainStore()
+
 const colorStore = useColorStore()
+
+const title = computed(() => {
+    if (mainStore.chatPage == 'clear') {
+        return t('clearMessagesPopup.popupHeaderText')
+    }
+    else if (mainStore.chatPage == 'delete') {
+        return t('deleteMessagesPopup.popupHeaderText')
+    }
+})
+
+const content = computed(() => {
+    if (mainStore.chatPage == 'clear') {
+        return t('clearMessagesPopup.popupContent')
+    }
+    else if (mainStore.chatPage == 'delete') {
+        return t('deleteMessagesPopup.popupContent')
+    }
+})
 
 const backgroundColor = computed(() => {
     return colorStore.background
@@ -33,23 +53,23 @@ const shadowColor = computed(() => {
 
 <template>
     <transition>
-        <div class='mask' v-if="mainStore.chatPage == 'clear'">
+        <div class='mask' v-if="mainStore.chatPage == 'delete' || mainStore.chatPage == 'clear'">
             <div class='wrapper'>
                 <div class='container'>
                     <div class='header'>
                         <div class='title'>
-                            {{ t('clearMessagesPopup.popupHeaderText') }}
+                            {{ title }}
                         </div>
                     </div>
 
                     <div class='body'>
                         <div class='textContent' value='light'>
-                            {{ t('clearMessagesPopup.popupContent') }}
+                            {{ content }}
                         </div>
                     </div>
 
                     <div class='footer'>
-                        <div class='button' @click="$emit('clearMessages');mainStore.gotoChatPage('chat')">
+                        <div class='button' @click="$emit('OK');mainStore.gotoChatPage('chat')">
                             {{ t('button.okButton') }}
                         </div>
                         <div class='button' @click="mainStore.gotoChatPage('chat')">

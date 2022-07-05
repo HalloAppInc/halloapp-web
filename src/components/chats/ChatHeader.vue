@@ -96,8 +96,8 @@ const backgroundColor = computed(() => {
                     </div>
                 </div>
             </div>
-            <div class='menuContainer'>
-                <div class='textContainer textContainerlastElement' @mousedown="mainStore.gotoChatPage('clear')">
+            <div class='menuContainer' @mousedown="mainStore.gotoChatPage('clear')">
+                <div class='textContainer textContainerlastElement'>
                     <div class='contentTextBody'>
                         {{ t('chatSettings.clearMessgae') }}
                     </div>
@@ -106,7 +106,7 @@ const backgroundColor = computed(() => {
         </div>
     </div>
 
-    <Popup @clear-messages="$emit('clearMessages')" />
+    <Popup @OK="$emit('clearMessages')"/>
 
 </template>
 
