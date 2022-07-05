@@ -19,6 +19,8 @@ const cursorPosition = ref(0)
 
 const showContacts = ref(false)
 
+const showAttachMenu = ref(false)
+
 const disableUpdate = ref(false)
 
 const contactPosition = ref(-1)
@@ -26,6 +28,8 @@ const contactPosition = ref(-1)
 const inputArea = ref(<HTMLElement | null>(null))
 
 const chatBox = ref(<HTMLElement | null>(null))
+
+const uploadfile = ref(<HTMLElement | null>(null))
 
 const currentNode = ref(<Node | null>(null))
 
@@ -61,6 +65,10 @@ const hoverColor = computed(() => {
     return colorStore.hover
 })
 
+const iconColor = computed(() => {
+    return colorStore.icon
+})
+
 
 // deal with different keydown: enter, enter+shift, cmd+a, space, delete
 function analyzeKeyDown(e: any) {
@@ -78,7 +86,7 @@ function analyzeKeyDown(e: any) {
             totalOffset = cursorPosition.value
             currentNode.value = null
             getChildNodeAndOffsetFromNestedNodes(inputArea.value, false)
-            if (currentNode.value){
+            if (currentNode.value) {
                 const node = currentNode.value as HTMLElement
                 if (node &&
                     node.parentElement?.nodeName == 'SPAN' &&
@@ -319,7 +327,7 @@ function getCursorLine() {
     const lines = (text.match(/\\n/g) || []).length + 1
     // clear selection
     window.getSelection()?.collapseToEnd()
-    
+
 
     return lines
 }
@@ -418,6 +426,28 @@ function checkContacts() {
 
 }
 
+function openAttachMenu(e: any) {
+    showAttachMenu.value = !showAttachMenu.value
+    // if show attach menu, close contacts
+    if (showAttachMenu.value) {
+        showContacts.value = false
+    }
+    
+    if (chatBox.value) {
+        chatBoxHeight.value = chatBox.value.clientHeight
+    }
+}
+
+function onFilePicked (event: any) {
+  const files = event.target.files
+  let filename = files[0].name
+  console.log(filename)
+}
+
+function switchMenu() {
+    console.log('switch')
+    showAttachMenu.value = false
+}
 </script>
 
 <template>
@@ -439,26 +469,58 @@ function checkContacts() {
         </div>
     </div>
 
+    <!-- attach menu -->
+    <transition name='attach'>
+        <div class='veriticalMenuContainer' v-if='showAttachMenu'>
+            <!-- upload file -->
+            <input type="file" ref="uploadfile" accept="image/*"
+                @change='onFilePicked' style="display:none"/>
+            <!-- icon -->
+            <div class='iconContainer' @mousedown='uploadfile?.click()'>
+                <div class='iconShadowAttachPhoto'>
+                    <font-awesome-icon :icon="['fas', 'image']" size='lg' />
+                </div>
+            </div>
+        </div>
+    </transition>
+
     <div class='chatBoxTray' ref='chatBox'>
         <!-- <div class='iconContainer'>
-            <font-awesome-icon :icon="['fas', 'face-smile']" size='2x' />
-        </div>
-        <div class='iconContainer'>
-            <font-awesome-icon :icon="['fas', 'paperclip']" size='2x' />
+            <div class='iconShadow' :class="{ 'showIconShadow': showAttachMenu == true }">
+                <font-awesome-icon :icon="['fas', 'face-smile']" size='lg' />
+            </div>
         </div> -->
+        <div class='iconContainer' tabindex='0' @click='openAttachMenu' @focusout='switchMenu'>
+            <div class='iconShadow' :class="{ 'showIconShadow': showAttachMenu == true }">
+                <font-awesome-icon :icon="['fas', 'paperclip']" size='lg'/>
+            </div>
+        </div>
         <div class='inputBoxContainer'>
             <div id='textarea' ref='inputArea' contenteditable='true' placeholder='Type a message...'
                 @keydown='analyzeKeyDown($event)' @keyup='analyzeKeyUp($event)' @click='analyzeMouseMovement($event)'>
             </div>
         </div>
         <!-- <div class='iconContainer'>
-            <font-awesome-icon :icon="['fas', 'microphone']" size='2x' />
+            <div class='iconShadow' :class="{ 'showIconShadow': showAttachMenu == true }">
+                <font-awesome-icon :icon="['fas', 'microphone']" size='lg' />
+            </div>
         </div> -->
     </div>
 </template>
 
 
 <style scoped>
+.attach-enter-active,
+.attach-leave-active {
+    transition: all 0.5s ease
+}
+
+.attach-enter-from,
+.attach-leave-to {
+    transform: scale(0.1);
+    opacity: 0;
+}
+
 #textarea::-webkit-scrollbar {
     width: 25px;
 }
@@ -492,7 +554,12 @@ function checkContacts() {
 }
 
 .iconContainer {
-    padding: 10px 15px;
+    margin: 5px;
+    color: v-bind(iconColor);
+}
+
+.iconContainer:hover {
+    cursor: pointer;
 }
 
 #textarea {
@@ -603,5 +670,73 @@ function checkContacts() {
     white-space: nowrap;
     user-select: none;
     overflow: hidden;
+}
+
+.veriticalMenuContainer {
+    position: fixed;
+    bottom: v-bind(chatBoxHeight + 'px');
+    margin: 10px 10px;
+}
+
+.iconShadow {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    border-radius: 50%;
+}
+
+.iconShadow:hover {
+    background-color: v-bind(hoverColor);
+}
+
+.showIconShadow {
+    background-color: v-bind(hoverColor);
+}
+
+.iconShadowAttachPhoto {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    border-radius: 50%;
+    box-shadow: 0px 0px 5px 2px rgba(0, 0, 0, 0.1);
+    background-color: #E6E6FA;
+    animation: colorChange 60s infinite;
+}
+
+@keyframes colorChange {
+  0% {
+    background: #7AD8F5;
+    color: white;
+  }
+  20% {
+    background: #9342A6;
+    color: white;
+  }
+  40% {
+    background: #AA1A13;
+    color: white;
+  }
+  60% {
+    background: #FECF87;
+  }
+  61% {
+    color: #333;
+  }
+  80% {
+    background: #AEE77E;
+  }
+  81% {
+    color: white;
+  }
+  100% {
+    background: #7AD8F5;
+    color: white;
+  }
 }
 </style>
