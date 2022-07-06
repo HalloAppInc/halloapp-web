@@ -73,14 +73,13 @@ const backgroundColor = computed(() => {
 
 .container {
     display: flex;
-    flex-direction: horizontal;
-    padding: 0px;
-    padding-left: 20px;
+    flex-direction: row;
+    
 }
 
 .avatarContainer {
     flex: 0 0 70px;
-    padding: 5px 0px 5px 20px;
+    padding: 5px 0px 5px 0px;
 }
 
 .avatar {
@@ -92,7 +91,7 @@ const backgroundColor = computed(() => {
 }
 
 .iconContainer {
-    padding: 5px 20px 5px 0px;
+    padding: 5px 0px 5px 0px;
     color: v-bind(iconColor);
 }
 
@@ -115,7 +114,7 @@ const backgroundColor = computed(() => {
 }
 
 .titleContainer {
-    padding: 5px 20px 5px 0px;
+    padding: 5px 0px 5px 0px;
     color: v-bind(iconColor);
 
     display: flex;

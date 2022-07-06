@@ -198,7 +198,7 @@ function gotoProfile(e: any) {
 <template>
     <div id='contents' ref='content' @scroll='handleScroll()'>
         <!-- chat msg -->
-        <div class='containerChat' v-for='(value, idx) in data' id='panel'>
+        <div class='containerChat' v-for='(value, idx) in data'>
             <!-- inbound msg -->
             <div v-if="value.type == 'inBound'" class='contentTextBody contentTextBodyInBound'
                 :class="idx == 0 || (idx != 0 && data[idx - 1].type != 'inBound') ? 'chatBubbleBigMargin' : 'chatBubbleSmallMargin'">
@@ -316,8 +316,8 @@ function gotoProfile(e: any) {
 
 #contents {
     width: 100%;
-    min-width: 100px;
     height: 100%;
+
     overflow-y: scroll;
     padding-bottom: 50px;
 
@@ -331,23 +331,27 @@ function gotoProfile(e: any) {
     padding: 0px;
     margin: 0px;
 }
-
 .contentTextBody {
+    width: 100%;
+
     display: flex;
     flex-direction: row;
-    width: 100%;
 }
-
 .contentTextBodyInBound {
+    align-self: flex-start;
+
     justify-content: flex-start;
 }
 
 .contentTextBodyOutBound {
-    justify-content: flex-end;
+    align-self: flex-end;
 
+    justify-content: flex-end;
 }
 
 .contentTextBodyTime {
+    align-self: center;
+
     justify-content: center;
 }
 
@@ -364,19 +368,18 @@ function gotoProfile(e: any) {
 }
 
 .chatBubbleInBound {
-    max-width: 50%;
+    left: 10px;
+    max-width: 80%;
     min-width: 2%;
     background: v-bind(inBoundMsgBubble);
     overflow-x: hidden;
-    margin: 0px 30px;
 }
 
 .chatBubbleoutBound {
-    max-width: 50%;
-    min-width: 10%;
+    right: 10px;
+    max-width: 80%;
     background: v-bind(outBoundMsgBubble);
     overflow-x: hidden;
-    margin: 0px 30px;
 }
 
 .chatBubbleTime {
@@ -385,7 +388,7 @@ function gotoProfile(e: any) {
     box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.1);
     border-radius: 7px;
     width: fit-content;
-    margin: 10px 30px 0px 0px;
+    margin: 10px 0px 0px 0px;
 }
 
 .chatBubbleSmallMargin {
@@ -493,7 +496,6 @@ function gotoProfile(e: any) {
     justify-content: center;
     align-items: center;
 }
-
 
 .menuToggler {
     position: absolute;
