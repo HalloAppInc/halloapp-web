@@ -4,8 +4,12 @@ import { ref, computed } from 'vue'
 import { useHAText } from '../../composables/haText'
 
 import { useColorStore } from '../../stores/colorStore'
+import { useMainStore } from '../../stores/mainStore'
+
+import AttachFile from './AttachFile.vue'
 
 const colorStore = useColorStore()
+const mainStore = useMainStore()
 
 const { processText } = useHAText()
 
@@ -36,6 +40,8 @@ const currentNode = ref(<Node | null>(null))
 const nodeOffset = ref(0)
 
 const chatBoxHeight = ref(0)
+
+const uploadFile = ref()
 
 const headerColor = computed(() => {
     return colorStore.header
@@ -432,16 +438,20 @@ function openAttachMenu(e: any) {
     if (showAttachMenu.value) {
         showContacts.value = false
     }
-    
+
     if (chatBox.value) {
         chatBoxHeight.value = chatBox.value.clientHeight
     }
 }
 
-function onFilePicked (event: any) {
-  const files = event.target.files
-  let filename = files[0].name
-  console.log(filename)
+function onFilePicked(event: any) {
+    const files = event.target.files
+    let filename = files[0].name
+    console.log(filename)
+    if (filename != '') {
+        uploadFile.value = URL.createObjectURL(files[0]);
+        mainStore.gotoChatPage('attachFile')
+    }
 }
 
 function switchMenu() {
@@ -473,8 +483,7 @@ function switchMenu() {
     <transition name='attach'>
         <div class='veriticalMenuContainer' v-if='showAttachMenu'>
             <!-- upload file -->
-            <input type="file" ref="uploadfile" accept="image/*"
-                @change='onFilePicked' style="display:none"/>
+            <input type="file" ref="uploadfile" accept="image/*" @change='onFilePicked' style="display:none" />
             <!-- icon -->
             <div class='iconContainer' @mousedown='uploadfile?.click()'>
                 <div class='iconShadowAttachPhoto'>
@@ -492,7 +501,7 @@ function switchMenu() {
         </div> -->
         <div class='iconContainer' tabindex='0' @click='openAttachMenu' @focusout='switchMenu'>
             <div class='iconShadow' :class="{ 'showIconShadow': showAttachMenu == true }">
-                <font-awesome-icon :icon="['fas', 'paperclip']" size='lg'/>
+                <font-awesome-icon :icon="['fas', 'paperclip']" size='lg' />
             </div>
         </div>
         <div class='inputBoxContainer'>
@@ -506,6 +515,10 @@ function switchMenu() {
             </div>
         </div> -->
     </div>
+
+    <AttachFile :upload-files='uploadFile'/>
+
+
 </template>
 
 
@@ -709,7 +722,7 @@ function switchMenu() {
     animation: colorChange 60s infinite;
 }
 
-@keyframes colorChange {
+/* @keyframes colorChange {
   0% {
     background: #7AD8F5;
     color: white;
@@ -738,5 +751,5 @@ function switchMenu() {
     background: #7AD8F5;
     color: white;
   }
-}
+} */
 </style>

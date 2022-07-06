@@ -130,7 +130,7 @@ function notifyMe() {
 
 <template>
 
-    <div id='wrapper' v-if="mainStore.chatPage == 'chat' || mainStore.chatPage == 'clear'">
+    <div id='wrapper' v-if='mainStore.page == "chats"'>
 
         <div id='header'>
             <ChatHeader :chat-name='chatName' :chat-information='chatInformation' @clear-messages='messageList = []' />
