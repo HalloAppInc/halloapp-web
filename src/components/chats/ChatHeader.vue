@@ -72,7 +72,7 @@ const backgroundColor = computed(() => {
             </div> -->
             <div class='iconContainer' tabindex='0' @click='showChatSettings = !showChatSettings'
                 @focusout='showChatSettings = false'>
-                <div class='iconShadow'>
+                <div class='iconShadow' :class='{showShadow: showChatSettings == true}'>
                     <font-awesome-icon :icon="['fas', 'angle-down']" size='lg' />
                 </div>
             </div>
@@ -193,6 +193,10 @@ const backgroundColor = computed(() => {
 }
 
 .iconShadow:hover {
+    background-color: v-bind(hoverColor);
+}
+
+.showShadow {
     background-color: v-bind(hoverColor);
 }
 
