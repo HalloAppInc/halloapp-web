@@ -392,7 +392,7 @@ onUnmounted(() => {
     </div>
 
     <!-- popup -->
-    <Popup @click-ok="$emit('deleteMessage', selectMessageId)" />
+    <Popup @confirm-Ok="$emit('deleteMessage', selectMessageId)" />
 
 </template>
 

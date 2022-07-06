@@ -64,7 +64,7 @@ const shadowColor = computed(() => {
                     </div>
 
                     <div class='footer'>
-                        <div class='button' @click="$emit('clickOk');mainStore.gotoChatPage('chat')">
+                        <div class='button' @click="$emit('confirmOk');mainStore.gotoChatPage('chat')">
                             {{ t('button.okButton') }}
                         </div>
                         <div class='button' @click="mainStore.gotoChatPage('chat')">
