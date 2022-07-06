@@ -2,79 +2,46 @@
 import { ref, computed } from 'vue'
 
 import { useHAText } from '../../composables/haText'
-
 import { useColorStore } from '../../stores/colorStore'
-import { useMainStore } from '../../stores/mainStore'
-
-import AttachFile from './AttachFile.vue'
 
 const colorStore = useColorStore()
-const mainStore = useMainStore()
 
 const { processText } = useHAText()
 
-const props = defineProps(['messageList', 'contactList'])
+const props = defineProps(['messageList', 'contactList', 'uploadFiles'])
 
 const inputMessage = ref(<string>'')
-
 const inputMarkDownSign = ref('')
-
 const cursorPosition = ref(0)
-
 const showContacts = ref(false)
-
-const showAttachMenu = ref(false)
-
 const disableUpdate = ref(false)
-
 const contactPosition = ref(-1)
-
 const inputArea = ref(<HTMLElement | null>(null))
-
 const chatBox = ref(<HTMLElement | null>(null))
 
-const uploadfile = ref(<HTMLElement | null>(null))
-
 const currentNode = ref(<Node | null>(null))
-
 const nodeOffset = ref(0)
 
 const chatBoxHeight = ref(0)
 
-const uploadFile = ref()
-
-const headerColor = computed(() => {
-    return colorStore.header
-})
-
 const inBoundMsgBubbleColor = computed(() => {
     return colorStore.inBoundMsgBubble
 })
-
 const cursorColor = computed(() => {
     return colorStore.cursor
 })
-
 const textColor = computed(() => {
     return colorStore.text
 })
-
 const backgroundColor = computed(() => {
     return colorStore.background
 })
-
 const lineColor = computed(() => {
     return colorStore.line
 })
-
 const hoverColor = computed(() => {
     return colorStore.hover
 })
-
-const iconColor = computed(() => {
-    return colorStore.icon
-})
-
 
 // deal with different keydown: enter, enter+shift, cmd+a, space, delete
 function analyzeKeyDown(e: any) {
@@ -151,6 +118,7 @@ function sendMessage() {
     if (inputArea.value?.innerText.trim().length !== 0) {
         props.messageList.push({
             type: 'outBound',
+            media: props.uploadFiles,
             message: processText(inputArea.value?.innerText.trim(), props.contactList).html,
             timestamp: Date.now() / 1000 | 0, //  get current time
         })
@@ -302,13 +270,14 @@ function updateInputContent() {
 
 // get cursor position 
 function getCursorPosition() {
-    let element = document.querySelector('[contenteditable]')
+    let element = document.getElementById('textarea')
     let sel = window.getSelection()
     let range = sel?.getRangeAt(0)
     let preCursorRange = range?.cloneRange()
     if (range && element && preCursorRange) {
-        preCursorRange?.selectNodeContents(element)
-        preCursorRange?.setEnd(range.endContainer, range.endOffset)
+        preCursorRange.selectNodeContents(element)
+        preCursorRange.setEnd(range.endContainer, range.endOffset)
+        console.log(preCursorRange.toString())
         cursorPosition.value = preCursorRange.toString().length
     }
 }
@@ -382,8 +351,6 @@ function addContactToInputBox(contact: string) {
     let newHTML = processText(newText, props.contactList, false, 100, true).html
     if (inputArea.value) {
         inputArea.value.innerHTML = newHTML
-        showContacts.value = false
-        inputArea.value.focus()
         // update cursor position
         updateCursorPosition(true)
         // check if needs update after insertion
@@ -396,17 +363,18 @@ function addContactToInputBox(contact: string) {
 // check if input after @ is in contact
 function checkContacts() {
     contactPosition.value = -1
+    showContacts.value = false
     if (inputArea.value) {
         const input = inputArea.value.innerText.replaceAll('\n', '')
         // cursor stops exactly at @
         if (chatBox.value && input[cursorPosition.value - 1] == '@') {
-            chatBoxHeight.value = chatBox.value.clientHeight // update offset of contact list
+            let offsetY = window.innerHeight - chatBox.value.offsetTop
+            chatBoxHeight.value = offsetY // update offset of contact list
             showContacts.value = true
             contactPosition.value = cursorPosition.value
         }
         // cursor stops after @
         else {
-            showContacts.value = false
             // check whether there exist an @
             let idx = input.indexOf('@')
             let idx_old = -1
@@ -420,7 +388,8 @@ function checkContacts() {
                 for (idx = 0; idx < props.contactList.length; idx++) {
                     if (chatBox.value && props.contactList[idx].includes(contact)) {
                         showContacts.value = true
-                        chatBoxHeight.value = chatBox.value.clientHeight // update offset of contact list
+                        let offsetY = window.innerHeight - chatBox.value.offsetTop
+                        chatBoxHeight.value = offsetY // update offset of contact list
                         break
                     }
                 }
@@ -432,38 +401,20 @@ function checkContacts() {
 
 }
 
-function openAttachMenu(e: any) {
-    showAttachMenu.value = !showAttachMenu.value
-    // if show attach menu, close contacts
-    if (showAttachMenu.value) {
+function closeContactsAndFocusOnInputBox() {
+    // only focus on inputBox after closing contacts
+    if (showContacts.value) {
+        inputArea.value?.focus()
+        // close contact
         showContacts.value = false
     }
-
-    if (chatBox.value) {
-        chatBoxHeight.value = chatBox.value.clientHeight
-    }
-}
-
-function onFilePicked(event: any) {
-    const files = event.target.files
-    let filename = files[0].name
-    console.log(filename)
-    if (filename != '') {
-        uploadFile.value = URL.createObjectURL(files[0]);
-        mainStore.gotoChatPage('attachFile')
-    }
-}
-
-function switchMenu() {
-    console.log('switch')
-    showAttachMenu.value = false
 }
 </script>
 
 <template>
     <div class='contactList' v-if='showContacts'>
         <div id='listBox'>
-            <div v-for='(value, idx) in contactList' class='container' @click='addContactToInputBox(value)'>
+            <div v-for='(value, idx) in contactList' class='container' @mousedown='addContactToInputBox(value)'>
                 <div class='avatarContainer'>
                     <div class='avatar'></div>
                 </div>
@@ -479,61 +430,19 @@ function switchMenu() {
         </div>
     </div>
 
-    <!-- attach menu -->
-    <transition name='attach'>
-        <div class='veriticalMenuContainer' v-if='showAttachMenu'>
-            <!-- upload file -->
-            <input type="file" ref="uploadfile" accept="image/*" @change='onFilePicked' style="display:none" />
-            <!-- icon -->
-            <div class='iconContainer' @mousedown='uploadfile?.click()'>
-                <div class='iconShadowAttachPhoto'>
-                    <font-awesome-icon :icon="['fas', 'image']" size='lg' />
-                </div>
-            </div>
-        </div>
-    </transition>
-
     <div class='chatBoxTray' ref='chatBox'>
-        <!-- <div class='iconContainer'>
-            <div class='iconShadow' :class="{ 'showIconShadow': showAttachMenu == true }">
-                <font-awesome-icon :icon="['fas', 'face-smile']" size='lg' />
-            </div>
-        </div> -->
-        <div class='iconContainer' tabindex='0' @click='openAttachMenu' @focusout='switchMenu'>
-            <div class='iconShadow' :class="{ 'showIconShadow': showAttachMenu == true }">
-                <font-awesome-icon :icon="['fas', 'paperclip']" size='lg' />
-            </div>
-        </div>
         <div class='inputBoxContainer'>
             <div id='textarea' ref='inputArea' contenteditable='true' placeholder='Type a message...'
-                @keydown='analyzeKeyDown($event)' @keyup='analyzeKeyUp($event)' @click='analyzeMouseMovement($event)'>
+                @focusout='closeContactsAndFocusOnInputBox' @keydown='analyzeKeyDown($event)'
+                @keyup='analyzeKeyUp($event)' @click='analyzeMouseMovement($event)'>
             </div>
         </div>
-        <!-- <div class='iconContainer'>
-            <div class='iconShadow' :class="{ 'showIconShadow': showAttachMenu == true }">
-                <font-awesome-icon :icon="['fas', 'microphone']" size='lg' />
-            </div>
-        </div> -->
     </div>
-
-    <AttachFile :upload-files='uploadFile'/>
-
 
 </template>
 
 
 <style scoped>
-.attach-enter-active,
-.attach-leave-active {
-    transition: all 0.5s ease
-}
-
-.attach-enter-from,
-.attach-leave-to {
-    transform: scale(0.1);
-    opacity: 0;
-}
-
 #textarea::-webkit-scrollbar {
     width: 25px;
 }
@@ -558,21 +467,10 @@ function switchMenu() {
 }
 
 .chatBoxTray {
-    background-color: v-bind(headerColor);
     width: 100%;
     display: flex;
     flex-direction: row;
-    padding: 5px 10px 5px 10px;
     bottom: 0;
-}
-
-.iconContainer {
-    margin: 5px;
-    color: v-bind(iconColor);
-}
-
-.iconContainer:hover {
-    cursor: pointer;
 }
 
 #textarea {
@@ -611,7 +509,7 @@ function switchMenu() {
 
 .contactList {
     position: fixed;
-    width: 100%;
+    width: inherit;
     height: fit-content;
     max-height: 300px;
     bottom: v-bind(chatBoxHeight + 'px');
@@ -638,13 +536,13 @@ function switchMenu() {
 }
 
 .avatarContainer {
-    flex: 0 0 70px;
-    padding: 10px 0px 10px 10px;
+    flex: 0 0 50px;
+    padding: 10px 10px 10px 10px;
 }
 
 .avatar {
-    width: 50px;
-    height: 50px;
+    width: 30px;
+    height: 30px;
 
     background-color: lightgray;
     border-radius: 50%;
@@ -684,72 +582,4 @@ function switchMenu() {
     user-select: none;
     overflow: hidden;
 }
-
-.veriticalMenuContainer {
-    position: fixed;
-    bottom: v-bind(chatBoxHeight + 'px');
-    margin: 10px 10px;
-}
-
-.iconShadow {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    border-radius: 50%;
-}
-
-.iconShadow:hover {
-    background-color: v-bind(hoverColor);
-}
-
-.showIconShadow {
-    background-color: v-bind(hoverColor);
-}
-
-.iconShadowAttachPhoto {
-    width: 50px;
-    height: 50px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    border-radius: 50%;
-    box-shadow: 0px 0px 5px 2px rgba(0, 0, 0, 0.1);
-    background-color: #E6E6FA;
-    animation: colorChange 60s infinite;
-}
-
-/* @keyframes colorChange {
-  0% {
-    background: #7AD8F5;
-    color: white;
-  }
-  20% {
-    background: #9342A6;
-    color: white;
-  }
-  40% {
-    background: #AA1A13;
-    color: white;
-  }
-  60% {
-    background: #FECF87;
-  }
-  61% {
-    color: #333;
-  }
-  80% {
-    background: #AEE77E;
-  }
-  81% {
-    color: white;
-  }
-  100% {
-    background: #7AD8F5;
-    color: white;
-  }
-} */
 </style>

@@ -1,13 +1,24 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 
 import { useColorStore } from '../../stores/colorStore'
 import { useMainStore } from '../../stores/mainStore'
 
+import InputBox from './InputBox.vue'
+
 const colorStore = useColorStore()
 const mainStore = useMainStore()
 
-const props = defineProps(["uploadFiles"])
+const props = defineProps(['uploadFiles', 'messageList', 'contactList'])
+
+const messageNumber = computed(() => {
+    return props.messageList.length
+})
+
+// if message is sent, close preview
+watch(messageNumber, () => {
+    mainStore.gotoChatPage('')
+})
 
 const backgroundColor = computed(() => {
     return colorStore.background
@@ -18,20 +29,14 @@ const wraperColor = computed(() => {
 const shadowColor = computed(() => {
     return colorStore.shadow
 })
-const textColor = computed(() => {
-    return colorStore.text
-})
 const iconColor = computed(() => {
     return colorStore.icon
-})
-const headerColor = computed(() => {
-    return colorStore.header
 })
 </script>
 
 <template>
 
-    <div id='mask' v-if='mainStore.chatPage == "attachFile"'>
+    <div id='mask' v-if='mainStore.chatPage == "preview"'>
         <div id='wrapper'>
             <!-- close icon -->
             <div class='closeIconContainer'>
@@ -42,7 +47,7 @@ const headerColor = computed(() => {
                 </div>
             </div>
 
-            <!-- tool box -->
+            <!-- tool box: edit uploaded photo -->
             <div id='header'>
                 <div class='iconContainer' @click=''>
                     <div class='iconShadow'>
@@ -51,17 +56,17 @@ const headerColor = computed(() => {
                 </div>
             </div>
 
-            <!-- image box -->
+            <!-- image box: show the image -->
             <div id='content'>
                 <div class='imgContainer'>
-                    <img :src='props.uploadFiles' />
+                    <img :src='uploadFiles' />
                 </div>
             </div>
 
-            <!-- input box -->
+            <!-- input box: add caption -->
             <div id='footer'>
-                <div class='chatBoxTray'>
-                    inputBox here...
+                <div class='chatBoxTray' ref='chatBox'>
+                    <InputBox :message-list='messageList' :contact-list='contactList' :upload-files='uploadFiles'/>
                 </div>
             </div>
         </div>
@@ -104,15 +109,15 @@ const headerColor = computed(() => {
     color: v-bind(iconColor);
 }
 
+.iconContainer:hover {
+    cursor: pointer;
+}
+
 #header {
     flex: 1 1 50px;
     display: flex;
     flex-direction: row;
     justify-content: center;
-}
-
-.iconContainer:hover {
-    cursor: pointer;
 }
 
 #content {
@@ -131,7 +136,6 @@ img {
 
 #footer {
     bottom: 0;
-    padding: 5px 10px 5px 10px;
     display: flex;
     flex-direction: row;
     justify-content: center;
@@ -140,5 +144,7 @@ img {
 .chatBoxTray {
     width: 500px;
     margin-bottom: 100px;
+    display: flex;
+    flex-direction: row;
 }
 </style>
