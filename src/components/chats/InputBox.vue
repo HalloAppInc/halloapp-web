@@ -3,8 +3,10 @@ import { ref, computed } from 'vue'
 
 import { useHAText } from '../../composables/haText'
 import { useColorStore } from '../../stores/colorStore'
+import { useMainStore } from '../../stores/mainStore'
 
 const colorStore = useColorStore()
+const mainStore = useMainStore()
 
 const { processText } = useHAText()
 
@@ -123,6 +125,7 @@ function analyzeKeyDown(e: any) {
 function sendMessage() {
     if (inputArea.value?.innerText.trim().length !== 0) {
         props.messageList.push({
+            quoteIdx: mainStore.chatPage.includes('reply') ? mainStore.chatPage.substring(5) : -1, // get reply id
             type: 'outBound',
             message: processText(inputArea.value?.innerText.trim(), props.contactList).html,
             timestamp: Date.now() / 1000 | 0, //  get current time
@@ -407,6 +410,7 @@ function checkContacts() {
 </script>
 
 <template>
+    
     <div class='contactList' v-if='showContacts'>
         <div id='listBox'>
             <div v-for='(value, idx) in contactList' class='container' @click='addContactToInputBox(value)'>
