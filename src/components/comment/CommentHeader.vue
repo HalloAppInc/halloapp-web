@@ -45,15 +45,17 @@ const backgroundColor = computed(() => {
 
 <template>
 
-    <div id='chatHeader'>
-        <div class='container'>
+    <div class='header'>
 
+        <div class='container'>
+            <div class="leftGutter"></div>
             <div class='iconContainer' @click="$emit('backClick')">
                 <div class='iconShadow'>
                     <font-awesome-icon v-if='!mainStore.isMobile' :icon="['fas', 'xmark']" style="font-size: 25px;"/>
                     <font-awesome-icon v-else :icon="['fas', 'angle-left']" style="font-size: 25px;"/>
                 </div>
             </div>
+            <div class="rightGutter"></div>
             <div class='titleContainer'>
                 Post: {{ postID }}
             </div>            
@@ -64,23 +66,30 @@ const backgroundColor = computed(() => {
 </template>
 
 <style scoped>
-#chatHeader {
+
+.header {
     overflow-y: auto;
     overflow-x: hidden;
-    background-color: v-bind(headerColor);
+    
     height: 100%;
 }
 
 .container {
     display: flex;
-    flex-direction: horizontal;
-    padding: 0px;
-    padding-left: 20px;
+    flex-direction: row;
+}
+
+.leftGutter {
+    flex: 0 0 10px;
+}
+
+.rightGutter {
+    flex: 0 0 10px;
 }
 
 .avatarContainer {
     flex: 0 0 70px;
-    padding: 5px 0px 5px 20px;
+    padding: 5px 0px 5px 0px;
 }
 
 .avatar {
@@ -92,7 +101,7 @@ const backgroundColor = computed(() => {
 }
 
 .iconContainer {
-    padding: 5px 20px 5px 0px;
+    padding: 5px 0px 5px 0px;
     color: v-bind(iconColor);
 }
 
@@ -115,7 +124,7 @@ const backgroundColor = computed(() => {
 }
 
 .titleContainer {
-    padding: 5px 20px 5px 0px;
+    padding: 5px 0px 5px 0px;
     color: v-bind(iconColor);
 
     display: flex;

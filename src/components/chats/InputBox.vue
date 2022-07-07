@@ -11,20 +11,26 @@ const { processText } = useHAText()
 
 const props = defineProps(['messageList', 'contactList', 'uploadFiles'])
 
-const inputMessage = ref(<string>'')
-const inputMarkDownSign = ref('')
-const cursorPosition = ref(0)
-const showContacts = ref(false)
-const disableUpdate = ref(false)
-const contactPosition = ref(-1)
 const inputArea = ref(<HTMLElement | null>(null))
 const chatBox = ref(<HTMLElement | null>(null))
 
+// for input analyze
+const inputMessage = ref(<string>'')
+const inputMarkDownSign = ref('')
+const cursorPosition = ref(0)
+const contactPosition = ref(-1)
+const showContacts = ref(false)
+const disableUpdate = ref(false)
+
+// for cursor position
 const currentNode = ref(<Node | null>(null))
 const nodeOffset = ref(0)
 
 const chatBoxHeight = ref(0)
 
+const headerColor = computed(() => {
+    return colorStore.header
+})
 const inBoundMsgBubbleColor = computed(() => {
     return colorStore.inBoundMsgBubble
 })

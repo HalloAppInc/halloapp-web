@@ -214,11 +214,18 @@ function loadFonts() {
 
 </template>
 
+<!-- Global Styles -->
 <style>
 
 * {
     box-sizing: border-box;
 }
+
+/* mobile iOS: prevent unsightly brief flicker of highlight when tapping */
+* {
+    -webkit-tap-highlight-color: transparent;
+}
+
 html, body {
     height: 100%;
     width: 100%;

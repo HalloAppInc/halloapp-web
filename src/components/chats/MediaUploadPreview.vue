@@ -51,12 +51,14 @@ const iconColor = computed(() => {
 })
 
 async function testUploadAndDownload(file: any) {
-    await uploadAndDownLoad(file, attachMediaList.value)
-    // wait for uploadAndDownLoad
-    setTimeout(() => {
-        // console.log(attachMediaList.value)
-        test.value.src = attachMediaList.value[attachMediaList.value.length - 1]
-    }, 5000)
+    if (file) {
+        await uploadAndDownLoad(file, attachMediaList.value)
+        // wait for uploadAndDownLoad
+        setTimeout(() => {
+            // console.log(attachMediaList.value)
+            test.value.src = attachMediaList.value[attachMediaList.value.length - 1]
+        }, 5000)
+    }
 }
 </script>
 
@@ -82,13 +84,20 @@ async function testUploadAndDownload(file: any) {
                     </div>
                 </div>
 
-                <div class='button' @click='testUploadAndDownload(props.uploadFiles[0])'> try upload and download </div>
+
+                <!-- will delete this one when merge -->
+                <div class='iconContainer' @click='testUploadAndDownload(props.uploadFiles[0])'>
+                    <div class='iconShadow'>
+                        <font-awesome-icon :icon="['fas', 'hammer']" size='lg' />
+                    </div>
+                </div>
             </div>
 
             <!-- image box: show the image -->
             <div id='content'>
                 <div class='imgContainer'>
                     <img :src='mediaUrlList[0]' />
+                    <!-- will delete this one when merge -->
                     <img ref='test' />
                 </div>
             </div>

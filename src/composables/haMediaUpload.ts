@@ -49,7 +49,7 @@ export function useHAMediaUpload() {
                 // upload
                 await sendMediaToServer(file, val.iq?.uploadMedia?.url?.put)
                 // download
-               await getMediaFromServer(val.iq?.uploadMedia?.url?.get).then(
+                await getMediaFromServer(val.iq?.uploadMedia?.url?.get).then(
                     (res) => {
                         list.push(res)
                     }

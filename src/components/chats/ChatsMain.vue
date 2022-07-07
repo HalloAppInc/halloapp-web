@@ -2,8 +2,9 @@
 import { ref, computed, watch } from 'vue'
 
 import { useColorStore } from '../../stores/colorStore'
-import { useMainStore } from '../../stores/mainStore'
+import { useMainStore  } from '../../stores/mainStore'
 
+import InputBox from './InputBox.vue'
 import ChatHeader from './ChatHeader.vue'
 import ChatPanel from './ChatPanel.vue'
 import ChatFooter from './ChatFooter.vue'
@@ -117,6 +118,10 @@ const chatBackground = computed(() => {
     return colorStore.chatBackground
 })
 
+watch(messageNumber, () => {
+    // notifyMe()
+})
+
 function notifyMe() {
     // check if the browser supports notifications
     if (!('Notification' in window)) {
@@ -138,19 +143,30 @@ function notifyMe() {
         })
     }
 }
+
+function clearOrDeleteMessage(idx: number = -1) {
+    // clear all msg
+    if (idx == -1) {
+        messageList.value = []
+    }
+    // delete msg at idx
+    else if (idx >= 0) {
+        messageList.value.splice(idx, 1)
+    }
+}
 </script>
 
 <template>
 
-    <div id='wrapper' v-if='mainStore.page == "chats"'>
+    <div id='wrapper' v-if="mainStore.page == 'chats' && mainStore.chatPage != 'settings'">
 
         <div id='header'>
-            <ChatHeader :chat-name='chatName' :chat-information='chatInformation' @clear-messages='messageList = []' />
+            <ChatHeader :chat-name='chatName' :chat-information='chatInformation' @clear-messages='clearOrDeleteMessage'/>
         </div>
 
         <!-- chatting area -->
         <div id='content' ref='content'>
-            <ChatPanel :message-list='messageList' />
+            <ChatPanel :message-list='messageList' @delete-message='clearOrDeleteMessage'/>
         </div>
 
         <!-- input tray -->
