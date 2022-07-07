@@ -1,15 +1,16 @@
 <script setup lang="ts">
-
 import { ref, computed, watch } from 'vue'
+
 import { useColorStore } from '../../stores/colorStore'
-import { useMainStore  } from '../../stores/mainStore'
-import InputBox from './InputBox.vue'
-import ChatPanel from './ChatPanel.vue'
+import { useMainStore } from '../../stores/mainStore'
+
 import ChatHeader from './ChatHeader.vue'
+import ChatPanel from './ChatPanel.vue'
+import ChatFooter from './ChatFooter.vue'
 import ChatSettings from './ChatSettings.vue'
+import Preview from './MediaUploadPreview.vue'
 
 const colorStore = useColorStore()
-
 const mainStore = useMainStore()
 
 const content = ref<HTMLElement | null>(null)
@@ -22,16 +23,19 @@ const messageList = ref([
     },
     {
         type: "inBound",
+        media: "",
         message: "Short text testing:<br> ~123~ <s>123</s>,_123_<i>123</i>,*123*<b>123</b>",
         timestamp: "1649204213",
     },
     {
         type: "outBound",
+        media: "",
         message: "Long text testing: The item is sized according to its width and height properties, The item is sized according to its width and height properties, The item is sized according to its width and height properties",
         timestamp: "1649204213",
     },
     {
         type: "inBound",
+        media: "",
         message: "Long text testing: The item is sized according to its width and height properties, The item is sized according to its width and height properties, The item is sized according to its width and height properties",
         timestamp: "1649204213",
     },
@@ -42,31 +46,37 @@ const messageList = ref([
     },
     {
         type: "inBound",
+        media: "",
         message: "asdfasdfsadfasdflsadkfl;sdakf;lasdkf;asdkf;lasdkf;lsadkf;lsadkf;sadkf;lasdfksd;lfksd;lfdsf",
         timestamp: "1655527924",
     },
     {
         type: "inBound",
+        media: "",
         message: "😍😍😍😍",
         timestamp: "1655527924",
     },
     {
         type: "inBound",
+        media: "",
         message: "😍!",
         timestamp: "1655527924",
     },
     {
         type: "inBound",
+        media: "",
         message: "😍",
         timestamp: "1655527924",
     },
     {
         type: "inBound",
+        media: "",
         message: "☺️", // this emoji can't be displayed 
         timestamp: "1655527924",
     },
     {
         type: "inBound",
+        media: "",
         message: "❤️",  // this emoji can't be detected
         timestamp: "1655527924",
     },
@@ -77,6 +87,7 @@ const messageList = ref([
     },
     {
         type: "inBound",
+        media: "",
         message: "asdfasdfsadfasdflsadkfl;sdakf;lasdkf;asdkf;lasdkf;lsadkf;",
         timestamp: "1655862547",
     }
@@ -89,13 +100,14 @@ const contactList = ref([
     "?@#$%^&",
 ])
 
+const uploadFiles = ref([])
+
+const chatName = ref('chat1')
+const chatInformation = ref('chatInfo')
+
 const messageNumber = computed(() => {
     return messageList.value.length
 })
-
-const chatName = ref('chat1')
-
-const chatInformation = ref('chatInfo')
 
 watch(messageNumber, () => {
     // notifyMe()
@@ -130,7 +142,7 @@ function notifyMe() {
 
 <template>
 
-    <div id='wrapper' v-if="mainStore.chatPage == 'chat' || mainStore.chatPage == 'clear'">
+    <div id='wrapper' v-if='mainStore.page == "chats"'>
 
         <div id='header'>
             <ChatHeader :chat-name='chatName' :chat-information='chatInformation' @clear-messages='messageList = []' />
@@ -143,12 +155,16 @@ function notifyMe() {
 
         <!-- input tray -->
         <div id='footer'>
-            <InputBox :message-list='messageList' :contact-list='contactList' />
+            <ChatFooter :upload-files='uploadFiles' :message-list='messageList' :contact-list='contactList' />
         </div>
 
     </div>
 
-    <ChatSettings v-if="mainStore.chatPage == 'settings'"/>
+    <!-- background settings -->
+    <ChatSettings v-if="mainStore.chatPage == 'settings'" />
+
+    <!-- attachment preview -->
+    <Preview :upload-files='uploadFiles' :message-list='messageList' :contact-list='contactList' />
 
 </template>
 

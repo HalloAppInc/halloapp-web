@@ -1,66 +1,48 @@
 <script setup lang="ts">
+import { off } from 'process';
 import { ref, computed } from 'vue'
 
 import { useHAText } from '../../composables/haText'
-
 import { useColorStore } from '../../stores/colorStore'
 
 const colorStore = useColorStore()
 
 const { processText } = useHAText()
 
-const props = defineProps(['messageList', 'contactList'])
+const props = defineProps(['messageList', 'contactList', 'uploadFiles'])
 
 const inputMessage = ref(<string>'')
-
 const inputMarkDownSign = ref('')
-
 const cursorPosition = ref(0)
-
 const showContacts = ref(false)
-
 const disableUpdate = ref(false)
-
 const contactPosition = ref(-1)
-
 const inputArea = ref(<HTMLElement | null>(null))
-
 const chatBox = ref(<HTMLElement | null>(null))
 
 const currentNode = ref(<Node | null>(null))
-
 const nodeOffset = ref(0)
 
 const chatBoxHeight = ref(0)
 
-const headerColor = computed(() => {
-    return colorStore.header
-})
-
 const inBoundMsgBubbleColor = computed(() => {
     return colorStore.inBoundMsgBubble
 })
-
 const cursorColor = computed(() => {
     return colorStore.cursor
 })
-
 const textColor = computed(() => {
     return colorStore.text
 })
-
 const backgroundColor = computed(() => {
     return colorStore.background
 })
-
 const lineColor = computed(() => {
     return colorStore.line
 })
-
 const hoverColor = computed(() => {
     return colorStore.hover
 })
-
 
 // deal with different keydown: enter, enter+shift, cmd+a, space, delete
 function analyzeKeyDown(e: any) {
@@ -78,7 +60,7 @@ function analyzeKeyDown(e: any) {
             totalOffset = cursorPosition.value
             currentNode.value = null
             getChildNodeAndOffsetFromNestedNodes(inputArea.value, false)
-            if (currentNode.value){
+            if (currentNode.value) {
                 const node = currentNode.value as HTMLElement
                 if (node &&
                     node.parentElement?.nodeName == 'SPAN' &&
@@ -137,6 +119,7 @@ function sendMessage() {
     if (inputArea.value?.innerText.trim().length !== 0) {
         props.messageList.push({
             type: 'outBound',
+            media: props.uploadFiles,
             message: processText(inputArea.value?.innerText.trim(), props.contactList).html,
             timestamp: Date.now() / 1000 | 0, //  get current time
         })
@@ -288,13 +271,13 @@ function updateInputContent() {
 
 // get cursor position 
 function getCursorPosition() {
-    let element = document.querySelector('[contenteditable]')
+    let element = inputArea.value
     let sel = window.getSelection()
     let range = sel?.getRangeAt(0)
     let preCursorRange = range?.cloneRange()
-    if (range && element && preCursorRange) {
-        preCursorRange?.selectNodeContents(element)
-        preCursorRange?.setEnd(range.endContainer, range.endOffset)
+    if (range && preCursorRange && element) {
+        preCursorRange.selectNodeContents(element)
+        preCursorRange.setEnd(range.endContainer, range.endOffset)
         cursorPosition.value = preCursorRange.toString().length
     }
 }
@@ -302,8 +285,8 @@ function getCursorPosition() {
 // get number of line before cursor
 function getCursorLine() {
     // our editable div
-    const editable = document.getElementById('textarea') as Node
-    if (editable.childNodes.length == 0) {
+    const editable = inputArea.value //document.getElementById('textarea') as Node
+    if (editable && editable.childNodes.length == 0) {
         return 1 // input is empty, count as 1 line
     }
     // collapse selection to end
@@ -311,7 +294,7 @@ function getCursorLine() {
     const sel = window.getSelection()
     const range = sel?.getRangeAt(0)
     // select to top of editable
-    if (editable.firstChild) {
+    if (editable && editable.firstChild) {
         range?.setStart(editable.firstChild, 0)
     }
     const content = window.getSelection()?.toString()
@@ -319,7 +302,7 @@ function getCursorLine() {
     const lines = (text.match(/\\n/g) || []).length + 1
     // clear selection
     window.getSelection()?.collapseToEnd()
-    
+
 
     return lines
 }
@@ -368,8 +351,6 @@ function addContactToInputBox(contact: string) {
     let newHTML = processText(newText, props.contactList, false, 100, true).html
     if (inputArea.value) {
         inputArea.value.innerHTML = newHTML
-        showContacts.value = false
-        inputArea.value.focus()
         // update cursor position
         updateCursorPosition(true)
         // check if needs update after insertion
@@ -386,7 +367,8 @@ function checkContacts() {
         const input = inputArea.value.innerText.replaceAll('\n', '')
         // cursor stops exactly at @
         if (chatBox.value && input[cursorPosition.value - 1] == '@') {
-            chatBoxHeight.value = chatBox.value.clientHeight // update offset of contact list
+            let offsetY = window.innerHeight - chatBox.value.offsetTop
+            chatBoxHeight.value = offsetY // update offset of contact list
             showContacts.value = true
             contactPosition.value = cursorPosition.value
         }
@@ -406,7 +388,8 @@ function checkContacts() {
                 for (idx = 0; idx < props.contactList.length; idx++) {
                     if (chatBox.value && props.contactList[idx].includes(contact)) {
                         showContacts.value = true
-                        chatBoxHeight.value = chatBox.value.clientHeight // update offset of contact list
+                        let offsetY = window.innerHeight - chatBox.value.offsetTop
+                        chatBoxHeight.value = offsetY // update offset of contact list
                         break
                     }
                 }
@@ -418,12 +401,20 @@ function checkContacts() {
 
 }
 
+function closeContactsAndFocusOnInputBox() {
+    // only focus on inputBox after closing contacts
+    if (showContacts.value) {
+        inputArea.value?.focus()
+        // close contact
+        showContacts.value = false
+    }
+}
 </script>
 
 <template>
     <div class='contactList' v-if='showContacts'>
         <div id='listBox'>
-            <div v-for='(value, idx) in contactList' class='container' @click='addContactToInputBox(value)'>
+            <div v-for='(value, idx) in contactList' class='container' @mousedown='addContactToInputBox(value)'>
                 <div class='avatarContainer'>
                     <div class='avatar'></div>
                 </div>
@@ -440,21 +431,14 @@ function checkContacts() {
     </div>
 
     <div class='chatBoxTray' ref='chatBox'>
-        <!-- <div class='iconContainer'>
-            <font-awesome-icon :icon="['fas', 'face-smile']" size='2x' />
-        </div>
-        <div class='iconContainer'>
-            <font-awesome-icon :icon="['fas', 'paperclip']" size='2x' />
-        </div> -->
         <div class='inputBoxContainer'>
             <div id='textarea' ref='inputArea' contenteditable='true' placeholder='Type a message...'
-                @keydown='analyzeKeyDown($event)' @keyup='analyzeKeyUp($event)' @click='analyzeMouseMovement($event)'>
+                @focusout='closeContactsAndFocusOnInputBox' @keydown='analyzeKeyDown($event)'
+                @keyup='analyzeKeyUp($event)' @click='analyzeMouseMovement($event)'>
             </div>
         </div>
-        <!-- <div class='iconContainer'>
-            <font-awesome-icon :icon="['fas', 'microphone']" size='2x' />
-        </div> -->
     </div>
+
 </template>
 
 
@@ -483,16 +467,10 @@ function checkContacts() {
 }
 
 .chatBoxTray {
-    background-color: v-bind(headerColor);
     width: 100%;
     display: flex;
     flex-direction: row;
-    padding: 5px 10px 5px 10px;
     bottom: 0;
-}
-
-.iconContainer {
-    padding: 10px 15px;
 }
 
 #textarea {
@@ -531,7 +509,7 @@ function checkContacts() {
 
 .contactList {
     position: fixed;
-    width: 100%;
+    width: inherit;
     height: fit-content;
     max-height: 300px;
     bottom: v-bind(chatBoxHeight + 'px');
@@ -558,13 +536,13 @@ function checkContacts() {
 }
 
 .avatarContainer {
-    flex: 0 0 70px;
-    padding: 10px 0px 10px 10px;
+    flex: 0 0 50px;
+    padding: 10px 10px 10px 10px;
 }
 
 .avatar {
-    width: 50px;
-    height: 50px;
+    width: 30px;
+    height: 30px;
 
     background-color: lightgray;
     border-radius: 50%;

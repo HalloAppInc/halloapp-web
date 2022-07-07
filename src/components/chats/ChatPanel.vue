@@ -13,14 +13,15 @@ nextTick(() => {
 })
 
 const colorStore = useColorStore()
-const { formatTime } = useTimeformatter()
 
-const chatPanelHeight = ref(0)
+const { formatTime } = useTimeformatter()
 
 const { locale } = useI18n({
     inheritLocale: true,
     useScope: 'global'
 })
+
+const chatPanelHeight = ref(0)
 
 const props = defineProps(['messageList'])
 
@@ -55,21 +56,20 @@ const data = computed(() => {
 const textColor = computed(() => {
     return colorStore.text
 })
-
-const outBoundMsgBubble = computed(() => {
+const outBoundMsgBubbleColor = computed(() => {
     return colorStore.outBoundMsgBubble
 })
-
-const inBoundMsgBubble = computed(() => {
+const inBoundMsgBubbleColor = computed(() => {
     return colorStore.inBoundMsgBubble
 })
-
-const timeBubble = computed(() => {
+const timeBubbleColor = computed(() => {
     return colorStore.timeBubble
 })
-
-const timestamp = computed(() => {
+const timestampColor = computed(() => {
     return colorStore.timestamp
+})
+const iconColor = computed(() => {
+    return colorStore.icon
 })
 
 // add extra space after text to fit time stamp and checkmarks
@@ -203,16 +203,22 @@ function gotoProfile(e: any) {
             <div v-if="value.type == 'inBound'" class='contentTextBody contentTextBodyInBound'
                 :class="idx == 0 || (idx != 0 && data[idx - 1].type != 'inBound') ? 'chatBubbleBigMargin' : 'chatBubbleSmallMargin'">
                 <div class='chatBubble chatBubbleInBound'>
+                    <!-- toggler -->
                     <div class='menuToggler menuTogglerInBound'>
                         <div class='togglerIconContainer'>
                             <font-awesome-icon :icon="['fas', 'angle-down']" size='xs' />
                         </div>
                     </div>
+                    <!-- media -->
+                    <div class='mediaContainer' v-if='value.media != ""'>
+                        <img :src='value.media' />
+                    </div>
+                    <!-- text -->
                     <div class='chatTextContainer chatTextContainerInBound'>
-                        <!-- show message content -->
                         <span v-html='value.message' :class="value.font ? 'onlyEmoji' : 'noOverflow'">
                         </span>
                     </div>
+                    <!-- timestamp -->
                     <div class='msgInfoContainer'>
                         <div class='msgInfoContent'>
                             <div class='timestamp'>
@@ -227,17 +233,23 @@ function gotoProfile(e: any) {
             <div v-else-if="value.type == 'outBound'" class='contentTextBody contentTextBodyOutBound'
                 :class="idx == 0 || (idx != 0 && data[idx - 1].type != 'outBound') ? 'chatBubbleBigMargin' : 'chatBubbleSmallMargin'">
                 <div class='chatBubble chatBubbleoutBound'>
+                    <!-- toggler -->
                     <div class='menuToggler menuTogglerOutBound'>
                         <div class='togglerIconContainer'>
                             <font-awesome-icon :icon="['fas', 'angle-down']" size='xs' />
                         </div>
                     </div>
+                    <!-- media -->
+                    <div class='mediaContainer' v-if='value.media != ""'>
+                        <img :src='value.media' />
+                    </div>
+                    <!-- text -->
                     <div class='chatTextContainer chatTextContainerOutBound'>
-                        <!-- show message content -->
                         <span v-html='value.message' :class="value.font ? 'onlyEmoji' : 'noOverflow'"
                             @click="gotoProfile($event)">
                         </span>
                     </div>
+                    <!-- timestamp -->
                     <div class='msgInfoContainer'>
                         <div class='msgInfoContent'>
                             <div class='timestamp'>
@@ -352,8 +364,8 @@ function gotoProfile(e: any) {
 }
 
 .chatBubble {
-    padding: 10px 15px;
-    border-radius: 14px;
+    padding: 5px 5px;
+    border-radius: 10px;
     position: relative;
     box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.08);
     border: 0.5px solid rgba(0, 0, 0, 0.1);
@@ -364,23 +376,23 @@ function gotoProfile(e: any) {
 }
 
 .chatBubbleInBound {
-    max-width: 50%;
-    min-width: 2%;
-    background: v-bind(inBoundMsgBubble);
+    max-width: 60%;
+    min-width: 10%;
+    background: v-bind(inBoundMsgBubbleColor);
     overflow-x: hidden;
     margin: 0px 30px;
 }
 
 .chatBubbleoutBound {
-    max-width: 50%;
+    max-width: 60%;
     min-width: 10%;
-    background: v-bind(outBoundMsgBubble);
+    background: v-bind(outBoundMsgBubbleColor);
     overflow-x: hidden;
     margin: 0px 30px;
 }
 
 .chatBubbleTime {
-    background: v-bind(timeBubble);
+    background: v-bind(timeBubbleColor);
     border: 0.5px solid rgba(101, 61, 61, 0.2);
     box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.1);
     border-radius: 7px;
@@ -405,7 +417,7 @@ function gotoProfile(e: any) {
     align-items: center;
     letter-spacing: 0.02em;
 
-    margin: 5px 0px;
+    margin: 10px 10px;
 }
 
 .noOverflow {
@@ -438,7 +450,7 @@ function gotoProfile(e: any) {
 
 .timestamp {
     font-size: 10px;
-    color: v-bind(timestamp);
+    color: v-bind(timestampColor);
 }
 
 .iconContainer {
@@ -447,6 +459,7 @@ function gotoProfile(e: any) {
 }
 
 .timestampContainerBig {
+    margin: 5px 10px;
     width: fit-content;
     flex-direction: column;
 }
@@ -455,7 +468,7 @@ function gotoProfile(e: any) {
     white-space: nowrap;
     width: fit-content;
     font-size: small;
-    color: v-bind(timestamp);
+    color: v-bind(timestampColor);
 }
 
 .containerFloatingTimestamp {
@@ -474,7 +487,7 @@ function gotoProfile(e: any) {
     display: flex;
     flex-direction: horizontal;
     border-radius: 100%;
-    background-color: white;
+    background: v-bind(inBoundMsgBubbleColor);
     box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.2);
 
     align-content: center;
@@ -492,6 +505,7 @@ function gotoProfile(e: any) {
     display: flex;
     justify-content: center;
     align-items: center;
+    color: v-bind(iconColor);
 }
 
 
@@ -511,13 +525,13 @@ function gotoProfile(e: any) {
 }
 
 .menuTogglerInBound {
-    background: v-bind(inBoundMsgBubble);
-    box-shadow: 0px 0px 20px 20px v-bind(inBoundMsgBubble);
+    background: v-bind(inBoundMsgBubbleColor);
+    box-shadow: 0px 0px 20px 20px v-bind(inBoundMsgBubbleColor);
 }
 
 .menuTogglerOutBound {
-    background: v-bind(outBoundMsgBubble);
-    box-shadow: 0px 0px 20px 20px v-bind(outBoundMsgBubble);
+    background: v-bind(outBoundMsgBubbleColor);
+    box-shadow: 0px 0px 20px 20px v-bind(outBoundMsgBubbleColor);
 }
 
 .menuToggler:hover {
@@ -537,5 +551,14 @@ function gotoProfile(e: any) {
     cursor: pointer;
     color: #6495ED;
     text-decoration: none;
+}
+
+.mediaContainer {
+    width: 100%;
+}
+
+img {
+    border-radius: 5px;
+    max-width: 100%;
 }
 </style>

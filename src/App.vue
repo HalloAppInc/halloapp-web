@@ -73,7 +73,7 @@ async function init() {
      * temporary: timeout used to send uploadMedia after addKeuy
      */
     setTimeout(() => {
-        // connStore.getMediaUrl(1000)
+        //connStore.getMediaUrl(1000)
     }, 3000)
     
 }
