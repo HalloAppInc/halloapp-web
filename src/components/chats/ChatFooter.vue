@@ -9,7 +9,7 @@ import InputBox from './InputBox.vue'
 const mainStore = useMainStore()
 const colorStore = useColorStore()
 
-const props = defineProps(['uploadFiles', 'messageList','contactList'])
+const props = defineProps(['uploadFiles', 'messageList', 'contactList'])
 
 const selectAndUploadfile = ref(<HTMLElement | null>(null))
 const chatBox = ref(<HTMLElement | null>(null))
@@ -43,8 +43,8 @@ function onFilePicked(e: any) {
     // make upload file array empty
     props.uploadFiles.splice(0, props.uploadFiles.length)
     const files = e.target.files
-    for(let i = 0; i < files.length; i++) {
-        let filename = files[i].name 
+    for (let i = 0; i < files.length; i++) {
+        let filename = files[i].name
         // if select at least one file
         if (filename != '') {
             props.uploadFiles.push(files[i])
@@ -60,8 +60,8 @@ function onFilePicked(e: any) {
     <transition name='attach'>
         <div class='veriticalMenuContainer' v-if='showAttachMenu'>
             <!-- upload file -->
-            <input type='file' ref='selectAndUploadfile' accept='image/*' 
-            @change='onFilePicked' style='display: none' />
+            <input type='file' ref='selectAndUploadfile' accept='image/*' @change='onFilePicked'
+                style='display: none' />
             <!-- icon -->
             <div class='iconContainer' @mousedown='selectAndUploadfile?.click'>
                 <div class='iconShadowAttachPhoto'>
@@ -83,7 +83,7 @@ function onFilePicked(e: any) {
             </div>
         </div>
         <!-- uploadfile = "" does not attachment heren -->
-        <InputBox :message-list='props.messageList' :contact-list='props.contactList' :upload-files='""'/>
+        <InputBox :message-list='props.messageList' :contact-list='props.contactList' :upload-files='""' />
         <!-- <div class='iconContainer'>
             <div class='iconShadow' :class="{ 'showIconShadow': showAttachMenu == true }">
                 <font-awesome-icon :icon="['fas', 'microphone']" size='lg' />
@@ -160,34 +160,40 @@ function onFilePicked(e: any) {
 }
 
 /* @keyframes colorChange {
-  0% {
-    background: #7AD8F5;
-    color: white;
-  }
-  20% {
-    background: #9342A6;
-    color: white;
-  }
-  40% {
-    background: #AA1A13;
-    color: white;
-  }
-  60% {
-    background: #FECF87;
-  }
-  61% {
-    color: #333;
-  }
-  80% {
-    background: #AEE77E;
-  }
-  81% {
-    color: white;
-  }
-  100% {
-    background: #7AD8F5;
-    color: white;
-  }
-} */
+    0% {
+        background: #7AD8F5;
+        color: white;
+    }
 
+    20% {
+        background: #9342A6;
+        color: white;
+    }
+
+    40% {
+        background: #AA1A13;
+        color: white;
+    }
+
+    60% {
+        background: #FECF87;
+    }
+
+    61% {
+        color: #333;
+    }
+
+    80% {
+        background: #AEE77E;
+    }
+
+    81% {
+        color: white;
+    }
+
+    100% {
+        background: #7AD8F5;
+        color: white;
+    }
+} */
 </style>

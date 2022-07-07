@@ -50,9 +50,9 @@ const iconColor = computed(() => {
     return colorStore.icon
 })
 
-async function testUploadAndDownload(file: any) {
+function testUploadAndDownload(file: any) {
     if (file) {
-        await uploadAndDownLoad(file, attachMediaList.value)
+        uploadAndDownLoad(file, attachMediaList.value)
         // wait for uploadAndDownLoad
         setTimeout(() => {
             // console.log(attachMediaList.value)
@@ -168,7 +168,14 @@ async function testUploadAndDownload(file: any) {
     align-items: center;
 }
 
+.imgContainer {
+    width: fit-content;
+    height: fit-content;
+}
+
 img {
+    max-width: 70vw;
+    max-height: 70vh;
     background-color: v-bind(backgroundColor);
     box-shadow: 0px 0px 20px 2px v-bind(shadowColor);
 }

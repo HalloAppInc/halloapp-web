@@ -1,5 +1,6 @@
 import { useMainStore } from '../stores/mainStore'
 import { useConnStore } from '../stores/connStore'
+import { resolveComponent } from 'vue'
 
 export function useHAMediaUpload() {
 
@@ -45,15 +46,12 @@ export function useHAMediaUpload() {
     async function uploadAndDownLoad(file: any, list: any) {
         // if the file is valid
         if (file) {
-            connStore.getMediaUrl(1000, async function (val: any) {
+            await connStore.getMediaUrl(1000, async function (val: any) {
                 // upload
                 await sendMediaToServer(file, val.iq?.uploadMedia?.url?.put)
                 // download
-                await getMediaFromServer(val.iq?.uploadMedia?.url?.get).then(
-                    (res) => {
-                        list.push(res)
-                    }
-                )
+                let res = await getMediaFromServer(val.iq?.uploadMedia?.url?.get)
+                list.push(res)
             })
         }
     }
