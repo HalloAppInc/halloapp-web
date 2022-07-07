@@ -22,6 +22,7 @@ const messageList = ref([
     },
     {
         type: "inBound",
+        media: "...", // should be url
         message: "Short text testing:<br> ~123~ <s>123</s>,_123_<i>123</i>,*123*<b>123</b>",
         timestamp: "1649204213",
     },
@@ -42,11 +43,13 @@ const messageList = ref([
     },
     {
         type: "inBound",
+        quoteIdx: 1,
         message: "asdfasdfsadfasdflsadkfl;sdakf;lasdkf;asdkf;lasdkf;lsadkf;lsadkf;sadkf;lasdfksd;lfksd;lfdsf",
         timestamp: "1655527924",
     },
     {
         type: "inBound",
+        quoteIdx: 2,
         message: "😍😍😍😍",
         timestamp: "1655527924",
     },
@@ -141,7 +144,7 @@ function clearOrDeleteMessage(idx: number = -1) {
 
 <template>
 
-    <div id='wrapper' v-if="mainStore.chatPage == 'chat' || mainStore.chatPage == 'clear' || mainStore.chatPage == 'delete'">
+    <div id='wrapper' v-if='mainStore.page == "chats" && mainStore.chatPage != "settings"'>
 
         <div id='header'>
             <ChatHeader :chat-name='chatName' :chat-information='chatInformation' @clear-messages='clearOrDeleteMessage'/>
