@@ -62,12 +62,7 @@ const data = computed(() => {
     return result
 })
 
-const quoteMessage = ref({
-    sender: 'YOU',
-    type: "inBound",
-    message: "llll",
-    timestamp: "1655527924",
-})
+const quoteMessage = ref({})
 
 const headerColor = computed(() => {
     return colorStore.header
@@ -293,7 +288,7 @@ onUnmounted(() => {
 })
 
 function openReply() {
-    mainStore.gotoChatPage('reply'+selectMessageId.value)
+    mainStore.gotoChatPage('reply' + selectMessageId.value)
     showReply.value = true
     showMenu.value = false
     // get quote message
@@ -329,7 +324,7 @@ function getQuoteMessageData(message: any) {
                     <div class='chatReplyContainer' v-if='value.quoteIdx > -1'>
                         <Quote :quote-message='getQuoteMessageData(messageList[value.quoteIdx])'/>
                     </div>
-                    <div class='chatTextContainer' :class='{bigChatTextContainer: value.font}'>
+                    <div class='chatTextContainer' :class='{ bigChatTextContainer: value.font }'>
                         <!-- show message content -->
                         <span v-html='value.message' :class="value.font ? 'onlyEmoji' : 'noOverflow'">
                         </span>
@@ -357,7 +352,7 @@ function getQuoteMessageData(message: any) {
                     <div class='chatReplyContainer' v-if='value.quoteIdx > -1'>
                         <Quote :quote-message='getQuoteMessageData(messageList[value.quoteIdx])'/>
                     </div>
-                    <div class='chatTextContainer' :class='{bigChatTextContainer: value.font}'>
+                    <div class='chatTextContainer' :class='{ bigChatTextContainer: value.font }'>
                         <!-- show message content -->
                         <span v-html='value.message' :class="value.font ? 'onlyEmoji' : 'noOverflow'"
                             @click="gotoProfile($event)">

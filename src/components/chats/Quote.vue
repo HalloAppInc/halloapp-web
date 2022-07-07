@@ -34,7 +34,7 @@ const iconColor = computed(() => {
                     <font-awesome-icon :icon="['fas', 'camera']" size='xs' />
                 </div>
                 <div class='TextContainer'>
-                    {{ quoteMessage.message }}
+                    <span v-html='quoteMessage.message'></span>
                 </div>
             </div>
         </div>
