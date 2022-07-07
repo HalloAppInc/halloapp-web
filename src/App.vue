@@ -372,6 +372,12 @@ h1, h2, h3, h4, h5, h6 {
 
 #MainPanel {
     flex: 1 1 auto;
+
+    /* 
+     * needed for mobile Safari where input box would keep expanding flexbox
+     * reference: https://stackoverflow.com/questions/36247140/why-dont-flex-items-shrink-past-content-size
+     */
+    min-width: 0;
 }
 
 #BottomNav {

@@ -10,6 +10,7 @@ import { useColorStore } from '../../stores/colorStore'
 import { useMainStore } from '../../stores/mainStore'
 
 import Popup from './Popup.vue'
+import Quote from './Quote.vue'
 
 const colorStore = useColorStore()
 const mainStore = useMainStore()
@@ -37,6 +38,7 @@ let handleScrollTimer: any
 
 const showJumpDownButton = ref(false)
 const showMenu = ref(false)
+const showReply = ref(false)
 
 const selectMessageId = ref(-1)
 
@@ -62,6 +64,11 @@ const data = computed(() => {
     return result
 })
 
+const quoteMessage = ref({})
+
+const headerColor = computed(() => {
+    return colorStore.header
+})
 const textColor = computed(() => {
     return colorStore.text
 })
@@ -124,6 +131,8 @@ function appendSpaceForMsgInfo(msg: string, time: string, isOutBound: boolean) {
 // listen to msg list, when a new msg comes in, scroll to the bottom
 watch(messageNumber, (newVal, oldVal) => {
     if (newVal > oldVal) {
+        showReply.value = false
+        mainStore.gotoChatPage('')
         nextTick(() => {
             gotoBottom('smooth')
             handleScroll()
@@ -288,6 +297,25 @@ function openMedia(e: any) {
     mainStore.gotoChatPage('media')
     return e.target.getAttribute('src')
 }
+
+function openReply() {
+    mainStore.gotoChatPage('reply' + selectMessageId.value)
+    showReply.value = true
+    showMenu.value = false
+    // get quote message
+    quoteMessage.value = getQuoteMessageData(props.messageList[selectMessageId.value])
+}
+
+function getQuoteMessageData(message: any) {
+    let data = JSON.parse(JSON.stringify(message))
+    if (message['type'] == 'outBound') {
+        data['sender'] = 'YOU'
+    }
+    else if (message['type'] == 'inBound') {
+        data['sender'] = 'User1' // should replace by real data
+    }
+    return data
+}
 </script>
 
 <template>
@@ -305,11 +333,16 @@ function openMedia(e: any) {
                         </div>
                     </div>
                     <!-- media -->
-                    <div class='mediaContainer' v-if='value.media != ""' @click='$emit("openMedia", openMedia($event))'>
+                    <div class='mediaContainer' v-if='value.media && value.media != ""' @click='$emit("openMedia", openMedia($event))'>
                         <img :src='value.media' />
                     </div>
+                    <!-- quote -->
+                    <div class='chatReplyContainer' v-if='value.quoteIdx && value.quoteIdx > -1'>
+                        <Quote :quote-message='getQuoteMessageData(messageList[value.quoteIdx])'/>
+                    </div>
                     <!-- text -->
-                    <div class='chatTextContainer chatTextContainerInBound'>
+                    <div class='chatTextContainer' :class='{ bigChatTextContainer: value.font }'>
+                        <!-- show message content -->
                         <span v-html='value.message' :class="value.font ? 'onlyEmoji' : 'noOverflow'">
                         </span>
                     </div>
@@ -335,11 +368,16 @@ function openMedia(e: any) {
                         </div>
                     </div>
                     <!-- media -->
-                    <div class='mediaContainer' v-if='value.media != ""' @click='$emit("openMedia", openMedia($event))'>
+                    <div class='mediaContainer' v-if='value.media && value.media != ""' @click='$emit("openMedia", openMedia($event))'>
                         <img :src='value.media' />
                     </div>
+                    <!-- quote -->
+                    <div class='chatReplyContainer' v-if='value.quoteIdx && value.quoteIdx > -1'>
+                        <Quote :quote-message='getQuoteMessageData(messageList[value.quoteIdx])'/>
+                    </div>
                     <!-- text -->
-                    <div class='chatTextContainer chatTextContainerOutBound'>
+                    <div class='chatTextContainer' :class='{ bigChatTextContainer: value.font }'>
+                        <!-- show message content -->
                         <span v-html='value.message' :class="value.font ? 'onlyEmoji' : 'noOverflow'"
                             @click="gotoProfile($event)">
                         </span>
@@ -403,7 +441,7 @@ function openMedia(e: any) {
                         </div>
                     </div>
                 </div>
-                <div class='menuContainer'>
+                <div class='menuContainer' @mousedown='openReply'>
                     <div class='textContainer textContainerlastElement'>
                         <div class='contentTextBody contentTextBodyForSettings'>
                             {{ t('chatMsgBubbleSettings.reply') }}
@@ -416,6 +454,18 @@ function openMedia(e: any) {
 
     <!-- popup -->
     <Popup @confirm-Ok="$emit('deleteMessage', selectMessageId)" />
+
+    <!-- Reply -->
+    <div class='containerReply' v-if='showReply'>
+        <div class='containerReplyWithRightMargin'>
+            <Quote :quote-message='quoteMessage' />
+        </div>
+        <div class='closeIconContainer'>
+            <div class='iconContainer closeIcon' @click="showReply = false;mainStore.gotoChatPage('')">
+                <font-awesome-icon :icon="['fas', 'xmark']" size='lg' />
+            </div>
+        </div>
+    </div>
 
 </template>
 
@@ -464,6 +514,11 @@ function openMedia(e: any) {
     padding: 0px;
     margin: 0px;
 }
+
+.chatReplyContainer {
+    margin-bottom: 5px;
+}
+
 .contentTextBody {
     width: 100%;
 
@@ -543,6 +598,10 @@ function openMedia(e: any) {
     letter-spacing: 0.02em;
 
     margin: 10px 10px;
+}
+
+.bigChatTextContainer {
+    margin-top: 10px;
 }
 
 .noOverflow {
@@ -742,5 +801,45 @@ img:hover {
     flex-direction: row;
     align-items: center;
     justify-content: center;
+}
+
+.containerReply {
+    position: absolute;
+    bottom: 50px;
+    height: fit-content;
+    width: 100%;
+    background-color: v-bind(headerColor);
+
+    display: flex;
+    flex-direction: row;
+    justify-content: center; 
+
+    z-index: 1;
+}
+
+.containerReplyWithRightMargin {
+    width: 80%;
+    margin: 5px 0px;
+}
+
+
+.closeIconContainer {
+    position: absolute;
+    bottom: 30px;
+    right: 20px;
+
+    width: 50px;
+    border-radius: 100%;
+}
+
+.closeIcon {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.closeIcon:hover {
+    cursor: pointer;
 }
 </style>

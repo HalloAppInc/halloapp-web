@@ -19,76 +19,65 @@ const content = ref<HTMLElement | null>(null)
 const messageList = ref([
     {
         type: "timestamp",
-        message: "",
         timestamp: "1649204213",
     },
     {
         type: "inBound",
-        media: "",
         message: "Short text testing:<br> ~123~ <s>123</s>,_123_<i>123</i>,*123*<b>123</b>",
         timestamp: "1649204213",
     },
     {
         type: "outBound",
-        media: "",
         message: "Long text testing: The item is sized according to its width and height properties, The item is sized according to its width and height properties, The item is sized according to its width and height properties",
         timestamp: "1649204213",
     },
     {
         type: "inBound",
-        media: "",
         message: "Long text testing: The item is sized according to its width and height properties, The item is sized according to its width and height properties, The item is sized according to its width and height properties",
         timestamp: "1649204213",
     },
     {
         type: "timestamp",
-        message: "",
         timestamp: "1655527924",
     },
     {
         type: "inBound",
-        media: "",
+        quoteIdx: 1,
         message: "asdfasdfsadfasdflsadkfl;sdakf;lasdkf;asdkf;lasdkf;lsadkf;lsadkf;sadkf;lasdfksd;lfksd;lfdsf",
         timestamp: "1655527924",
     },
     {
         type: "inBound",
-        media: "",
+        quoteIdx: 2,
         message: "😍😍😍😍",
         timestamp: "1655527924",
     },
     {
         type: "inBound",
-        media: "",
         message: "😍!",
         timestamp: "1655527924",
     },
     {
         type: "inBound",
-        media: "",
         message: "😍",
         timestamp: "1655527924",
     },
     {
         type: "inBound",
-        media: "",
         message: "☺️", // this emoji can't be displayed 
         timestamp: "1655527924",
     },
     {
         type: "inBound",
-        media: "",
         message: "❤️",  // this emoji can't be detected
         timestamp: "1655527924",
     },
     {
         type: "timestamp",
-        message: "",
         timestamp: "1655862547",
     },
     {
         type: "inBound",
-        media: "",
         message: "asdfasdfsadfasdflsadkfl;sdakf;lasdkf;asdkf;lasdkf;lsadkf;",
         timestamp: "1655862547",
     }
@@ -164,7 +153,7 @@ function openMedia(url: string) {
 
 <template>
 
-    <div id='wrapper' v-if="mainStore.page == 'chats' && mainStore.chatPage != 'settings'">
+    <div id='wrapper' v-if='mainStore.page == "chats" && mainStore.chatPage != "settings"'>
 
         <div id='header'>
             <ChatHeader :chat-name='chatName' :chat-information='chatInformation' @clear-messages='clearOrDeleteMessage'/>
