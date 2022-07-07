@@ -1,40 +1,29 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 
 import { useColorStore } from '../../stores/colorStore'
 import { useMainStore } from '../../stores/mainStore'
 
-import { useHAMediaUpload } from '../../composables/haMediaUpload'
-
-import InputBox from './InputBox.vue'
-import { arrayBuffer } from 'stream/consumers'
-
 const colorStore = useColorStore()
 const mainStore = useMainStore()
 
-const { uploadAndDownLoad } = useHAMediaUpload()
+const props = defineProps(['selectMediaUrl','messageList'])
 
-const props = defineProps(['uploadFiles', 'messageList', 'contactList'])
-
-const attachMediaList = ref(<any>[])
-
-const test = ref()
-
-const messageNumber = computed(() => {
-    return props.messageList.length
-})
+// delect media's idx in mediaUrlList
+const selectMediaIdx = ref(-1)
 
 const mediaUrlList = computed(() => {
     const result = []
-    for (let i = 0; i < props.uploadFiles.length; i++) {
-        result.push(URL.createObjectURL(props.uploadFiles[i]))
+    for (let i = 0; i < props.messageList.length; i++) {
+        // find media from message list and build a new array for media
+        if (props.messageList[i].media && props.messageList[i].media != '') {
+            result.push(props.messageList[i].media)
+            if (props.selectMediaUrl == props.messageList[i].media) {
+                selectMediaIdx.value = result.length - 1 
+            }
+        }
     }
     return result
-})
-
-// if message is sent, close preview
-watch(messageNumber, (newVal, oldVal) => {
-    mainStore.gotoChatPage('')
 })
 
 const backgroundColor = computed(() => {
@@ -49,22 +38,11 @@ const shadowColor = computed(() => {
 const iconColor = computed(() => {
     return colorStore.icon
 })
-
-function testUploadAndDownload(file: any) {
-    if (file) {
-        uploadAndDownLoad(file, attachMediaList.value)
-        // wait for uploadAndDownLoad
-        setTimeout(() => {
-            // console.log(attachMediaList.value)
-            test.value.src = attachMediaList.value[attachMediaList.value.length - 1]
-        }, 5000)
-    }
-}
 </script>
 
 <template>
 
-    <div id='mask' v-if='mainStore.chatPage == "preview"'>
+    <div id='mask' v-if='mainStore.chatPage == "media"' @click='mainStore.gotoChatPage("")'>
         <div id='wrapper'>
             <!-- close icon -->
             <div class='closeIconContainer'>
@@ -75,37 +53,19 @@ function testUploadAndDownload(file: any) {
                 </div>
             </div>
 
-            <!-- tool box: edit uploaded photo -->
-            <div id='header'>
-                <!-- test upload and download -->
+            <!-- tool box -->
+            <!-- <div id='header'>
                 <div class='iconContainer'>
                     <div class='iconShadow'>
                         <font-awesome-icon :icon="['fas', 'face-smile']" size='lg' />
                     </div>
                 </div>
-
-
-                <!-- will delete this one when merge -->
-                <div class='iconContainer' @click='testUploadAndDownload(props.uploadFiles[0])'>
-                    <div class='iconShadow'>
-                        <font-awesome-icon :icon="['fas', 'hammer']" size='lg' />
-                    </div>
-                </div>
-            </div>
+            </div> -->
 
             <!-- image box: show the image -->
             <div id='content'>
                 <div class='imgContainer'>
-                    <img :src='mediaUrlList[0]' />
-                    <!-- will delete this one when merge -->
-                    <img ref='test' />
-                </div>
-            </div>
-
-            <!-- input box: add caption -->
-            <div id='footer'>
-                <div class='chatBoxTray' ref='chatBox'>
-                    <InputBox :message-list='messageList' :contact-list='contactList' :upload-files='mediaUrlList[0]' />
+                    <img :src='mediaUrlList[selectMediaIdx]'/>
                 </div>
             </div>
         </div>
@@ -192,15 +152,5 @@ img {
     margin-bottom: 100px;
     display: flex;
     flex-direction: row;
-}
-
-.button {
-    margin: 10px 0px;
-    width: 200px;
-    height: 30px;
-    background-color: azure;
-    border: 1px solid aqua;
-    border-radius: 10px;
-    text-align: center;
 }
 </style>

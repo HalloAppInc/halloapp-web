@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { emit } from 'process'
+import { emitKeypressEvents } from 'readline'
 import { ref, computed, nextTick, watch, onMounted, onUnmounted } from 'vue'
 
 import { useI18n } from 'vue-i18n'
@@ -21,7 +23,7 @@ const { t, locale } = useI18n({
 
 const props = defineProps(['messageList'])
 
-const emits = defineEmits(["deleteMessage"])
+const emits = defineEmits(['deleteMessage', 'openMedia'])
 
 const menu = ref<HTMLElement | null>(null)
 const content = ref<HTMLElement | null>(null)
@@ -280,6 +282,12 @@ onMounted(() => {
 onUnmounted(() => {
     document.removeEventListener("click", closeMenu)
 })
+
+function openMedia(e: any) {
+    // go to show media
+    mainStore.gotoChatPage('media')
+    return e.target.getAttribute('src')
+}
 </script>
 
 <template>
@@ -297,7 +305,7 @@ onUnmounted(() => {
                         </div>
                     </div>
                     <!-- media -->
-                    <div class='mediaContainer' v-if='value.media != ""'>
+                    <div class='mediaContainer' v-if='value.media != ""' @click='$emit("openMedia", openMedia($event))'>
                         <img :src='value.media' />
                     </div>
                     <!-- text -->
@@ -327,7 +335,7 @@ onUnmounted(() => {
                         </div>
                     </div>
                     <!-- media -->
-                    <div class='mediaContainer' v-if='value.media != ""'>
+                    <div class='mediaContainer' v-if='value.media != ""' @click='$emit("openMedia", openMedia($event))'>
                         <img :src='value.media' />
                     </div>
                     <!-- text -->
@@ -670,12 +678,17 @@ onUnmounted(() => {
 }
 
 .mediaContainer {
-    width: 100%;
+    max-height: 400px;
+    overflow-y: hidden;
 }
 
 img {
     border-radius: 5px;
     max-width: 100%;
+}
+
+img:hover {
+    cursor: pointer;
 }
 
 .chatSettingsContanier {

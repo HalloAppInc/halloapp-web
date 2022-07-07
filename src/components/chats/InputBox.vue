@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { off } from 'process';
 import { ref, computed } from 'vue'
 
 import { useHAText } from '../../composables/haText'
@@ -9,7 +8,7 @@ const colorStore = useColorStore()
 
 const { processText } = useHAText()
 
-const props = defineProps(['messageList', 'contactList', 'uploadFiles'])
+const props = defineProps(['messageList', 'contactList', 'uploadFiles', 'sendMessage'])
 
 const inputArea = ref(<HTMLElement | null>(null))
 const chatBox = ref(<HTMLElement | null>(null))
@@ -26,10 +25,13 @@ const disableUpdate = ref(false)
 const currentNode = ref(<Node | null>(null))
 const nodeOffset = ref(0)
 
+// show send button
+const showSendButton = ref(false)
+
 const chatBoxHeight = ref(0)
 
-const headerColor = computed(() => {
-    return colorStore.header
+const iconColor = computed(() => {
+    return colorStore.icon
 })
 const inBoundMsgBubbleColor = computed(() => {
     return colorStore.inBoundMsgBubble
@@ -92,6 +94,8 @@ function analyzeKeyDown(e: any) {
         // enter, send message
         else {
             sendMessage()
+            // hide send button
+            showSendButton.value = false
             e.preventDefault(e)
         }
     }
@@ -199,8 +203,15 @@ function analyzeKeyUp(e: any) {
 
     // if inputArea is empty, delete the remaining <span> and <div>
     if (inputArea.value && inputArea.value?.innerText.trim().length == 0) {
+        // clean html inside
         inputArea.value.innerHTML = ''
+        // hide send button
+        showSendButton.value = false
         return
+    }
+    else {
+        // have valid input show send button
+        showSendButton.value = true
     }
 
     if (e.keyCode != 16 && // Shift
@@ -443,7 +454,15 @@ function closeContactsAndFocusOnInputBox() {
                 @keyup='analyzeKeyUp($event)' @click='analyzeMouseMovement($event)'>
             </div>
         </div>
+        <!-- send button -->
+        <div class='buttonContainer' v-show='showSendButton' @click='sendMessage()'>
+            <div class='buttonIconContainer'>
+                <font-awesome-icon :icon="['fas', 'paper-plane']" size='lg' />
+            </div>
+        </div>
     </div>
+
+    
 
 </template>
 
@@ -587,5 +606,34 @@ function closeContactsAndFocusOnInputBox() {
     white-space: nowrap;
     user-select: none;
     overflow: hidden;
+}
+
+.buttonContainer {
+    height: 40px;
+    width: 40px;
+    margin: 5px;
+    border-radius: 100%;
+    background-color: #E6E6FA;
+    box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.2);
+
+    align-content: center;
+
+    display: flex;
+    flex-direction: horizontal;
+
+    z-index: 2;
+}
+
+.buttonContainer:hover {
+    cursor: pointer;
+}
+
+.buttonIconContainer {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: v-bind(iconColor);
 }
 </style>

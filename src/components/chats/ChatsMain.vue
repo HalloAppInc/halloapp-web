@@ -4,12 +4,12 @@ import { ref, computed, watch } from 'vue'
 import { useColorStore } from '../../stores/colorStore'
 import { useMainStore  } from '../../stores/mainStore'
 
-import InputBox from './InputBox.vue'
 import ChatHeader from './ChatHeader.vue'
 import ChatPanel from './ChatPanel.vue'
 import ChatFooter from './ChatFooter.vue'
 import ChatSettings from './ChatSettings.vue'
-import Preview from './MediaUploadPreview.vue'
+import Composer from './Composer.vue'
+import FullScreener from './FullScreener.vue'
 
 const colorStore = useColorStore()
 const mainStore = useMainStore()
@@ -102,6 +102,7 @@ const contactList = ref([
 ])
 
 const uploadFiles = ref([])
+const selectMediaUrl = ref()
 
 const chatName = ref('chat1')
 const chatInformation = ref('chatInfo')
@@ -154,6 +155,11 @@ function clearOrDeleteMessage(idx: number = -1) {
         messageList.value.splice(idx, 1)
     }
 }
+
+function openMedia(url: string) {
+    selectMediaUrl.value = url
+    console.log(selectMediaUrl)
+}
 </script>
 
 <template>
@@ -166,7 +172,7 @@ function clearOrDeleteMessage(idx: number = -1) {
 
         <!-- chatting area -->
         <div id='content' ref='content'>
-            <ChatPanel :message-list='messageList' @delete-message='clearOrDeleteMessage'/>
+            <ChatPanel :message-list='messageList' @open-media='openMedia' @delete-message='clearOrDeleteMessage'/>
         </div>
 
         <!-- input tray -->
@@ -180,7 +186,10 @@ function clearOrDeleteMessage(idx: number = -1) {
     <ChatSettings v-if="mainStore.chatPage == 'settings'" />
 
     <!-- attachment preview -->
-    <Preview :upload-files='uploadFiles' :message-list='messageList' :contact-list='contactList' />
+    <Composer :upload-files='uploadFiles' :message-list='messageList' :contact-list='contactList' />
+
+    <!-- show media in another tab -->
+    <FullScreener :select-media-url='selectMediaUrl' :message-list='messageList' />
 
 </template>
 
