@@ -99,7 +99,7 @@ const backgroundColor = computed(() => {
         </div>
     </div>
 
-    <Popup @confirm-OK="$emit('clearMessages')"/>
+    <Popup @confirm-Ok="$emit('clearMessages')"/>
 
 </template>
 
