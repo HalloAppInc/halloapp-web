@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 
-import { useColorStore } from '../../stores/colorStore'
-
-import { useMainStore } from '../../stores/mainStore'
-
 import { useI18n } from 'vue-i18n'
+
+import { useColorStore } from '../../stores/colorStore'
+import { useMainStore } from '../../stores/mainStore'
 
 import Popup from './Popup.vue'
 
@@ -16,11 +15,10 @@ const { t } = useI18n({
     useScope: 'global'
 })
 
-const menu = ref<HTMLElement | null>(null)
-
 const colorStore = useColorStore()
-
 const mainStore = useMainStore()
+
+const menu = ref<HTMLElement | null>(null)
 
 const showChatSettings = ref(false)
 
@@ -29,23 +27,18 @@ const props = defineProps(['chatName', 'chatInformation'])
 const hoverColor = computed(() => {
     return colorStore.hover
 })
-
 const lineColor = computed(() => {
     return colorStore.line
 })
-
 const textColor = computed(() => {
     return colorStore.text
 })
-
 const headerColor = computed(() => {
     return colorStore.header
 })
-
 const iconColor = computed(() => {
     return colorStore.icon
 })
-
 const backgroundColor = computed(() => {
     return colorStore.background
 })
@@ -79,7 +72,7 @@ const backgroundColor = computed(() => {
             </div> -->
             <div class='iconContainer' tabindex='0' @click='showChatSettings = !showChatSettings'
                 @focusout='showChatSettings = false'>
-                <div class='iconShadow'>
+                <div class='iconShadow' :class='{showShadow: showChatSettings == true}'>
                     <font-awesome-icon :icon="['fas', 'angle-down']" size='lg' />
                 </div>
             </div>
@@ -96,8 +89,8 @@ const backgroundColor = computed(() => {
                     </div>
                 </div>
             </div>
-            <div class='menuContainer'>
-                <div class='textContainer textContainerlastElement' @mousedown="mainStore.gotoChatPage('clear')">
+            <div class='menuContainer' @mousedown="mainStore.gotoChatPage('clear')">
+                <div class='textContainer textContainerlastElement'>
                     <div class='contentTextBody'>
                         {{ t('chatSettings.clearMessgae') }}
                     </div>
@@ -106,7 +99,7 @@ const backgroundColor = computed(() => {
         </div>
     </div>
 
-    <Popup @clear-messages="$emit('clearMessages')" />
+    <Popup @confirm-Ok="$emit('clearMessages')"/>
 
 </template>
 
@@ -203,6 +196,10 @@ const backgroundColor = computed(() => {
     background-color: v-bind(hoverColor);
 }
 
+.showShadow {
+    background-color: v-bind(hoverColor);
+}
+
 .verticalLine {
     border-right: 1px solid rgb(200, 200, 200);
     height: 30px;
@@ -214,7 +211,7 @@ const backgroundColor = computed(() => {
 }
 
 .menu {
-    z-index: 3;
+    z-index: 4;
     width: 300px;
     padding: 0px;
     position: fixed;

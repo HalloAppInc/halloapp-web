@@ -60,5 +60,13 @@
     "clearMessagesPopup": {
         "popupHeaderText": "Changes to clearing or deleting a chat",
         "popupContent": "Clearing or deleting messages from this chat will remove messages on this device."
+    },
+    "chatMsgBubbleSettings": {
+        "deleteMessage": "Delete message",
+        "reply": "Reply"
+    },
+    "deleteMessagesPopup": {
+        "popupHeaderText": "",
+        "popupContent": "Delete message?"
     }
 }
