@@ -8,7 +8,7 @@ import ChatHeader from './ChatHeader.vue'
 import ChatPanel from './ChatPanel.vue'
 import ChatFooter from './ChatFooter.vue'
 import ChatSettings from './ChatSettings.vue'
-import AttachFile from './AttachFile.vue'
+import Preview from './MediaUploadPreview.vue'
 
 const colorStore = useColorStore()
 const mainStore = useMainStore()
@@ -110,7 +110,7 @@ const messageNumber = computed(() => {
 })
 
 watch(messageNumber, () => {
-    notifyMe()
+    // notifyMe()
 })
 
 const chatBackground = computed(() => {
@@ -164,7 +164,7 @@ function notifyMe() {
     <ChatSettings v-if="mainStore.chatPage == 'settings'" />
 
     <!-- attachment preview -->
-    <AttachFile :upload-files='uploadFiles' :message-list='messageList' :contact-list='contactList' />
+    <Preview :upload-files='uploadFiles' :message-list='messageList' :contact-list='contactList' />
 
 </template>
 

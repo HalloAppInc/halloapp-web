@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { off } from 'process';
 import { ref, computed } from 'vue'
 
 import { useHAText } from '../../composables/haText'
@@ -270,14 +271,13 @@ function updateInputContent() {
 
 // get cursor position 
 function getCursorPosition() {
-    let element = document.getElementById('textarea')
+    let element = inputArea.value
     let sel = window.getSelection()
     let range = sel?.getRangeAt(0)
     let preCursorRange = range?.cloneRange()
-    if (range && element && preCursorRange) {
+    if (range && preCursorRange && element) {
         preCursorRange.selectNodeContents(element)
         preCursorRange.setEnd(range.endContainer, range.endOffset)
-        console.log(preCursorRange.toString())
         cursorPosition.value = preCursorRange.toString().length
     }
 }
@@ -285,8 +285,8 @@ function getCursorPosition() {
 // get number of line before cursor
 function getCursorLine() {
     // our editable div
-    const editable = document.getElementById('textarea') as Node
-    if (editable.childNodes.length == 0) {
+    const editable = inputArea.value //document.getElementById('textarea') as Node
+    if (editable && editable.childNodes.length == 0) {
         return 1 // input is empty, count as 1 line
     }
     // collapse selection to end
@@ -294,7 +294,7 @@ function getCursorLine() {
     const sel = window.getSelection()
     const range = sel?.getRangeAt(0)
     // select to top of editable
-    if (editable.firstChild) {
+    if (editable && editable.firstChild) {
         range?.setStart(editable.firstChild, 0)
     }
     const content = window.getSelection()?.toString()
@@ -363,7 +363,6 @@ function addContactToInputBox(contact: string) {
 // check if input after @ is in contact
 function checkContacts() {
     contactPosition.value = -1
-    showContacts.value = false
     if (inputArea.value) {
         const input = inputArea.value.innerText.replaceAll('\n', '')
         // cursor stops exactly at @
@@ -375,6 +374,7 @@ function checkContacts() {
         }
         // cursor stops after @
         else {
+            showContacts.value = false
             // check whether there exist an @
             let idx = input.indexOf('@')
             let idx_old = -1

@@ -40,14 +40,17 @@ function openAttachMenu() {
 }
 
 function onFilePicked(e: any) {
+    // make upload file array empty
+    props.uploadFiles.splice(0, props.uploadFiles.length)
     const files = e.target.files
-    let filename = files[0].name 
-    // if select at least one file
-    if (filename != '') {
-        // console.log(URL.createObjectURL(files[0]))
-        props.uploadFiles.push(URL.createObjectURL(files[0]))
-        mainStore.gotoChatPage('preview')
+    for(let i = 0; i < files.length; i++) {
+        let filename = files[i].name 
+        // if select at least one file
+        if (filename != '') {
+            props.uploadFiles.push(files[i])
+        }
     }
+    mainStore.gotoChatPage('preview')
 }
 </script>
 

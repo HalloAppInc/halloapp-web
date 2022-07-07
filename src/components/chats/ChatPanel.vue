@@ -376,15 +376,15 @@ function gotoProfile(e: any) {
 }
 
 .chatBubbleInBound {
-    max-width: 50%;
-    min-width: 2%;
+    max-width: 60%;
+    min-width: 10%;
     background: v-bind(inBoundMsgBubbleColor);
     overflow-x: hidden;
     margin: 0px 30px;
 }
 
 .chatBubbleoutBound {
-    max-width: 50%;
+    max-width: 60%;
     min-width: 10%;
     background: v-bind(outBoundMsgBubbleColor);
     overflow-x: hidden;
