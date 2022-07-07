@@ -369,7 +369,7 @@ function gotoProfile(e: any) {
 
 .chatBubbleInBound {
     left: 10px;
-    max-width: 80%;
+    max-width: 75%;
     min-width: 2%;
     background: v-bind(inBoundMsgBubble);
     overflow-x: hidden;
@@ -377,7 +377,7 @@ function gotoProfile(e: any) {
 
 .chatBubbleoutBound {
     right: 10px;
-    max-width: 80%;
+    max-width: 75%;
     background: v-bind(outBoundMsgBubble);
     overflow-x: hidden;
 }
