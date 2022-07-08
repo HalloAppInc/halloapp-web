@@ -268,7 +268,7 @@ function openMenu(e: any, forInBound: boolean, idx: number) {
                         msgBubble = e.target.parentElement.parentElement
                         floatMenuPositionY.value -= msgBubble.clientHeight
                     }
-                    floatMenuPositionY.value -= 50
+                    floatMenuPositionY.value -= 70
                 }
             }
         }
