@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { emit } from 'process'
+import { emitKeypressEvents } from 'readline'
 import { ref, computed, nextTick, watch, onMounted, onUnmounted } from 'vue'
 
 import { useI18n } from 'vue-i18n'
@@ -22,7 +24,7 @@ const { t, locale } = useI18n({
 
 const props = defineProps(['messageList'])
 
-const emits = defineEmits(["deleteMessage"])
+const emits = defineEmits(['deleteMessage', 'openMedia'])
 
 const menu = ref<HTMLElement | null>(null)
 const content = ref<HTMLElement | null>(null)
@@ -75,17 +77,20 @@ const headerColor = computed(() => {
 const textColor = computed(() => {
     return colorStore.text
 })
-const outBoundMsgBubble = computed(() => {
+const outBoundMsgBubbleColor = computed(() => {
     return colorStore.outBoundMsgBubble
 })
-const inBoundMsgBubble = computed(() => {
+const inBoundMsgBubbleColor = computed(() => {
     return colorStore.inBoundMsgBubble
 })
-const timeBubble = computed(() => {
+const timeBubbleColor = computed(() => {
     return colorStore.timeBubble
 })
-const timestamp = computed(() => {
+const timestampColor = computed(() => {
     return colorStore.timestamp
+})
+const iconColor = computed(() => {
+    return colorStore.icon
 })
 const hoverColor = computed(() => {
     return colorStore.hover
@@ -289,6 +294,12 @@ onUnmounted(() => {
     document.removeEventListener("click", closeMenu)
 })
 
+function openMedia(e: any) {
+    // go to show media
+    mainStore.gotoChatPage('media')
+    return e.target.getAttribute('src')
+}
+
 function openReply() {
     mainStore.gotoChatPage('reply' + selectMessageId.value)
     showReply.value = true
@@ -317,20 +328,27 @@ function getQuoteMessageData(message: any) {
             <div v-if="value.type == 'inBound'" class='contentTextBody contentTextBodyInBound'
                 :class="idx == 0 || (idx != 0 && data[idx - 1].type != 'inBound') ? 'chatBubbleBigMargin' : 'chatBubbleSmallMargin'">
                 <div class='chatBubble chatBubbleInBound'>
+                    <!-- toggler -->
                     <div class='menuToggler menuTogglerInBound'>
                         <div class='togglerIconContainer' @click.stop='openMenu($event, true, idx)'>
                             <font-awesome-icon :icon="['fas', 'angle-down']" size='xs' />
                         </div>
                     </div>
-                    <!-- quote -->
-                    <div class='chatReplyContainer' v-if='value.quoteIdx > -1'>
-                        <Quote :quote-message='getQuoteMessageData(messageList[value.quoteIdx])' />
+                    <!-- media -->
+                    <div class='mediaContainer' v-if='value.media && value.media != ""' @click='$emit("openMedia", openMedia($event))'>
+                        <img :src='value.media' />
                     </div>
+                    <!-- quote -->
+                    <div class='chatReplyContainer' v-if='value.quoteIdx && value.quoteIdx > -1'>
+                        <Quote :quote-message='getQuoteMessageData(messageList[value.quoteIdx])'/>
+                    </div>
+                    <!-- text -->
                     <div class='chatTextContainer' :class='{ bigChatTextContainer: value.font }'>
                         <!-- show message content -->
                         <span v-html='value.message' :class="value.font ? 'onlyEmoji' : 'noOverflow'">
                         </span>
                     </div>
+                    <!-- timestamp -->
                     <div class='msgInfoContainer'>
                         <div class='msgInfoContent'>
                             <div class='timestamp'>
@@ -345,21 +363,28 @@ function getQuoteMessageData(message: any) {
             <div v-else-if="value.type == 'outBound'" class='contentTextBody contentTextBodyOutBound'
                 :class="idx == 0 || (idx != 0 && data[idx - 1].type != 'outBound') ? 'chatBubbleBigMargin' : 'chatBubbleSmallMargin'">
                 <div class='chatBubble chatBubbleoutBound'>
+                    <!-- toggler -->
                     <div class='menuToggler menuTogglerOutBound'>
                         <div class='togglerIconContainer' @click.stop='openMenu($event, false, idx)'>
                             <font-awesome-icon :icon="['fas', 'angle-down']" size='xs' />
                         </div>
                     </div>
-                    <!-- quote -->
-                    <div class='chatReplyContainer' v-if='value.quoteIdx > -1'>
-                        <Quote :quote-message='getQuoteMessageData(messageList[value.quoteIdx])' />
+                    <!-- media -->
+                    <div class='mediaContainer' v-if='value.media && value.media != ""' @click='$emit("openMedia", openMedia($event))'>
+                        <img :src='value.media' />
                     </div>
+                    <!-- quote -->
+                    <div class='chatReplyContainer' v-if='value.quoteIdx && value.quoteIdx > -1'>
+                        <Quote :quote-message='getQuoteMessageData(messageList[value.quoteIdx])'/>
+                    </div>
+                    <!-- text -->
                     <div class='chatTextContainer' :class='{ bigChatTextContainer: value.font }'>
                         <!-- show message content -->
                         <span v-html='value.message' :class="value.font ? 'onlyEmoji' : 'noOverflow'"
                             @click="gotoProfile($event)">
                         </span>
                     </div>
+                    <!-- timestamp -->
                     <div class='msgInfoContainer'>
                         <div class='msgInfoContent'>
                             <div class='timestamp'>
@@ -529,8 +554,8 @@ function getQuoteMessageData(message: any) {
 }
 
 .chatBubble {
-    padding: 10px 15px;
-    border-radius: 14px;
+    padding: 5px 5px;
+    border-radius: 10px;
     position: relative;
     box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.08);
     border: 0.5px solid rgba(0, 0, 0, 0.1);
@@ -542,21 +567,22 @@ function getQuoteMessageData(message: any) {
 
 .chatBubbleInBound {
     left: 10px;
-    max-width: 75%;
-    min-width: 2%;
-    background: v-bind(inBoundMsgBubble);
+    max-width: 60%;
+    min-width: 10%;
+    background: v-bind(inBoundMsgBubbleColor);
     overflow-x: hidden;
 }
 
 .chatBubbleoutBound {
     right: 10px;
-    max-width: 75%;
-    background: v-bind(outBoundMsgBubble);
+    max-width: 60%;
+    min-width: 10%;
+    background: v-bind(outBoundMsgBubbleColor);
     overflow-x: hidden;
 }
 
 .chatBubbleTime {
-    background: v-bind(timeBubble);
+    background: v-bind(timeBubbleColor);
     border: 0.5px solid rgba(101, 61, 61, 0.2);
     box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.1);
     border-radius: 7px;
@@ -580,7 +606,8 @@ function getQuoteMessageData(message: any) {
 
     align-items: center;
     letter-spacing: 0.02em;
-    margin: 5px 0px;
+
+    margin: 10px 10px;
 }
 
 .bigChatTextContainer {
@@ -617,7 +644,7 @@ function getQuoteMessageData(message: any) {
 
 .timestamp {
     font-size: 10px;
-    color: v-bind(timestamp);
+    color: v-bind(timestampColor);
 }
 
 .iconContainer {
@@ -626,6 +653,7 @@ function getQuoteMessageData(message: any) {
 }
 
 .timestampContainerBig {
+    margin: 5px 10px;
     width: fit-content;
     flex-direction: column;
 }
@@ -634,7 +662,7 @@ function getQuoteMessageData(message: any) {
     white-space: nowrap;
     width: fit-content;
     font-size: small;
-    color: v-bind(timestamp);
+    color: v-bind(timestampColor);
 }
 
 .containerFloatingTimestamp {
@@ -653,7 +681,7 @@ function getQuoteMessageData(message: any) {
     display: flex;
     flex-direction: horizontal;
     border-radius: 100%;
-    background-color: white;
+    background: v-bind(inBoundMsgBubbleColor);
     box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.2);
 
     align-content: center;
@@ -671,6 +699,7 @@ function getQuoteMessageData(message: any) {
     display: flex;
     justify-content: center;
     align-items: center;
+    color: v-bind(iconColor);
 }
 
 .menuToggler {
@@ -689,13 +718,13 @@ function getQuoteMessageData(message: any) {
 }
 
 .menuTogglerInBound {
-    background: v-bind(inBoundMsgBubble);
-    box-shadow: 0px 0px 20px 20px v-bind(inBoundMsgBubble);
+    background: v-bind(inBoundMsgBubbleColor);
+    box-shadow: 0px 0px 20px 20px v-bind(inBoundMsgBubbleColor);
 }
 
 .menuTogglerOutBound {
-    background: v-bind(outBoundMsgBubble);
-    box-shadow: 0px 0px 20px 20px v-bind(outBoundMsgBubble);
+    background: v-bind(outBoundMsgBubbleColor);
+    box-shadow: 0px 0px 20px 20px v-bind(outBoundMsgBubbleColor);
 }
 
 .togglerIconContainer {
@@ -717,6 +746,19 @@ function getQuoteMessageData(message: any) {
     text-decoration: none;
 }
 
+.mediaContainer {
+    max-height: 400px;
+    overflow-y: hidden;
+}
+
+img {
+    border-radius: 5px;
+    max-width: 100%;
+}
+
+img:hover {
+    cursor: pointer;
+}
 
 .chatSettingsContanier {
     position: relative;

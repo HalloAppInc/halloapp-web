@@ -176,7 +176,7 @@ export const useConnStore = defineStore('conn', () => {
                     isFound = true
                     const callback = mainStore.messageQueue[i].callback
                     if (callback) {
-                        callback()
+                        callback(packet)
                     }
                     // remove message
                     mainStore.messageQueue.splice(i, 1)
