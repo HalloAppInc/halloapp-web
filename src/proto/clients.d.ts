@@ -863,6 +863,9 @@ export namespace clients {
 
         /** ChatContainer voiceNote */
         voiceNote?: (clients.IVoiceNote|null);
+
+        /** ChatContainer files */
+        files?: (clients.IFiles|null);
     }
 
     /** Represents a ChatContainer. */
@@ -889,8 +892,11 @@ export namespace clients {
         /** ChatContainer voiceNote. */
         public voiceNote?: (clients.IVoiceNote|null);
 
+        /** ChatContainer files. */
+        public files?: (clients.IFiles|null);
+
         /** ChatContainer message. */
-        public message?: ("text"|"album"|"contactCard"|"voiceNote");
+        public message?: ("text"|"album"|"contactCard"|"voiceNote"|"files");
 
         /**
          * Creates a new ChatContainer instance using the specified properties.
@@ -2122,6 +2128,198 @@ export namespace clients {
 
         /**
          * Converts this Video to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+    }
+
+    /** Properties of a Files. */
+    interface IFiles {
+
+        /** Files files */
+        files?: (clients.IFile[]|null);
+
+        /** Files text */
+        text?: (clients.IText|null);
+    }
+
+    /** Represents a Files. */
+    class Files implements IFiles {
+
+        /**
+         * Constructs a new Files.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: clients.IFiles);
+
+        /** Files files. */
+        public files: clients.IFile[];
+
+        /** Files text. */
+        public text?: (clients.IText|null);
+
+        /**
+         * Creates a new Files instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns Files instance
+         */
+        public static create(properties?: clients.IFiles): clients.Files;
+
+        /**
+         * Encodes the specified Files message. Does not implicitly {@link clients.Files.verify|verify} messages.
+         * @param message Files message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: clients.IFiles, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified Files message, length delimited. Does not implicitly {@link clients.Files.verify|verify} messages.
+         * @param message Files message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: clients.IFiles, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a Files message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns Files
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): clients.Files;
+
+        /**
+         * Decodes a Files message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns Files
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): clients.Files;
+
+        /**
+         * Verifies a Files message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a Files message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns Files
+         */
+        public static fromObject(object: { [k: string]: any }): clients.Files;
+
+        /**
+         * Creates a plain object from a Files message. Also converts values to other types if specified.
+         * @param message Files
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: clients.Files, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this Files to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+    }
+
+    /** Properties of a File. */
+    interface IFile {
+
+        /** File data */
+        data?: (clients.IEncryptedResource|null);
+
+        /** File filename */
+        filename?: (string|null);
+    }
+
+    /** Represents a File. */
+    class File implements IFile {
+
+        /**
+         * Constructs a new File.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: clients.IFile);
+
+        /** File data. */
+        public data?: (clients.IEncryptedResource|null);
+
+        /** File filename. */
+        public filename: string;
+
+        /**
+         * Creates a new File instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns File instance
+         */
+        public static create(properties?: clients.IFile): clients.File;
+
+        /**
+         * Encodes the specified File message. Does not implicitly {@link clients.File.verify|verify} messages.
+         * @param message File message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: clients.IFile, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified File message, length delimited. Does not implicitly {@link clients.File.verify|verify} messages.
+         * @param message File message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: clients.IFile, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a File message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns File
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): clients.File;
+
+        /**
+         * Decodes a File message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns File
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): clients.File;
+
+        /**
+         * Verifies a File message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a File message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns File
+         */
+        public static fromObject(object: { [k: string]: any }): clients.File;
+
+        /**
+         * Creates a plain object from a File message. Also converts values to other types if specified.
+         * @param message File
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: clients.File, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this File to JSON.
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };

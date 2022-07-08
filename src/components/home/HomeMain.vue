@@ -3,9 +3,12 @@
 import { ref } from 'vue'
 
 import { useMainStore } from '../../stores/mainStore'
+
+import HomeHeader from './HomeHeader.vue'
 import Post from './Post.vue'
 import Comment from '../comment/CommentMain.vue'
 import hal from '../../common/halogger'
+
 const mainStore = useMainStore()
 
 const listBoxWidth = ref('100%')
@@ -125,6 +128,11 @@ function debouncedHandleScroll() {
 <div class="wrapper">
     
     <div class="listBox" ref='content' @scroll='handleScroll()'>
+
+        <div class='header'>
+            <HomeHeader/>
+        </div>
+
         <div v-for="value in listData" class="container">
             <!-- data-ha-postID is used only for detecting post while scrolling -->
             <Post 
@@ -170,13 +178,24 @@ function debouncedHandleScroll() {
 }
 
 .listBox {
+    position: relative;
     flex: 0 0 v-bind(listBoxWidth);
     height: 100%;
-    
+
+   
     overflow-y: auto;
     overflow-x: hidden;
 
     transition: flex 300ms ease-in-out;
+}
+
+.header {
+    position: sticky;
+    top: 0px;
+    width: 100%;
+    height: 50px;
+    z-index: 2;
+    background-color: #f0f2f5;
 }
 
 .comments {

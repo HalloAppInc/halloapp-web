@@ -27,7 +27,6 @@ const disableUpdate = ref(false)
 const currentNode = ref(<Node | null>(null))
 const nodeOffset = ref(0)
 
-// show send button
 const showSendButton = ref(false)
 
 const chatBoxHeight = ref(0)
@@ -132,7 +131,7 @@ function sendMessage() {
             type: 'outBound',
             media: props.uploadFiles,
             message: processText(inputArea.value?.innerText.trim(), props.contactList).html,
-            timestamp: Date.now() / 1000 | 0, //  get current time
+            timestamp: Date.now() / 1000 | 0, // get current time
         })
         // hide send button
         showSendButton.value = false
@@ -619,13 +618,15 @@ function closeContactsAndFocusOnInputBox() {
     width: 40px;
     margin: 5px;
     border-radius: 100%;
-    background-color: #E6E6FA;
+    background-color: #007AFF;
     box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.2);
 
     align-content: center;
 
     display: flex;
     flex-direction: horizontal;
+
+    z-index: 2;
 }
 
 .buttonContainer:hover {
@@ -638,6 +639,6 @@ function closeContactsAndFocusOnInputBox() {
     display: flex;
     justify-content: center;
     align-items: center;
-    color: v-bind(iconColor);
+    color: #FFFFFF;
 }
 </style>

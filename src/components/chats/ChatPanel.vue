@@ -15,7 +15,7 @@ import Quote from './Quote.vue'
 const colorStore = useColorStore()
 const mainStore = useMainStore()
 
-const { formatTime } = useTimeformatter()
+const { formatTimeDateOnlyChat, formatTimeChat, formatTimeFullChat } = useTimeformatter()
 
 const { t, locale } = useI18n({
     inheritLocale: true,
@@ -41,6 +41,7 @@ const showMenu = ref(false)
 const showReply = ref(false)
 
 const selectMessageId = ref(-1)
+const menuTimestamp = ref('')
 
 // set floating time stamp's content
 const currentMsgTimestamp = ref()
@@ -54,10 +55,14 @@ const data = computed(() => {
     let result = JSON.parse(JSON.stringify(props.messageList))
     for (var i = 0; i < result.length; i++) {
         if (result[i].type != 'timestamp') {
-            let time = formatTime(parseInt(result[i].timestamp), <string>locale.value)
+            let time = formatTimeChat(parseInt(result[i].timestamp), <string>locale.value)
             let res = appendSpaceForMsgInfo(props.messageList[i].message, time, result[i].type == 'outBound')
             result[i].message = res[0]
             result[i].font = res[1]
+            result[i].timestamp = time
+        }
+        else {
+            result[i].timestamp = formatTimeDateOnlyChat(parseInt(result[i].timestamp), <string>locale.value)
         }
     }
 
@@ -192,13 +197,8 @@ function debouncedHandleScroll() {
 
         let closestElement = document.elementFromPoint(contentViewportOffset.left, contentViewportOffset.top)
 
-        // find the timestamp in msg bubble
-        let timestampEl = closestElement?.getElementsByClassName('timestamp')[0] as HTMLDivElement
-
-        if (!timestampEl) {
-            // find the timestamp in static timestamp bubble
-            timestampEl = closestElement?.getElementsByClassName('timestampBig')[0] as HTMLDivElement
-        }
+        // only change when overlap with a static timestamp
+        let timestampEl = closestElement?.getElementsByClassName('timestampBig')[0] as HTMLDivElement
 
         if (timestampEl) {
             currentMsgTimestamp.value = timestampEl.textContent
@@ -235,6 +235,8 @@ function openMenu(e: any, forInBound: boolean, idx: number) {
     if (!showMenu.value) {
         return
     }
+
+    menuTimestamp.value = formatTimeFullChat(parseInt(props.messageList[idx].timestamp), <string>locale.value)
     selectMessageId.value = idx
 
     let bounds = e.target.getBoundingClientRect()
@@ -271,7 +273,7 @@ function openMenu(e: any, forInBound: boolean, idx: number) {
                         msgBubble = e.target.parentElement.parentElement
                         floatMenuPositionY.value -= msgBubble.clientHeight
                     }
-                    floatMenuPositionY.value -= 50
+                    floatMenuPositionY.value -= 70
                 }
             }
         }
@@ -350,7 +352,7 @@ function getQuoteMessageData(message: any) {
                     <div class='msgInfoContainer'>
                         <div class='msgInfoContent'>
                             <div class='timestamp'>
-                                {{ formatTime(parseInt(value.timestamp), locale) }}
+                                {{ value.timestamp }}
                             </div>
                         </div>
                     </div>
@@ -386,7 +388,7 @@ function getQuoteMessageData(message: any) {
                     <div class='msgInfoContainer'>
                         <div class='msgInfoContent'>
                             <div class='timestamp'>
-                                {{ formatTime(parseInt(value.timestamp), locale) }}
+                                {{ value.timestamp }}
                             </div>
                             <div class='iconContainer'>
                                 <font-awesome-icon :icon="['fas', 'check-double']" size='xs' />
@@ -401,7 +403,7 @@ function getQuoteMessageData(message: any) {
                 <div class='chatBubble chatBubbleTime'>
                     <div class='timestampContainerBig'>
                         <div class='timestampBig'>
-                            {{ formatTime(parseInt(value.timestamp), locale) }}
+                            {{ value.timestamp }}
                         </div>
                     </div>
                 </div>
@@ -442,9 +444,16 @@ function getQuoteMessageData(message: any) {
                     </div>
                 </div>
                 <div class='menuContainer' @mousedown='openReply'>
-                    <div class='textContainer textContainerlastElement'>
+                    <div class='textContainer'>
                         <div class='contentTextBody contentTextBodyForSettings'>
                             {{ t('chatMsgBubbleSettings.reply') }}
+                        </div>
+                    </div>
+                </div>
+                <div class='menuTimestampLong'>
+                    <div class='timestampContainerBig'>
+                        <div class='timestampBig'>
+                            {{ menuTimestamp }}
                         </div>
                     </div>
                 </div>
@@ -461,7 +470,7 @@ function getQuoteMessageData(message: any) {
             <Quote :quote-message='quoteMessage' />
         </div>
         <div class='closeIconContainer'>
-            <div class='iconContainer closeIcon' @click="showReply = false;mainStore.gotoChatPage('')">
+            <div class='iconContainer closeIcon' @click="showReply = false; mainStore.gotoChatPage('')">
                 <font-awesome-icon :icon="['fas', 'xmark']" size='lg' />
             </div>
         </div>
@@ -525,6 +534,7 @@ function getQuoteMessageData(message: any) {
     display: flex;
     flex-direction: row;
 }
+
 .contentTextBodyInBound {
     align-self: flex-start;
 
@@ -780,6 +790,13 @@ img:hover {
     cursor: pointer;
 }
 
+.menuTimestampLong {
+    padding: 10px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
 
 .textContainer {
     color: v-bind(textColor);
@@ -812,7 +829,7 @@ img:hover {
 
     display: flex;
     flex-direction: row;
-    justify-content: center; 
+    justify-content: center;
 
     z-index: 1;
 }

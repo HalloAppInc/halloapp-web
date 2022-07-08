@@ -164,6 +164,8 @@ message Post {
         SECRET_POST = 1;
     }
     Tag tag = 9;
+    string psa_tag = 10;
+    int64 moment_unlock_uid = 11;
 }
 
 message Comment {
@@ -206,6 +208,8 @@ message FeedItem {
 
     // Meant for the receiver, computed by the server using `sender_state_bundles`.
     SenderStateWithKeyInfo sender_state = 6;
+
+    string sender_client_version = 7;  // ex: "HalloApp/Android0.127"
 }
 
 message FeedItems {
@@ -322,6 +326,7 @@ message GroupStanza {
         SET_BACKGROUND = 13;
         GET_MEMBER_IDENTITY_KEYS = 14;
         CHANGE_DESCRIPTION = 15;
+        SHARE_HISTORY = 16;
     }
     Action action = 1;
     string gid = 2;
@@ -335,7 +340,7 @@ message GroupStanza {
     // Audience hash to be returned on `GET_MEMBER_IDENTITY_KEYS` IQ.
     bytes audience_hash = 9;
     string description = 10;
-    // HistoryResend to be sent or received only on adding-members iq.
+    // HistoryResend to be sent or received only on adding-members iq or share-history iq.
     HistoryResend history_resend = 11;
 }
 
@@ -570,6 +575,7 @@ message GetCallServersResult {
     repeated StunServer stun_servers = 2;
     repeated TurnServer turn_servers = 3;
     CallConfig call_config = 4;
+    string call_id = 5;
 }
 
 message CallCapabilities {
@@ -730,6 +736,10 @@ message CallConfig {
     }
     IceTransportPolicy ice_transport_policy = 10;
     int32 ice_restart_delay_ms = 11;
+    bool prune_turn_ports = 12;
+    int32 ice_candidate_pool_size = 13;
+    int32 ice_backup_ping_interval_ms = 14;
+    int32 ice_connection_timeout_ms = 15;
 }
 
 
@@ -787,6 +797,27 @@ message WebStanza {
                            // between mobile and web client.
     bytes content = 2;  // Noise encrypted content or it is encoded and serialized NoiseMessage.
 }
+
+
+message ContentMissing {
+    string content_id = 1;
+    enum ContentType {
+        UNKNOWN = 0;
+        CHAT = 1;
+        // For calls - WebRtcOffer and WebRtcAnswer packets include encrypted payloads.
+        // Clients will respond back with content-missing and end-call packet if the call is not active.
+        CALL = 2;
+        GROUP_FEED_POST = 3;
+        GROUP_FEED_COMMENT = 4;
+        HOME_FEED_POST = 5;
+        HOME_FEED_COMMENT = 6;
+        HISTORY_RESEND = 7;
+        GROUP_HISTORY = 8;
+    }
+    ContentType content_type = 2;
+    string sender_client_version = 3;  // ex: "HalloApp/Android0.127"
+}
+
 
 // IQ
 
@@ -905,6 +936,8 @@ message Msg {
         IncomingCallPush incoming_call_push = 46;
         CallSdp call_sdp = 47;
         WebStanza web_stanza = 48;
+        ContentMissing content_missing = 49;
+        ScreenshotReceipt screenshot_receipt = 50;
     }
     int32 retry_count = 21;
     int32 rerequest_count = 25;
@@ -1159,6 +1192,11 @@ message PlayedReceipt {
     int64 timestamp = 3;
 }
 
+message ScreenshotReceipt {
+    string id = 1;
+    string thread_id = 2;
+    int64 timestamp = 3;
+}
 
 
 // retract stanza
@@ -1369,6 +1407,11 @@ message OtpResponse {
         INTERNAL_SERVER_ERROR = 9;
         INVALID_HASHCASH_NONCE = 10;
         WRONG_HASHCASH_SOLUTION = 11;
+        INVALID_COUNTRY_CODE = 12;
+        INVALID_LENGTH = 13;
+        LINE_TYPE_VOIP = 14;
+        LINE_TYPE_FIXED = 15;
+        LINE_TYPE_OTHER = 16;
     }
     Reason reason = 3;
     int64 retry_after_secs = 4;
@@ -1423,6 +1466,11 @@ message VerifyOtpResponse {
         UNABLE_TO_OPEN_SIGNED_PHRASE = 20;
         BAD_REQUEST = 21;
         INTERNAL_SERVER_ERROR = 22;
+        INVALID_COUNTRY_CODE = 23;
+        INVALID_LENGTH = 24;
+        LINE_TYPE_VOIP = 25;
+        LINE_TYPE_FIXED = 26;
+        LINE_TYPE_OTHER = 27;
     }
     Reason reason = 5;
     string group_invite_result = 6;
