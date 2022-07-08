@@ -27,8 +27,14 @@ const disableUpdate = ref(false)
 const currentNode = ref(<Node | null>(null))
 const nodeOffset = ref(0)
 
+// show send button
+const showSendButton = ref(false)
+
 const chatBoxHeight = ref(0)
 
+const iconColor = computed(() => {
+    return colorStore.icon
+})
 const headerColor = computed(() => {
     return colorStore.header
 })
@@ -67,7 +73,7 @@ function analyzeKeyDown(e: any) {
             totalOffset = cursorPosition.value
             currentNode.value = null
             getChildNodeAndOffsetFromNestedNodes(inputArea.value, false)
-            if (currentNode.value){
+            if (currentNode.value) {
                 const node = currentNode.value as HTMLElement
                 if (node &&
                     node.parentElement?.nodeName == 'SPAN' &&
@@ -130,6 +136,8 @@ function sendMessage() {
             message: processText(inputArea.value?.innerText.trim(), props.contactList).html,
             timestamp: Date.now() / 1000 | 0, //  get current time
         })
+        // hide send button
+        showSendButton.value = false
         // clean text inside input box
         if (inputArea.value) {
             inputArea.value.innerText = ''
@@ -200,8 +208,15 @@ function analyzeKeyUp(e: any) {
 
     // if inputArea is empty, delete the remaining <span> and <div>
     if (inputArea.value && inputArea.value?.innerText.trim().length == 0) {
+        // clean html inside
         inputArea.value.innerHTML = ''
+        // hide send button
+        showSendButton.value = false
         return
+    }
+    else {
+        // have valid input show send button
+        showSendButton.value = true
     }
 
     if (e.keyCode != 16 && // Shift
@@ -444,6 +459,11 @@ function checkContacts() {
         <!-- <div class='iconContainer'>
             <font-awesome-icon :icon="['fas', 'microphone']" size='2x' />
         </div> -->
+        <div class='buttonContainer' v-show='showSendButton' @click='sendMessage()'>
+            <div class='buttonIconContainer'>
+                <font-awesome-icon :icon="['fas', 'paper-plane']" size='lg' />
+            </div>
+        </div>
     </div>
 </template>
 
@@ -593,5 +613,34 @@ function checkContacts() {
     white-space: nowrap;
     user-select: none;
     overflow: hidden;
+}
+
+.buttonContainer {
+    height: 40px;
+    width: 40px;
+    margin: 5px;
+    border-radius: 100%;
+    background-color: #E6E6FA;
+    box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.2);
+
+    align-content: center;
+
+    display: flex;
+    flex-direction: horizontal;
+
+    z-index: 2;
+}
+
+.buttonContainer:hover {
+    cursor: pointer;
+}
+
+.buttonIconContainer {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: v-bind(iconColor);
 }
 </style>
