@@ -419,14 +419,14 @@ function getQuoteMessageData(message: any) {
                     </div>
                 </div>
                 <div class='menuContainer' @mousedown='openReply'>
-                    <div class='textContainer textContainerlastElement'>
+                    <div class='textContainer'>
                         <div class='contentTextBody contentTextBodyForSettings'>
                             {{ t('chatMsgBubbleSettings.reply') }}
                         </div>
                     </div>
                 </div>
                 <div class='menuTimestampLong'>
-                    <div class='timestampContainer'>
+                    <div class='timestampContainerBig'>
                         <div class='timestampBig'>
                             {{ menuTimestamp }}
                         </div>
@@ -749,6 +749,7 @@ function getQuoteMessageData(message: any) {
 }
 
 .menuTimestampLong {
+    padding: 10px;
     display: flex;
     flex-direction: row;
     justify-content: center;
