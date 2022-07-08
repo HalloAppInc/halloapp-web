@@ -25,10 +25,6 @@ const messageList = ref([
         timestamp: "1649204213",
     },
     {
-        type: "timestamp",
-        timestamp: "1656766800",
-    },
-    {
         type: "outBound",
         message: "Long text testing: The item is sized according to its width and height properties, The item is sized according to its width and height properties, The item is sized according to its width and height properties",
         timestamp: "1649204213",
@@ -40,7 +36,7 @@ const messageList = ref([
     {
         type: "inBound",
         message: "Long text testing: The item is sized according to its width and height properties, The item is sized according to its width and height properties, The item is sized according to its width and height properties",
-        timestamp: "1649204213",
+        timestamp: "1656853200",
     },
     {
         type: "timestamp",
@@ -50,33 +46,33 @@ const messageList = ref([
         type: "inBound",
         quoteIdx: 1,
         message: "asdfasdfsadfasdflsadkfl;sdakf;lasdkf;asdkf;lasdkf;lsadkf;lsadkf;sadkf;lasdfksd;lfksd;lfdsf",
-        timestamp: "1655527924",
+        timestamp: "1657026000",
     },
     {
         type: "inBound",
         quoteIdx: 2,
         message: "😍😍😍😍",
-        timestamp: "1655527924",
+        timestamp: "1657026000",
     },
     {
         type: "inBound",
         message: "😍!",
-        timestamp: "1655527924",
+        timestamp: "1657026000",
     },
     {
         type: "inBound",
         message: "😍",
-        timestamp: "1655527924",
+        timestamp: "1657026000",
     },
     {
         type: "inBound",
         message: "☺️", // this emoji can't be displayed 
-        timestamp: "1655527924",
+        timestamp: "1657026000",
     },
     {
         type: "inBound",
         message: "❤️",  // this emoji can't be detected
-        timestamp: "1655527924",
+        timestamp: "1657026000",
     },
     {
         type: "timestamp",
@@ -85,11 +81,7 @@ const messageList = ref([
     {
         type: "inBound",
         message: "asdfasdfsadfasdflsadkfl;sdakf;lasdkf;asdkf;lasdkf;lsadkf;",
-        timestamp: "1655862547",
-    },
-    {
-        type: "timestamp",
-        timestamp: "1657198800",
+        timestamp: "1657112400",
     }
 ])
 

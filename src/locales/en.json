@@ -68,5 +68,9 @@
     "deleteMessagesPopup": {
         "popupHeaderText": "",
         "popupContent": "Delete message?"
+    },
+    "timestampFormatter": {
+        "TODAY" : "TODAY",
+        "YESTERDAY" : "YESTERDAY"
     }
 }

@@ -13,7 +13,7 @@ import Quote from './Quote.vue'
 const colorStore = useColorStore()
 const mainStore = useMainStore()
 
-const { formatDateForChat, formatTimeForChat } = useTimeformatter()
+const { formatTimeDateOnlyChat, formatTimeChat, formatTimeFullChat } = useTimeformatter()
 
 const { t, locale } = useI18n({
     inheritLocale: true,
@@ -39,6 +39,7 @@ const showMenu = ref(false)
 const showReply = ref(false)
 
 const selectMessageId = ref(-1)
+const menuTimestamp = ref('')
 
 // set floating time stamp's content
 const currentMsgTimestamp = ref()
@@ -52,14 +53,14 @@ const data = computed(() => {
     let result = JSON.parse(JSON.stringify(props.messageList))
     for (var i = 0; i < result.length; i++) {
         if (result[i].type != 'timestamp') {
-            let time = formatTimeForChat(parseInt(result[i].timestamp), <string>locale.value)
+            let time = formatTimeChat(parseInt(result[i].timestamp), <string>locale.value)
             let res = appendSpaceForMsgInfo(props.messageList[i].message, time, result[i].type == 'outBound')
             result[i].message = res[0]
             result[i].font = res[1]
             result[i].timestamp = time
         }
         else {
-            result[i].timestamp = formatDateForChat(parseInt(result[i].timestamp), <string>locale.value)
+            result[i].timestamp = formatTimeDateOnlyChat(parseInt(result[i].timestamp), <string>locale.value)
         }
     }
 
@@ -229,6 +230,8 @@ function openMenu(e: any, forInBound: boolean, idx: number) {
     if (!showMenu.value) {
         return
     }
+
+    menuTimestamp.value = formatTimeFullChat(parseInt(props.messageList[idx].timestamp), <string>locale.value)
     selectMessageId.value = idx
 
     let bounds = e.target.getBoundingClientRect()
@@ -419,6 +422,13 @@ function getQuoteMessageData(message: any) {
                     <div class='textContainer textContainerlastElement'>
                         <div class='contentTextBody contentTextBodyForSettings'>
                             {{ t('chatMsgBubbleSettings.reply') }}
+                        </div>
+                    </div>
+                </div>
+                <div class='menuTimestampLong'>
+                    <div class='timestampContainer'>
+                        <div class='timestampBig'>
+                            {{ menuTimestamp }}
                         </div>
                     </div>
                 </div>
@@ -736,6 +746,12 @@ function getQuoteMessageData(message: any) {
 .menuContainer:hover {
     background-color: v-bind(hoverColor);
     cursor: pointer;
+}
+
+.menuTimestampLong {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
 }
 
 
