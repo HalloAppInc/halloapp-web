@@ -27,7 +27,6 @@ const disableUpdate = ref(false)
 const currentNode = ref(<Node | null>(null))
 const nodeOffset = ref(0)
 
-// show send button
 const showSendButton = ref(false)
 
 const chatBoxHeight = ref(0)
@@ -134,7 +133,7 @@ function sendMessage() {
             quoteIdx: mainStore.chatPage.includes('reply') ? mainStore.chatPage.substring(5) : -1, // get reply id
             type: 'outBound',
             message: processText(inputArea.value?.innerText.trim(), props.contactList).html,
-            timestamp: Date.now() / 1000 | 0, //  get current time
+            timestamp: Date.now() / 1000 | 0, // get current time
         })
         // hide send button
         showSendButton.value = false
@@ -620,7 +619,7 @@ function checkContacts() {
     width: 40px;
     margin: 5px;
     border-radius: 100%;
-    background-color: #E6E6FA;
+    background-color: #007AFF;
     box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.2);
 
     align-content: center;
@@ -641,6 +640,6 @@ function checkContacts() {
     display: flex;
     justify-content: center;
     align-items: center;
-    color: v-bind(iconColor);
+    color: #FFFFFF;
 }
 </style>
