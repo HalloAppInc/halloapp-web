@@ -9,9 +9,12 @@ export function useHAMediaUpload() {
 
     async function sendMediaToServer(file: any, putUrl: string) {
 
+        if (!mainStore.isConnectedToServer) { return }
+
         let status = -1
+        let remainRetryTimes = 3
     
-        while (status !== 200) {
+        while (status != 200 && remainRetryTimes > 0) {
             let response = await fetch(mainStore.devCORSWorkaroundUrlPrefix + putUrl,
                 {
                     method: 'PUT',
@@ -22,25 +25,46 @@ export function useHAMediaUpload() {
                 })
     
             status = response.status
-            // console.log('PUT status =', response.status)
+            remainRetryTimes -= 1
         }
+
+        // use up all the retry and still fail
+        if (remainRetryTimes == 0 && status != 200) {
+            console.log('HTTP PUT: Fail to upload, status =', status)
+        }
+
+        return status
     }
 
     async function getMediaFromServer(getUrl: string) {
 
+        if (!mainStore.isConnectedToServer) { return }
+
         const request = new Request(mainStore.devCORSWorkaroundUrlPrefix + getUrl)
     
         let status = -1
+        let remainRetryTimes = 3
         let response: any
     
-        while (status !== 200) {
+        while (status != 200 && remainRetryTimes > 0) {
             response = await fetch(request)
             status = response.status
+            remainRetryTimes -= 1
         }
+
+        let mediaBlobUrl = ''
     
-        let mediaBlob: Blob = await response.blob()
-        const mediaBlobUrl = URL.createObjectURL(mediaBlob)
-        return mediaBlobUrl
+        // use up all the retry and still fail
+        if (remainRetryTimes == 0 && status != 200) {
+            console.log('HTTP GET: Fail to download, status =', status)
+        }
+        // succeed
+        else {
+            let mediaBlob: Blob = await response.blob()
+            mediaBlobUrl = URL.createObjectURL(mediaBlob)
+        }
+
+        return {status, mediaBlobUrl}
     }
 
     async function uploadAndDownLoad(file: any, list: any) {
@@ -48,10 +72,16 @@ export function useHAMediaUpload() {
         if (file) {
             await connStore.getMediaUrl(1000, async function (val: any) {
                 // upload
-                await sendMediaToServer(file, val.iq?.uploadMedia?.url?.put)
-                // download
-                let res = await getMediaFromServer(val.iq?.uploadMedia?.url?.get)
-                list.push(res)
+                let resultPUT = await sendMediaToServer(file, val.iq?.uploadMedia?.url?.put)
+                // proceed when upload succeessfully
+                if (resultPUT == 200) {
+                    // download
+                    let resultGET = await getMediaFromServer(val.iq?.uploadMedia?.url?.get)
+                    // if download success
+                    if (resultGET?.status == 200) {
+                        list.push(resultGET?.mediaBlobUrl)
+                    }
+                }
             })
         }
     }

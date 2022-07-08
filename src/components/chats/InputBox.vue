@@ -96,8 +96,6 @@ function analyzeKeyDown(e: any) {
         // enter, send message
         else {
             sendMessage()
-            // hide send button
-            showSendButton.value = false
             e.preventDefault(e)
         }
     }
@@ -128,7 +126,7 @@ function analyzeKeyDown(e: any) {
 
 // send the text in input box
 function sendMessage() {
-    if (inputArea.value?.innerText.trim().length !== 0) {
+    if (inputArea.value?.innerText.trim().length !== 0 || props.uploadFiles != '') {
         props.messageList.push({
             quoteIdx: mainStore.chatPage.includes('reply') ? mainStore.chatPage.substring(5) : -1, // get reply id
             type: 'outBound',
@@ -136,6 +134,8 @@ function sendMessage() {
             message: processText(inputArea.value?.innerText.trim(), props.contactList).html,
             timestamp: Date.now() / 1000 | 0, //  get current time
         })
+        // hide send button
+        showSendButton.value = false
         // clean text inside input box
         if (inputArea.value) {
             inputArea.value.innerText = ''
@@ -459,7 +459,7 @@ function closeContactsAndFocusOnInputBox() {
             </div>
         </div>
         <!-- send button -->
-        <div class='buttonContainer' v-show='showSendButton' @click='sendMessage()'>
+        <div class='buttonContainer' v-show='showSendButton' @click='sendMessage(); showSendButton = false'>
             <div class='buttonIconContainer'>
                 <font-awesome-icon :icon="['fas', 'paper-plane']" size='lg' />
             </div>
@@ -544,6 +544,8 @@ function closeContactsAndFocusOnInputBox() {
     bottom: v-bind(chatBoxHeight + 'px');
     background-color: #f0f2f5;
     border-bottom: 1px solid v-bind(lineColor);
+
+    z-index: 2;
 }
 
 #listBox {
@@ -624,8 +626,6 @@ function closeContactsAndFocusOnInputBox() {
 
     display: flex;
     flex-direction: horizontal;
-
-    z-index: 2;
 }
 
 .buttonContainer:hover {

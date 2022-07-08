@@ -30,7 +30,7 @@ const iconColor = computed(() => {
             </div>
             <div class='contentBody'>
                 <!-- if attached media -->
-                <div class='iconContainer' v-if="quoteMessage.media">
+                <div class='iconContainer' v-if='quoteMessage.media'>
                     <font-awesome-icon :icon="['fas', 'camera']" size='xs' />
                 </div>
                 <div class='TextContainer'>
@@ -49,7 +49,7 @@ const iconColor = computed(() => {
 .quoteContainer {
     height: fit-content;
     background-color: rgb(0,0,0,0.05);
-    border-left: 5px solid #6495ED;;
+    border-left: 5px solid #6495ED;
     border-radius: 5px;
 
     display: flex;
@@ -58,18 +58,10 @@ const iconColor = computed(() => {
 }
 
 .quoteMessageContainer {
-    max-height: 110px;
-    height: fit-content;
+    height: 80px;
+    width: calc(100% - 80px);
     overflow: hidden;
     flex-grow: 100;
-}
-
-.attachMediaContainer {
-    overflow-y: hidden;
-    height: auto;
-    width: 15%;
-
-    background-color: #FFFFFF;
 }
 
 img {
@@ -77,8 +69,17 @@ img {
     width: 100%;
 }
 
+.attachMediaContainer {
+    height: 80px;
+    width: 80px;
+    overflow: hidden;
+
+    background-color: #FFFFFF;
+}
+
 .contentHeader {
     margin: 20px 15px 5px 15px;
+    width: fit-content;
     display: flex;
 
     justify-content: flex-start;
@@ -98,6 +99,7 @@ img {
 
 .contentBody {
     margin: 5px 10px 20px 10px;
+    max-width: 60%;
 
     color: v-bind(textColor);
     font-size: small;
@@ -118,5 +120,9 @@ img {
     max-height: 30px;
     overflow: hidden;
     width: fit-content;
+
+    /* wrap text when it is too long */
+    overflow-wrap: anywhere;
+    white-space: normal;
 }
 </style>
