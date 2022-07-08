@@ -13,7 +13,7 @@ import Quote from './Quote.vue'
 const colorStore = useColorStore()
 const mainStore = useMainStore()
 
-const { formatTime } = useTimeformatter()
+const { formatDateForChat, formatTimeForChat } = useTimeformatter()
 
 const { t, locale } = useI18n({
     inheritLocale: true,
@@ -52,10 +52,14 @@ const data = computed(() => {
     let result = JSON.parse(JSON.stringify(props.messageList))
     for (var i = 0; i < result.length; i++) {
         if (result[i].type != 'timestamp') {
-            let time = formatTime(parseInt(result[i].timestamp), <string>locale.value)
+            let time = formatTimeForChat(parseInt(result[i].timestamp), <string>locale.value)
             let res = appendSpaceForMsgInfo(props.messageList[i].message, time, result[i].type == 'outBound')
             result[i].message = res[0]
             result[i].font = res[1]
+            result[i].timestamp = time
+        }
+        else {
+            result[i].timestamp = formatDateForChat(parseInt(result[i].timestamp), <string>locale.value)
         }
     }
 
@@ -187,13 +191,8 @@ function debouncedHandleScroll() {
 
         let closestElement = document.elementFromPoint(contentViewportOffset.left, contentViewportOffset.top)
 
-        // find the timestamp in msg bubble
-        let timestampEl = closestElement?.getElementsByClassName('timestamp')[0] as HTMLDivElement
-
-        if (!timestampEl) {
-            // find the timestamp in static timestamp bubble
-            timestampEl = closestElement?.getElementsByClassName('timestampBig')[0] as HTMLDivElement
-        }
+        // only change when overlap with a static timestamp
+        let timestampEl = closestElement?.getElementsByClassName('timestampBig')[0] as HTMLDivElement
 
         if (timestampEl) {
             currentMsgTimestamp.value = timestampEl.textContent
@@ -322,7 +321,7 @@ function getQuoteMessageData(message: any) {
                     </div>
                     <!-- quote -->
                     <div class='chatReplyContainer' v-if='value.quoteIdx > -1'>
-                        <Quote :quote-message='getQuoteMessageData(messageList[value.quoteIdx])'/>
+                        <Quote :quote-message='getQuoteMessageData(messageList[value.quoteIdx])' />
                     </div>
                     <div class='chatTextContainer' :class='{ bigChatTextContainer: value.font }'>
                         <!-- show message content -->
@@ -332,7 +331,7 @@ function getQuoteMessageData(message: any) {
                     <div class='msgInfoContainer'>
                         <div class='msgInfoContent'>
                             <div class='timestamp'>
-                                {{ formatTime(parseInt(value.timestamp), locale) }}
+                                {{ value.timestamp }}
                             </div>
                         </div>
                     </div>
@@ -350,7 +349,7 @@ function getQuoteMessageData(message: any) {
                     </div>
                     <!-- quote -->
                     <div class='chatReplyContainer' v-if='value.quoteIdx > -1'>
-                        <Quote :quote-message='getQuoteMessageData(messageList[value.quoteIdx])'/>
+                        <Quote :quote-message='getQuoteMessageData(messageList[value.quoteIdx])' />
                     </div>
                     <div class='chatTextContainer' :class='{ bigChatTextContainer: value.font }'>
                         <!-- show message content -->
@@ -361,7 +360,7 @@ function getQuoteMessageData(message: any) {
                     <div class='msgInfoContainer'>
                         <div class='msgInfoContent'>
                             <div class='timestamp'>
-                                {{ formatTime(parseInt(value.timestamp), locale) }}
+                                {{ value.timestamp }}
                             </div>
                             <div class='iconContainer'>
                                 <font-awesome-icon :icon="['fas', 'check-double']" size='xs' />
@@ -376,7 +375,7 @@ function getQuoteMessageData(message: any) {
                 <div class='chatBubble chatBubbleTime'>
                     <div class='timestampContainerBig'>
                         <div class='timestampBig'>
-                            {{ formatTime(parseInt(value.timestamp), locale) }}
+                            {{ value.timestamp }}
                         </div>
                     </div>
                 </div>
@@ -436,7 +435,7 @@ function getQuoteMessageData(message: any) {
             <Quote :quote-message='quoteMessage' />
         </div>
         <div class='closeIconContainer'>
-            <div class='iconContainer closeIcon' @click="showReply = false;mainStore.gotoChatPage('')">
+            <div class='iconContainer closeIcon' @click="showReply = false; mainStore.gotoChatPage('')">
                 <font-awesome-icon :icon="['fas', 'xmark']" size='lg' />
             </div>
         </div>
@@ -500,6 +499,7 @@ function getQuoteMessageData(message: any) {
     display: flex;
     flex-direction: row;
 }
+
 .contentTextBodyInBound {
     align-self: flex-start;
 
@@ -770,7 +770,7 @@ function getQuoteMessageData(message: any) {
 
     display: flex;
     flex-direction: row;
-    justify-content: center; 
+    justify-content: center;
 
     z-index: 1;
 }

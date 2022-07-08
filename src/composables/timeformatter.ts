@@ -37,5 +37,37 @@ export function useTimeformatter() {
         return { display: diffMinutes + ":" + displaySeconds, timeDiffMs: timeDiffMs }
     }
 
-    return { formatTime, formatTimer }
+    function formatDateForChat(seconds: number, locale: string) {
+        let result = ""
+        const dt = DateTime.fromSeconds(seconds)
+        const currentTime = DateTime.local()
+        
+        // TODAY
+        if (currentTime.diff(dt, 'days').days < 1) {
+            result = "TODAY"
+        }
+        // YESTERDAY
+        else if (currentTime.diff(dt, 'days').days < 2) {
+            result = "YESTERDAY"
+        }
+        // Day of week: TUESDAY
+        else if (currentTime.diff(dt, 'days').days < 5) {
+            result = dt.toFormat("EEEE", { locale: locale }).toUpperCase()
+        }
+
+        // Date: 21/06/2022
+        else {
+            result = dt.toFormat("D", { locale: locale }) 
+        }
+
+        return result
+    }
+
+    function formatTimeForChat(seconds: number, locale: string) {
+        // Time: 11:11 am
+        const dt = DateTime.fromSeconds(seconds)
+        return dt.toFormat("t", { locale: locale })
+    }
+
+    return { formatTime, formatTimer, formatDateForChat, formatTimeForChat }
 }

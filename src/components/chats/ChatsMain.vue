@@ -17,19 +17,25 @@ const content = ref<HTMLElement | null>(null)
 const messageList = ref([
     {
         type: "timestamp",
-        message: "",
         timestamp: "1649204213",
     },
     {
         type: "inBound",
-        media: "...", // should be url
         message: "Short text testing:<br> ~123~ <s>123</s>,_123_<i>123</i>,*123*<b>123</b>",
         timestamp: "1649204213",
+    },
+    {
+        type: "timestamp",
+        timestamp: "1656766800",
     },
     {
         type: "outBound",
         message: "Long text testing: The item is sized according to its width and height properties, The item is sized according to its width and height properties, The item is sized according to its width and height properties",
         timestamp: "1649204213",
+    },
+    {
+        type: "timestamp",
+        timestamp: "1656853200"
     },
     {
         type: "inBound",
@@ -38,8 +44,7 @@ const messageList = ref([
     },
     {
         type: "timestamp",
-        message: "",
-        timestamp: "1655527924",
+        timestamp: "1657026000",
     },
     {
         type: "inBound",
@@ -75,13 +80,16 @@ const messageList = ref([
     },
     {
         type: "timestamp",
-        message: "",
-        timestamp: "1655862547",
+        timestamp: "1657112400",
     },
     {
         type: "inBound",
         message: "asdfasdfsadfasdflsadkfl;sdakf;lasdkf;asdkf;lasdkf;lsadkf;",
         timestamp: "1655862547",
+    },
+    {
+        type: "timestamp",
+        timestamp: "1657198800",
     }
 ])
 
