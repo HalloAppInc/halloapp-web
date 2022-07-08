@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package web;
+
+option java_package = "com.halloapp.proto.web";
+option java_multiple_files = true;
+
+message WebContainer {
+  oneof payload {
+    NoiseMessage noise_message = 1;
+  }
+}
+
+message NoiseMessage {
+    enum MessageType {
+        IK_A = 0;
+        IK_B = 1;
+
+        KK_A = 2;
+        KK_B = 3;
+    }
+    MessageType message_type = 1;
+    bytes content = 2;
+}
