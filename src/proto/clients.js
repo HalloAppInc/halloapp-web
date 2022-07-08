@@ -2111,6 +2111,7 @@ export const clients = $root.clients = (() => {
          * @property {clients.IAlbum|null} [album] ChatContainer album
          * @property {clients.IContactCard|null} [contactCard] ChatContainer contactCard
          * @property {clients.IVoiceNote|null} [voiceNote] ChatContainer voiceNote
+         * @property {clients.IFiles|null} [files] ChatContainer files
          */
 
         /**
@@ -2168,17 +2169,25 @@ export const clients = $root.clients = (() => {
          */
         ChatContainer.prototype.voiceNote = null;
 
+        /**
+         * ChatContainer files.
+         * @member {clients.IFiles|null|undefined} files
+         * @memberof clients.ChatContainer
+         * @instance
+         */
+        ChatContainer.prototype.files = null;
+
         // OneOf field names bound to virtual getters and setters
         let $oneOfFields;
 
         /**
          * ChatContainer message.
-         * @member {"text"|"album"|"contactCard"|"voiceNote"|undefined} message
+         * @member {"text"|"album"|"contactCard"|"voiceNote"|"files"|undefined} message
          * @memberof clients.ChatContainer
          * @instance
          */
         Object.defineProperty(ChatContainer.prototype, "message", {
-            get: $util.oneOfGetter($oneOfFields = ["text", "album", "contactCard", "voiceNote"]),
+            get: $util.oneOfGetter($oneOfFields = ["text", "album", "contactCard", "voiceNote", "files"]),
             set: $util.oneOfSetter($oneOfFields)
         });
 
@@ -2216,6 +2225,8 @@ export const clients = $root.clients = (() => {
                 $root.clients.ContactCard.encode(message.contactCard, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
             if (message.voiceNote != null && Object.hasOwnProperty.call(message, "voiceNote"))
                 $root.clients.VoiceNote.encode(message.voiceNote, writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
+            if (message.files != null && Object.hasOwnProperty.call(message, "files"))
+                $root.clients.Files.encode(message.files, writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
             return writer;
         };
 
@@ -2264,6 +2275,9 @@ export const clients = $root.clients = (() => {
                     break;
                 case 5:
                     message.voiceNote = $root.clients.VoiceNote.decode(reader, reader.uint32());
+                    break;
+                case 6:
+                    message.files = $root.clients.Files.decode(reader, reader.uint32());
                     break;
                 default:
                     reader.skipType(tag & 7);
@@ -2344,6 +2358,16 @@ export const clients = $root.clients = (() => {
                         return "voiceNote." + error;
                 }
             }
+            if (message.files != null && message.hasOwnProperty("files")) {
+                if (properties.message === 1)
+                    return "message: multiple values";
+                properties.message = 1;
+                {
+                    let error = $root.clients.Files.verify(message.files);
+                    if (error)
+                        return "files." + error;
+                }
+            }
             return null;
         };
 
@@ -2384,6 +2408,11 @@ export const clients = $root.clients = (() => {
                     throw TypeError(".clients.ChatContainer.voiceNote: object expected");
                 message.voiceNote = $root.clients.VoiceNote.fromObject(object.voiceNote);
             }
+            if (object.files != null) {
+                if (typeof object.files !== "object")
+                    throw TypeError(".clients.ChatContainer.files: object expected");
+                message.files = $root.clients.Files.fromObject(object.files);
+            }
             return message;
         };
 
@@ -2423,6 +2452,11 @@ export const clients = $root.clients = (() => {
                 object.voiceNote = $root.clients.VoiceNote.toObject(message.voiceNote, options);
                 if (options.oneofs)
                     object.message = "voiceNote";
+            }
+            if (message.files != null && message.hasOwnProperty("files")) {
+                object.files = $root.clients.Files.toObject(message.files, options);
+                if (options.oneofs)
+                    object.message = "files";
             }
             return object;
         };
@@ -5388,6 +5422,457 @@ export const clients = $root.clients = (() => {
         };
 
         return Video;
+    })();
+
+    clients.Files = (function() {
+
+        /**
+         * Properties of a Files.
+         * @memberof clients
+         * @interface IFiles
+         * @property {Array.<clients.IFile>|null} [files] Files files
+         * @property {clients.IText|null} [text] Files text
+         */
+
+        /**
+         * Constructs a new Files.
+         * @memberof clients
+         * @classdesc Represents a Files.
+         * @implements IFiles
+         * @constructor
+         * @param {clients.IFiles=} [properties] Properties to set
+         */
+        function Files(properties) {
+            this.files = [];
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * Files files.
+         * @member {Array.<clients.IFile>} files
+         * @memberof clients.Files
+         * @instance
+         */
+        Files.prototype.files = $util.emptyArray;
+
+        /**
+         * Files text.
+         * @member {clients.IText|null|undefined} text
+         * @memberof clients.Files
+         * @instance
+         */
+        Files.prototype.text = null;
+
+        /**
+         * Creates a new Files instance using the specified properties.
+         * @function create
+         * @memberof clients.Files
+         * @static
+         * @param {clients.IFiles=} [properties] Properties to set
+         * @returns {clients.Files} Files instance
+         */
+        Files.create = function create(properties) {
+            return new Files(properties);
+        };
+
+        /**
+         * Encodes the specified Files message. Does not implicitly {@link clients.Files.verify|verify} messages.
+         * @function encode
+         * @memberof clients.Files
+         * @static
+         * @param {clients.IFiles} message Files message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Files.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.files != null && message.files.length)
+                for (let i = 0; i < message.files.length; ++i)
+                    $root.clients.File.encode(message.files[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+            if (message.text != null && Object.hasOwnProperty.call(message, "text"))
+                $root.clients.Text.encode(message.text, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+            return writer;
+        };
+
+        /**
+         * Encodes the specified Files message, length delimited. Does not implicitly {@link clients.Files.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof clients.Files
+         * @static
+         * @param {clients.IFiles} message Files message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Files.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a Files message from the specified reader or buffer.
+         * @function decode
+         * @memberof clients.Files
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {clients.Files} Files
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Files.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.clients.Files();
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1:
+                    if (!(message.files && message.files.length))
+                        message.files = [];
+                    message.files.push($root.clients.File.decode(reader, reader.uint32()));
+                    break;
+                case 2:
+                    message.text = $root.clients.Text.decode(reader, reader.uint32());
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a Files message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof clients.Files
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {clients.Files} Files
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Files.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a Files message.
+         * @function verify
+         * @memberof clients.Files
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        Files.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.files != null && message.hasOwnProperty("files")) {
+                if (!Array.isArray(message.files))
+                    return "files: array expected";
+                for (let i = 0; i < message.files.length; ++i) {
+                    let error = $root.clients.File.verify(message.files[i]);
+                    if (error)
+                        return "files." + error;
+                }
+            }
+            if (message.text != null && message.hasOwnProperty("text")) {
+                let error = $root.clients.Text.verify(message.text);
+                if (error)
+                    return "text." + error;
+            }
+            return null;
+        };
+
+        /**
+         * Creates a Files message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof clients.Files
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {clients.Files} Files
+         */
+        Files.fromObject = function fromObject(object) {
+            if (object instanceof $root.clients.Files)
+                return object;
+            let message = new $root.clients.Files();
+            if (object.files) {
+                if (!Array.isArray(object.files))
+                    throw TypeError(".clients.Files.files: array expected");
+                message.files = [];
+                for (let i = 0; i < object.files.length; ++i) {
+                    if (typeof object.files[i] !== "object")
+                        throw TypeError(".clients.Files.files: object expected");
+                    message.files[i] = $root.clients.File.fromObject(object.files[i]);
+                }
+            }
+            if (object.text != null) {
+                if (typeof object.text !== "object")
+                    throw TypeError(".clients.Files.text: object expected");
+                message.text = $root.clients.Text.fromObject(object.text);
+            }
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a Files message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof clients.Files
+         * @static
+         * @param {clients.Files} message Files
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        Files.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            let object = {};
+            if (options.arrays || options.defaults)
+                object.files = [];
+            if (options.defaults)
+                object.text = null;
+            if (message.files && message.files.length) {
+                object.files = [];
+                for (let j = 0; j < message.files.length; ++j)
+                    object.files[j] = $root.clients.File.toObject(message.files[j], options);
+            }
+            if (message.text != null && message.hasOwnProperty("text"))
+                object.text = $root.clients.Text.toObject(message.text, options);
+            return object;
+        };
+
+        /**
+         * Converts this Files to JSON.
+         * @function toJSON
+         * @memberof clients.Files
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        Files.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        return Files;
+    })();
+
+    clients.File = (function() {
+
+        /**
+         * Properties of a File.
+         * @memberof clients
+         * @interface IFile
+         * @property {clients.IEncryptedResource|null} [data] File data
+         * @property {string|null} [filename] File filename
+         */
+
+        /**
+         * Constructs a new File.
+         * @memberof clients
+         * @classdesc Represents a File.
+         * @implements IFile
+         * @constructor
+         * @param {clients.IFile=} [properties] Properties to set
+         */
+        function File(properties) {
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * File data.
+         * @member {clients.IEncryptedResource|null|undefined} data
+         * @memberof clients.File
+         * @instance
+         */
+        File.prototype.data = null;
+
+        /**
+         * File filename.
+         * @member {string} filename
+         * @memberof clients.File
+         * @instance
+         */
+        File.prototype.filename = "";
+
+        /**
+         * Creates a new File instance using the specified properties.
+         * @function create
+         * @memberof clients.File
+         * @static
+         * @param {clients.IFile=} [properties] Properties to set
+         * @returns {clients.File} File instance
+         */
+        File.create = function create(properties) {
+            return new File(properties);
+        };
+
+        /**
+         * Encodes the specified File message. Does not implicitly {@link clients.File.verify|verify} messages.
+         * @function encode
+         * @memberof clients.File
+         * @static
+         * @param {clients.IFile} message File message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        File.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.data != null && Object.hasOwnProperty.call(message, "data"))
+                $root.clients.EncryptedResource.encode(message.data, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+            if (message.filename != null && Object.hasOwnProperty.call(message, "filename"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.filename);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified File message, length delimited. Does not implicitly {@link clients.File.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof clients.File
+         * @static
+         * @param {clients.IFile} message File message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        File.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a File message from the specified reader or buffer.
+         * @function decode
+         * @memberof clients.File
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {clients.File} File
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        File.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.clients.File();
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1:
+                    message.data = $root.clients.EncryptedResource.decode(reader, reader.uint32());
+                    break;
+                case 2:
+                    message.filename = reader.string();
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a File message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof clients.File
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {clients.File} File
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        File.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a File message.
+         * @function verify
+         * @memberof clients.File
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        File.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.data != null && message.hasOwnProperty("data")) {
+                let error = $root.clients.EncryptedResource.verify(message.data);
+                if (error)
+                    return "data." + error;
+            }
+            if (message.filename != null && message.hasOwnProperty("filename"))
+                if (!$util.isString(message.filename))
+                    return "filename: string expected";
+            return null;
+        };
+
+        /**
+         * Creates a File message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof clients.File
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {clients.File} File
+         */
+        File.fromObject = function fromObject(object) {
+            if (object instanceof $root.clients.File)
+                return object;
+            let message = new $root.clients.File();
+            if (object.data != null) {
+                if (typeof object.data !== "object")
+                    throw TypeError(".clients.File.data: object expected");
+                message.data = $root.clients.EncryptedResource.fromObject(object.data);
+            }
+            if (object.filename != null)
+                message.filename = String(object.filename);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a File message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof clients.File
+         * @static
+         * @param {clients.File} message File
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        File.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            let object = {};
+            if (options.defaults) {
+                object.data = null;
+                object.filename = "";
+            }
+            if (message.data != null && message.hasOwnProperty("data"))
+                object.data = $root.clients.EncryptedResource.toObject(message.data, options);
+            if (message.filename != null && message.hasOwnProperty("filename"))
+                object.filename = message.filename;
+            return object;
+        };
+
+        /**
+         * Converts this File to JSON.
+         * @function toJSON
+         * @memberof clients.File
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        File.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        return File;
     })();
 
     clients.AlbumMedia = (function() {

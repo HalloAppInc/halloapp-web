@@ -3,9 +3,12 @@
 import { ref } from 'vue'
 
 import { useMainStore } from '../../stores/mainStore'
+
+import HomeHeader from './HomeHeader.vue'
 import Post from './Post.vue'
 import Comment from '../comment/CommentMain.vue'
 import hal from '../../common/halogger'
+
 const mainStore = useMainStore()
 
 const listBoxWidth = ref('100%')

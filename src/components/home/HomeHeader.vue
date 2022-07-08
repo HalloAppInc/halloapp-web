@@ -5,8 +5,6 @@ import { useMainStore } from '../../stores/mainStore'
 import { useColorStore } from '../../stores/colorStore'
 import { useI18n } from 'vue-i18n'
 
-import HomeHeader from './HomeHeader.vue'
-
 const props = defineProps(['postID'])
 
 const { t } = useI18n({
@@ -49,16 +47,16 @@ const backgroundColor = computed(() => {
 
         <div class='container'>
             <div class="leftGutter"></div>
-            <div class='iconContainer' @click="$emit('backClick')">
+            <!-- <div class='iconContainer' @click="$emit('backClick')">
                 <div class='iconShadow'>
                     <font-awesome-icon v-if='!mainStore.isMobile' :icon="['fas', 'xmark']" style="font-size: 25px;"/>
                     <font-awesome-icon v-else :icon="['fas', 'angle-left']" style="font-size: 25px;"/>
                 </div>
-            </div>
+            </div> -->
             <div class="rightGutter"></div>
-            <div class='titleContainer'>
+            <!-- <div class='titleContainer'>
                 Post: {{ postID }}
-            </div>            
+            </div>             -->
 
         </div>
     </div>
