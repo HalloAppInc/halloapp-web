@@ -1,7 +1,13 @@
 import { DateTime } from 'luxon'
+import { useI18n } from 'vue-i18n'
 import halogger from '../common/halogger'
 
 export function useTimeformatter() {
+
+    const { t } = useI18n({
+        inheritLocale: true,
+        useScope: 'global'
+    })
     
     const minMs = 1000 * 60
     const hrMs = minMs * 60
@@ -37,5 +43,49 @@ export function useTimeformatter() {
         return { display: diffMinutes + ":" + displaySeconds, timeDiffMs: timeDiffMs }
     }
 
-    return { formatTime, formatTimer }
+    function formatTimeDateOnlyChat(seconds: number, locale: string) {
+        let result = ""
+        const dt = DateTime.fromSeconds(seconds)
+        const currentTime = DateTime.local()
+        
+        // TODAY
+        if (currentTime.diff(dt, 'days').days < 1) {
+            result = t('timestampFormatter.TODAY')
+        }
+        // YESTERDAY
+        else if (currentTime.diff(dt, 'days').days < 2) {
+            result = t('timestampFormatter.YESTERDAY')
+        }
+        // Day of week: TUESDAY
+        else if (currentTime.diff(dt, 'days').days < 5) {
+            result = dt.toFormat("EEEE", { locale: locale }).toUpperCase()
+        }
+
+        // Date: localized numeric date
+        else {
+            result = dt.toFormat("D", { locale: locale }) 
+        }
+
+        return result
+    }
+
+    function formatTimeChat(seconds: number, locale: string) {
+        // Time: 11:11 am
+        const dt = DateTime.fromSeconds(seconds)
+        return dt.toFormat("t", { locale: locale })
+    }
+
+    function formatTimeFullChat(seconds: number, locale: string) {
+        const dt = DateTime.fromSeconds(seconds)
+
+        // date + hh:mm am
+        let res = dt.toFormat("D", { locale: locale }) 
+        res += " "
+        res += formatTimeChat(seconds, locale)
+
+        return res
+    }
+
+
+    return { formatTime, formatTimer, formatTimeDateOnlyChat, formatTimeChat, formatTimeFullChat }
 }
