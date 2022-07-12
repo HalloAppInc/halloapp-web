@@ -18,7 +18,6 @@ const quoteMedia = computed(() => {
         'width': res?.mediaItemWidth,
         'height': res?.mediaItemHeight 
     }
-    console.log(result)
     return result
 })
 

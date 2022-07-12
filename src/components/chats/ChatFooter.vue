@@ -51,6 +51,7 @@ function onFilePicked(e: any) {
             img.onload = function () {
                 props.uploadFiles.push({
                         'file': file,
+                        'url': img.src,
                         'width': img.width,
                         'height': img.height
                     })
@@ -60,6 +61,7 @@ function onFilePicked(e: any) {
             img.src = URL.createObjectURL(file)
         }
     }
+    e.target.files = ''
 }
 </script>
 
@@ -69,7 +71,7 @@ function onFilePicked(e: any) {
     <transition name='attach'>
         <div class='veriticalMenuContainer' v-if='showAttachMenu'>
             <!-- upload file -->
-            <input type='file' ref='selectAndUploadfile' accept='image/*' @change='onFilePicked'
+            <input type='file' multiple ref='selectAndUploadfile' accept='image/*' @change='onFilePicked'
                 style='display: none' />
             <!-- icon -->
             <div class='iconContainer' @mousedown='selectAndUploadfile?.click'>

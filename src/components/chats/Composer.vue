@@ -34,11 +34,10 @@ const mediaUrlList = computed(() => {
         let media = props.uploadFiles[i]
         let res = setPreviewMediaSizes(media)
         result.push({
-            'url': URL.createObjectURL(media.file),
+            'url': media.url,
             'width': res?.mediaItemWidth,
             'height': res?.mediaItemHeight
         })
-        props.uploadFiles[i].url = URL.createObjectURL(media.file)
     }
     // only set selet idx in initialization
     if (selectMediaIdx.value == -1) {
@@ -70,7 +69,6 @@ function testUploadAndDownload(file: any) {
         uploadAndDownLoad(file, attachMediaList.value)
         // wait for uploadAndDownLoad
         setTimeout(() => {
-            // console.log(attachMediaList.value)
             test.value.src = attachMediaList.value[attachMediaList.value.length - 1]
         }, 5000)
     }
@@ -86,6 +84,7 @@ function onFilePicked(e: any) {
             img.onload = function () {
                 props.uploadFiles.push({
                         'file': file,
+                        'url': img.src,
                         'width': img.width,
                         'height': img.height
                     })
@@ -93,6 +92,8 @@ function onFilePicked(e: any) {
             img.src = URL.createObjectURL(file)
         }
     }
+    // reset select to allow second use of same media
+    e.target.value = ''
 }
 
 function openBigImg(e: any, idx: number) {
@@ -110,7 +111,7 @@ function deleteMedia(idx: number) {
         mainStore.gotoChatPage('')
     }
     // if delete media before selet one
-    else if (idx < selectMediaIdx.value) {
+    else if (idx <= selectMediaIdx.value) {
         selectMediaIdx.value -= 1
     }
     // remove this element
@@ -180,7 +181,7 @@ function deleteMedia(idx: number) {
                     </div>
                     <div class='addMoreIconContainer'>
                         <!-- upload file -->
-                        <input type='file' ref='addUploadMedia' accept='image/*' @change='onFilePicked'
+                        <input type='file' multiple ref='addUploadMedia' accept='image/*' @change='onFilePicked'
                             style='display: none' />
                         <div class='iconContainer' @click='addUploadMedia?.click'>
                             <font-awesome-icon :icon="['fas', 'plus']" size='lg' />
