@@ -84,8 +84,7 @@ function onFilePicked(e: any) {
         if (file) {
             let img = new Image()
             img.onload = function () {
-                props.uploadFiles.push(
-                    {
+                props.uploadFiles.push({
                         'file': file,
                         'width': img.width,
                         'height': img.height
@@ -121,8 +120,8 @@ function deleteMedia(idx: number) {
 
 <template>
 
-    <div id='mask' v-if='mainStore.chatPage == "composer"'>
-        <div id='wrapper'>
+    <div class='mask' v-if='mainStore.chatPage == "composer"'>
+        <div class='wrapper'>
             <!-- close icon -->
             <div class='closeIconContainer'>
                 <div class='iconContainer' @click="mainStore.gotoChatPage('chat')">
@@ -133,7 +132,7 @@ function deleteMedia(idx: number) {
             </div>
 
             <!-- tool box: edit uploaded photo -->
-            <div id='header'>
+            <div class='header'>
                 <div class='iconContainer'>
                     <div class='iconShadow'>
                         <font-awesome-icon :icon="['fas', 'face-smile']" size='lg' />
@@ -150,7 +149,7 @@ function deleteMedia(idx: number) {
             </div>
 
             <!-- image box: show the image -->
-            <div id='content'>
+            <div class='content'>
                 <div class='imgBigContainer'>
                     <img class='imgBig' :src='mediaUrlList[selectMediaIdx].url' />
                     <!-- TODO: delete this one, only for test -->
@@ -159,7 +158,7 @@ function deleteMedia(idx: number) {
             </div>
 
             <!-- input box: add caption -->
-            <div id='footer'>
+            <div class='footer'>
                 <div class='chatBoxTray' ref='chatBox'>
                     <InputBox :message-list='messageList' :contact-list='contactList' :upload-files='uploadFiles' />
                 </div>
@@ -195,7 +194,7 @@ function deleteMedia(idx: number) {
 </template>
 
 <style scoped>
-#mask {
+.mask {
     position: fixed;
     z-index: 4;
     top: 0;
@@ -206,7 +205,7 @@ function deleteMedia(idx: number) {
     display: table;
 }
 
-#wrapper {
+.wrapper {
     width: 100%;
     height: 100%;
     position: relative;
@@ -233,14 +232,14 @@ function deleteMedia(idx: number) {
     cursor: pointer;
 }
 
-#header {
+.header {
     flex: 1 1 50px;
     display: flex;
     flex-direction: row;
     justify-content: center;
 }
 
-#content {
+.content {
     width: 100%;
     height: 100%;
     display: flex;
@@ -260,12 +259,12 @@ function deleteMedia(idx: number) {
     box-shadow: 0px 0px 20px 2px v-bind(shadowColor);
 }
 
-#footer {
+.footer {
     bottom: 0;
     display: flex;
     flex-direction: column;
-    align-items: center;
     justify-content: center;
+    align-items: center;
 }
 
 .chatBoxTray {

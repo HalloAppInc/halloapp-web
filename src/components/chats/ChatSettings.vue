@@ -33,8 +33,8 @@ function selectColor(color: string) {
 
 <template>
 
-    <div id='wrapper' v-if="mainStore.chatPage == 'settings'">
-        <div id='header'>
+    <div class='wrapper' v-if="mainStore.chatPage == 'settings'">
+        <div class='header'>
             <div class='contentMenuTitle'>
                 <div class='iconContainer' @click="mainStore.chatPage = 'chat'">
                     <font-awesome-icon :icon="['fas', 'arrow-left']" size='lg' />
@@ -47,7 +47,7 @@ function selectColor(color: string) {
             </div>
         </div>
 
-        <div id='content' ref='content'>
+        <div class='content' ref='content'>
             <div class='container'>
                 <div class='colorBlockContainer' v-for='value in colorList' :style="{ 'background-color': value }"
                     :class="{ 'selected': selectedColor == value }" @click='selectColor(value)'>
@@ -59,7 +59,7 @@ function selectColor(color: string) {
 </template>
 
 <style scoped>
-#wrapper {
+.wrapper {
     position: fixed;
     z-index: 9998;
     top: 0;
@@ -71,13 +71,13 @@ function selectColor(color: string) {
     background-color: v-bind(chatBackground);
 }
 
-#header {
+.header {
     flex: 0 0 50px;
     background-color: v-bind(headerColor);
     padding: 10px;
 }
 
-#content {
+.content {
     width: 100%;
     height: 100%;
     overflow-y: hidden;

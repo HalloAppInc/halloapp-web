@@ -433,7 +433,7 @@ function closeContactsAndFocusOnInputBox() {
 <template>
     
     <div class='contactList' v-if='showContacts'>
-        <div id='listBox'>
+        <div class='listBox'>
             <div v-for='(value, idx) in contactList' class='container' @mousedown='addContactToInputBox(value)'>
                 <div class='avatarContainer'>
                     <div class='avatar'></div>
@@ -452,7 +452,7 @@ function closeContactsAndFocusOnInputBox() {
 
     <div class='chatBoxTray' ref='chatBox'>
         <div class='inputBoxContainer'>
-            <div id='textarea' ref='inputArea' contenteditable='true' placeholder='Type a message...'
+            <div class='textarea' ref='inputArea' contenteditable='true' placeholder='Type a message...'
                 @focusout='closeContactsAndFocusOnInputBox' @keydown='analyzeKeyDown($event)'
                 @keyup='analyzeKeyUp($event)' @click='analyzeMouseMovement($event)'>
             </div>
@@ -501,7 +501,7 @@ function closeContactsAndFocusOnInputBox() {
     bottom: 0;
 }
 
-#textarea {
+.textarea {
     width: 100%;
     padding: 10px 15px;
     overflow-y: auto;
@@ -518,7 +518,7 @@ function closeContactsAndFocusOnInputBox() {
     color: v-bind(textColor);
 }
 
-#textarea:focus {
+.textarea:focus {
     outline: none;
 }
 
@@ -547,7 +547,7 @@ function closeContactsAndFocusOnInputBox() {
     z-index: 2;
 }
 
-#listBox {
+.listBox {
     overflow-y: auto;
     overflow-x: hidden;
     height: 100%;

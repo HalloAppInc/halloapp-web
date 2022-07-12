@@ -71,8 +71,8 @@ function openBigImg(idx: number) {
 
 <template>
 
-    <div id='mask' v-if='mainStore.chatPage == "media"'>
-        <div id='wrapper'>
+    <div class='mask' v-if='mainStore.chatPage == "media"'>
+        <div class='wrapper'>
             <!-- close icon -->
             <div class='closeIconContainer'>
                 <div class='iconContainer' @click='mainStore.gotoChatPage("")'>
@@ -81,14 +81,14 @@ function openBigImg(idx: number) {
             </div>
 
             <!-- tool box -->
-            <div id='header'>
+            <div class='header'>
                 <div class='iconContainer'>
                     <font-awesome-icon :icon="['fas', 'face-smile']" size='lg' />
                 </div>
             </div>
 
             <!-- image box: show the image -->
-            <div id='content'>
+            <div class='content'>
                 <div class='leftArrowIconContainer'>
                     <div class='iconContainer' :class='{ iconContainerForbidden: selectMediaIdx == 0 }'
                         @mousedown='lastMedia()'>
@@ -114,7 +114,7 @@ function openBigImg(idx: number) {
                 </div>
             </div>
 
-            <div id='footer'>
+            <div class='footer'>
                 <!-- media preview and add more media -->
                 <div class='mediaTray'>
                     <div class='smallPreviewContainer'>
@@ -135,7 +135,7 @@ function openBigImg(idx: number) {
 </template>
 
 <style scoped>
-#mask {
+.mask {
     position: fixed;
     z-index: 4;
     top: 0;
@@ -146,7 +146,7 @@ function openBigImg(idx: number) {
     display: table;
 }
 
-#wrapper {
+.wrapper {
     width: 100%;
     height: 100%;
     position: relative;
@@ -158,14 +158,14 @@ function openBigImg(idx: number) {
     justify-content: flex-start;
 }
 
-#header {
+.header {
     flex: 1 1 50px;
     display: flex;
     flex-direction: row;
     justify-content: center;
 }
 
-#content {
+.content {
     width: 100%;
     height: 100%;
     display: flex;
@@ -174,7 +174,7 @@ function openBigImg(idx: number) {
     align-items: center;
 }
 
-#footer {
+.footer {
     bottom: 0;
     display: flex;
     flex-direction: column;

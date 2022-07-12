@@ -12,7 +12,7 @@ import { useMainStore } from '../../stores/mainStore'
 import Popup from './Popup.vue'
 import Quote from './Quote.vue'
 import FullScreener from './FullScreener.vue'
-import MediaCarousel from './MediaCarousel.vue'
+import MediaCollage from './MediaCollage.vue'
 
 const colorStore = useColorStore()
 const mainStore = useMainStore()
@@ -329,7 +329,7 @@ function getQuoteMessageData(message: any) {
 </script>
 
 <template>
-    <div id='contents' ref='content' @scroll='handleScroll()'>
+    <div class='contents' ref='content' @scroll='handleScroll()'>
         <!-- chat msg -->
         <div class='containerChat' v-for='(value, idx) in data'>
             <!-- inbound msg -->
@@ -390,7 +390,7 @@ function getQuoteMessageData(message: any) {
                             :width='media.width'
                             :height='media.hieght'/>
                         </div> -->
-                        <MediaCarousel :media-list='value.media'/>
+                        <MediaCollage :media-list='value.media'/>
                     </div>
                     <!-- quote -->
                     <div class='chatReplyContainer' v-if='value.quoteIdx && value.quoteIdx > -1'>
@@ -527,7 +527,7 @@ function getQuoteMessageData(message: any) {
     border: 0px solid white;
 }
 
-#contents {
+.contents {
     width: 100%;
     height: 100%;
 

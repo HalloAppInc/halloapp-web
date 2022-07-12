@@ -60,10 +60,10 @@ const listData = [
 <template>
 
 <div class="wrapper">
-    <div id="header"> 
+    <div class="header"> 
         
     </div>
-    <div id="listBox"> 
+    <div class="listBox"> 
         <div v-for="value in listData" class="container">
             <div class="avatarContainer">
                 <div class="avatar"></div>
@@ -118,13 +118,13 @@ const listData = [
     overflow: hidden;
 }
 
-#header {
+.header {
     flex: 0 0 50px;
     background-color: #f0f2f5;
     padding: 10px;
 }
 
-#listBox {
+.listBox {
     overflow-y: auto;
     overflow-x: hidden;
     height: 100%;

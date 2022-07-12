@@ -49,8 +49,7 @@ function onFilePicked(e: any) {
         if (file) {
             let img = new Image()
             img.onload = function () {
-                props.uploadFiles.push(
-                    {
+                props.uploadFiles.push({
                         'file': file,
                         'width': img.width,
                         'height': img.height

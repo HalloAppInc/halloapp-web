@@ -150,19 +150,19 @@ function clearOrDeleteMessage(idx: number = -1) {
 
 <template>
 
-    <div id='wrapper' v-if='mainStore.page == "chats" && mainStore.chatPage != "settings"'>
+    <div class='wrapper' v-if='mainStore.page == "chats" && mainStore.chatPage != "settings"'>
 
-        <div id='header'>
+        <div class='header'>
             <ChatHeader :chat-name='chatName' :chat-information='chatInformation' @clear-messages='clearOrDeleteMessage'/>
         </div>
 
         <!-- chatting area -->
-        <div id='content' ref='content'>
+        <div class='content' ref='content'>
             <ChatPanel :message-list='messageList' @delete-message='clearOrDeleteMessage'/>
         </div>
 
         <!-- input tray -->
-        <div id='footer'>
+        <div class='footer'>
             <ChatFooter :upload-files='uploadFiles' :message-list='messageList' :contact-list='contactList' />
         </div>
 
@@ -176,7 +176,7 @@ function clearOrDeleteMessage(idx: number = -1) {
 </template>
 
 <style scoped>
-#wrapper {
+.wrapper {
     width: 100%;
     height: 100%;
     position: relative;
@@ -190,17 +190,17 @@ function clearOrDeleteMessage(idx: number = -1) {
     justify-content: flex-start;
 }
 
-#header {
+.header {
     flex: 1 1 50px;
     background-color: #f0f2f5;
 }
 
-#footer {
+.footer {
     bottom: 0;
     width: 100%;
 }
 
-#content {
+.content {
     width: 100%;
     height: 100%;
     overflow-y: hidden;
