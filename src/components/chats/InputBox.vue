@@ -10,7 +10,7 @@ const mainStore = useMainStore()
 
 const { processText } = useHAText()
 
-const props = defineProps(['messageList', 'contactList', 'uploadFiles', 'sendMessage'])
+const props = defineProps(['messageList', 'contactList', 'uploadFiles'])
 
 const inputArea = ref(<HTMLElement | null>(null))
 const chatBox = ref(<HTMLElement | null>(null))
@@ -129,7 +129,7 @@ function sendMessage() {
         props.messageList.push({
             quoteIdx: mainStore.chatPage.includes('reply') ? mainStore.chatPage.substring(5) : -1, // get reply id
             type: 'outBound',
-            media: props.uploadFiles,
+            media: JSON.parse(JSON.stringify(props.uploadFiles)), // deep copy
             message: processText(inputArea.value?.innerText.trim(), props.contactList).html,
             timestamp: Date.now() / 1000 | 0, // get current time
         })

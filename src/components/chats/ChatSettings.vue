@@ -33,26 +33,24 @@ function selectColor(color: string) {
 
 <template>
 
-    <div id='wrapper'>
+    <div id='wrapper' v-if="mainStore.chatPage == 'settings'">
         <div id='header'>
             <div class='contentMenuTitle'>
-                    <div class='iconContainer' @click="mainStore.chatPage = 'chat'">
-                        <font-awesome-icon :icon="['fas', 'arrow-left']" size='lg' />
-                    </div>
-                    <div class='textContainerBig'>
-                        <div class='contentTextBodyBig'>
-                            Change Chat Background Color
-                        </div>
+                <div class='iconContainer' @click="mainStore.chatPage = 'chat'">
+                    <font-awesome-icon :icon="['fas', 'arrow-left']" size='lg' />
+                </div>
+                <div class='textContainerBig'>
+                    <div class='contentTextBodyBig'>
+                        Change Chat Background Color
                     </div>
                 </div>
+            </div>
         </div>
 
         <div id='content' ref='content'>
             <div class='container'>
-                <div class='colorBlockContainer' v-for='value in colorList' 
-                :style="{'background-color': value}" 
-                :class="{'selected': selectedColor == value}"
-                @click='selectColor(value)'>
+                <div class='colorBlockContainer' v-for='value in colorList' :style="{ 'background-color': value }"
+                    :class="{ 'selected': selectedColor == value }" @click='selectColor(value)'>
                 </div>
             </div>
         </div>
@@ -146,13 +144,11 @@ function selectColor(color: string) {
     cursor: pointer;
 }
 
-.selected { 
+.selected {
     box-shadow: inset 0 0 0 5px #1E90FF;
 }
 
-.selected:hover { 
+.selected:hover {
     box-shadow: inset 0 0 0 5px #1E90FF;
 }
 </style>
-
-

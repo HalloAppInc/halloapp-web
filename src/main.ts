@@ -11,6 +11,7 @@ import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome"
 import {
     faAngleDown,
     faAngleLeft,
+    faAngleRight,
     faArrowLeft,
     faBell,
     faCamera,
@@ -31,6 +32,7 @@ import {
     faMicrophone,
     faPaperclip,
     faPaperPlane,
+    faPlus,
     faPowerOff,
     faShieldHalved,
     faUserGroup,
@@ -41,6 +43,7 @@ import {
 library.add(
     faAngleDown,
     faAngleLeft,
+    faAngleRight,
     faArrowLeft,
     faBell,
     faCamera,
@@ -61,6 +64,7 @@ library.add(
     faMicrophone,
     faPaperclip,
     faPaperPlane,
+    faPlus,
     faPowerOff,
     faShieldHalved,
     faUserGroup,

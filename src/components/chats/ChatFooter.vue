@@ -44,13 +44,23 @@ function onFilePicked(e: any) {
     props.uploadFiles.splice(0, props.uploadFiles.length)
     const files = e.target.files
     for (let i = 0; i < files.length; i++) {
-        let filename = files[i].name
+        let file = files[i]
         // if select at least one file
-        if (filename != '') {
-            props.uploadFiles.push(files[i])
+        if (file) {
+            let img = new Image()
+            img.onload = function () {
+                props.uploadFiles.push(
+                    {
+                        'file': file,
+                        'width': img.width,
+                        'height': img.height
+                    })
+                // goto composer after get width and height
+                mainStore.gotoChatPage('composer')
+            }
+            img.src = URL.createObjectURL(file)
         }
     }
-    mainStore.gotoChatPage('preview')
 }
 </script>
 

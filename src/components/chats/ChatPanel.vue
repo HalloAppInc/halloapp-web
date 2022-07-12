@@ -1,21 +1,24 @@
 <script setup lang="ts">
-import { emit } from 'process'
-import { emitKeypressEvents } from 'readline'
 import { ref, computed, nextTick, watch, onMounted, onUnmounted } from 'vue'
 
 import { useI18n } from 'vue-i18n'
 
 import { useTimeformatter } from '../../composables/timeformatter'
+import { useHAMediaResize } from '../../composables/haMediaResize'
+
 import { useColorStore } from '../../stores/colorStore'
 import { useMainStore } from '../../stores/mainStore'
 
 import Popup from './Popup.vue'
 import Quote from './Quote.vue'
+import FullScreener from './FullScreener.vue'
+import MediaCarousel from './MediaCarousel.vue'
 
 const colorStore = useColorStore()
 const mainStore = useMainStore()
 
 const { formatTimeDateOnlyChat, formatTimeChat, formatTimeFullChat } = useTimeformatter()
+const { setMediaSizeInMediaList } = useHAMediaResize()
 
 const { t, locale } = useI18n({
     inheritLocale: true,
@@ -24,7 +27,7 @@ const { t, locale } = useI18n({
 
 const props = defineProps(['messageList'])
 
-const emits = defineEmits(['deleteMessage', 'openMedia'])
+const emits = defineEmits(['deleteMessage'])
 
 const menu = ref<HTMLElement | null>(null)
 const content = ref<HTMLElement | null>(null)
@@ -40,7 +43,8 @@ const showJumpDownButton = ref(false)
 const showMenu = ref(false)
 const showReply = ref(false)
 
-const selectMessageId = ref(-1)
+const selectMessageIdx = ref(-1)
+const selectMediaUrl = ref()
 const menuTimestamp = ref('')
 
 // set floating time stamp's content
@@ -56,10 +60,13 @@ const data = computed(() => {
     for (var i = 0; i < result.length; i++) {
         if (result[i].type != 'timestamp') {
             let time = formatTimeChat(parseInt(result[i].timestamp), <string>locale.value)
-            let res = appendSpaceForMsgInfo(props.messageList[i].message, time, result[i].type == 'outBound')
-            result[i].message = res[0]
-            result[i].font = res[1]
+            let resMsg = appendSpaceForMsgInfo(props.messageList[i].message, time, result[i].type == 'outBound')
+            result[i].message = resMsg[0]
+            result[i].font = resMsg[1]
             result[i].timestamp = time
+            if (result[i].media) {
+                setMediaSizeInMediaList(result[i].media)
+            }
         }
         else {
             result[i].timestamp = formatTimeDateOnlyChat(parseInt(result[i].timestamp), <string>locale.value)
@@ -237,7 +244,7 @@ function openMenu(e: any, forInBound: boolean, idx: number) {
     }
 
     menuTimestamp.value = formatTimeFullChat(parseInt(props.messageList[idx].timestamp), <string>locale.value)
-    selectMessageId.value = idx
+    selectMessageIdx.value = idx
 
     let bounds = e.target.getBoundingClientRect()
     for (let key in bounds) {
@@ -294,18 +301,19 @@ onUnmounted(() => {
     document.removeEventListener("click", closeMenu)
 })
 
-function openMedia(e: any) {
+function openMedia(e: any, idx: number) {
     // go to show media
+    selectMediaUrl.value = e.target.getAttribute('src')
+    selectMessageIdx.value = idx
     mainStore.gotoChatPage('media')
-    return e.target.getAttribute('src')
 }
 
 function openReply() {
-    mainStore.gotoChatPage('reply' + selectMessageId.value)
+    mainStore.gotoChatPage('reply' + selectMessageIdx.value)
     showReply.value = true
     showMenu.value = false
     // get quote message
-    quoteMessage.value = getQuoteMessageData(props.messageList[selectMessageId.value])
+    quoteMessage.value = getQuoteMessageData(props.messageList[selectMessageIdx.value])
 }
 
 function getQuoteMessageData(message: any) {
@@ -335,12 +343,16 @@ function getQuoteMessageData(message: any) {
                         </div>
                     </div>
                     <!-- media -->
-                    <div class='mediaContainer' v-if='value.media && value.media != ""' @click='$emit("openMedia", openMedia($event))'>
-                        <img :src='value.media' />
+                    <div class='mediaContainer' v-if='value.media && value.media != ""'
+                        @click='openMedia($event, idx)'>
+                        <img v-for='media in value.media' 
+                            :src='media.url' 
+                            :width='media.width'
+                            :height='media.hieght'/>
                     </div>
                     <!-- quote -->
                     <div class='chatReplyContainer' v-if='value.quoteIdx && value.quoteIdx > -1'>
-                        <Quote :quote-message='getQuoteMessageData(messageList[value.quoteIdx])'/>
+                        <Quote :quote-message='getQuoteMessageData(messageList[value.quoteIdx])' />
                     </div>
                     <!-- text -->
                     <div class='chatTextContainer' :class='{ bigChatTextContainer: value.font }'>
@@ -370,12 +382,19 @@ function getQuoteMessageData(message: any) {
                         </div>
                     </div>
                     <!-- media -->
-                    <div class='mediaContainer' v-if='value.media && value.media != ""' @click='$emit("openMedia", openMedia($event))'>
-                        <img :src='value.media' />
+                    <div class='mediaContainer' v-if='value.media && value.media != ""'
+                        @click='openMedia($event, idx)'>
+                        <!-- <div class='imgSquareContainer' v-for='media in value.media'>
+                            <img  
+                            :src='media.url' 
+                            :width='media.width'
+                            :height='media.hieght'/>
+                        </div> -->
+                        <MediaCarousel :media-list='value.media'/>
                     </div>
                     <!-- quote -->
                     <div class='chatReplyContainer' v-if='value.quoteIdx && value.quoteIdx > -1'>
-                        <Quote :quote-message='getQuoteMessageData(messageList[value.quoteIdx])'/>
+                        <Quote :quote-message='getQuoteMessageData(messageList[value.quoteIdx])' />
                     </div>
                     <!-- text -->
                     <div class='chatTextContainer' :class='{ bigChatTextContainer: value.font }'>
@@ -462,7 +481,7 @@ function getQuoteMessageData(message: any) {
     </div>
 
     <!-- popup -->
-    <Popup @confirm-Ok="$emit('deleteMessage', selectMessageId)" />
+    <Popup @confirm-Ok="$emit('deleteMessage', selectMessageIdx)" />
 
     <!-- Reply -->
     <div class='containerReply' v-if='showReply'>
@@ -475,6 +494,9 @@ function getQuoteMessageData(message: any) {
             </div>
         </div>
     </div>
+
+    <!-- show media in full screen -->
+    <FullScreener :select-message-idx='selectMessageIdx' :select-media-url='selectMediaUrl' :message-list='messageList' />
 
 </template>
 
@@ -747,13 +769,26 @@ function getQuoteMessageData(message: any) {
 }
 
 .mediaContainer {
-    max-height: 400px;
     overflow-y: hidden;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.mediaContainer:hover {
+    cursor: pointer;
+}
+
+.imgSquareContainer {
+    height: 150px;
+    width: 150px;
+    margin-right: 5px;
 }
 
 img {
     border-radius: 5px;
-    max-width: 100%;
+
+    overflow: hidden;
 }
 
 img:hover {
