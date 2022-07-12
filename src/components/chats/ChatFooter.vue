@@ -61,7 +61,6 @@ function onFilePicked(e: any) {
             img.src = URL.createObjectURL(file)
         }
     }
-    e.target.files = ''
 }
 </script>
 
