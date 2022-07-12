@@ -285,10 +285,12 @@ function deleteMedia(idx: number) {
 .smallPreviewContainer {
     width: fit-content;
     overflow-x: auto;
-    height: 50px;
+    padding-left: 5px;
+    height: 56px;
     display: flex;
     flex-direction: row;
     justify-content: center;
+    align-items: center;
 }
 
 .squareContainer {
@@ -304,7 +306,7 @@ function deleteMedia(idx: number) {
     border-radius: 5px;
     overflow: hidden;
 
-    border: 1px solid gainsboro;
+    outline: 1px solid gainsboro;
 }
 
 .squareContainer:hover {
@@ -344,7 +346,7 @@ function deleteMedia(idx: number) {
 }
 
 .selected {
-    border: 3px solid #1E90FF;
+    outline: 3px solid #1E90FF;
 }
 
 .addMoreIconContainer {
