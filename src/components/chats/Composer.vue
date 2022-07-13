@@ -306,7 +306,7 @@ function deleteMedia(idx: number) {
     border-radius: 5px;
     overflow: hidden;
 
-    outline: 1px solid gainsboro;
+    border: 1px solid gainsboro;
 }
 
 .squareContainer:hover {

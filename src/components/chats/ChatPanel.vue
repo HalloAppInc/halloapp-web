@@ -44,7 +44,8 @@ const showMenu = ref(false)
 const showReply = ref(false)
 
 const selectMessageIdx = ref(-1)
-const selectMediaUrl = ref()
+const selectMediaList = ref()
+const selectMediaIndex = ref()
 const menuTimestamp = ref('')
 
 // set floating time stamp's content
@@ -160,7 +161,6 @@ watch(chatPanelHeight, () => {
 
 function setChatPanelHeight() {
     chatPanelHeight.value = content.value ? content.value.clientHeight : 0
-    // console.log(chatPanelHeight.value)
 }
 
 function handleScroll() {
@@ -301,10 +301,10 @@ onUnmounted(() => {
     document.removeEventListener("click", closeMenu)
 })
 
-function openMedia(e: any, idx: number) {
-    // go to show media
-    selectMediaUrl.value = e.target.getAttribute('src')
-    selectMessageIdx.value = idx
+function openMedia(mediaList: any, idx: number) {
+    selectMediaList.value = mediaList
+    selectMediaIndex.value = idx
+    // go to fullscreener
     mainStore.gotoChatPage('media')
 }
 
@@ -343,12 +343,8 @@ function getQuoteMessageData(message: any) {
                         </div>
                     </div>
                     <!-- media -->
-                    <div class='mediaContainer' v-if='value.media && value.media != ""'
-                        @click='openMedia($event, idx)'>
-                        <img v-for='media in value.media' 
-                            :src='media.url' 
-                            :width='media.width'
-                            :height='media.hieght'/>
+                    <div class='mediaContainer' v-if='value.media && value.media != ""'>
+                        <MediaCollage @open-media='openMedia' :media-list='value.media'/>
                     </div>
                     <!-- quote -->
                     <div class='chatReplyContainer' v-if='value.quoteIdx && value.quoteIdx > -1'>
@@ -382,15 +378,8 @@ function getQuoteMessageData(message: any) {
                         </div>
                     </div>
                     <!-- media -->
-                    <div class='mediaContainer' v-if='value.media && value.media != ""'
-                        @click='openMedia($event, idx)'>
-                        <!-- <div class='imgSquareContainer' v-for='media in value.media'>
-                            <img  
-                            :src='media.url' 
-                            :width='media.width'
-                            :height='media.hieght'/>
-                        </div> -->
-                        <MediaCollage :media-list='value.media'/>
+                    <div class='mediaContainer' v-if='value.media && value.media != ""'>
+                        <MediaCollage @open-media='openMedia' :media-list='value.media'/>
                     </div>
                     <!-- quote -->
                     <div class='chatReplyContainer' v-if='value.quoteIdx && value.quoteIdx > -1'>
@@ -496,7 +485,7 @@ function getQuoteMessageData(message: any) {
     </div>
 
     <!-- show media in full screen -->
-    <FullScreener :select-message-idx='selectMessageIdx' :select-media-url='selectMediaUrl' :message-list='messageList' />
+    <FullScreener :select-media-index='selectMediaIndex' :select-media-list='selectMediaList' />
 
 </template>
 

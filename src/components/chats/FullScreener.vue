@@ -11,27 +11,24 @@ const mainStore = useMainStore()
 
 const { setPreviewMediaSizes } = useHAMediaResize()
 
-const props = defineProps(['selectMessageIdx', 'selectMediaUrl', 'messageList'])
+const props = defineProps(['selectMediaIndex', 'selectMediaList'])
 
 // delect media's idx in mediaUrlList
-const selectMediaIdx = ref()
+const selectMediaIdx = ref(-1)
 
 const mediaUrlList = computed(() => {
     const result = []
-    let list = props.messageList[props.selectMessageIdx]
+    let list = props.selectMediaList
     // find media from message list and build a new array for media
-    for (let i = 0; i < list.media.length; i++) {
-        let media = list.media[i]
+    for (let i = 0; i < list.length; i++) {
+        let media = list[i]
         let res = setPreviewMediaSizes(media)
         result.push({
-                'url': list.media[i].url,
+                'url': media.url,
                 'width': res?.mediaItemWidth,
                 'height': res?.mediaItemHeight
             })
-        // find the one that was clicked by user
-        if (props.selectMediaUrl == list.media[i].url) {
-            selectMediaIdx.value = result.length - 1
-        }
+        selectMediaIdx.value = props.selectMediaIndex
     }
     return result
 })

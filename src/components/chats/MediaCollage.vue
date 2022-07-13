@@ -7,47 +7,47 @@ const numberOfMedia = props.mediaList.length
 <template>
 
     <div class='containerOneMedia' v-if='numberOfMedia == 1'>
-        <div class='imgBigContainer' :height='mediaList[0].hieght' >
+        <div class='imgBigContainer' :height='mediaList[0].hieght' @click="$emit('openMedia', mediaList, 0)">
             <img :src='mediaList[0].url' :width='mediaList[0].width' :height='mediaList[0].hieght' />
         </div>
     </div>
 
     <div class='containerMoreThanOneMedia' v-else-if='numberOfMedia == 2'>
-        <div class='imgVerticalRectangleContainer'>
+        <div class='imgVerticalRectangleContainer' @click="$emit('openMedia', mediaList, 0)">
             <img :src='mediaList[0].url' :height='mediaList[0].hieght' :width='mediaList[0].width' />
         </div>
-        <div class='imgVerticalRectangleContainer lastElementInLine'>
+        <div class='imgVerticalRectangleContainer lastElementInLine' @click="$emit('openMedia', mediaList, 1)">
             <img :src='mediaList[1].url' :height='mediaList[1].hieght' :width='mediaList[1].width' />
         </div>
     </div>
 
     <div class='containerMoreThanOneMedia' v-else-if='numberOfMedia == 3'>
-        <div class='imgSquareContainer'>
+        <div class='imgSquareContainer' @click="$emit('openMedia', mediaList, 0)">
             <img :src='mediaList[0].url' :width='mediaList[0].width' :height='mediaList[0].hieght' />
         </div>
-        <div class='imgSquareContainer imgSquareContainerLastElement'>
+        <div class='imgSquareContainer imgSquareContainerLastElement' @click="$emit('openMedia', mediaList, 1)">
             <img :src='mediaList[1].url' :width='mediaList[1].width' :height='mediaList[1].hieght' />
         </div>
-        <div class='imgHorizontalRectangleContainer'>
+        <div class='imgHorizontalRectangleContainer' @click="$emit('openMedia', mediaList, 2)">
             <img :src='mediaList[2].url' :width='mediaList[2].width' :height='mediaList[2].hieght' />
         </div>
     </div>
 
     <div class='containerMoreThanOneMedia' v-else-if='numberOfMedia >= 4'>
-        <div class='imgSquareContainer'>
+        <div class='imgSquareContainer' @click="$emit('openMedia', mediaList, 0)">
             <img :src='mediaList[0].url' :width='mediaList[0].width' :height='mediaList[0].hieght' />
         </div>
-        <div class='imgSquareContainer imgSquareContainerLastElement'>
+        <div class='imgSquareContainer imgSquareContainerLastElement' @click="$emit('openMedia', mediaList, 1)">
             <img :src='mediaList[1].url' :width='mediaList[1].width' :height='mediaList[1].hieght' />
         </div>
-        <div class='imgSquareContainer'>
+        <div class='imgSquareContainer' @click="$emit('openMedia', mediaList, 2)">
             <img :src='mediaList[2].url' :width='mediaList[2].width' :height='mediaList[2].hieght' />
         </div>
-        <div v-if='numberOfMedia == 4' class='imgSquareContainer imgSquareContainerLastElement'>
+        <div v-if='numberOfMedia == 4' class='imgSquareContainer imgSquareContainerLastElement' @click="$emit('openMedia', mediaList, 3)">
             <img :src='mediaList[3].url' :width='mediaList[3].width' :height='mediaList[3].hieght' />
         </div>
         <!-- if more than 4 -->
-        <div v-else-if='numberOfMedia > 4'>
+        <div v-else-if='numberOfMedia > 4' @click="$emit('openMedia', mediaList, 3)">
             <div class='imgSquareContainer imgSquareContainerLastElement'>
                 <img class='blurImg' :src='mediaList[3].url' :width='mediaList[3].width'
                     :height='mediaList[3].hieght' />
