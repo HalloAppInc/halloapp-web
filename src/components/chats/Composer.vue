@@ -22,7 +22,7 @@ const attachMediaList = ref(<any>[])
 const test = ref()
 const addUploadMedia = ref()
 
-const selectMediaIdx = ref(-1)
+const selectMediaIdx = ref(0)
 
 const messageNumber = computed(() => {
     return props.messageList.length
@@ -40,9 +40,10 @@ const mediaUrlList = computed(() => {
         })
     }
     // only set selet idx in initialization
-    if (selectMediaIdx.value == -1) {
-        selectMediaIdx.value = props.uploadFiles.length - 1
-    }
+    console.log('idx=',selectMediaIdx.value,)
+    console.log('result=', result)
+    console.log(result[selectMediaIdx.value].url)
+
     return result
 })
 
@@ -106,16 +107,24 @@ function openBigImg(e: any, idx: number) {
 }
 
 function deleteMedia(idx: number) {
-    // if delete all
+    // delete the last one
     if (props.uploadFiles.length == 1) {
-        mainStore.gotoChatPage('')
+        closeComposer()
     }
-    // if delete media before selet one
-    else if (idx <= selectMediaIdx.value) {
-        selectMediaIdx.value -= 1
+    else {
+        // if delete one is before select one
+        if (idx <= selectMediaIdx.value && selectMediaIdx.value > 0) {
+            selectMediaIdx.value -= 1
+        }
+        // remove this element
+        props.uploadFiles.splice(idx, 1)
     }
-    // remove this element
-    props.uploadFiles.splice(idx, 1)
+}
+
+function closeComposer() {
+    selectMediaIdx.value = 0
+    mainStore.gotoChatPage('')
+    props.uploadFiles.splice(0, props.uploadFiles.length)
 }
 </script>
 
@@ -125,7 +134,7 @@ function deleteMedia(idx: number) {
         <div class='wrapper'>
             <!-- close icon -->
             <div class='closeIconContainer'>
-                <div class='iconContainer' @click="mainStore.gotoChatPage('chat')">
+                <div class='iconContainer' @click='closeComposer'>
                     <div class='iconShadow'>
                         <font-awesome-icon :icon="['fas', 'xmark']" size='lg' />
                     </div>

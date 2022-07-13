@@ -272,11 +272,13 @@ img {
 
 .smallPreviewContainer {
     width: fit-content;
-    height: 50px;
+    height: 56px;
+    padding-left: 5px;
     overflow-y: scroll;
     display: flex;
     flex-direction: row;
     justify-content: center;
+    align-items: center;
 }
 
 .squareContainer {
@@ -292,7 +294,7 @@ img {
     border-radius: 5px;
     overflow: hidden;
 
-    border: 1px solid gainsboro;
+    outline: 1px solid gainsboro;
 }
 
 .squareContainer:hover {
@@ -314,6 +316,6 @@ img {
 }
 
 .selected {
-    border: 3px solid #1E90FF;
+    outline: 3px solid #1E90FF;
 }
 </style>
