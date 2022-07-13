@@ -1,17 +1,15 @@
 import { useMainStore } from '../stores/mainStore'
 import { useConnStore } from '../stores/connStore'
 
-import { Base64 } from "js-base64"
+import { Base64 } from 'js-base64'
+import { clients } from '../proto/clients.js'
 import hal from '../common/halogger'
-import hkdf from "js-crypto-hkdf"
-import halogger from '../common/halogger'
-import { Type } from 'protobufjs'
+import hkdf from 'js-crypto-hkdf'
 
 export function useHAMediaUpload() {
 
     const imageInfo = Base64.fromBase64("SGFsbG9BcHAgaW1hZ2U=")
     const videoInfo = Base64.fromBase64("SGFsbG9BcHAgdmlkZW8=") 
-    const voiceNoteInfo = Base64.fromBase64("SGFsbG9BcHAgYXVkaW8=") 
 
     const mainStore = useMainStore()
     const connStore = useConnStore()
