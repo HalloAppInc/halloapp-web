@@ -37,19 +37,15 @@ const mediaUrlList = computed(() => {
             'url': media.url,
             'width': res?.mediaItemWidth,
             'height': res?.mediaItemHeight
-        })
+            })
     }
-    // only set selet idx in initialization
-    console.log('idx=',selectMediaIdx.value,)
-    console.log('result=', result)
-    console.log(result[selectMediaIdx.value].url)
 
     return result
 })
 
 // if message is sent, close preview
 watch(messageNumber, (newVal, oldVal) => {
-    mainStore.gotoChatPage('')
+    closeComposer()
 })
 
 const backgroundColor = computed(() => {
@@ -75,8 +71,8 @@ function testUploadAndDownload(file: any) {
     }
 }
 
-function onFilePicked(e: any) {
-    const files = e.target.files
+function onFilePicked(event: any) {
+    const files = event.target.files
     for (let i = 0; i < files.length; i++) {
         let file = files[i]
         // if select at least one file
@@ -84,21 +80,21 @@ function onFilePicked(e: any) {
             let img = new Image()
             img.onload = function () {
                 props.uploadFiles.push({
-                        'file': file,
-                        'url': img.src,
-                        'width': img.width,
-                        'height': img.height
+                    'file': file,
+                    'url': img.src,
+                    'width': img.width,
+                    'height': img.height
                     })
             }
             img.src = URL.createObjectURL(file)
         }
     }
     // reset select to allow second use of same media
-    e.target.value = ''
+    event.target.value = ''
 }
 
-function openBigImg(e: any, idx: number) {
-    if (e.target.nodeName == 'IMG') {
+function openBigImg(event: any, idx: number) {
+    if (event.target.nodeName == 'IMG') {
         selectMediaIdx.value = idx
     }
     else {
@@ -170,13 +166,14 @@ function closeComposer() {
             <!-- input box: add caption -->
             <div class='footer'>
                 <div class='chatBoxTray' ref='chatBox'>
-                    <InputBox :message-list='messageList' :contact-list='contactList' :upload-files='uploadFiles' />
+                    <InputBox :message-list='messageList' :contact-list='contactList' :upload-files='uploadFiles'
+                        :always-show-send-button='true' />
                 </div>
                 <!-- media preview and add more media -->
                 <div class='mediaTray'>
                     <div class='smallPreviewContainer'>
-                        <div class='squareContainer' v-for='(value, idx) in mediaUrlList' @click='openBigImg($event, idx)'
-                            :class="{ 'selected': idx == selectMediaIdx }">
+                        <div v-for='(value, idx) in mediaUrlList' @click='openBigImg($event, idx)'
+                            :class="{ 'squareContainer': true, 'selected': idx == selectMediaIdx }" >
                             <div class='imgSmallContainer'>
                                 <img class='imgSmall' :width='value.width' :height='value.height' :src='value.url' />
                             </div>
@@ -211,7 +208,7 @@ function closeComposer() {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: v-bind(wraperColor);
+    background-color: #FFFFFF;
     display: table;
 }
 
@@ -219,8 +216,6 @@ function closeComposer() {
     width: 100%;
     height: 100%;
     position: relative;
-
-    background-color: v-bind(wraperColor);
 
     display: flex;
     flex-direction: column;

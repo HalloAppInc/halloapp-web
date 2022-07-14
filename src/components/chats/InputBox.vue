@@ -10,7 +10,7 @@ const mainStore = useMainStore()
 
 const { processText } = useHAText()
 
-const props = defineProps(['messageList', 'contactList', 'uploadFiles'])
+const props = defineProps(['messageList', 'contactList', 'uploadFiles', 'alwaysShowSendButton'])
 
 const inputArea = ref(<HTMLElement | null>(null))
 const chatBox = ref(<HTMLElement | null>(null))
@@ -54,9 +54,9 @@ const hoverColor = computed(() => {
 })
 
 // deal with different keydown: enter, enter+shift, cmd+a, space, delete
-function analyzeKeyDown(e: any) {
+function analyzeKeyDown(event: any) {
     // delete
-    if (e.keyCode == 8) {
+    if (event.keyCode == 8) {
         // if inputbox is empty, clean all element inside
         // but due to webkit's bug, still can not clean <font> tag, need to detect it manually and delete it
         if (inputArea.value?.innerText == '') {
@@ -77,48 +77,48 @@ function analyzeKeyDown(e: any) {
                     if (nodeOffset.value == node.textContent.length) {
                         node.parentElement?.remove()
                         disableUpdate.value = true
-                        e.preventDefault(e)
+                        event.preventDefault(event)
                     }
                 }
             }
         }
     }
     // enter
-    else if (e.keyCode == 13) {
+    else if (event.keyCode == 13) {
         // shift + enter, new line
-        if (e.shiftKey) {
+        if (event.shiftKey) {
             // if input box is empty, not allow to enter new line
             if (inputArea.value?.innerText.trim().length == 0) {
-                e.preventDefault(e)
+                event.preventDefault(event)
             }
         }
         // enter, send message
         else {
             sendMessage()
-            e.preventDefault(e)
+            event.preventDefault(event)
         }
     }
     // cmd + A, select all
-    else if ((e.metaKey || e.ctrlKey) && e.keyCode == 65) {
+    else if ((event.metaKey || event.ctrlKey) && event.keyCode == 65) {
         disableUpdate.value = true
     }
     // space
-    else if (e.keyCode == 32) {
+    else if (event.keyCode == 32) {
         // if input box is empty, not allow to enter space
         if (inputArea.value?.innerText.trim().length == 0) {
-            e.preventDefault(e)
+            event.preventDefault(event)
         }
     }
     // cmd + ` : ~
-    else if (e.shiftKey && e.keyCode == 192) {
+    else if (event.shiftKey && event.keyCode == 192) {
         inputMarkDownSign.value = '~'
     }
     // cmd + - : _
-    else if (e.shiftKey && e.keyCode == 189) {
+    else if (event.shiftKey && event.keyCode == 189) {
         inputMarkDownSign.value = '_'
     }
     // cmd + 8 : *
-    else if (e.shiftKey && e.keyCode == 56) {
+    else if (event.shiftKey && event.keyCode == 56) {
         inputMarkDownSign.value = '*'
     }
 }
@@ -132,7 +132,7 @@ function sendMessage() {
             media: JSON.parse(JSON.stringify(props.uploadFiles)), // deep copy
             message: processText(inputArea.value?.innerText.trim(), props.contactList).html,
             timestamp: Date.now() / 1000 | 0, // get current time
-        })
+            })
         // hide send button
         showSendButton.value = false
         // clean text inside input box
@@ -143,7 +143,7 @@ function sendMessage() {
 }
 
 // for mouse movement
-function analyzeMouseMovement(e: any) {
+function analyzeMouseMovement() {
     // get cursor position
     getCursorPosition()
 
@@ -196,7 +196,7 @@ function needUpdate(inputChar: string) {
 }
 
 // deal with different input, update content and move cursor
-function analyzeKeyUp(e: any) {
+function analyzeKeyUp(event: any) {
     // get cursor position
     getCursorPosition()
 
@@ -216,13 +216,13 @@ function analyzeKeyUp(e: any) {
         showSendButton.value = true
     }
 
-    if (e.keyCode != 16 && // Shift
-        e.keyCode != 91 && // left cmd on mac
-        e.keyCode != 93 && // right cmd on mac
-        e.keyCode != 37 && // ArrowLeft
-        e.keyCode != 38 && // ArrowUp
-        e.keyCode != 39 && // ArrowRight
-        e.keyCode != 40) { // ArrowDown 
+    if (event.keyCode != 16 && // Shift
+        event.keyCode != 91 && // left cmd on mac
+        event.keyCode != 93 && // right cmd on mac
+        event.keyCode != 37 && // ArrowLeft
+        event.keyCode != 38 && // ArrowUp
+        event.keyCode != 39 && // ArrowRight
+        event.keyCode != 40) { // ArrowDown 
         if (!disableUpdate.value) {
             let inputChar: string
             // if input ~|*|_ 
@@ -231,7 +231,7 @@ function analyzeKeyUp(e: any) {
                 inputMarkDownSign.value = ''
             }
             else {
-                inputChar = e.key
+                inputChar = event.key
             }
             // if need update
             if (needUpdate(inputChar)) {
@@ -454,11 +454,11 @@ function closeContactsAndFocusOnInputBox() {
         <div class='inputBoxContainer'>
             <div class='textarea' ref='inputArea' contenteditable='true' placeholder='Type a message...'
                 @focusout='closeContactsAndFocusOnInputBox' @keydown='analyzeKeyDown($event)'
-                @keyup='analyzeKeyUp($event)' @click='analyzeMouseMovement($event)'>
+                @keyup='analyzeKeyUp($event)' @click='analyzeMouseMovement()'>
             </div>
         </div>
         <!-- send button -->
-        <div class='buttonContainer' v-show='showSendButton' @click='sendMessage(); showSendButton = false'>
+        <div class='buttonContainer' v-show='alwaysShowSendButton || showSendButton' @click='sendMessage(); showSendButton = false'>
             <div class='buttonIconContainer'>
                 <font-awesome-icon :icon="['fas', 'paper-plane']" size='lg' />
             </div>

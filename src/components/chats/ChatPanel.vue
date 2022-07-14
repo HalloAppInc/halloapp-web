@@ -231,12 +231,12 @@ function gotoBottom(type: ScrollBehavior | undefined) {
     content.value?.scrollTo({ left: 0, top: content.value?.scrollHeight, behavior: type })
 }
 
-function gotoProfile(e: any) {
-    let contactName = e.target.innerText.substring(1)
+function gotoProfile(event: any) {
+    let contactName = event.target.innerText.substring(1)
     // go to user's profile page
 }
 
-function openMenu(e: any, forInBound: boolean, idx: number) {
+function openMenu(event: any, forInBound: boolean, idx: number) {
     showMenu.value = !showMenu.value
     // if close menu
     if (!showMenu.value) {
@@ -246,7 +246,7 @@ function openMenu(e: any, forInBound: boolean, idx: number) {
     menuTimestamp.value = formatTimeFullChat(parseInt(props.messageList[idx].timestamp), <string>locale.value)
     selectMessageIdx.value = idx
 
-    let bounds = e.target.getBoundingClientRect()
+    let bounds = event.target.getBoundingClientRect()
     for (let key in bounds) {
         if (key == 'right') {
             floatMenuPositionX.value = window.outerWidth - bounds[key]
@@ -268,16 +268,16 @@ function openMenu(e: any, forInBound: boolean, idx: number) {
                 if (bottomOffset <= 80) {
                     let msgBubble
                     // get msg bubble's height
-                    if (e.target.nodeName == 'svg') {
-                        msgBubble = e.target.parentElement.parentElement.parentElement
+                    if (event.target.nodeName == 'svg') {
+                        msgBubble = event.target.parentElement.parentElement.parentElement
                         floatMenuPositionY.value -= msgBubble.clientHeight
                     }
-                    else if (e.target.nodeName == 'path') {
-                        msgBubble = e.target.parentElement.parentElement.parentElement.parentElement
+                    else if (event.target.nodeName == 'path') {
+                        msgBubble = event.target.parentElement.parentElement.parentElement.parentElement
                         floatMenuPositionY.value -= msgBubble.clientHeight
                     }
-                    else if (e.target.nodeName == 'DIV' && e.target.className == 'togglerIconContainer') {
-                        msgBubble = e.target.parentElement.parentElement
+                    else if (event.target.nodeName == 'DIV' && event.target.className == 'togglerIconContainer') {
+                        msgBubble = event.target.parentElement.parentElement
                         floatMenuPositionY.value -= msgBubble.clientHeight
                     }
                     floatMenuPositionY.value -= 70

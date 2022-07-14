@@ -39,10 +39,11 @@ function openAttachMenu() {
     }
 }
 
-function onFilePicked(e: any) {
+function onFilePicked(event: any) {
     // make upload file array empty
     props.uploadFiles.splice(0, props.uploadFiles.length)
-    const files = e.target.files
+    const files = event.target.files
+    let gotoComposer = false
     for (let i = 0; i < files.length; i++) {
         let file = files[i]
         // if select at least one file
@@ -50,18 +51,21 @@ function onFilePicked(e: any) {
             let img = new Image()
             img.onload = function () {
                 props.uploadFiles.push({
-                        'file': file,
-                        'url': img.src,
-                        'width': img.width,
-                        'height': img.height
+                    'file': file,
+                    'url': img.src,
+                    'width': img.width,
+                    'height': img.height
                     })
-                // goto composer after get width and height
-                mainStore.gotoChatPage('composer')
+                // goto composer after get width and height, and only go once
+                if (!gotoComposer) {
+                    mainStore.gotoChatPage('composer')
+                    gotoComposer = true
+                }
             }
             img.src = URL.createObjectURL(file)
         }
     }
-    e.target.value = ''
+    event.target.value = ''
 }
 </script>
 
@@ -94,7 +98,8 @@ function onFilePicked(e: any) {
             </div>
         </div>
         <!-- uploadfile = "" does not attachment heren -->
-        <InputBox :message-list='props.messageList' :contact-list='props.contactList' :upload-files='""' />
+        <InputBox :message-list='props.messageList' :contact-list='props.contactList' :upload-files='""'
+            :always-show-send-button='false' />
         <!-- <div class='iconContainer'>
             <div class='iconShadow' :class="{ 'showIconShadow': showAttachMenu == true }">
                 <font-awesome-icon :icon="['fas', 'microphone']" size='lg' />

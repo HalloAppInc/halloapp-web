@@ -2,13 +2,34 @@ import halogger from '../common/halogger'
 
 export function useHAMediaResize() {
 
-    let maxBoxHeight = 400
-    let maxBoxWidth = 300
+    // for composer
+    const maxBoxWidthBigSquare = 300
+    const maxBoxHeightBigSquare = 300
 
-    let longImageWidth = 400
-    let longImageHeight = 100
+    const maxBoxWidthSquare = 150
+    const maxBoxHeightSquare = 150
 
-    let defaultRatio = 0.75 // 3/4 width/height portrait ratio
+    const maxBoxWidthVerticalRectangle = 150
+    const maxBoxHeightVerticalRectangle = 300
+
+    const maxBoxWidthHorizontalRectangle = 305
+    const maxBoxHeightHorizontalRectangle = 150
+
+    // for mini media carousel
+    const maxBoxWidthMiniSquare = 50
+    const maxBoxHeightMiniSquare = 50 
+
+    // for reply
+    const maxBoxWidthSmallSquare = 80
+    const maxBoxHeightSmallSquare = 80 
+
+    const defaultRatioSquare = 1
+    const defaultRatioVerticalRectangle = 0.5
+    const defaultRatioHorizontalRectangle = 305/150
+
+    let maxBoxWidth = maxBoxWidthSquare
+    let maxBoxHeight = maxBoxHeightSquare
+    let defaultRatio = defaultRatioSquare // 3/4 width/height portrait ratio
 
     function setMediaSizeInMediaList(mediaList: any) {
         if (!mediaList) { return }
@@ -16,19 +37,19 @@ export function useHAMediaResize() {
         let numberOfMedia = mediaList.length
 
         if (numberOfMedia >= 3) {
-            maxBoxWidth = 150
-            maxBoxHeight = 150
-            defaultRatio = 1
+            maxBoxWidth = maxBoxWidthSquare
+            maxBoxHeight = maxBoxWidthSquare
+            defaultRatio = defaultRatioSquare
         }
         else if (numberOfMedia == 2) {
-            maxBoxWidth = 150
-            maxBoxHeight = 300
-            defaultRatio = 0.5
+            maxBoxWidth = maxBoxWidthVerticalRectangle
+            maxBoxHeight = maxBoxHeightVerticalRectangle
+            defaultRatio = defaultRatioVerticalRectangle
         }
-        else {
-            maxBoxHeight = 300
-            maxBoxWidth = 300
-            defaultRatio = 1
+        else if (numberOfMedia == 1) {
+            maxBoxWidth = maxBoxWidthBigSquare
+            maxBoxHeight = maxBoxHeightBigSquare
+            defaultRatio = defaultRatioSquare
         }
 
         for (let i = 0; i < mediaList.length; i++) {
@@ -36,9 +57,9 @@ export function useHAMediaResize() {
             let res: any
             // last media if there are 3 media
             if (i == 2 && mediaList.length == 3) {
-                maxBoxWidth = 305
-                maxBoxHeight = 150
-                defaultRatio = 305/150
+                maxBoxWidth = maxBoxWidthHorizontalRectangle
+                maxBoxHeight = maxBoxHeightHorizontalRectangle
+                defaultRatio = defaultRatioHorizontalRectangle
                 res = setMediaSizes(media, -1)
             }
             res = setMediaSizes(media, numberOfMedia)
@@ -49,14 +70,6 @@ export function useHAMediaResize() {
 
     function setMediaSizes(media: any, numberOfMedia: number) {
         if (!media) { return }
-
-        /* const type = media.image ? MediaType.Image : MediaType.Video
-        let mediaItem: any
-        if (type == MediaType.Image) {
-            mediaItem = media.image
-        } else if (type == MediaType.Video) {
-            mediaItem = media.video
-        } */
 
         let mediaItemWidth: number = media.width
         let mediaItemHeight: number = media.height
@@ -73,50 +86,7 @@ export function useHAMediaResize() {
             }
         }
         // rectangle
-        else if (numberOfMedia == 2) {
-            if (mediaItemRatio > defaultRatio) {
-                mediaItemWidth = maxBoxHeight * mediaItemRatio
-                mediaItemHeight = maxBoxHeight
-            } else {
-                mediaItemWidth = maxBoxWidth
-                mediaItemHeight = maxBoxWidth / mediaItemRatio
-            }
-        }
-        /* else if (numberOfMedia == 1) {
-            // if image height is too big
-            if (mediaItemHeight > maxBoxHeight) {
-                if (mediaItemRatio > defaultRatio) {
-                    mediaItemWidth = maxBoxWidth
-                    mediaItemHeight = mediaItemWidth / mediaItemRatio
-                }
-                // width:height = 3:4 ~ 1:2
-                else if (mediaItemRatio > 0.5) {
-                    mediaItemHeight = maxBoxHeight
-                    mediaItemWidth = mediaItemHeight * mediaItemRatio
-                }
-                // width:height > 1:2
-                else {
-                    mediaItemWidth = maxBoxWidth
-                    mediaItemHeight = maxBoxHeight
-                }
-            }
-            // width is too big
-            else if (mediaItemWidth > maxBoxWidth) {
-                // long image 
-                // width : height > 2:1
-                if (mediaItemRatio > 2) {
-                    mediaItemWidth = longImageWidth
-                    mediaItemHeight = longImageHeight
-                }
-                // width : height = 2:1 ~ 3 : 4
-                else if (mediaItemRatio > defaultRatio) {
-                    mediaItemWidth = maxBoxWidth
-                    mediaItemHeight = mediaItemWidth / mediaItemRatio
-                }
-            }
-        } */
-        else if (numberOfMedia == -1) {
-            // last media if there are 3 media
+        else if (numberOfMedia == 2 || numberOfMedia == -1) {
             if (mediaItemRatio > defaultRatio) {
                 mediaItemWidth = maxBoxHeight * mediaItemRatio
                 mediaItemHeight = maxBoxHeight
@@ -132,18 +102,10 @@ export function useHAMediaResize() {
     function setPreviewMediaSizes(media: any) {
         if (!media) { return }
 
-        /* const type = media.image ? MediaType.Image : MediaType.Video
-        let mediaItem: any
-        if (type == MediaType.Image) {
-            mediaItem = media.image
-        } else if (type == MediaType.Video) {
-            mediaItem = media.video
-        } */
+        maxBoxWidth = maxBoxWidthMiniSquare
+        maxBoxHeight = maxBoxHeightMiniSquare
 
-        maxBoxHeight = 50
-        maxBoxWidth = 50
-
-        defaultRatio = 1 // 1/1 width/height portrait ratio
+        defaultRatio = defaultRatioSquare // 1/1 width/height portrait ratio
         let mediaItemWidth: number = media.width
         let mediaItemHeight: number = media.height
 
@@ -162,11 +124,10 @@ export function useHAMediaResize() {
     function setQuoteMediaSize(media: any) {
         if (!media) { return }
 
-        maxBoxHeight = 80
-        maxBoxWidth = 80
+        maxBoxHeight = maxBoxWidthSmallSquare
+        maxBoxWidth = maxBoxHeightSmallSquare
 
-        defaultRatio = 1 // 1/1 width/height portrait ratio
-
+        defaultRatio = defaultRatioSquare // 1/1 width/height portrait ratio
         let mediaItemWidth: number = media.width
         let mediaItemHeight: number = media.height
 

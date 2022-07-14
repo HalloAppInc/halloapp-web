@@ -24,9 +24,9 @@ const mediaUrlList = computed(() => {
         let media = list[i]
         let res = setPreviewMediaSizes(media)
         result.push({
-                'url': media.url,
-                'width': res?.mediaItemWidth,
-                'height': res?.mediaItemHeight
+            'url': media.url,
+            'width': res?.mediaItemWidth,
+            'height': res?.mediaItemHeight
             })
         selectMediaIdx.value = props.selectMediaIndex
     }
