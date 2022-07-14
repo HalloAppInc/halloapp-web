@@ -508,6 +508,7 @@ function closeContactsAndFocusOnInputBox() {
     resize: none;
     max-height: 110px;
     text-align: left;
+    word-break: break-all;
 
     background: v-bind(inBoundMsgBubbleColor);
     border: 0.5px solid rgba(0, 0, 0, 0.15);
