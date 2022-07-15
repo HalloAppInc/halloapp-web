@@ -2,10 +2,6 @@
 import { ref, onMounted } from 'vue'
 const props = defineProps(['mediaList'])
 
-onMounted(() => {
-    console.log('mounted!')
-})
-
 const firstMedia = ref(props.mediaList[0] ? props.mediaList[0] : null)
 const secondMedia = ref(props.mediaList[1] ? props.mediaList[1] : null)
 const thirdMedia = ref(props.mediaList[2] ? props.mediaList[2] : null)

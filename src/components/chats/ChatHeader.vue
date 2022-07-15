@@ -8,7 +8,7 @@ import { useMainStore } from '../../stores/mainStore'
 
 import Popup from './Popup.vue'
 
-const emits = defineEmits(["clearMessages"])
+const props = defineProps(['messageList', 'chatName', 'chatInformation'])
 
 const { t } = useI18n({
     inheritLocale: true,
@@ -21,8 +21,7 @@ const mainStore = useMainStore()
 const menu = ref<HTMLElement | null>(null)
 
 const showChatSettings = ref(false)
-
-const props = defineProps(['chatName', 'chatInformation'])
+const showPopup = ref({ 'value': false, 'type': 'clear' })
 
 const hoverColor = computed(() => {
     return colorStore.hover
@@ -42,6 +41,14 @@ const iconColor = computed(() => {
 const backgroundColor = computed(() => {
     return colorStore.background
 })
+
+function clearMessage() {
+    props.messageList.splice(0, props.messageList.length)
+}
+
+function openPopup() {
+    showPopup.value.value = true
+}
 </script>
 
 <template>
@@ -82,14 +89,14 @@ const backgroundColor = computed(() => {
     <!-- chat settings menu -->
     <div class='chatSettings' v-if='showChatSettings'>
         <div class='menu' ref='menu'>
-            <div class='menuContainer' @mousedown="mainStore.gotoChatPage('settings')">
+            <div class='menuContainer' @mousedown='mainStore.gotoChatPage("settings")'>
                 <div class='textContainer'>
                     <div class='contentTextBody'>
                         {{ t('chatSettings.changeBackgroundColor') }}
                     </div>
                 </div>
             </div>
-            <div class='menuContainer' @mousedown="mainStore.gotoChatPage('clear')">
+            <div class='menuContainer' @mousedown="openPopup">
                 <div class='textContainer textContainerlastElement'>
                     <div class='contentTextBody'>
                         {{ t('chatSettings.clearMessgae') }}
@@ -99,7 +106,9 @@ const backgroundColor = computed(() => {
         </div>
     </div>
 
-    <Popup @confirm-Ok="$emit('clearMessages')"/>
+    <Popup 
+        @confirmOk='clearMessage'
+        :show-popup='showPopup' />
 
 </template>
 

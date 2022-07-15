@@ -15,7 +15,7 @@ const mainStore = useMainStore()
 const { uploadAndDownLoad } = useHAMediaUpload()
 const { setPreviewMediaSizes } = useHAMediaResize()
 
-const props = defineProps(['showComposer', 'uploadFiles', 'messageList', 'contactList'])
+const props = defineProps(['showComposer', 'uploadFiles', 'messageList', 'replyQuoteIdx', 'contactList'])
 
 const attachMediaList = ref(<any>[])
 
@@ -28,12 +28,7 @@ const messageNumber = computed(() => {
     return props.messageList.length
 })
 
-onMounted(() => {
-    console.log('composer mounted!')
-})
-
 const mediaUrlList = computed(() => {
-    console.log(' mediaUrlList ')
     const result = []
     for (let i = 0; i < props.uploadFiles.length; i++) {
         let media = props.uploadFiles[i]
@@ -176,8 +171,12 @@ function closeComposer() {
             <!-- input box: add caption -->
             <div class='footer'>
                 <div class='chatBoxTray' ref='chatBox'>
-                    <InputBox :message-list='messageList' :contact-list='contactList' :upload-files='uploadFiles'
-                        :always-show-send-button='true' />
+                    <InputBox 
+                        :message-list='messageList' 
+                        :contact-list='contactList' 
+                        :upload-files='uploadFiles'
+                        :always-show-send-button='true'
+                        :reply-quote-idx='replyQuoteIdx' />
                 </div>
                 <!-- media preview and add more media -->
                 <div class='mediaTray'>

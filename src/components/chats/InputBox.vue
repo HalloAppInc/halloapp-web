@@ -10,7 +10,7 @@ const mainStore = useMainStore()
 
 const { processText } = useHAText()
 
-const props = defineProps(['messageList', 'contactList', 'uploadFiles', 'alwaysShowSendButton'])
+const props = defineProps(['messageList', 'contactList', 'uploadFiles', 'replyQuoteIdx', 'alwaysShowSendButton'])
 
 const inputArea = ref(<HTMLElement | null>(null))
 const chatBox = ref(<HTMLElement | null>(null))
@@ -127,12 +127,14 @@ function analyzeKeyDown(event: any) {
 function sendMessage() {
     if (inputArea.value?.innerText.trim().length !== 0 || props.uploadFiles != '') {
         props.messageList.push({
-            quoteIdx: mainStore.chatPage.includes('reply') ? mainStore.chatPage.substring(5) : -1, // get reply id
+            quoteIdx: props.replyQuoteIdx.value, // get reply id
             type: 'outBound',
             media: JSON.parse(JSON.stringify(props.uploadFiles)), // deep copy
             message: processText(inputArea.value?.innerText.trim(), props.contactList).html,
             timestamp: Date.now() / 1000 | 0, // get current time
+            display: true,
             })
+        props.replyQuoteIdx.value = -1
         // hide send button
         showSendButton.value = false
         // clean text inside input box

@@ -23,11 +23,13 @@ const messageList = ref([
         type: "inBound",
         message: "Short text testing:<br> ~123~ <s>123</s>,_123_<i>123</i>,*123*<b>123</b>",
         timestamp: "1649204213",
+        display: true,
     },
     {
         type: "outBound",
         message: "Long text testing: The item is sized according to its width and height properties, The item is sized according to its width and height properties, The item is sized according to its width and height properties",
         timestamp: "1649204213",
+        display: true
     },
     {
         type: "timestamp",
@@ -37,6 +39,7 @@ const messageList = ref([
         type: "inBound",
         message: "Long text testing: The item is sized according to its width and height properties, The item is sized according to its width and height properties, The item is sized according to its width and height properties",
         timestamp: "1656853200",
+        display: true
     },
     {
         type: "timestamp",
@@ -47,32 +50,38 @@ const messageList = ref([
         quoteIdx: 1,
         message: "asdfasdfsadfasdflsadkfl;sdakf;lasdkf;asdkf;lasdkf;lsadkf;lsadkf;sadkf;lasdfksd;lfksd;lfdsf",
         timestamp: "1657026000",
+        display: true
     },
     {
         type: "inBound",
         quoteIdx: 2,
         message: "😍😍😍😍",
         timestamp: "1657026000",
+        display: true
     },
     {
         type: "inBound",
         message: "😍!",
         timestamp: "1657026000",
+        display: true
     },
     {
         type: "inBound",
         message: "😍",
         timestamp: "1657026000",
+        display: true
     },
     {
         type: "inBound",
         message: "☺️", // this emoji can't be displayed 
         timestamp: "1657026000",
+        display: true
     },
     {
         type: "inBound",
         message: "❤️",  // this emoji can't be detected
         timestamp: "1657026000",
+        display: true
     },
     {
         type: "timestamp",
@@ -82,6 +91,7 @@ const messageList = ref([
         type: "inBound",
         message: "asdfasdfsadfasdflsadkfl;sdakf;lasdkf;asdkf;lasdkf;lsadkf;",
         timestamp: "1657112400",
+        display: true
     }
 ])
 
@@ -91,6 +101,8 @@ const contactList = ref([
     "abcd123",
     "?@#$%^&",
 ])
+
+const replyQuoteIdx = ref({'value': -1})
 
 const uploadFiles = ref([])
 
@@ -135,16 +147,6 @@ function notifyMe() {
     }
 }
 
-function clearOrDeleteMessage(idx: number = -1) {
-    // clear all msg
-    if (idx == -1) {
-        messageList.value = []
-    }
-    // delete msg at idx
-    else if (idx >= 0) {
-        messageList.value.splice(idx, 1)
-    }
-}
 </script>
 
 <template>
@@ -152,17 +154,17 @@ function clearOrDeleteMessage(idx: number = -1) {
     <div class='wrapper' v-if='mainStore.page == "chats" && mainStore.chatPage != "settings"'>
 
         <div class='header'>
-            <ChatHeader :chat-name='chatName' :chat-information='chatInformation' @clearMessages='clearOrDeleteMessage'/>
+            <ChatHeader :message-list='messageList'  :chat-name='chatName' :chat-information='chatInformation'/>
         </div>
 
         <!-- chatting area -->
         <div class='content' ref='content'>
-            <ChatPanel :message-list='messageList' @deleteMessage='clearOrDeleteMessage'/>
+            <ChatPanel :message-list='messageList' :reply-quote-idx='replyQuoteIdx'/>
         </div>
 
         <!-- input tray -->
         <div class='footer'>
-            <ChatFooter :upload-files='uploadFiles' :message-list='messageList' :contact-list='contactList' />
+            <ChatFooter :upload-files='uploadFiles' :message-list='messageList' :contact-list='contactList' :reply-quote-idx='replyQuoteIdx'/>
         </div>
 
     </div>

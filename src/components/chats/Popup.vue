@@ -14,21 +14,37 @@ const { t } = useI18n({
 const mainStore = useMainStore()
 const colorStore = useColorStore()
 
+const props = defineProps(['showPopup'])
+
 const title = computed(() => {
-    if (mainStore.chatPage == 'clear') {
+    if (props.showPopup.type == 'clear') {
         return t('clearMessagesPopup.popupHeaderText')
     }
-    else if (mainStore.chatPage == 'delete') {
+    else if (props.showPopup.type == 'delete') {
         return t('deleteMessagesPopup.popupHeaderText')
     }
 })
 
 const content = computed(() => {
-    if (mainStore.chatPage == 'clear') {
+    if (props.showPopup.type == 'clear') {
         return t('clearMessagesPopup.popupContent')
     }
-    else if (mainStore.chatPage == 'delete') {
+    else if (props.showPopup.type == 'delete') {
         return t('deleteMessagesPopup.popupContent')
+    }
+})
+
+const buttonType = computed(() => {
+    if (props.showPopup.type == 'clear') {
+        return 'twoButton'
+    }
+    else if (props.showPopup.type == 'delete') {
+        if (props.showPopup.messageType == 'normal') {
+            return 'threeButton'
+        }
+        else if (props.showPopup.messageType == 'deleted') {
+            return 'twoButton'
+        }
     }
 })
 
@@ -48,7 +64,7 @@ const shadowColor = computed(() => {
 
 <template>
     <transition>
-        <div class='mask' v-if="mainStore.chatPage == 'delete' || mainStore.chatPage == 'clear'">
+        <div class='mask' v-if='showPopup ? showPopup.value : false'>
             <div class='wrapper'>
                 <div class='container'>
                     <div class='header'>
@@ -64,11 +80,24 @@ const shadowColor = computed(() => {
                     </div>
 
                     <div class='footer'>
-                        <div class='button' @click="$emit('confirmOk');mainStore.gotoChatPage('chat')">
-                            {{ t('button.okButton') }}
+                        <div v-if="buttonType== 'threeButton'" class='buttonContainerCol'>
+                            <div  class='button' @click="$emit('deleteForEveryone');props.showPopup.value = false">
+                                {{ 'delete for everyone' }}
+                            </div>
+                            <div class='button' @click="$emit('deleteForMe');props.showPopup.value = false">
+                                {{ 'delete for me' }}
+                            </div>
+                            <div class='button' @click="props.showPopup.value = false">
+                                {{ t('button.cancelButton') }}
+                            </div>
                         </div>
-                        <div class='button' @click="mainStore.gotoChatPage('chat')">
-                            {{ t('button.cancelButton') }}
+                        <div v-else-if="buttonType == 'twoButton'" class='buttonContainerRow'>
+                            <div class='button' @click="$emit('confirmOk');props.showPopup.value = false">
+                                {{ t('button.okButton') }}
+                            </div>
+                            <div class='button' @click="props.showPopup.value = false">
+                                {{ t('button.cancelButton') }}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -138,10 +167,20 @@ const shadowColor = computed(() => {
 }
 
 .footer {
+    padding: 10px;
+}
+
+.buttonContainerRow {
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
-    padding: 10px;
+}
+
+.buttonContainerCol {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
 }
 
 .button {

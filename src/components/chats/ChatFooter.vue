@@ -1,16 +1,14 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 
-import { useMainStore } from '../../stores/mainStore'
 import { useColorStore } from '../../stores/colorStore'
 
 import InputBox from './InputBox.vue'
 import Composer from './Composer.vue'
 
-const mainStore = useMainStore()
 const colorStore = useColorStore()
 
-const props = defineProps(['uploadFiles', 'messageList', 'contactList'])
+const props = defineProps(['uploadFiles', 'messageList', 'contactList', 'replyQuoteIdx'])
 
 const selectAndUploadfile = ref(<HTMLElement | null>(null))
 const chatBox = ref(<HTMLElement | null>(null))
@@ -99,8 +97,12 @@ function onFilePicked(event: any) {
             </div>
         </div>
         <!-- uploadfile = "" does not attachment heren -->
-        <InputBox :message-list='props.messageList' :contact-list='props.contactList' :upload-files='""'
-            :always-show-send-button='false' />
+        <InputBox 
+            :message-list='props.messageList' 
+            :contact-list='props.contactList' 
+            :upload-files='""'
+            :always-show-send-button='false'
+            :reply-quote-idx='props.replyQuoteIdx' />
         <!-- <div class='iconContainer'>
             <div class='iconShadow' :class="{ 'showIconShadow': showAttachMenu == true }">
                 <font-awesome-icon :icon="['fas', 'microphone']" size='lg' />
@@ -109,8 +111,12 @@ function onFilePicked(event: any) {
     </div>
 
     <!-- composer -->
-    <Composer :show-composer='showComposer' :upload-files='uploadFiles' 
-        :message-list='messageList' :contact-list='contactList' />
+    <Composer 
+        :show-composer='showComposer' 
+        :upload-files='uploadFiles' 
+        :message-list='messageList' 
+        :contact-list='contactList'
+        :reply-quote-idx='replyQuoteIdx' />
 </template>
 
 <style scoped>
@@ -124,7 +130,6 @@ function onFilePicked(event: any) {
     transform: scale(0.1);
     opacity: 0;
 }
-
 
 .iconContainer {
     margin: 5px;
@@ -146,6 +151,8 @@ function onFilePicked(event: any) {
     position: fixed;
     bottom: v-bind(chatBoxHeight + 'px');
     margin: 10px 10px;
+
+    z-index: 2;
 }
 
 .iconShadow {
