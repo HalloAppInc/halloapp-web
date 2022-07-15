@@ -5,6 +5,7 @@ import { useMainStore } from '../../stores/mainStore'
 import { useColorStore } from '../../stores/colorStore'
 
 import InputBox from './InputBox.vue'
+import Composer from './Composer.vue'
 
 const mainStore = useMainStore()
 const colorStore = useColorStore()
@@ -15,6 +16,7 @@ const selectAndUploadfile = ref(<HTMLElement | null>(null))
 const chatBox = ref(<HTMLElement | null>(null))
 
 const showAttachMenu = ref(false)
+const showComposer = ref({'value' : false})
 
 const chatBoxHeight = ref(0)
 
@@ -43,8 +45,8 @@ function onFilePicked(event: any) {
     // make upload file array empty
     props.uploadFiles.splice(0, props.uploadFiles.length)
     const files = event.target.files
-    let gotoComposer = false
-    for (let i = 0; i < files.length; i++) {
+    const numOfFile = files.length
+    for (let i = 0; i < numOfFile; i++) {
         let file = files[i]
         // if select at least one file
         if (file) {
@@ -57,9 +59,8 @@ function onFilePicked(event: any) {
                     'height': img.height
                     })
                 // goto composer after get width and height, and only go once
-                if (!gotoComposer) {
-                    mainStore.gotoChatPage('composer')
-                    gotoComposer = true
+                if (i == numOfFile - 1) {
+                    showComposer.value.value = true
                 }
             }
             img.src = URL.createObjectURL(file)
@@ -107,6 +108,9 @@ function onFilePicked(event: any) {
         </div> -->
     </div>
 
+    <!-- composer -->
+    <Composer :show-composer='showComposer' :upload-files='uploadFiles' 
+        :message-list='messageList' :contact-list='contactList' />
 </template>
 
 <style scoped>

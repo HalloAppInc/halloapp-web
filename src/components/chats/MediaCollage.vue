@@ -1,5 +1,15 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 const props = defineProps(['mediaList'])
+
+onMounted(() => {
+    console.log('mounted!')
+})
+
+const firstMedia = ref(props.mediaList[0] ? props.mediaList[0] : null)
+const secondMedia = ref(props.mediaList[1] ? props.mediaList[1] : null)
+const thirdMedia = ref(props.mediaList[2] ? props.mediaList[2] : null)
+const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
 
 const numberOfMedia = props.mediaList.length
 </script>
@@ -8,49 +18,49 @@ const numberOfMedia = props.mediaList.length
 
     <div class='containerOneMedia' v-if='numberOfMedia == 1'>
         <div class='imgBigContainer' :height='mediaList[0].hieght' @click="$emit('openMedia', mediaList, 0)">
-            <img :src='mediaList[0].url' :width='mediaList[0].width' :height='mediaList[0].hieght' />
+            <img :src='firstMedia.url' :width='firstMedia.width' :height='firstMedia.hieght' />
         </div>
     </div>
 
     <div class='containerMoreThanOneMedia' v-else-if='numberOfMedia == 2'>
         <div class='imgVerticalRectangleContainer' @click="$emit('openMedia', mediaList, 0)">
-            <img :src='mediaList[0].url' :height='mediaList[0].hieght' :width='mediaList[0].width' />
+            <img :src='firstMedia.url' :height='firstMedia.hieght' :width='firstMedia.width' />
         </div>
         <div class='imgVerticalRectangleContainer lastElementInLine' @click="$emit('openMedia', mediaList, 1)">
-            <img :src='mediaList[1].url' :height='mediaList[1].hieght' :width='mediaList[1].width' />
+            <img :src='secondMedia.url' :height='secondMedia.hieght' :width='secondMedia.width' />
         </div>
     </div>
 
     <div class='containerMoreThanOneMedia' v-else-if='numberOfMedia == 3'>
         <div class='imgSquareContainer' @click="$emit('openMedia', mediaList, 0)">
-            <img :src='mediaList[0].url' :width='mediaList[0].width' :height='mediaList[0].hieght' />
+            <img :src='firstMedia.url' :width='firstMedia.width' :height='firstMedia.hieght' />
         </div>
         <div class='imgSquareContainer imgSquareContainerLastElement' @click="$emit('openMedia', mediaList, 1)">
-            <img :src='mediaList[1].url' :width='mediaList[1].width' :height='mediaList[1].hieght' />
+            <img :src='secondMedia.url' :width='secondMedia.width' :height='secondMedia.hieght' />
         </div>
         <div class='imgHorizontalRectangleContainer' @click="$emit('openMedia', mediaList, 2)">
-            <img :src='mediaList[2].url' :width='mediaList[2].width' :height='mediaList[2].hieght' />
+            <img :src='thirdMedia.url' :width='thirdMedia.width' :height='thirdMedia.hieght' />
         </div>
     </div>
 
     <div class='containerMoreThanOneMedia' v-else-if='numberOfMedia >= 4'>
         <div class='imgSquareContainer' @click="$emit('openMedia', mediaList, 0)">
-            <img :src='mediaList[0].url' :width='mediaList[0].width' :height='mediaList[0].hieght' />
+            <img :src='firstMedia.url' :width='firstMedia.width' :height='firstMedia.hieght' />
         </div>
         <div class='imgSquareContainer imgSquareContainerLastElement' @click="$emit('openMedia', mediaList, 1)">
-            <img :src='mediaList[1].url' :width='mediaList[1].width' :height='mediaList[1].hieght' />
+            <img :src='secondMedia.url' :width='secondMedia.width' :height='secondMedia.hieght' />
         </div>
         <div class='imgSquareContainer' @click="$emit('openMedia', mediaList, 2)">
-            <img :src='mediaList[2].url' :width='mediaList[2].width' :height='mediaList[2].hieght' />
+            <img :src='thirdMedia.url' :width='thirdMedia.width' :height='thirdMedia.hieght' />
         </div>
         <div v-if='numberOfMedia == 4' class='imgSquareContainer imgSquareContainerLastElement' @click="$emit('openMedia', mediaList, 3)">
-            <img :src='mediaList[3].url' :width='mediaList[3].width' :height='mediaList[3].hieght' />
+            <img :src='fourthMedia.url' :width='fourthMedia.width' :height='fourthMedia.hieght' />
         </div>
         <!-- if more than 4 -->
         <div v-else-if='numberOfMedia > 4' @click="$emit('openMedia', mediaList, 3)">
             <div class='imgSquareContainer imgSquareContainerLastElement'>
-                <img class='blurImg' :src='mediaList[3].url' :width='mediaList[3].width'
-                    :height='mediaList[3].hieght' />
+                <img class='blurImg' :src='fourthMedia.url' :width='fourthMedia.width'
+                    :height='fourthMedia.hieght' />
             </div>
             <div class='iconContainer'>
                 <font-awesome-icon :icon="['fas', 'plus']" size='2x' />

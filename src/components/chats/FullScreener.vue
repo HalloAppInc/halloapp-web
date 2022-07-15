@@ -11,7 +11,7 @@ const mainStore = useMainStore()
 
 const { setPreviewMediaSizes } = useHAMediaResize()
 
-const props = defineProps(['selectMediaIndex', 'selectMediaList'])
+const props = defineProps(['showFullScreener', 'selectMediaIndex', 'selectMediaList'])
 
 // delect media's idx in mediaUrlList
 const selectMediaIdx = ref(-1)
@@ -68,11 +68,11 @@ function openBigImg(idx: number) {
 
 <template>
 
-    <div class='mask' v-if='mainStore.chatPage == "media"'>
+    <div class='mask' v-if='props.showFullScreener.value'>
         <div class='wrapper'>
             <!-- close icon -->
             <div class='closeIconContainer'>
-                <div class='iconContainer' @click='mainStore.gotoChatPage("")'>
+                <div class='iconContainer' @click='props.showFullScreener.value = false'>
                     <font-awesome-icon :icon="['fas', 'xmark']" size='lg' />
                 </div>
             </div>

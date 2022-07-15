@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 
 import { useColorStore } from '../../stores/colorStore'
 import { useMainStore } from '../../stores/mainStore'
@@ -15,7 +15,7 @@ const mainStore = useMainStore()
 const { uploadAndDownLoad } = useHAMediaUpload()
 const { setPreviewMediaSizes } = useHAMediaResize()
 
-const props = defineProps(['uploadFiles', 'messageList', 'contactList'])
+const props = defineProps(['showComposer', 'uploadFiles', 'messageList', 'contactList'])
 
 const attachMediaList = ref(<any>[])
 
@@ -28,7 +28,12 @@ const messageNumber = computed(() => {
     return props.messageList.length
 })
 
+onMounted(() => {
+    console.log('composer mounted!')
+})
+
 const mediaUrlList = computed(() => {
+    console.log(' mediaUrlList ')
     const result = []
     for (let i = 0; i < props.uploadFiles.length; i++) {
         let media = props.uploadFiles[i]
@@ -73,7 +78,9 @@ function testUploadAndDownload(file: any) {
 
 function onFilePicked(event: any) {
     const files = event.target.files
-    for (let i = 0; i < files.length; i++) {
+    const numOfFileOld = mediaUrlList.value.length
+    const numOfFileAdd = files.length
+    for (let i = 0; i < numOfFileAdd ; i++) {
         let file = files[i]
         // if select at least one file
         if (file) {
@@ -85,6 +92,9 @@ function onFilePicked(event: any) {
                     'width': img.width,
                     'height': img.height
                     })
+                if (i == numOfFileAdd - 1) {
+                    selectMediaIdx.value = numOfFileOld + numOfFileAdd - 1 
+                }
             }
             img.src = URL.createObjectURL(file)
         }
@@ -119,14 +129,14 @@ function deleteMedia(idx: number) {
 
 function closeComposer() {
     selectMediaIdx.value = 0
-    mainStore.gotoChatPage('')
+    props.showComposer.value = false
     props.uploadFiles.splice(0, props.uploadFiles.length)
 }
 </script>
 
 <template>
 
-    <div class='mask' v-if='mainStore.chatPage == "composer"'>
+    <div class='mask' v-if='props.showComposer.value'>
         <div class='wrapper'>
             <!-- close icon -->
             <div class='closeIconContainer'>

@@ -42,6 +42,7 @@ let handleScrollTimer: any
 const showJumpDownButton = ref(false)
 const showMenu = ref(false)
 const showReply = ref(false)
+const showFullScreener = ref({'value' : false})
 
 const selectMessageIdx = ref(-1)
 const selectMediaList = ref()
@@ -305,7 +306,7 @@ function openMedia(mediaList: any, idx: number) {
     selectMediaList.value = mediaList
     selectMediaIndex.value = idx
     // go to fullscreener
-    mainStore.gotoChatPage('media')
+    showFullScreener.value.value = true
 }
 
 function openReply() {
@@ -485,7 +486,8 @@ function getQuoteMessageData(message: any) {
     </div>
 
     <!-- show media in full screen -->
-    <FullScreener :select-media-index='selectMediaIndex' :select-media-list='selectMediaList' />
+    <FullScreener :show-full-screener='showFullScreener' :select-media-index='selectMediaIndex' 
+        :select-media-list='selectMediaList' />
 
 </template>
 

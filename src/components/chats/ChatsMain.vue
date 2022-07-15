@@ -8,7 +8,6 @@ import ChatHeader from './ChatHeader.vue'
 import ChatPanel from './ChatPanel.vue'
 import ChatFooter from './ChatFooter.vue'
 import ChatSettings from './ChatSettings.vue'
-import Composer from './Composer.vue'
 
 const colorStore = useColorStore()
 const mainStore = useMainStore()
@@ -153,12 +152,12 @@ function clearOrDeleteMessage(idx: number = -1) {
     <div class='wrapper' v-if='mainStore.page == "chats" && mainStore.chatPage != "settings"'>
 
         <div class='header'>
-            <ChatHeader :chat-name='chatName' :chat-information='chatInformation' @clear-messages='clearOrDeleteMessage'/>
+            <ChatHeader :chat-name='chatName' :chat-information='chatInformation' @clearMessages='clearOrDeleteMessage'/>
         </div>
 
         <!-- chatting area -->
         <div class='content' ref='content'>
-            <ChatPanel :message-list='messageList' @delete-message='clearOrDeleteMessage'/>
+            <ChatPanel :message-list='messageList' @deleteMessage='clearOrDeleteMessage'/>
         </div>
 
         <!-- input tray -->
@@ -170,9 +169,6 @@ function clearOrDeleteMessage(idx: number = -1) {
 
     <!-- background settings -->
     <ChatSettings />
-
-    <!-- composer -->
-    <Composer :upload-files='uploadFiles' :message-list='messageList' :contact-list='contactList' />
 </template>
 
 <style scoped>
