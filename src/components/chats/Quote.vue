@@ -3,9 +3,23 @@ import { ref, computed } from 'vue'
 
 import { useColorStore } from '../../stores/colorStore'
 
+import { useHAMediaResize } from '../../composables/haMediaResize'
+
 const colorStore = useColorStore()
 
+const { setQuoteMediaSize } = useHAMediaResize()
+
 const props = defineProps(['quoteMessage'])
+
+const quoteMedia = computed(() => {
+    let res = setQuoteMediaSize(props.quoteMessage.media[0])
+    let result = {
+        'url': props.quoteMessage.media[0].url,
+        'width': res?.mediaItemWidth,
+        'height': res?.mediaItemHeight 
+    }
+    return result
+})
 
 const textColor = computed(() => {
     return colorStore.text
@@ -34,12 +48,12 @@ const iconColor = computed(() => {
                     <font-awesome-icon :icon="['fas', 'camera']" size='xs' />
                 </div>
                 <div class='TextContainer'>
-                    <span v-html='quoteMessage.message'></span>
+                    <span v-html='quoteMessage.message' class='noOverFlow'></span>
                 </div>
             </div>
         </div>
         <div class='attachMediaContainer' v-if='quoteMessage.media'>
-            <img :src='quoteMessage.media'/>
+            <img class='imgSmall' :height='quoteMedia.height' :width='quoteMedia.width' :src='quoteMedia.url'/>
         </div>
     </div>
 
@@ -48,7 +62,7 @@ const iconColor = computed(() => {
 <style scoped>
 .quoteContainer {
     height: fit-content;
-    background-color: rgb(0,0,0,0.05);
+    background-color: rgb(0, 0, 0, 0.05);
     border-left: 5px solid #6495ED;
     border-radius: 5px;
 
@@ -64,17 +78,16 @@ const iconColor = computed(() => {
     flex-grow: 100;
 }
 
-img {
-    height: 100%;
-    width: 100%;
-}
-
 .attachMediaContainer {
     height: 80px;
     width: 80px;
     overflow: hidden;
 
     background-color: #FFFFFF;
+}
+
+.imgSmall {
+    overflow: hidden;
 }
 
 .contentHeader {
@@ -118,10 +131,15 @@ img {
 .TextContainer {
     margin: 0px 5px;
     max-height: 30px;
+    min-width: 100px;
     overflow: hidden;
-    width: fit-content;
 
     /* wrap text when it is too long */
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.noOverFlow {
     overflow-wrap: anywhere;
     white-space: normal;
 }

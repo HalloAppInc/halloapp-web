@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 
 import { useColorStore } from '../../stores/colorStore'
 import { useMainStore } from '../../stores/mainStore'
 
 import { useHAMediaUpload } from '../../composables/haMediaUpload'
+import { useHAMediaResize } from '../../composables/haMediaResize'
 
 import InputBox from './InputBox.vue'
 
@@ -12,28 +13,44 @@ const colorStore = useColorStore()
 const mainStore = useMainStore()
 
 const { uploadAndDownLoad } = useHAMediaUpload()
+const { setPreviewMediaSizes } = useHAMediaResize()
 
-const props = defineProps(['uploadFiles', 'messageList', 'contactList'])
+const props = defineProps(['showComposer', 'uploadFiles', 'messageList', 'contactList'])
 
 const attachMediaList = ref(<any>[])
 
 const test = ref()
+const addUploadMedia = ref()
+
+const selectMediaIdx = ref(0)
 
 const messageNumber = computed(() => {
     return props.messageList.length
 })
 
+onMounted(() => {
+    console.log('composer mounted!')
+})
+
 const mediaUrlList = computed(() => {
+    console.log(' mediaUrlList ')
     const result = []
     for (let i = 0; i < props.uploadFiles.length; i++) {
-        result.push(URL.createObjectURL(props.uploadFiles[i]))
+        let media = props.uploadFiles[i]
+        let res = setPreviewMediaSizes(media)
+        result.push({
+            'url': media.url,
+            'width': res?.mediaItemWidth,
+            'height': res?.mediaItemHeight
+            })
     }
+
     return result
 })
 
 // if message is sent, close preview
 watch(messageNumber, (newVal, oldVal) => {
-    mainStore.gotoChatPage('')
+    closeComposer()
 })
 
 const backgroundColor = computed(() => {
@@ -54,20 +71,76 @@ function testUploadAndDownload(file: any) {
         uploadAndDownLoad(file, attachMediaList.value)
         // wait for uploadAndDownLoad
         setTimeout(() => {
-            // console.log(attachMediaList.value)
             test.value.src = attachMediaList.value[attachMediaList.value.length - 1]
         }, 5000)
     }
+}
+
+function onFilePicked(event: any) {
+    const files = event.target.files
+    const numOfFileOld = mediaUrlList.value.length
+    const numOfFileAdd = files.length
+    for (let i = 0; i < numOfFileAdd ; i++) {
+        let file = files[i]
+        // if select at least one file
+        if (file) {
+            let img = new Image()
+            img.onload = function () {
+                props.uploadFiles.push({
+                    'file': file,
+                    'url': img.src,
+                    'width': img.width,
+                    'height': img.height
+                    })
+                if (i == numOfFileAdd - 1) {
+                    selectMediaIdx.value = numOfFileOld + numOfFileAdd - 1 
+                }
+            }
+            img.src = URL.createObjectURL(file)
+        }
+    }
+    // reset select to allow second use of same media
+    event.target.value = ''
+}
+
+function openBigImg(event: any, idx: number) {
+    if (event.target.nodeName == 'IMG') {
+        selectMediaIdx.value = idx
+    }
+    else {
+        deleteMedia(idx)
+    }
+}
+
+function deleteMedia(idx: number) {
+    // delete the last one
+    if (props.uploadFiles.length == 1) {
+        closeComposer()
+    }
+    else {
+        // if delete one is before select one
+        if (idx <= selectMediaIdx.value && selectMediaIdx.value > 0) {
+            selectMediaIdx.value -= 1
+        }
+        // remove this element
+        props.uploadFiles.splice(idx, 1)
+    }
+}
+
+function closeComposer() {
+    selectMediaIdx.value = 0
+    props.showComposer.value = false
+    props.uploadFiles.splice(0, props.uploadFiles.length)
 }
 </script>
 
 <template>
 
-    <div id='mask' v-if='mainStore.chatPage == "preview"'>
-        <div id='wrapper'>
+    <div class='mask' v-if='props.showComposer.value'>
+        <div class='wrapper'>
             <!-- close icon -->
             <div class='closeIconContainer'>
-                <div class='iconContainer' @click="mainStore.gotoChatPage('chat')">
+                <div class='iconContainer' @click='closeComposer'>
                     <div class='iconShadow'>
                         <font-awesome-icon :icon="['fas', 'xmark']" size='lg' />
                     </div>
@@ -75,8 +148,7 @@ function testUploadAndDownload(file: any) {
             </div>
 
             <!-- tool box: edit uploaded photo -->
-            <div id='header'>
-                <!-- test upload and download -->
+            <div class='header'>
                 <div class='iconContainer'>
                     <div class='iconShadow'>
                         <font-awesome-icon :icon="['fas', 'face-smile']" size='lg' />
@@ -85,7 +157,7 @@ function testUploadAndDownload(file: any) {
 
 
                 <!-- will delete this one when merge -->
-                <div class='iconContainer' @click='testUploadAndDownload(props.uploadFiles[0])'>
+                <div class='iconContainer' @click='testUploadAndDownload(props.uploadFiles[selectMediaIdx].file)'>
                     <div class='iconShadow'>
                         <font-awesome-icon :icon="['fas', 'hammer']" size='lg' />
                     </div>
@@ -93,19 +165,44 @@ function testUploadAndDownload(file: any) {
             </div>
 
             <!-- image box: show the image -->
-            <div id='content'>
-                <div class='imgContainer'>
-                    <img :src='mediaUrlList[0]' />
-                    <!-- will delete this one when merge -->
-                    <img ref='test' />
+            <div class='content'>
+                <div class='imgBigContainer'>
+                    <img class='imgBig' :src='mediaUrlList[selectMediaIdx].url' />
+                    <!-- TODO: delete this one, only for test -->
+                    <img class='imgBig' ref='test' />
                 </div>
             </div>
 
             <!-- input box: add caption -->
-            <div id='footer'>
+            <div class='footer'>
                 <div class='chatBoxTray' ref='chatBox'>
-                    <InputBox :message-list='messageList' :contact-list='contactList' 
-                        :upload-files='mediaUrlList[0]' />
+                    <InputBox :message-list='messageList' :contact-list='contactList' :upload-files='uploadFiles'
+                        :always-show-send-button='true' />
+                </div>
+                <!-- media preview and add more media -->
+                <div class='mediaTray'>
+                    <div class='smallPreviewContainer'>
+                        <div v-for='(value, idx) in mediaUrlList' @click='openBigImg($event, idx)'
+                            :class="{ 'squareContainer': true, 'selected': idx == selectMediaIdx }" >
+                            <div class='imgSmallContainer'>
+                                <img class='imgSmall' :width='value.width' :height='value.height' :src='value.url' />
+                            </div>
+                            <!-- close toggler -->
+                            <div class='menuToggler'>
+                                <div class='togglerIconContainer'>
+                                    <font-awesome-icon :icon="['fas', 'xmark']" size='xs' />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class='addMoreIconContainer'>
+                        <!-- upload file -->
+                        <input type='file' multiple ref='addUploadMedia' accept='image/*' @change='onFilePicked'
+                            style='display: none' />
+                        <div class='iconContainer' @click='addUploadMedia?.click'>
+                            <font-awesome-icon :icon="['fas', 'plus']" size='lg' />
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -114,23 +211,21 @@ function testUploadAndDownload(file: any) {
 </template>
 
 <style scoped>
-#mask {
+.mask {
     position: fixed;
     z-index: 4;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: v-bind(wraperColor);
+    background-color: #FFFFFF;
     display: table;
 }
 
-#wrapper {
+.wrapper {
     width: 100%;
     height: 100%;
     position: relative;
-
-    background-color: v-bind(wraperColor);
 
     display: flex;
     flex-direction: column;
@@ -152,14 +247,14 @@ function testUploadAndDownload(file: any) {
     cursor: pointer;
 }
 
-#header {
+.header {
     flex: 1 1 50px;
     display: flex;
     flex-direction: row;
     justify-content: center;
 }
 
-#content {
+.content {
     width: 100%;
     height: 100%;
     display: flex;
@@ -168,29 +263,115 @@ function testUploadAndDownload(file: any) {
     align-items: center;
 }
 
-.imgContainer {
+.imgBigContainer {
     width: fit-content;
     height: fit-content;
 }
 
-img {
+.imgBig {
     max-width: 70vw;
     max-height: 70vh;
-    background-color: v-bind(backgroundColor);
     box-shadow: 0px 0px 20px 2px v-bind(shadowColor);
 }
 
-#footer {
+.footer {
     bottom: 0;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     justify-content: center;
+    align-items: center;
 }
 
 .chatBoxTray {
     width: 500px;
-    margin-bottom: 100px;
     display: flex;
     flex-direction: row;
+}
+
+.mediaTray {
+    height: 100px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.smallPreviewContainer {
+    width: fit-content;
+    overflow-x: auto;
+    padding-left: 5px;
+    height: 56px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.squareContainer {
+    z-index: 2;
+    width: 50px;
+    height: 50px;
+    margin-right: 10px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    border-radius: 5px;
+    overflow: hidden;
+
+    border: 1px solid gainsboro;
+}
+
+.squareContainer:hover {
+    cursor: pointer;
+}
+
+.squareContainer:hover .menuToggler {
+    display: flex;
+}
+
+.menuToggler {
+    z-index: 3;
+    display: none;
+    position: relative;
+    width: 0;
+    top: -45px;
+    left: 10px;
+    box-shadow: 2px -20px 50px 30px rgba(0, 0, 0, 0.5);
+}
+
+.togglerIconContainer {
+    color: v-bind(iconColor);
+}
+
+.imgSmallContainer {
+    z-index: 1;
+
+    width: 50px;
+    height: 50px;
+    overflow: hidden;
+}
+
+.imgSmall {
+    z-index: 0;
+
+    overflow: hidden;
+}
+
+.selected {
+    outline: 3px solid #1E90FF;
+}
+
+.addMoreIconContainer {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    border-radius: 5px;
+    overflow: hidden;
+    border: 1px solid gainsboro;
 }
 </style>
