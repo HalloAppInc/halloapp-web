@@ -1,21 +1,24 @@
 <script setup lang="ts">
-import { emit } from 'process'
-import { emitKeypressEvents } from 'readline'
 import { ref, computed, nextTick, watch, onMounted, onUnmounted } from 'vue'
 
 import { useI18n } from 'vue-i18n'
 
 import { useTimeformatter } from '../../composables/timeformatter'
+import { useHAMediaResize } from '../../composables/haMediaResize'
+
 import { useColorStore } from '../../stores/colorStore'
 import { useMainStore } from '../../stores/mainStore'
 
 import Popup from './Popup.vue'
 import Quote from './Quote.vue'
+import FullScreener from './FullScreener.vue'
+import MediaCollage from './MediaCollage.vue'
 
 const colorStore = useColorStore()
 const mainStore = useMainStore()
 
 const { formatTimeDateOnlyChat, formatTimeChat, formatTimeFullChat } = useTimeformatter()
+const { setMediaSizeInMediaList } = useHAMediaResize()
 
 const { t, locale } = useI18n({
     inheritLocale: true,
@@ -24,7 +27,7 @@ const { t, locale } = useI18n({
 
 const props = defineProps(['messageList'])
 
-const emits = defineEmits(['deleteMessage', 'openMedia'])
+const emits = defineEmits(['deleteMessage'])
 
 const menu = ref<HTMLElement | null>(null)
 const content = ref<HTMLElement | null>(null)
@@ -39,8 +42,11 @@ let handleScrollTimer: any
 const showJumpDownButton = ref(false)
 const showMenu = ref(false)
 const showReply = ref(false)
+const showFullScreener = ref({'value' : false})
 
-const selectMessageId = ref(-1)
+const selectMessageIdx = ref(-1)
+const selectMediaList = ref()
+const selectMediaIndex = ref()
 const menuTimestamp = ref('')
 
 // set floating time stamp's content
@@ -56,10 +62,13 @@ const data = computed(() => {
     for (var i = 0; i < result.length; i++) {
         if (result[i].type != 'timestamp') {
             let time = formatTimeChat(parseInt(result[i].timestamp), <string>locale.value)
-            let res = appendSpaceForMsgInfo(props.messageList[i].message, time, result[i].type == 'outBound')
-            result[i].message = res[0]
-            result[i].font = res[1]
+            let resMsg = appendSpaceForMsgInfo(props.messageList[i].message, time, result[i].type == 'outBound')
+            result[i].message = resMsg[0]
+            result[i].font = resMsg[1]
             result[i].timestamp = time
+            if (result[i].media) {
+                setMediaSizeInMediaList(result[i].media)
+            }
         }
         else {
             result[i].timestamp = formatTimeDateOnlyChat(parseInt(result[i].timestamp), <string>locale.value)
@@ -153,7 +162,6 @@ watch(chatPanelHeight, () => {
 
 function setChatPanelHeight() {
     chatPanelHeight.value = content.value ? content.value.clientHeight : 0
-    // console.log(chatPanelHeight.value)
 }
 
 function handleScroll() {
@@ -224,12 +232,12 @@ function gotoBottom(type: ScrollBehavior | undefined) {
     content.value?.scrollTo({ left: 0, top: content.value?.scrollHeight, behavior: type })
 }
 
-function gotoProfile(e: any) {
-    let contactName = e.target.innerText.substring(1)
+function gotoProfile(event: any) {
+    let contactName = event.target.innerText.substring(1)
     // go to user's profile page
 }
 
-function openMenu(e: any, forInBound: boolean, idx: number) {
+function openMenu(event: any, forInBound: boolean, idx: number) {
     showMenu.value = !showMenu.value
     // if close menu
     if (!showMenu.value) {
@@ -237,9 +245,9 @@ function openMenu(e: any, forInBound: boolean, idx: number) {
     }
 
     menuTimestamp.value = formatTimeFullChat(parseInt(props.messageList[idx].timestamp), <string>locale.value)
-    selectMessageId.value = idx
+    selectMessageIdx.value = idx
 
-    let bounds = e.target.getBoundingClientRect()
+    let bounds = event.target.getBoundingClientRect()
     for (let key in bounds) {
         if (key == 'right') {
             floatMenuPositionX.value = window.outerWidth - bounds[key]
@@ -261,16 +269,16 @@ function openMenu(e: any, forInBound: boolean, idx: number) {
                 if (bottomOffset <= 80) {
                     let msgBubble
                     // get msg bubble's height
-                    if (e.target.nodeName == 'svg') {
-                        msgBubble = e.target.parentElement.parentElement.parentElement
+                    if (event.target.nodeName == 'svg') {
+                        msgBubble = event.target.parentElement.parentElement.parentElement
                         floatMenuPositionY.value -= msgBubble.clientHeight
                     }
-                    else if (e.target.nodeName == 'path') {
-                        msgBubble = e.target.parentElement.parentElement.parentElement.parentElement
+                    else if (event.target.nodeName == 'path') {
+                        msgBubble = event.target.parentElement.parentElement.parentElement.parentElement
                         floatMenuPositionY.value -= msgBubble.clientHeight
                     }
-                    else if (e.target.nodeName == 'DIV' && e.target.className == 'togglerIconContainer') {
-                        msgBubble = e.target.parentElement.parentElement
+                    else if (event.target.nodeName == 'DIV' && event.target.className == 'togglerIconContainer') {
+                        msgBubble = event.target.parentElement.parentElement
                         floatMenuPositionY.value -= msgBubble.clientHeight
                     }
                     floatMenuPositionY.value -= 70
@@ -294,18 +302,19 @@ onUnmounted(() => {
     document.removeEventListener("click", closeMenu)
 })
 
-function openMedia(e: any) {
-    // go to show media
-    mainStore.gotoChatPage('media')
-    return e.target.getAttribute('src')
+function openMedia(mediaList: any, idx: number) {
+    selectMediaList.value = mediaList
+    selectMediaIndex.value = idx
+    // go to fullscreener
+    showFullScreener.value.value = true
 }
 
 function openReply() {
-    mainStore.gotoChatPage('reply' + selectMessageId.value)
+    mainStore.gotoChatPage('reply' + selectMessageIdx.value)
     showReply.value = true
     showMenu.value = false
     // get quote message
-    quoteMessage.value = getQuoteMessageData(props.messageList[selectMessageId.value])
+    quoteMessage.value = getQuoteMessageData(props.messageList[selectMessageIdx.value])
 }
 
 function getQuoteMessageData(message: any) {
@@ -321,7 +330,7 @@ function getQuoteMessageData(message: any) {
 </script>
 
 <template>
-    <div id='contents' ref='content' @scroll='handleScroll()'>
+    <div class='contents' ref='content' @scroll='handleScroll()'>
         <!-- chat msg -->
         <div class='containerChat' v-for='(value, idx) in data'>
             <!-- inbound msg -->
@@ -335,12 +344,12 @@ function getQuoteMessageData(message: any) {
                         </div>
                     </div>
                     <!-- media -->
-                    <div class='mediaContainer' v-if='value.media && value.media != ""' @click='$emit("openMedia", openMedia($event))'>
-                        <img :src='value.media' />
+                    <div class='mediaContainer' v-if='value.media && value.media != ""'>
+                        <MediaCollage @open-media='openMedia' :media-list='value.media'/>
                     </div>
                     <!-- quote -->
                     <div class='chatReplyContainer' v-if='value.quoteIdx && value.quoteIdx > -1'>
-                        <Quote :quote-message='getQuoteMessageData(messageList[value.quoteIdx])'/>
+                        <Quote :quote-message='getQuoteMessageData(messageList[value.quoteIdx])' />
                     </div>
                     <!-- text -->
                     <div class='chatTextContainer' :class='{ bigChatTextContainer: value.font }'>
@@ -370,12 +379,12 @@ function getQuoteMessageData(message: any) {
                         </div>
                     </div>
                     <!-- media -->
-                    <div class='mediaContainer' v-if='value.media && value.media != ""' @click='$emit("openMedia", openMedia($event))'>
-                        <img :src='value.media' />
+                    <div class='mediaContainer' v-if='value.media && value.media != ""'>
+                        <MediaCollage @open-media='openMedia' :media-list='value.media'/>
                     </div>
                     <!-- quote -->
                     <div class='chatReplyContainer' v-if='value.quoteIdx && value.quoteIdx > -1'>
-                        <Quote :quote-message='getQuoteMessageData(messageList[value.quoteIdx])'/>
+                        <Quote :quote-message='getQuoteMessageData(messageList[value.quoteIdx])' />
                     </div>
                     <!-- text -->
                     <div class='chatTextContainer' :class='{ bigChatTextContainer: value.font }'>
@@ -462,7 +471,7 @@ function getQuoteMessageData(message: any) {
     </div>
 
     <!-- popup -->
-    <Popup @confirm-Ok="$emit('deleteMessage', selectMessageId)" />
+    <Popup @confirm-Ok="$emit('deleteMessage', selectMessageIdx)" />
 
     <!-- Reply -->
     <div class='containerReply' v-if='showReply'>
@@ -475,6 +484,10 @@ function getQuoteMessageData(message: any) {
             </div>
         </div>
     </div>
+
+    <!-- show media in full screen -->
+    <FullScreener :show-full-screener='showFullScreener' :select-media-index='selectMediaIndex' 
+        :select-media-list='selectMediaList' />
 
 </template>
 
@@ -505,7 +518,7 @@ function getQuoteMessageData(message: any) {
     border: 0px solid white;
 }
 
-#contents {
+.contents {
     width: 100%;
     height: 100%;
 
@@ -747,13 +760,26 @@ function getQuoteMessageData(message: any) {
 }
 
 .mediaContainer {
-    max-height: 400px;
     overflow-y: hidden;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.mediaContainer:hover {
+    cursor: pointer;
+}
+
+.imgSquareContainer {
+    height: 150px;
+    width: 150px;
+    margin-right: 5px;
 }
 
 img {
     border-radius: 5px;
-    max-width: 100%;
+
+    overflow: hidden;
 }
 
 img:hover {

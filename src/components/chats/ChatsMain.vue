@@ -8,8 +8,6 @@ import ChatHeader from './ChatHeader.vue'
 import ChatPanel from './ChatPanel.vue'
 import ChatFooter from './ChatFooter.vue'
 import ChatSettings from './ChatSettings.vue'
-import Composer from './Composer.vue'
-import FullScreener from './FullScreener.vue'
 
 const colorStore = useColorStore()
 const mainStore = useMainStore()
@@ -95,7 +93,6 @@ const contactList = ref([
 ])
 
 const uploadFiles = ref([])
-const selectMediaUrl = ref()
 
 const chatName = ref('chat1')
 const chatInformation = ref('chatInfo')
@@ -148,46 +145,34 @@ function clearOrDeleteMessage(idx: number = -1) {
         messageList.value.splice(idx, 1)
     }
 }
-
-function openMedia(url: string) {
-    selectMediaUrl.value = url
-    console.log(selectMediaUrl)
-}
 </script>
 
 <template>
 
-    <div id='wrapper' v-if='mainStore.page == "chats" && mainStore.chatPage != "settings"'>
+    <div class='wrapper' v-if='mainStore.page == "chats" && mainStore.chatPage != "settings"'>
 
-        <div id='header'>
-            <ChatHeader :chat-name='chatName' :chat-information='chatInformation' @clear-messages='clearOrDeleteMessage'/>
+        <div class='header'>
+            <ChatHeader :chat-name='chatName' :chat-information='chatInformation' @clearMessages='clearOrDeleteMessage'/>
         </div>
 
         <!-- chatting area -->
-        <div id='content' ref='content'>
-            <ChatPanel :message-list='messageList' @open-media='openMedia' @delete-message='clearOrDeleteMessage'/>
+        <div class='content' ref='content'>
+            <ChatPanel :message-list='messageList' @deleteMessage='clearOrDeleteMessage'/>
         </div>
 
         <!-- input tray -->
-        <div id='footer'>
+        <div class='footer'>
             <ChatFooter :upload-files='uploadFiles' :message-list='messageList' :contact-list='contactList' />
         </div>
 
     </div>
 
     <!-- background settings -->
-    <ChatSettings v-if="mainStore.chatPage == 'settings'" />
-
-    <!-- attachment preview -->
-    <Composer :upload-files='uploadFiles' :message-list='messageList' :contact-list='contactList' />
-
-    <!-- show media in another tab -->
-    <FullScreener :select-media-url='selectMediaUrl' :message-list='messageList' />
-
+    <ChatSettings />
 </template>
 
 <style scoped>
-#wrapper {
+.wrapper {
     width: 100%;
     height: 100%;
     position: relative;
@@ -201,17 +186,17 @@ function openMedia(url: string) {
     justify-content: flex-start;
 }
 
-#header {
+.header {
     flex: 1 1 50px;
     background-color: #f0f2f5;
 }
 
-#footer {
+.footer {
     bottom: 0;
     width: 100%;
 }
 
-#content {
+.content {
     width: 100%;
     height: 100%;
     overflow-y: hidden;

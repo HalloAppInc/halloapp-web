@@ -5,6 +5,7 @@ import { useMainStore } from '../../stores/mainStore'
 import { useColorStore } from '../../stores/colorStore'
 
 import InputBox from './InputBox.vue'
+import Composer from './Composer.vue'
 
 const mainStore = useMainStore()
 const colorStore = useColorStore()
@@ -15,6 +16,7 @@ const selectAndUploadfile = ref(<HTMLElement | null>(null))
 const chatBox = ref(<HTMLElement | null>(null))
 
 const showAttachMenu = ref(false)
+const showComposer = ref({'value' : false})
 
 const chatBoxHeight = ref(0)
 
@@ -39,18 +41,32 @@ function openAttachMenu() {
     }
 }
 
-function onFilePicked(e: any) {
+function onFilePicked(event: any) {
     // make upload file array empty
     props.uploadFiles.splice(0, props.uploadFiles.length)
-    const files = e.target.files
-    for (let i = 0; i < files.length; i++) {
-        let filename = files[i].name
+    const files = event.target.files
+    const numOfFile = files.length
+    for (let i = 0; i < numOfFile; i++) {
+        let file = files[i]
         // if select at least one file
-        if (filename != '') {
-            props.uploadFiles.push(files[i])
+        if (file) {
+            let img = new Image()
+            img.onload = function () {
+                props.uploadFiles.push({
+                    'file': file,
+                    'url': img.src,
+                    'width': img.width,
+                    'height': img.height
+                    })
+                // goto composer after get width and height, and only go once
+                if (i == numOfFile - 1) {
+                    showComposer.value.value = true
+                }
+            }
+            img.src = URL.createObjectURL(file)
         }
     }
-    mainStore.gotoChatPage('preview')
+    event.target.value = ''
 }
 </script>
 
@@ -60,7 +76,7 @@ function onFilePicked(e: any) {
     <transition name='attach'>
         <div class='veriticalMenuContainer' v-if='showAttachMenu'>
             <!-- upload file -->
-            <input type='file' ref='selectAndUploadfile' accept='image/*' @change='onFilePicked'
+            <input type='file' multiple ref='selectAndUploadfile' accept='image/*' @change='onFilePicked'
                 style='display: none' />
             <!-- icon -->
             <div class='iconContainer' @mousedown='selectAndUploadfile?.click'>
@@ -83,7 +99,8 @@ function onFilePicked(e: any) {
             </div>
         </div>
         <!-- uploadfile = "" does not attachment heren -->
-        <InputBox :message-list='props.messageList' :contact-list='props.contactList' :upload-files='""' />
+        <InputBox :message-list='props.messageList' :contact-list='props.contactList' :upload-files='""'
+            :always-show-send-button='false' />
         <!-- <div class='iconContainer'>
             <div class='iconShadow' :class="{ 'showIconShadow': showAttachMenu == true }">
                 <font-awesome-icon :icon="['fas', 'microphone']" size='lg' />
@@ -91,6 +108,9 @@ function onFilePicked(e: any) {
         </div> -->
     </div>
 
+    <!-- composer -->
+    <Composer :show-composer='showComposer' :upload-files='uploadFiles' 
+        :message-list='messageList' :contact-list='contactList' />
 </template>
 
 <style scoped>

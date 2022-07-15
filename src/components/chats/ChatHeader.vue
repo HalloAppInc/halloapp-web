@@ -46,7 +46,7 @@ const backgroundColor = computed(() => {
 
 <template>
 
-    <div id='chatHeader'>
+    <div class='chatHeader'>
         <div class='container'>
             <!-- show user profile photo and chat information -->
             <div class='avatarContainer'>
@@ -104,7 +104,7 @@ const backgroundColor = computed(() => {
 </template>
 
 <style scoped>
-#chatHeader {
+.chatHeader {
     overflow-y: auto;
     overflow-x: hidden;
     background-color: v-bind(headerColor);
@@ -251,7 +251,7 @@ const backgroundColor = computed(() => {
     font-size: medium;
     display: flex;
     flex-direction: row;
-    align-items: center;
     justify-content: center;
+    align-items: center;
 }
 </style>
