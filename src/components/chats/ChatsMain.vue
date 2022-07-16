@@ -7,12 +7,9 @@ import { useMainStore  } from '../../stores/mainStore'
 import ChatHeader from './ChatHeader.vue'
 import ChatPanel from './ChatPanel.vue'
 import ChatFooter from './ChatFooter.vue'
-import ChatSettings from './ChatSettings.vue'
 
 const colorStore = useColorStore()
 const mainStore = useMainStore()
-
-const content = ref<HTMLElement | null>(null)
 
 const messageList = ref([
     {
@@ -104,8 +101,6 @@ const contactList = ref([
 
 const replyQuoteIdx = ref({'value': -1})
 
-const uploadFiles = ref([])
-
 const chatName = ref('chat1')
 const chatInformation = ref('chatInfo')
 
@@ -158,19 +153,17 @@ function notifyMe() {
         </div>
 
         <!-- chatting area -->
-        <div class='content' ref='content'>
+        <div class='content'>
             <ChatPanel :message-list='messageList' :reply-quote-idx='replyQuoteIdx'/>
         </div>
 
         <!-- input tray -->
         <div class='footer'>
-            <ChatFooter :upload-files='uploadFiles' :message-list='messageList' :contact-list='contactList' :reply-quote-idx='replyQuoteIdx'/>
+            <ChatFooter :message-list='messageList' :contact-list='contactList' :reply-quote-idx='replyQuoteIdx'/>
         </div>
 
     </div>
 
-    <!-- background settings -->
-    <ChatSettings />
 </template>
 
 <style scoped>

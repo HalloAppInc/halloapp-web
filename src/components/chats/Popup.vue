@@ -187,6 +187,7 @@ const shadowColor = computed(() => {
     float: right;
     border-radius: 20px;
     margin-left: 20px;
+    margin-top: 10px;
     background-color: #5ba4fc;
     padding: 5px 15px 5px 15px;
     color: white;

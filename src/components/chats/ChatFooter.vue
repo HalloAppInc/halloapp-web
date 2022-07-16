@@ -8,7 +8,9 @@ import Composer from './Composer.vue'
 
 const colorStore = useColorStore()
 
-const props = defineProps(['uploadFiles', 'messageList', 'contactList', 'replyQuoteIdx'])
+const props = defineProps(['messageList', 'contactList', 'replyQuoteIdx'])
+
+const uploadFiles: any = ref([])
 
 const selectAndUploadfile = ref(<HTMLElement | null>(null))
 const chatBox = ref(<HTMLElement | null>(null))
@@ -41,7 +43,7 @@ function openAttachMenu() {
 
 function onFilePicked(event: any) {
     // make upload file array empty
-    props.uploadFiles.splice(0, props.uploadFiles.length)
+    uploadFiles.value.splice(0, uploadFiles.value.length)
     const files = event.target.files
     const numOfFile = files.length
     for (let i = 0; i < numOfFile; i++) {
@@ -50,7 +52,7 @@ function onFilePicked(event: any) {
         if (file) {
             let img = new Image()
             img.onload = function () {
-                props.uploadFiles.push({
+                uploadFiles.value.push({
                     'file': file,
                     'url': img.src,
                     'width': img.width,

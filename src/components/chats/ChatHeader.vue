@@ -7,6 +7,7 @@ import { useColorStore } from '../../stores/colorStore'
 import { useMainStore } from '../../stores/mainStore'
 
 import Popup from './Popup.vue'
+import ChatSettings from './ChatSettings.vue'
 
 const props = defineProps(['messageList', 'chatName', 'chatInformation'])
 
@@ -21,6 +22,7 @@ const mainStore = useMainStore()
 const menu = ref<HTMLElement | null>(null)
 
 const showChatSettings = ref(false)
+const showBackgroundColorSetting = ref({ 'value': false})
 const showPopup = ref({ 'value': false, 'type': 'clear' })
 
 const hoverColor = computed(() => {
@@ -48,6 +50,10 @@ function clearMessage() {
 
 function openPopup() {
     showPopup.value.value = true
+}
+
+function openBackgroundColorSetting() {
+    showBackgroundColorSetting.value.value = true
 }
 </script>
 
@@ -89,7 +95,7 @@ function openPopup() {
     <!-- chat settings menu -->
     <div class='chatSettings' v-if='showChatSettings'>
         <div class='menu' ref='menu'>
-            <div class='menuContainer' @mousedown='mainStore.gotoChatPage("settings")'>
+            <div class='menuContainer' @mousedown='openBackgroundColorSetting'>
                 <div class='textContainer'>
                     <div class='contentTextBody'>
                         {{ t('chatSettings.changeBackgroundColor') }}
@@ -106,9 +112,13 @@ function openPopup() {
         </div>
     </div>
 
+    <!-- clear all messages -->
     <Popup 
         @confirmOk='clearMessage'
         :show-popup='showPopup' />
+
+    <!-- background settings -->
+    <ChatSettings :show-background-color-setting='showBackgroundColorSetting'/>
 
 </template>
 
