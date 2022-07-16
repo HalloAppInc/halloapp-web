@@ -88,28 +88,32 @@ function onFilePicked(event: any) {
     </transition>
 
     <div class='chatBoxTray' ref='chatBox'>
+
         <!-- <div class='iconContainer'>
             <div class='iconShadow' :class="{ 'showIconShadow': showAttachMenu == true }">
                 <font-awesome-icon :icon="['fas', 'face-smile']" size='lg' />
             </div>
         </div> -->
+
         <div class='iconContainer' tabindex='0' @click='openAttachMenu' @focusout='showAttachMenu = false'>
             <div class='iconShadow' :class="{ 'showIconShadow': showAttachMenu == true }">
                 <font-awesome-icon :icon="['fas', 'paperclip']" size='lg' />
             </div>
         </div>
-        <!-- uploadfile = "" does not attachment heren -->
+
         <InputBox 
             :message-list='props.messageList' 
             :contact-list='props.contactList' 
             :upload-files='""'
             :always-show-send-button='false'
             :reply-quote-idx='props.replyQuoteIdx' />
+
         <!-- <div class='iconContainer'>
             <div class='iconShadow' :class="{ 'showIconShadow': showAttachMenu == true }">
                 <font-awesome-icon :icon="['fas', 'microphone']" size='lg' />
             </div>
         </div> -->
+
     </div>
 
     <!-- composer -->
@@ -119,6 +123,7 @@ function onFilePicked(event: any) {
         :message-list='messageList' 
         :contact-list='contactList'
         :reply-quote-idx='replyQuoteIdx' />
+        
 </template>
 
 <style scoped>

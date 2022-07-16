@@ -57,7 +57,8 @@
     },
     "chatSettings": {
         "changeBackgroundColor": "Change Chat Background Color",
-        "clearMessgae": "Clear Messages"
+        "clearMessgae": "Clear Messages",
+        "changeBackgroundColorHeader": "Change Chat Background Color"
     },
     "clearMessagesPopup": {
         "popupHeaderText": "Changes to clearing or deleting a chat",

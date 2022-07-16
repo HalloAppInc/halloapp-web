@@ -4,7 +4,6 @@ import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { useColorStore } from '../../stores/colorStore'
-import { useMainStore } from '../../stores/mainStore'
 
 import Popup from './Popup.vue'
 import ChatSettings from './ChatSettings.vue'
@@ -17,9 +16,6 @@ const { t } = useI18n({
 })
 
 const colorStore = useColorStore()
-const mainStore = useMainStore()
-
-const menu = ref<HTMLElement | null>(null)
 
 const showChatSettings = ref(false)
 const showBackgroundColorSetting = ref({ 'value': false})
@@ -61,10 +57,12 @@ function openBackgroundColorSetting() {
 
     <div class='chatHeader'>
         <div class='container'>
+
             <!-- show user profile photo and chat information -->
             <div class='avatarContainer'>
                 <div class='avatar'></div>
             </div>
+
             <div class='content'>
                 <div class='contentHeader'>
                     <div class='contentTitle'>
@@ -83,18 +81,22 @@ function openBackgroundColorSetting() {
                     <font-awesome-icon :icon="['fas', 'magnifying-glass']" size='lg' />
                 </div>
             </div> -->
+
             <div class='iconContainer' tabindex='0' @click='showChatSettings = !showChatSettings'
                 @focusout='showChatSettings = false'>
                 <div class='iconShadow' :class='{ showShadow: showChatSettings == true }'>
                     <font-awesome-icon :icon="['fas', 'angle-down']" size='lg' />
                 </div>
             </div>
+            
         </div>
     </div>
 
     <!-- chat settings menu -->
     <div class='chatSettings' v-if='showChatSettings'>
-        <div class='menu' ref='menu'>
+        <div class='menu'>
+
+            <!-- change background color -->
             <div class='menuContainer' @mousedown='openBackgroundColorSetting'>
                 <div class='textContainer'>
                     <div class='contentTextBody'>
@@ -102,6 +104,8 @@ function openBackgroundColorSetting() {
                     </div>
                 </div>
             </div>
+
+            <!-- clear messages -->
             <div class='menuContainer' @mousedown="openPopup">
                 <div class='textContainer textContainerlastElement'>
                     <div class='contentTextBody'>
@@ -109,15 +113,16 @@ function openBackgroundColorSetting() {
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 
-    <!-- clear all messages -->
+    <!-- clear all messages popup -->
     <Popup 
         @confirmOk='clearMessage'
         :show-popup='showPopup' />
 
-    <!-- background settings -->
+    <!-- background color setting page-->
     <ChatSettings :show-background-color-setting='showBackgroundColorSetting'/>
 
 </template>

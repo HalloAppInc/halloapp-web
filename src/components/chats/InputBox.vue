@@ -2,13 +2,12 @@
 import { ref, computed } from 'vue'
 
 import { useHAText } from '../../composables/haText'
-import { useColorStore } from '../../stores/colorStore'
-import { useMainStore } from '../../stores/mainStore'
 
-const colorStore = useColorStore()
-const mainStore = useMainStore()
+import { useColorStore } from '../../stores/colorStore'
 
 const { processText } = useHAText()
+
+const colorStore = useColorStore()
 
 const props = defineProps(['messageList', 'contactList', 'uploadFiles', 'replyQuoteIdx', 'alwaysShowSendButton'])
 
@@ -31,9 +30,6 @@ const showSendButton = ref(false)
 
 const chatBoxHeight = ref(0)
 
-const iconColor = computed(() => {
-    return colorStore.icon
-})
 const inBoundMsgBubbleColor = computed(() => {
     return colorStore.inBoundMsgBubble
 })
@@ -447,27 +443,27 @@ function closeContactsAndFocusOnInputBox() {
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
 
     <div class='chatBoxTray' ref='chatBox'>
+
         <div class='inputBoxContainer'>
             <div class='textarea' ref='inputArea' contenteditable='true' placeholder='Type a message...'
                 @focusout='closeContactsAndFocusOnInputBox' @keydown='analyzeKeyDown($event)'
                 @keyup='analyzeKeyUp($event)' @click='analyzeMouseMovement()'>
             </div>
         </div>
+
         <!-- send button -->
         <div class='buttonContainer' v-show='alwaysShowSendButton || showSendButton' @click='sendMessage(); showSendButton = false'>
             <div class='buttonIconContainer'>
                 <font-awesome-icon :icon="['fas', 'paper-plane']" size='lg' />
             </div>
         </div>
-    </div>
 
-    
+    </div>
 
 </template>
 

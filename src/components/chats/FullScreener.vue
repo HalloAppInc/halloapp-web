@@ -2,12 +2,10 @@
 import { ref, computed } from 'vue'
 
 import { useColorStore } from '../../stores/colorStore'
-import { useMainStore } from '../../stores/mainStore'
 
 import { useHAMediaResize } from '../../composables/haMediaResize'
 
 const colorStore = useColorStore()
-const mainStore = useMainStore()
 
 const { setPreviewMediaSizes } = useHAMediaResize()
 
@@ -70,6 +68,7 @@ function openBigImg(idx: number) {
 
     <div class='mask' v-if='props.showFullScreener.value'>
         <div class='wrapper'>
+
             <!-- close icon -->
             <div class='closeIconContainer'>
                 <div class='iconContainer' @click='props.showFullScreener.value = false'>
@@ -86,6 +85,7 @@ function openBigImg(idx: number) {
 
             <!-- image box: show the image -->
             <div class='content'>
+
                 <div class='leftArrowIconContainer'>
                     <div class='iconContainer' :class='{ iconContainerForbidden: selectMediaIdx == 0 }'
                         @mousedown='lastMedia()'>
@@ -109,6 +109,7 @@ function openBigImg(idx: number) {
                         </div>
                     </div>
                 </div>
+                
             </div>
 
             <div class='footer'>

@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 
+import { useI18n } from 'vue-i18n'
+
 import { useColorStore } from '../../stores/colorStore'
+
+const { t } = useI18n({
+    inheritLocale: true,
+    useScope: 'global'
+})
 
 const colorStore = useColorStore()
 
@@ -44,7 +51,7 @@ function selectColor(color: string) {
                 </div>
                 <div class='textContainerBig'>
                     <div class='contentTextBodyBig'>
-                        Change Chat Background Color
+                        {{ t('chatSettings.changeBackgroundColorHeader')}}
                     </div>
                 </div>
             </div>
@@ -63,11 +70,11 @@ function selectColor(color: string) {
 
 <style scoped>
 .wrapper {
-    position: fixed;
+    position: absolute;
     z-index: 10000;
-    top: 0;
-    right: 0;
-    width: calc(70% - 79px);
+    top: 0px;
+    right: 0px;
+    width: 100%;
     height: 100%;
     overflow-y: hidden;
     overflow-x: hidden;
@@ -120,7 +127,7 @@ function selectColor(color: string) {
 }
 
 .contentTextBodyBig {
-    font-size: large;
+    font-size: medium;
 
     display: flex;
     justify-content: flex-start;

@@ -65,6 +65,7 @@ const shadowColor = computed(() => {
         <div class='mask' v-if='showPopup.value'>
             <div class='wrapper'>
                 <div class='container'>
+
                     <div class='header'>
                         <div class='title'>
                             {{ title }}
@@ -78,6 +79,7 @@ const shadowColor = computed(() => {
                     </div>
 
                     <div class='footer'>
+
                         <div v-if="buttonType== 'threeButton'" class='buttonContainerCol'>
                             <div  class='button' @click="$emit('deleteForEveryone');props.showPopup.value = false">
                                 {{ t('button.deleteForEveryone') }}
@@ -89,6 +91,7 @@ const shadowColor = computed(() => {
                                 {{ t('button.cancelButton') }}
                             </div>
                         </div>
+
                         <div v-else-if="buttonType == 'twoButton'" class='buttonContainerRow'>
                             <div class='button' @click="$emit('confirmOk');props.showPopup.value = false">
                                 {{ t('button.okButton') }}
@@ -97,6 +100,7 @@ const shadowColor = computed(() => {
                                 {{ t('button.cancelButton') }}
                             </div>
                         </div>
+                        
                     </div>
                 </div>
             </div>
