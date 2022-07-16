@@ -4,14 +4,12 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { useColorStore } from '../../stores/colorStore'
-import { useMainStore } from '../../stores/mainStore'
 
 const { t } = useI18n({
     inheritLocale: true,
     useScope: 'global'
 })
 
-const mainStore = useMainStore()
 const colorStore = useColorStore()
 
 const props = defineProps(['showPopup'])
@@ -64,7 +62,7 @@ const shadowColor = computed(() => {
 
 <template>
     <transition>
-        <div class='mask' v-if='showPopup ? showPopup.value : false'>
+        <div class='mask' v-if='showPopup.value'>
             <div class='wrapper'>
                 <div class='container'>
                     <div class='header'>
@@ -82,10 +80,10 @@ const shadowColor = computed(() => {
                     <div class='footer'>
                         <div v-if="buttonType== 'threeButton'" class='buttonContainerCol'>
                             <div  class='button' @click="$emit('deleteForEveryone');props.showPopup.value = false">
-                                {{ 'delete for everyone' }}
+                                {{ t('button.deleteForEveryone') }}
                             </div>
                             <div class='button' @click="$emit('deleteForMe');props.showPopup.value = false">
-                                {{ 'delete for me' }}
+                                {{ t('button.deleteForMeButton') }}
                             </div>
                             <div class='button' @click="props.showPopup.value = false">
                                 {{ t('button.cancelButton') }}

@@ -25,6 +25,8 @@
         "noVideoSupportText": "Your browser cannot play the provided video file."
     },
     "button": {
+        "deleteForEveryone": "Delete for everyone",
+        "deleteForMeButton": "Delete for me",
         "okButton": "OK",
         "cancelButton": "CANCEL"
     },

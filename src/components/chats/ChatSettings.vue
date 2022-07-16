@@ -2,14 +2,10 @@
 import { ref, computed } from 'vue'
 
 import { useColorStore } from '../../stores/colorStore'
-import { useMainStore } from '../../stores/mainStore'
 
 const colorStore = useColorStore()
-const mainStore = useMainStore()
 
 const props = defineProps(['showBackgroundColorSetting'])
-
-console.log(props.showBackgroundColorSetting)
 
 const colorList = computed(() => {
     return colorStore.colorList

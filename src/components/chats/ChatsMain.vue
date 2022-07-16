@@ -2,14 +2,12 @@
 import { ref, computed, watch } from 'vue'
 
 import { useColorStore } from '../../stores/colorStore'
-import { useMainStore  } from '../../stores/mainStore'
 
 import ChatHeader from './ChatHeader.vue'
 import ChatPanel from './ChatPanel.vue'
 import ChatFooter from './ChatFooter.vue'
 
 const colorStore = useColorStore()
-const mainStore = useMainStore()
 
 const messageList = ref([
     {
@@ -116,10 +114,6 @@ const chatBackground = computed(() => {
     return colorStore.chatBackground
 })
 
-watch(messageNumber, () => {
-    // notifyMe()
-})
-
 function notifyMe() {
     // check if the browser supports notifications
     if (!('Notification' in window)) {
@@ -141,13 +135,13 @@ function notifyMe() {
         })
     }
 }
-
 </script>
 
 <template>
 
-    <div class='wrapper' v-if='mainStore.page == "chats" && mainStore.chatPage != "settings"'>
+    <div class='wrapper'>
 
+        <!-- chat header with chatname chatinfo and settings -->
         <div class='header'>
             <ChatHeader :message-list='messageList'  :chat-name='chatName' :chat-information='chatInformation'/>
         </div>
