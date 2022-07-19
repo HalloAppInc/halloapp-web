@@ -12,6 +12,7 @@ import Popup from './Popup.vue'
 import Quote from './Quote.vue'
 import FullScreener from './FullScreener.vue'
 import MediaCollage from './MediaCollage.vue'
+import Notification from './Notification.vue'
 
 const colorStore = useColorStore()
 
@@ -47,6 +48,7 @@ const selectMediaList = ref()
 const selectMediaIdx = ref()
 const menuTimestamp = ref('')
 const quoteMessage = ref({})
+const NotificationQueue = ref(<string[]>[])
 
 // set floating time stamp's content
 const currentMsgTimestamp = ref()
@@ -380,6 +382,7 @@ function gotoQuoteMessage(quoteIdx: number) {
     if (!props.messageList[quoteIdx].display) {
         // message has been deleted!
         console.log('message has been deleted!')
+        NotificationQueue.value.push('Message deleted')
     }
     else {
         const targetElement = document.getElementById('messageBubble' + quoteIdx)
@@ -398,6 +401,7 @@ function gotoQuoteMessage(quoteIdx: number) {
 </script>
 
 <template>
+
     <div class='contents' ref='content' @scroll='handleScroll()'>
         <!-- chat msg -->
         <div class='containerChat' v-for='(value, idx) in data'>
@@ -577,6 +581,9 @@ function gotoQuoteMessage(quoteIdx: number) {
     <!-- show media in full screen -->
     <FullScreener :show-full-screener='showFullScreener' :select-media-index='selectMediaIdx'
         :select-media-list='selectMediaList' />
+
+    <!-- notification -->
+    <Notification :NotificationQueue='NotificationQueue'/>
 
 </template>
 
