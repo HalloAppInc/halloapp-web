@@ -85,6 +85,7 @@ const data = computed(() => {
                 let resMsg = appendSpaceForMsgInfo(props.messageList[i].message, time, result[i].type == 'outBound')
                 result[i].message = resMsg[0]
                 result[i].font = resMsg[1]
+                result[i].unixTimestamp = result[i].timestamp
                 result[i].timestamp = time
                 if (result[i].media) {
                     setMediaSizeInMediaList(result[i].media)
@@ -219,11 +220,18 @@ function debouncedHandleScroll() {
 
         let closestElement = document.elementFromPoint(contentViewportOffset.left, contentViewportOffset.top)
 
-        // only change when overlap with a static timestamp
-        let timestampEl = closestElement?.getElementsByClassName('timestampBig')[0] as HTMLDivElement
-
+        // find the timestamp in msg bubble
+        let timestampEl = closestElement?.getElementsByClassName('timestamp')[0] as HTMLDivElement
         if (timestampEl) {
-            currentMsgTimestamp.value = timestampEl.textContent
+            let unixTimestamp = timestampEl.getAttribute('data-msg-timestamp') as string
+            currentMsgTimestamp.value = formatTimeDateOnlyChat(parseInt(unixTimestamp), <string>locale.value)
+        }
+        if (!timestampEl) {
+            // find the timestamp in static timestamp bubble
+            timestampEl = closestElement?.getElementsByClassName('timestampBig')[0] as HTMLDivElement
+            if (timestampEl) {
+                currentMsgTimestamp.value = timestampEl.textContent
+            }
         }
     }
     else {
@@ -442,7 +450,7 @@ function gotoQuoteMessage(quoteIdx: number) {
                     <!-- timestamp -->
                     <div class='msgInfoContainer' v-if='value.timestamp'>
                         <div class='msgInfoContent'>
-                            <div class='timestamp'>
+                            <div class='timestamp' :data-msg-timestamp='value.unixTimestamp'>
                                 {{ value.timestamp }}
                             </div>
                         </div>
@@ -484,7 +492,7 @@ function gotoQuoteMessage(quoteIdx: number) {
                     <!-- timestamp -->
                     <div class='msgInfoContainer' v-if='value.timestamp'>
                         <div class='msgInfoContent'>
-                            <div class='timestamp'>
+                            <div class='timestamp' :data-msg-timestamp='value.unixTimestamp'>
                                 {{ value.timestamp }}
                             </div>
                             <div class='iconContainer'>
