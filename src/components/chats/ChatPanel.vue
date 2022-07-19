@@ -288,7 +288,7 @@ function openMenu(event: any, forInBound: boolean, idx: number) {
             if (content.value) {
                 floatMenuPositionY.value = -1 * (content.value?.scrollHeight - bounds[key] - content.value?.scrollTop) + 20
                 let bottomOffset = content.value?.clientHeight - bounds[key]
-                // visual offset, not let part of menu hidden under input box
+                // visual offset, do not let part of menu hidden under input box
                 if (bottomOffset <= 80) {
                     let msgBubble
                     // get msg bubble's height
@@ -304,7 +304,11 @@ function openMenu(event: any, forInBound: boolean, idx: number) {
                         msgBubble = event.target.parentElement.parentElement
                         floatMenuPositionY.value -= msgBubble.clientHeight
                     }
-                    floatMenuPositionY.value -= 70
+                    
+                    // move 90px upwards if this message is not deleted
+                    if (!isForDeletedMessage.value) {
+                        floatMenuPositionY.value -= 90
+                    }
                 }
             }
         }
@@ -390,10 +394,10 @@ function gotoQuoteMessage(quoteIdx: number) {
             const offsetTop = targetElement.offsetTop - targetElement.offsetHeight
             content.value?.scrollTo({ left: 0, top: offsetTop, behavior: 'smooth' })
             setTimeout(() => {
-                targetElement.classList.add('chatBubble-animation')
+                targetElement.classList.add('chatBubbleAnimation')
                 setTimeout(() => {
-                    targetElement.classList.remove('chatBubble-animation')
-                }, 750)
+                    targetElement.classList.remove('chatBubbleAnimation')
+                }, 5000)
             }, 1000)
         }
     }
@@ -421,12 +425,12 @@ function gotoQuoteMessage(quoteIdx: number) {
                     <!-- quote -->
                     <div class='chatReplyContainer' v-if='value.quoteIdx && value.quoteIdx > -1'
                         @click='gotoQuoteMessage(value.quoteIdx)'>
-                        <Quote :quote-message='getQuoteMessageData(messageList[value.quoteIdx])' />
+                        <Quote :quoteMessage='getQuoteMessageData(messageList[value.quoteIdx])' />
                     </div>
 
                     <!-- media -->
                     <div class='mediaContainer' v-if='value.media && value.media != ""'>
-                        <MediaCollage @open-media='openMedia' :media-list='value.media' />
+                        <MediaCollage @openMedia='openMedia' :media-list='value.media' />
                     </div>
 
                     <!-- text -->
@@ -463,12 +467,12 @@ function gotoQuoteMessage(quoteIdx: number) {
                     <!-- quote -->
                     <div class='chatReplyContainer' v-if='value.quoteIdx && value.quoteIdx > -1'
                         @click='gotoQuoteMessage(value.quoteIdx)'>
-                        <Quote :quote-message='getQuoteMessageData(messageList[value.quoteIdx])' />
+                        <Quote :quoteMessage='getQuoteMessageData(messageList[value.quoteIdx])' />
                     </div>
 
                     <!-- media -->
                     <div class='mediaContainer' v-if='value.media && value.media != ""'>
-                        <MediaCollage @open-media='openMedia' :media-list='value.media' />
+                        <MediaCollage @openMedia='openMedia' :media-list='value.media' />
                     </div>
 
                     <!-- text -->
@@ -563,13 +567,14 @@ function gotoQuoteMessage(quoteIdx: number) {
 
     <!-- popup -->
     <Popup @deleteForEveryone='deleteMessage(selectMessageIdx, true)'
-        @deleteForMe='deleteMessage(selectMessageIdx, false)' @confirmOk='deleteMessage(selectMessageIdx, false)'
-        :show-popup='showPopup' />
+        @deleteForMe='deleteMessage(selectMessageIdx, false)' 
+        @confirmOk='deleteMessage(selectMessageIdx, false)'
+        :showPopup='showPopup' />
 
     <!-- Reply -->
     <div class='containerReply' v-if='showReply'>
         <div class='containerReplyWithRightMargin'>
-            <Quote :quote-message='quoteMessage' />
+            <Quote :quoteMessage='quoteMessage' />
         </div>
         <div class='closeIconContainer'>
             <div class='iconContainer closeIcon' @click="showReply = false">
@@ -579,8 +584,9 @@ function gotoQuoteMessage(quoteIdx: number) {
     </div>
 
     <!-- show media in full screen -->
-    <FullScreener :show-full-screener='showFullScreener' :select-media-index='selectMediaIdx'
-        :select-media-list='selectMediaList' />
+    <FullScreener :showFullScreener='showFullScreener' 
+        :selectMediaIndex='selectMediaIdx'
+        :selectMediaList='selectMediaList' />
 
     <!-- notification -->
     <Notification :NotificationQueue='NotificationQueue'/>
@@ -679,8 +685,12 @@ function gotoQuoteMessage(quoteIdx: number) {
         box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.08);
     }
 
-    50% {
-        box-shadow: 0px 0px 10px 5px rgba(55, 113, 247);
+    10% {
+        box-shadow: 0px 0px 10px 5px rgba(148, 148, 148, 0.6);
+    }
+
+    90% {
+        box-shadow: 0px 0px 10px 5px rgba(148, 148, 148, 0.6);
     }
 
     100% {
@@ -688,9 +698,9 @@ function gotoQuoteMessage(quoteIdx: number) {
     }
 }
 
-.chatBubble-animation {
+.chatBubbleAnimation {
     opacity: 1;
-    animation: fade 0.75s linear;
+    animation: fade 2s linear;
     z-index: 1;
 }
 
@@ -921,7 +931,7 @@ img:hover {
 
 .menu {
     position: absolute;
-    width: 200px;
+    width: fit-content;
     padding: 0px;
     right: 10px;
     background-color: v-bind(backgroundColor);
@@ -933,6 +943,7 @@ img:hover {
 .menuContainer {
     display: flex;
     flex-direction: row;
+    justify-content: center;
     align-items: center;
 }
 
@@ -968,7 +979,7 @@ img:hover {
 .contentTextBodyForSettings {
     flex-direction: row;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
 }
 
 .containerReply {

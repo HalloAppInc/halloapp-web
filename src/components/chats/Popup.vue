@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 
 import { useI18n } from 'vue-i18n'
+import colors from '../../common/colors';
 
 import { useColorStore } from '../../stores/colorStore'
 
@@ -81,22 +82,22 @@ const shadowColor = computed(() => {
                     <div class='footer'>
 
                         <div v-if="buttonType== 'threeButton'" class='buttonContainerCol'>
-                            <div  class='button buttonLong' @click="$emit('deleteForEveryone');props.showPopup.value = false">
+                            <div  class='button buttonLong buttonRed' @click="$emit('deleteForEveryone');props.showPopup.value = false">
                                 {{ t('button.deleteForEveryone') }}
                             </div>
-                            <div class='button buttonLong' @click="$emit('deleteForMe');props.showPopup.value = false">
+                            <div class='button buttonLong buttonRed' @click="$emit('deleteForMe');props.showPopup.value = false">
                                 {{ t('button.deleteForMeButton') }}
                             </div>
-                            <div class='button buttonLong' @click="props.showPopup.value = false">
+                            <div class='button buttonLong buttonGray' @click="props.showPopup.value = false">
                                 {{ t('button.cancelButton') }}
                             </div>
                         </div>
 
                         <div v-else-if="buttonType == 'twoButton'" class='buttonContainerRow'>
-                            <div class='button' @click="$emit('confirmOk');props.showPopup.value = false">
+                            <div class='button buttonBlue' @click="$emit('confirmOk');props.showPopup.value = false">
                                 {{ t('button.okButton') }}
                             </div>
-                            <div class='button' @click="props.showPopup.value = false">
+                            <div class='button buttonGray' @click="props.showPopup.value = false">
                                 {{ t('button.cancelButton') }}
                             </div>
                         </div>
@@ -182,7 +183,7 @@ const shadowColor = computed(() => {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
+    align-items: flex-end;
 }
 
 .button {
@@ -190,8 +191,7 @@ const shadowColor = computed(() => {
     border-radius: 20px;
     margin-left: 20px;
     margin-top: 10px;
-    background-color: #5ba4fc;
-    padding: 15px;
+    padding: 10px 30px 10px 30px;
     color: white;
 
     font-family: "Gotham", Helvetica, "Helvetica Neue", Arial, Avenir, sans-serif;
@@ -201,13 +201,36 @@ const shadowColor = computed(() => {
 
 .button:hover {
     cursor: pointer;
-    background-color: gray;
     box-shadow: -2px 2px 5px v-bind(shadowColor);
 }
 
+.buttonBlue {
+    background-color: #007AFF;
+}
+
+.buttonBlue:hover {
+    background-color: rgb(0, 91, 182);
+}
+
+.buttonRed {
+    background-color: rgb(244,69,53);
+}
+
+.buttonRed:hover {
+    background-color: rgb(207,57,46);
+}
+
+.buttonGray {
+    color: black;
+    background-color: rgb(233,233,233);
+}
+
+.buttonGray:hover {
+    background-color: rgb(195,195,195);
+}
+
 .buttonLong {
-    width: 350px;
     text-align: center;
-    font-size: medium;
+    font-size: 15px;
 }
 </style>

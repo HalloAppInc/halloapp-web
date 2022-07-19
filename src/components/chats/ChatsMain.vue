@@ -143,17 +143,17 @@ function notifyMe() {
 
         <!-- chat header with chatname chatinfo and settings -->
         <div class='header'>
-            <ChatHeader :message-list='messageList'  :chat-name='chatName' :chat-information='chatInformation'/>
+            <ChatHeader :messageList='messageList'  :chatName='chatName' :chatInformation='chatInformation'/>
         </div>
 
         <!-- chatting area -->
         <div class='content'>
-            <ChatPanel :message-list='messageList' :reply-quote-idx='replyQuoteIdx'/>
+            <ChatPanel :messageList='messageList' :replyQuoteIdx='replyQuoteIdx'/>
         </div>
 
         <!-- input tray -->
         <div class='footer'>
-            <ChatFooter :message-list='messageList' :contact-list='contactList' :reply-quote-idx='replyQuoteIdx'/>
+            <ChatFooter :messageList='messageList' :contactList='contactList' :replyQuoteIdx='replyQuoteIdx'/>
         </div>
 
     </div>

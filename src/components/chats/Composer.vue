@@ -165,11 +165,11 @@ function closeComposer() {
 
                 <div class='chatBoxTray' ref='chatBox'>
                     <InputBox 
-                        :message-list='messageList' 
-                        :contact-list='contactList' 
-                        :upload-files='uploadFiles'
-                        :always-show-send-button='true'
-                        :reply-quote-idx='replyQuoteIdx' />
+                        :messageList='messageList' 
+                        :contactList='contactList' 
+                        :uploadFiles='uploadFiles'
+                        :alwaysShowSendButton='true'
+                        :replyQuoteIdx='replyQuoteIdx' />
                 </div>
 
                 <!-- media preview and add more media -->

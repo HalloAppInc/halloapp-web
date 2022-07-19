@@ -69,7 +69,7 @@
         "reply": "Reply"
     },
     "deleteMessagesPopup": {
-        "popupHeaderText": "Changes to clearing or deleting this chat?",
+        "popupHeaderText": "Delete selected message?",
         "popupContent": ""
     },
     "timestampFormatter": {

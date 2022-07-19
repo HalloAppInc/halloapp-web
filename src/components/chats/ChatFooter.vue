@@ -102,11 +102,11 @@ function onFilePicked(event: any) {
         </div>
 
         <InputBox 
-            :message-list='props.messageList' 
-            :contact-list='props.contactList' 
-            :upload-files='""'
-            :always-show-send-button='false'
-            :reply-quote-idx='props.replyQuoteIdx' />
+            :messageList='props.messageList' 
+            :contactList='props.contactList' 
+            :uploadFiles='""'
+            :alwaysShowSendButton='false'
+            :replyQuoteIdx='props.replyQuoteIdx' />
 
         <!-- <div class='iconContainer'>
             <div class='iconShadow' :class="{ 'showIconShadow': showAttachMenu == true }">
@@ -118,11 +118,11 @@ function onFilePicked(event: any) {
 
     <!-- composer -->
     <Composer 
-        :show-composer='showComposer' 
-        :upload-files='uploadFiles' 
-        :message-list='messageList' 
-        :contact-list='contactList'
-        :reply-quote-idx='replyQuoteIdx' />
+        :showComposer='showComposer' 
+        :uploadFiles='uploadFiles' 
+        :messageList='messageList' 
+        :contactList='contactList'
+        :replyQuoteIdx='replyQuoteIdx' />
         
 </template>
 

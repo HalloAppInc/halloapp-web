@@ -120,10 +120,10 @@ function openBackgroundColorSetting() {
     <!-- clear all messages popup -->
     <Popup 
         @confirmOk='clearMessage'
-        :show-popup='showPopup' />
+        :showPopup='showPopup' />
 
     <!-- background color setting page-->
-    <ChatSettings :show-background-color-setting='showBackgroundColorSetting'/>
+    <ChatSettings :showBackgroundColorSetting='showBackgroundColorSetting'/>
 
 </template>
 

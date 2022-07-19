@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 const props = defineProps(['mediaList'])
 
 const numberOfMedia = props.mediaList.length
