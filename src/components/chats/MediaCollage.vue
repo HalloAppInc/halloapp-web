@@ -1,17 +1,13 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 const props = defineProps(['mediaList'])
 
-onMounted(() => {
-    console.log('mounted!')
-})
+const numberOfMedia = props.mediaList.length
 
 const firstMedia = ref(props.mediaList[0] ? props.mediaList[0] : null)
 const secondMedia = ref(props.mediaList[1] ? props.mediaList[1] : null)
 const thirdMedia = ref(props.mediaList[2] ? props.mediaList[2] : null)
 const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
-
-const numberOfMedia = props.mediaList.length
 </script>
 
 <template>
@@ -53,6 +49,8 @@ const numberOfMedia = props.mediaList.length
         <div class='imgSquareContainer' @click="$emit('openMedia', mediaList, 2)">
             <img :src='thirdMedia.url' :width='thirdMedia.width' :height='thirdMedia.hieght' />
         </div>
+
+        <!-- if 4 media -->
         <div v-if='numberOfMedia == 4' class='imgSquareContainer imgSquareContainerLastElement' @click="$emit('openMedia', mediaList, 3)">
             <img :src='fourthMedia.url' :width='fourthMedia.width' :height='fourthMedia.hieght' />
         </div>

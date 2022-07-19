@@ -2,7 +2,6 @@
 import { ref, computed, watch, onMounted } from 'vue'
 
 import { useColorStore } from '../../stores/colorStore'
-import { useMainStore } from '../../stores/mainStore'
 
 import { useHAMediaUpload } from '../../composables/haMediaUpload'
 import { useHAMediaResize } from '../../composables/haMediaResize'
@@ -10,12 +9,11 @@ import { useHAMediaResize } from '../../composables/haMediaResize'
 import InputBox from './InputBox.vue'
 
 const colorStore = useColorStore()
-const mainStore = useMainStore()
 
 const { uploadAndDownLoad } = useHAMediaUpload()
 const { setPreviewMediaSizes } = useHAMediaResize()
 
-const props = defineProps(['showComposer', 'uploadFiles', 'messageList', 'contactList'])
+const props = defineProps(['showComposer', 'uploadFiles', 'messageList', 'replyQuoteIdx', 'contactList'])
 
 const attachMediaList = ref(<any>[])
 
@@ -28,12 +26,7 @@ const messageNumber = computed(() => {
     return props.messageList.length
 })
 
-onMounted(() => {
-    console.log('composer mounted!')
-})
-
 const mediaUrlList = computed(() => {
-    console.log(' mediaUrlList ')
     const result = []
     for (let i = 0; i < props.uploadFiles.length; i++) {
         let media = props.uploadFiles[i]
@@ -53,12 +46,6 @@ watch(messageNumber, (newVal, oldVal) => {
     closeComposer()
 })
 
-const backgroundColor = computed(() => {
-    return colorStore.background
-})
-const wraperColor = computed(() => {
-    return colorStore.wraper
-})
 const shadowColor = computed(() => {
     return colorStore.shadow
 })
@@ -138,6 +125,7 @@ function closeComposer() {
 
     <div class='mask' v-if='props.showComposer.value'>
         <div class='wrapper'>
+
             <!-- close icon -->
             <div class='closeIconContainer'>
                 <div class='iconContainer' @click='closeComposer'>
@@ -155,8 +143,7 @@ function closeComposer() {
                     </div>
                 </div>
 
-
-                <!-- will delete this one when merge -->
+                <!-- TODO: delete this one, only for testing! -->
                 <div class='iconContainer' @click='testUploadAndDownload(props.uploadFiles[selectMediaIdx].file)'>
                     <div class='iconShadow'>
                         <font-awesome-icon :icon="['fas', 'hammer']" size='lg' />
@@ -175,26 +162,36 @@ function closeComposer() {
 
             <!-- input box: add caption -->
             <div class='footer'>
+
                 <div class='chatBoxTray' ref='chatBox'>
-                    <InputBox :message-list='messageList' :contact-list='contactList' :upload-files='uploadFiles'
-                        :always-show-send-button='true' />
+                    <InputBox 
+                        :messageList='messageList' 
+                        :contactList='contactList' 
+                        :uploadFiles='uploadFiles'
+                        :alwaysShowSendButton='true'
+                        :replyQuoteIdx='replyQuoteIdx' />
                 </div>
+
                 <!-- media preview and add more media -->
                 <div class='mediaTray'>
                     <div class='smallPreviewContainer'>
                         <div v-for='(value, idx) in mediaUrlList' @click='openBigImg($event, idx)'
                             :class="{ 'squareContainer': true, 'selected': idx == selectMediaIdx }" >
+
                             <div class='imgSmallContainer'>
                                 <img class='imgSmall' :width='value.width' :height='value.height' :src='value.url' />
                             </div>
+
                             <!-- close toggler -->
                             <div class='menuToggler'>
                                 <div class='togglerIconContainer'>
                                     <font-awesome-icon :icon="['fas', 'xmark']" size='xs' />
                                 </div>
                             </div>
+
                         </div>
                     </div>
+
                     <div class='addMoreIconContainer'>
                         <!-- upload file -->
                         <input type='file' multiple ref='addUploadMedia' accept='image/*' @change='onFilePicked'
@@ -203,6 +200,7 @@ function closeComposer() {
                             <font-awesome-icon :icon="['fas', 'plus']" size='lg' />
                         </div>
                     </div>
+                    
                 </div>
             </div>
         </div>

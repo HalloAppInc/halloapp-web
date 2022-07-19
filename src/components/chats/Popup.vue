@@ -2,33 +2,48 @@
 import { computed } from 'vue'
 
 import { useI18n } from 'vue-i18n'
+import colors from '../../common/colors';
 
 import { useColorStore } from '../../stores/colorStore'
-import { useMainStore } from '../../stores/mainStore'
 
 const { t } = useI18n({
     inheritLocale: true,
     useScope: 'global'
 })
 
-const mainStore = useMainStore()
 const colorStore = useColorStore()
 
+const props = defineProps(['showPopup'])
+
 const title = computed(() => {
-    if (mainStore.chatPage == 'clear') {
+    if (props.showPopup.type == 'clear') {
         return t('clearMessagesPopup.popupHeaderText')
     }
-    else if (mainStore.chatPage == 'delete') {
+    else if (props.showPopup.type == 'delete') {
         return t('deleteMessagesPopup.popupHeaderText')
     }
 })
 
 const content = computed(() => {
-    if (mainStore.chatPage == 'clear') {
+    if (props.showPopup.type == 'clear') {
         return t('clearMessagesPopup.popupContent')
     }
-    else if (mainStore.chatPage == 'delete') {
+    else if (props.showPopup.type == 'delete') {
         return t('deleteMessagesPopup.popupContent')
+    }
+})
+
+const buttonType = computed(() => {
+    if (props.showPopup.type == 'clear') {
+        return 'twoButton'
+    }
+    else if (props.showPopup.type == 'delete') {
+        if (props.showPopup.messageType == 'normal') {
+            return 'threeButton'
+        }
+        else if (props.showPopup.messageType == 'deleted') {
+            return 'twoButton'
+        }
     }
 })
 
@@ -48,9 +63,10 @@ const shadowColor = computed(() => {
 
 <template>
     <transition>
-        <div class='mask' v-if="mainStore.chatPage == 'delete' || mainStore.chatPage == 'clear'">
+        <div class='mask' v-if='showPopup.value'>
             <div class='wrapper'>
                 <div class='container'>
+
                     <div class='header'>
                         <div class='title'>
                             {{ title }}
@@ -64,12 +80,28 @@ const shadowColor = computed(() => {
                     </div>
 
                     <div class='footer'>
-                        <div class='button' @click="$emit('confirmOk');mainStore.gotoChatPage('chat')">
-                            {{ t('button.okButton') }}
+
+                        <div v-if="buttonType== 'threeButton'" class='buttonContainerCol'>
+                            <div  class='button buttonLong buttonRed' @click="$emit('deleteForEveryone');props.showPopup.value = false">
+                                {{ t('button.deleteForEveryone') }}
+                            </div>
+                            <div class='button buttonLong buttonRed' @click="$emit('deleteForMe');props.showPopup.value = false">
+                                {{ t('button.deleteForMeButton') }}
+                            </div>
+                            <div class='button buttonLong buttonGray' @click="props.showPopup.value = false">
+                                {{ t('button.cancelButton') }}
+                            </div>
                         </div>
-                        <div class='button' @click="mainStore.gotoChatPage('chat')">
-                            {{ t('button.cancelButton') }}
+
+                        <div v-else-if="buttonType == 'twoButton'" class='buttonContainerRow'>
+                            <div class='button buttonBlue' @click="$emit('confirmOk');props.showPopup.value = false">
+                                {{ t('button.okButton') }}
+                            </div>
+                            <div class='button buttonGray' @click="props.showPopup.value = false">
+                                {{ t('button.cancelButton') }}
+                            </div>
                         </div>
+                        
                     </div>
                 </div>
             </div>
@@ -138,18 +170,28 @@ const shadowColor = computed(() => {
 }
 
 .footer {
+    padding: 10px;
+}
+
+.buttonContainerRow {
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
-    padding: 10px;
+}
+
+.buttonContainerCol {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
 }
 
 .button {
     float: right;
     border-radius: 20px;
     margin-left: 20px;
-    background-color: #5ba4fc;
-    padding: 5px 15px 5px 15px;
+    margin-top: 10px;
+    padding: 10px 30px 10px 30px;
     color: white;
 
     font-family: "Gotham", Helvetica, "Helvetica Neue", Arial, Avenir, sans-serif;
@@ -159,7 +201,36 @@ const shadowColor = computed(() => {
 
 .button:hover {
     cursor: pointer;
-    background-color: gray;
     box-shadow: -2px 2px 5px v-bind(shadowColor);
+}
+
+.buttonBlue {
+    background-color: #007AFF;
+}
+
+.buttonBlue:hover {
+    background-color: rgb(0, 91, 182);
+}
+
+.buttonRed {
+    background-color: rgb(244,69,53);
+}
+
+.buttonRed:hover {
+    background-color: rgb(207,57,46);
+}
+
+.buttonGray {
+    color: black;
+    background-color: rgb(233,233,233);
+}
+
+.buttonGray:hover {
+    background-color: rgb(195,195,195);
+}
+
+.buttonLong {
+    text-align: center;
+    font-size: 15px;
 }
 </style>

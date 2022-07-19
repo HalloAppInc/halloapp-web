@@ -4,11 +4,11 @@ import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { useColorStore } from '../../stores/colorStore'
-import { useMainStore } from '../../stores/mainStore'
 
 import Popup from './Popup.vue'
+import ChatSettings from './ChatSettings.vue'
 
-const emits = defineEmits(["clearMessages"])
+const props = defineProps(['messageList', 'chatName', 'chatInformation'])
 
 const { t } = useI18n({
     inheritLocale: true,
@@ -16,13 +16,10 @@ const { t } = useI18n({
 })
 
 const colorStore = useColorStore()
-const mainStore = useMainStore()
-
-const menu = ref<HTMLElement | null>(null)
 
 const showChatSettings = ref(false)
-
-const props = defineProps(['chatName', 'chatInformation'])
+const showBackgroundColorSetting = ref({ 'value': false})
+const showPopup = ref({ 'value': false, 'type': 'clear' })
 
 const hoverColor = computed(() => {
     return colorStore.hover
@@ -42,16 +39,30 @@ const iconColor = computed(() => {
 const backgroundColor = computed(() => {
     return colorStore.background
 })
+
+function clearMessage() {
+    props.messageList.splice(0, props.messageList.length)
+}
+
+function openPopup() {
+    showPopup.value.value = true
+}
+
+function openBackgroundColorSetting() {
+    showBackgroundColorSetting.value.value = true
+}
 </script>
 
 <template>
 
     <div class='chatHeader'>
         <div class='container'>
+
             <!-- show user profile photo and chat information -->
             <div class='avatarContainer'>
                 <div class='avatar'></div>
             </div>
+
             <div class='content'>
                 <div class='contentHeader'>
                     <div class='contentTitle'>
@@ -70,36 +81,49 @@ const backgroundColor = computed(() => {
                     <font-awesome-icon :icon="['fas', 'magnifying-glass']" size='lg' />
                 </div>
             </div> -->
+
             <div class='iconContainer' tabindex='0' @click='showChatSettings = !showChatSettings'
                 @focusout='showChatSettings = false'>
                 <div class='iconShadow' :class='{ showShadow: showChatSettings == true }'>
                     <font-awesome-icon :icon="['fas', 'angle-down']" size='lg' />
                 </div>
             </div>
+            
         </div>
     </div>
 
     <!-- chat settings menu -->
     <div class='chatSettings' v-if='showChatSettings'>
-        <div class='menu' ref='menu'>
-            <div class='menuContainer' @mousedown="mainStore.gotoChatPage('settings')">
+        <div class='menu'>
+
+            <!-- change background color -->
+            <div class='menuContainer' @mousedown='openBackgroundColorSetting'>
                 <div class='textContainer'>
                     <div class='contentTextBody'>
                         {{ t('chatSettings.changeBackgroundColor') }}
                     </div>
                 </div>
             </div>
-            <div class='menuContainer' @mousedown="mainStore.gotoChatPage('clear')">
+
+            <!-- clear messages -->
+            <div class='menuContainer' @mousedown="openPopup">
                 <div class='textContainer textContainerlastElement'>
                     <div class='contentTextBody'>
                         {{ t('chatSettings.clearMessgae') }}
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 
-    <Popup @confirm-Ok="$emit('clearMessages')"/>
+    <!-- clear all messages popup -->
+    <Popup 
+        @confirmOk='clearMessage'
+        :showPopup='showPopup' />
+
+    <!-- background color setting page-->
+    <ChatSettings :showBackgroundColorSetting='showBackgroundColorSetting'/>
 
 </template>
 
