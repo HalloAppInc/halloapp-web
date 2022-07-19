@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, watch } from 'Vue'
+import { ref, resolveComponent, watch } from 'Vue'
 import hal from '../common/halogger'
 import hacrypto from '../common/hacrypto'
 
@@ -10,14 +10,17 @@ import { network } from '../common/network'
 import { useMainStore } from './mainStore'
 
 import { server } from '../proto/server.js'
+import { web } from '../proto/web.js'
 
 import createNoise from "noise-c.wasm"
-import { EventEmitterListener } from 'protobufjs'
 
 export const useConnStore = defineStore('conn', () => {
 
     const mainStore = useMainStore()
-    let { sendPing, addKey, removeKey, check, sendDemoWebStanza, uploadMedia } = network()
+    let { createPing, addKey, removeKey, check, createNoiseMessageIKB, uploadMedia } = network()
+
+    // const webSocketServer = "wss://localhost:7071"
+    const webSocketServer = 'wss://ws-test.halloapp.net/ws'
 
     let connectionTimer: any    // timer used for debouncing
     let sendMessagesTimer: any  // timer used for debouncing
@@ -55,10 +58,13 @@ export const useConnStore = defineStore('conn', () => {
         webSocket.removeEventListener('message', handleInboundMsg)
         webSocket.addEventListener('message', handleInboundMsg)
 
-        addKeyToServer(function() {
-            hal.log('connStore/connectToServer/added public key successfully')
-            mainStore.haveAddedPublicKeyToServer = true
-        })
+        /* temporary: for debugging */
+        hal.log('websocketOnopen/web client public key (base64): ' + mainStore.publicKeyBase64)
+
+        // addKeyToServer(function() {
+        //     hal.log('connStore/connectToServer/added public key successfully')
+        //     mainStore.haveAddedPublicKeyToServer = true
+        // })
 
         sendReadyMessagesInQueue()
     }
@@ -84,9 +90,7 @@ export const useConnStore = defineStore('conn', () => {
     async function connectToServer() {
         hal.log('connStore/connectToServer')
 
-        // const server = "wss://localhost:7071"
-        const server = 'wss://ws-test.halloapp.net/ws'
-        const newWebSocket = new WebSocket(server)
+        const newWebSocket = new WebSocket(webSocketServer)
         newWebSocket.binaryType = 'arraybuffer'
     
         newWebSocket.removeEventListener('open', websocketOnopen)
@@ -118,7 +122,6 @@ export const useConnStore = defineStore('conn', () => {
             mainStore.privateKeyBase64 = Base64.fromUint8Array(keypair.secretKey)
             mainStore.publicKeyBase64 = Base64.fromUint8Array(keypair.publicKey)
         }
-        // hal.log("generatePublicKeyIfNeeded/privateKey: " + mainStore.privateKeyBase64)
         hal.prod("generatePublicKeyIfNeeded/publicKey: " + mainStore.publicKeyBase64)
     }
 
@@ -132,11 +135,37 @@ export const useConnStore = defineStore('conn', () => {
         disconnectFromServer()
     }
 
+    async function initNoise() {
+        return new Promise(resolve => {
+            createNoise(function (createdNoise: any) { 
+                resolve(createdNoise)
+            })
+        })
+    }
+
     async function handleInboundMsg(event: any) {
         hal.log('connStore/handleInboundMsg')
         const eventDataBinArr = new Uint8Array(event.data)
         const packet = await decodePacket(eventDataBinArr)
         
+        /* verbose logging for now */
+        hal.log('connStore/handleInboundMsg:\n' + JSON.stringify(packet) + '\n\n')
+
+        if (packet == undefined) {
+            hal.log('connStore/handleInboundMsg/undefined packet')
+
+            /* temporary: testing against local noise protocol server */
+            // if (noise == undefined) {
+            //     noise = await initNoise()
+            // }            
+            // if (handshakeState == undefined) {
+            //     initHandshake(noise)
+            // }
+            // handleNoiseHandshakeMsg(eventDataBinArr)
+
+            return
+        }
+
         const iq = packet.iq
         const id = iq?.id
 
@@ -147,23 +176,50 @@ export const useConnStore = defineStore('conn', () => {
 
         if (ping) {
 
-            sendPing(webSocket)
+            const pingBuf = createPing()
+            webSocket.send(pingBuf)
 
         } else if (webStanza) {
-    
-            if (!noise) {
-                createNoise(function (noise: any) { noise = noise })
-            }
-    
-            if (mainStore.isPublicKeyAuthenticated && mainStore.haveInitialHandshakeCompleted) {
-                const decrypted = cipherStateReceive.DecryptWithAd([], eventDataBinArr)
-                const decoded = new TextDecoder().decode(decrypted)
-                hal.log('connStore/handleInboundMsg/webStanza/decrypted: ' + decoded)
-            } else if (!mainStore.haveInitialHandshakeCompleted) {
-                if (!handshakeState) {
-                    initHandshake(noise)
+            hal.log('connStore/handleInboundMsg/webStanza')
+
+            const webStanzaContentsBinArr = new Uint8Array(webStanza.contents)
+            const webContainer = await decodeWebContainer(webStanzaContentsBinArr)
+            const noiseMessage = webContainer?.noiseMessage
+
+            if (noiseMessage) {
+                hal.log('connStore/handleInboundMsg/webStanza/noiseMessage')
+
+                if (!mainStore.haveInitialHandshakeCompleted) {
+                    hal.log('connStore/handleInboundMsg/webStanza/noiseMessage/start handshake')
+                    if (noise == undefined) {
+                        noise = await initNoise()
+                    }    
+
+                    if (!handshakeState) {
+                        initHandshake(noise)
+                    }
+
+                    if (noiseMessage.messageType == noiseMessage.MessageType.IK_A) {
+                        hal.log('connStore/handleInboundMsg/webStanza/noiseMessage/IK_A')
+                        handleNoiseHandshakeMsg(noiseMessage.content)
+                    } 
+                    else {
+                        hal.log('connStore/handleInboundMsg/webStanza/noiseMessage/not IK_A: ' + noiseMessage.messageType)
+                    }
                 }
-                handleNoiseHandshakeMsg(webStanza.content)
+                else {
+                    hal.log('connStore/handleInboundMsg/webStanza/noiseMessage/handshake completed previously')
+                }
+            } 
+            
+            else {
+                hal.log('connStore/handleInboundMsg/webStanza/not a noiseMessage')
+                if (mainStore.isPublicKeyAuthenticated && mainStore.haveInitialHandshakeCompleted) {
+                    const decrypted = cipherStateReceive.DecryptWithAd([], eventDataBinArr)
+                    hal.log('connStore/handleInboundMsg/webStanza/decrypted: ' + decrypted)
+                    const decoded = new TextDecoder().decode(decrypted)
+                    hal.log('connStore/handleInboundMsg/webStanza/decoded text(if so): ' + decoded)
+                }                
             }
     
         } else {
@@ -192,33 +248,49 @@ export const useConnStore = defineStore('conn', () => {
         }
     }
 
-
+    /* currently only handle IK handshakes */
     function handleNoiseHandshakeMsg(contentBinArr: any) {
+        hal.prod('handleNoiseHandshakeMsg')
+
         let action = handshakeState.GetAction()
     
         if (action == noise.constants.NOISE_ACTION_FAILED) { // 16643
             hal.prod('handleNoiseHandshakeMsg/action/failed')
-    
-        } else if (action == noise.constants.NOISE_ACTION_READ_MESSAGE) { // 16642
+            return
+        }
+
+        else if (action == noise.constants.NOISE_ACTION_READ_MESSAGE) { // 16642
             hal.prod('handleNoiseHandshakeMsg/action/read')
             const fallbackSupported = false      
             handshakeState.ReadMessage(contentBinArr, fallbackSupported)
-    
-        } else if (action == noise.constants.NOISE_ACTION_WRITE_MESSAGE) {
-            hal.prod('handleNoiseHandshakeMsg/action/write')
-            const writeMessage = handshakeState.WriteMessage()
-            // todo: need to send writeMessage as proto webstanza
-            // webSocket.send(writeMessage)
+
+            let nextAction = handshakeState.GetAction()
+            if (nextAction != noise.constants.NOISE_ACTION_READ_MESSAGE) {
+                handleNoiseHandshakeMsg(contentBinArr)
+            }
         }
-    
-        action = handshakeState.GetAction()
-    
-        if (action == noise.constants.NOISE_ACTION_SPLIT) { // 16644
+
+        else if (action == noise.constants.NOISE_ACTION_WRITE_MESSAGE) { // 16641
+            hal.prod('handleNoiseHandshakeMsg/action/write')
+            const writeMessageBuf = handshakeState.WriteMessage()
+
+            const noiseMessageIKBBuf = createNoiseMessageIKB(writeMessageBuf)
+            webSocket.send(noiseMessageIKBBuf)
+
+            // webSocket.send(writeMessageBuf)
+
+            let nextAction = handshakeState.GetAction()
+            if (nextAction != noise.constants.NOISE_ACTION_READ_MESSAGE) {
+                handleNoiseHandshakeMsg(contentBinArr)
+            }
+        }
+
+        else if (action == noise.constants.NOISE_ACTION_SPLIT) { // 16644
             hal.prod('handleNoiseHandshakeMsg/action/split')
     
             const remotePublicKey = handshakeState.GetRemotePublicKey()
             const mobilePublicKeyBase64 = Base64.fromUint8Array(remotePublicKey)
-            hal.prod('handleNoiseHandshakeMsg/mobilePublicKeyBase64: ' + mobilePublicKeyBase64)
+            hal.prod('handleNoiseHandshakeMsg/action/split/mobilePublicKeyBase64: ' + mobilePublicKeyBase64)
         
             const split = handshakeState.Split()
             cipherStateSend = split[0]
@@ -227,8 +299,13 @@ export const useConnStore = defineStore('conn', () => {
             mainStore.isPublicKeyAuthenticated = true
             mainStore.haveInitialHandshakeCompleted = true
     
-            alert('Noise handshake successful, logging in')
+            hal.prod('handleNoiseHandshakeMsg/action/split/noise handshake successful, logging in')
             login()
+        }
+
+        else {
+            console.log("handleNoiseHandshakeMsg/action/can't find action")
+            return
         }
     }
     
@@ -267,9 +344,6 @@ export const useConnStore = defineStore('conn', () => {
             psk
         )
     
-        // webSocket.removeEventListener('message', handleHandshakeMessage)
-        // webSocket.addEventListener('message', handleHandshakeMessage)
-    
         /* send message */
         // let counter = 0
         // setInterval(function () {
@@ -283,17 +357,44 @@ export const useConnStore = defineStore('conn', () => {
     async function decodeProtobufToPacket(binArray: Uint8Array) {
         const err = server.Packet.verify(binArray)
         if (err) {
+            console.log('decodeProtobufToPacket/verify/error ' + err)
             throw err
         }
-        const message = server.Packet.decode(binArray)
+
+        let message: any
+        try {
+            message = server.Packet.decode(binArray)
+        } catch(error) {
+            console.log('decodeProtobufToPacket/decode/error ' + error)
+        }
+        return message
+    }
+
+    async function decodeProtobufToWebContainer(binArray: Uint8Array) {
+        const err = web.WebContainer.verify(binArray)
+        if (err) {
+            console.log('decodeProtobufToWebContainer/verify/error ' + err)
+            throw err
+        }
+
+        let message: any
+        try {
+            message = web.WebContainer.decode(binArray)
+        } catch(error) {
+            console.log('decodeProtobufToWebContainer/decode/error ' + error)
+        }
         return message
     }
 
     async function decodePacket(binArray: Uint8Array) {
         const packet = await decodeProtobufToPacket(binArray)
-        const iq = packet.iq
         return packet
     }
+
+    async function decodeWebContainer(binArray: Uint8Array) {
+        const webContainer = await decodeProtobufToWebContainer(binArray)
+        return webContainer
+    }    
 
     async function enqueue(packet: any, needAuth?: boolean, callback?: any) {
         mainStore.messageQueue.push({ 
@@ -327,7 +428,7 @@ export const useConnStore = defineStore('conn', () => {
             const message = mainStore.messageQueue[i]
             const packet = message.packet
 
-            // temporary: send all messages for now regardless if it needs auth or not
+            /* temporary: send all messages for now regardless if it needs auth or not */
             // certain packets like addKey do not need authentication
             // if (!mainStore.isPublicKeyAuthenticated && message.needAuth) {
             //     hal.log('connStore/sendMessagesInQueue/' + i.toString() + '/not authenticated, skip: ' + packet.iq?.id)

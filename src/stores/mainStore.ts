@@ -56,8 +56,10 @@ export const useMainStore = defineStore('main', {
     },
     actions: {
         loginMain() {
-            this.page = 'home'
-            this.isLoggedIntoApp = true
+            if (!this.isLoggedIntoApp) {
+                this.page = 'home'
+                this.isLoggedIntoApp = true
+            }
         },
         logoutMain() {
             this.privateKeyBase64 = ''
