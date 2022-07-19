@@ -81,13 +81,13 @@ const shadowColor = computed(() => {
                     <div class='footer'>
 
                         <div v-if="buttonType== 'threeButton'" class='buttonContainerCol'>
-                            <div  class='button' @click="$emit('deleteForEveryone');props.showPopup.value = false">
+                            <div  class='button buttonLong' @click="$emit('deleteForEveryone');props.showPopup.value = false">
                                 {{ t('button.deleteForEveryone') }}
                             </div>
-                            <div class='button' @click="$emit('deleteForMe');props.showPopup.value = false">
+                            <div class='button buttonLong' @click="$emit('deleteForMe');props.showPopup.value = false">
                                 {{ t('button.deleteForMeButton') }}
                             </div>
-                            <div class='button' @click="props.showPopup.value = false">
+                            <div class='button buttonLong' @click="props.showPopup.value = false">
                                 {{ t('button.cancelButton') }}
                             </div>
                         </div>
@@ -182,7 +182,7 @@ const shadowColor = computed(() => {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: flex-end;
+    align-items: center;
 }
 
 .button {
@@ -191,7 +191,7 @@ const shadowColor = computed(() => {
     margin-left: 20px;
     margin-top: 10px;
     background-color: #5ba4fc;
-    padding: 5px 15px 5px 15px;
+    padding: 15px;
     color: white;
 
     font-family: "Gotham", Helvetica, "Helvetica Neue", Arial, Avenir, sans-serif;
@@ -203,5 +203,11 @@ const shadowColor = computed(() => {
     cursor: pointer;
     background-color: gray;
     box-shadow: -2px 2px 5px v-bind(shadowColor);
+}
+
+.buttonLong {
+    width: 350px;
+    text-align: center;
+    font-size: medium;
 }
 </style>

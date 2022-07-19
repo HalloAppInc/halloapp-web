@@ -38,7 +38,7 @@ let handleScrollTimer: any
 const showJumpDownButton = ref(false)
 const showMenu = ref(false)
 const showReply = ref(false)
-const showFullScreener = ref({'value' : false})
+const showFullScreener = ref({ 'value': false })
 const showPopup = ref({ 'value': false, 'type': 'delete', 'messageType': 'normal' })
 const isForDeletedMessage = ref(false)
 
@@ -385,13 +385,13 @@ function gotoQuoteMessage(quoteIdx: number) {
         const targetElement = document.getElementById('messageBubble' + quoteIdx)
         if (targetElement) {
             const offsetTop = targetElement.offsetTop - targetElement.offsetHeight
-            content.value?.scrollTo({ left: 0, top: offsetTop, behavior: 'auto' })
-            targetElement.style.boxShadow = '0px 0px 10px 5px rgba(100, 148, 237)'
-            targetElement.style.zIndex= '1'
-            setTimeout(()=>{
-                targetElement.style.zIndex= '0'
-                targetElement.style.boxShadow = '0px 2px 3px rgba(0, 0, 0, 0.08)'
-            },200)
+            content.value?.scrollTo({ left: 0, top: offsetTop, behavior: 'smooth' })
+            setTimeout(() => {
+                targetElement.classList.add('chatBubble-animation')
+                setTimeout(() => {
+                    targetElement.classList.remove('chatBubble-animation')
+                }, 750)
+            }, 1000)
         }
     }
 }
@@ -403,8 +403,7 @@ function gotoQuoteMessage(quoteIdx: number) {
         <div class='containerChat' v-for='(value, idx) in data'>
 
             <!-- inbound msg -->
-            <div v-if="value.display && value.type == 'inBound'" 
-                class='contentTextBody contentTextBodyInBound'
+            <div v-if="value.display && value.type == 'inBound'" class='contentTextBody contentTextBodyInBound'
                 :class="idx == 0 || (idx != 0 && data[idx - 1].type != 'inBound') ? 'chatBubbleBigMargin' : 'chatBubbleSmallMargin'">
                 <div class='chatBubble chatBubbleInBound' :id='"messageBubble" + idx'>
 
@@ -416,13 +415,14 @@ function gotoQuoteMessage(quoteIdx: number) {
                     </div>
 
                     <!-- quote -->
-                    <div class='chatReplyContainer' v-if='value.quoteIdx && value.quoteIdx > -1' @click='gotoQuoteMessage(value.quoteIdx)'>
+                    <div class='chatReplyContainer' v-if='value.quoteIdx && value.quoteIdx > -1'
+                        @click='gotoQuoteMessage(value.quoteIdx)'>
                         <Quote :quote-message='getQuoteMessageData(messageList[value.quoteIdx])' />
                     </div>
 
                     <!-- media -->
                     <div class='mediaContainer' v-if='value.media && value.media != ""'>
-                        <MediaCollage @open-media='openMedia' :media-list='value.media'/>
+                        <MediaCollage @open-media='openMedia' :media-list='value.media' />
                     </div>
 
                     <!-- text -->
@@ -433,7 +433,7 @@ function gotoQuoteMessage(quoteIdx: number) {
                     </div>
 
                     <!-- timestamp -->
-                    <div class='msgInfoContainer'>
+                    <div class='msgInfoContainer' v-if='value.timestamp'>
                         <div class='msgInfoContent'>
                             <div class='timestamp'>
                                 {{ value.timestamp }}
@@ -445,8 +445,7 @@ function gotoQuoteMessage(quoteIdx: number) {
             </div>
 
             <!-- outBound msg -->
-            <div v-else-if="value.type == 'outBound'"
-                class='contentTextBody contentTextBodyOutBound'
+            <div v-else-if="value.display && value.type == 'outBound'" class='contentTextBody contentTextBodyOutBound'
                 :class="idx == 0 || (idx != 0 && data[idx - 1].type != 'outBound') ? 'chatBubbleBigMargin' : 'chatBubbleSmallMargin'">
                 <div class='chatBubble chatBubbleoutBound' :id='"messageBubble" + idx'>
 
@@ -458,25 +457,25 @@ function gotoQuoteMessage(quoteIdx: number) {
                     </div>
 
                     <!-- quote -->
-                    <div class='chatReplyContainer' v-if='value.quoteIdx && value.quoteIdx > -1' @click='gotoQuoteMessage(value.quoteIdx)'>
+                    <div class='chatReplyContainer' v-if='value.quoteIdx && value.quoteIdx > -1'
+                        @click='gotoQuoteMessage(value.quoteIdx)'>
                         <Quote :quote-message='getQuoteMessageData(messageList[value.quoteIdx])' />
                     </div>
 
                     <!-- media -->
                     <div class='mediaContainer' v-if='value.media && value.media != ""'>
-                        <MediaCollage @open-media='openMedia' :media-list='value.media'/>
+                        <MediaCollage @open-media='openMedia' :media-list='value.media' />
                     </div>
 
                     <!-- text -->
                     <div class='chatTextContainer' :class='{ bigChatTextContainer: value.font == "onlyEmoji" }'>
                         <!-- show message content -->
-                        <span v-html='value.message' :class='value.font'
-                            @click="gotoProfile($event)">
+                        <span v-html='value.message' :class='value.font' @click="gotoProfile($event)">
                         </span>
                     </div>
 
                     <!-- timestamp -->
-                    <div class='msgInfoContainer'>
+                    <div class='msgInfoContainer' v-if='value.timestamp'>
                         <div class='msgInfoContent'>
                             <div class='timestamp'>
                                 {{ value.timestamp }}
@@ -553,16 +552,14 @@ function gotoQuoteMessage(quoteIdx: number) {
                         </div>
                     </div>
                 </div>
-                
+
             </div>
         </div>
     </div>
 
     <!-- popup -->
-    <Popup 
-        @deleteForEveryone='deleteMessage(selectMessageIdx, true)'
-        @deleteForMe='deleteMessage(selectMessageIdx, false)'
-        @confirmOk = 'deleteMessage(selectMessageIdx, false)'
+    <Popup @deleteForEveryone='deleteMessage(selectMessageIdx, true)'
+        @deleteForMe='deleteMessage(selectMessageIdx, false)' @confirmOk='deleteMessage(selectMessageIdx, false)'
         :show-popup='showPopup' />
 
     <!-- Reply -->
@@ -578,7 +575,7 @@ function gotoQuoteMessage(quoteIdx: number) {
     </div>
 
     <!-- show media in full screen -->
-    <FullScreener :show-full-screener='showFullScreener' :select-media-index='selectMediaIdx' 
+    <FullScreener :show-full-screener='showFullScreener' :select-media-index='selectMediaIdx'
         :select-media-list='selectMediaList' />
 
 </template>
@@ -668,6 +665,26 @@ function gotoQuoteMessage(quoteIdx: number) {
     position: relative;
     box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.08);
     border: 0.5px solid rgba(0, 0, 0, 0.1);
+}
+
+@keyframes fade {
+    0% {
+        box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    50% {
+        box-shadow: 0px 0px 10px 5px rgba(55, 113, 247);
+    }
+
+    100% {
+        box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.08);
+    }
+}
+
+.chatBubble-animation {
+    opacity: 1;
+    animation: fade 0.75s linear;
+    z-index: 1;
 }
 
 .chatBubble:hover .menuToggler {

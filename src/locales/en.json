@@ -25,8 +25,8 @@
         "noVideoSupportText": "Your browser cannot play the provided video file."
     },
     "button": {
-        "deleteForEveryone": "Delete for everyone",
-        "deleteForMeButton": "Delete for me",
+        "deleteForEveryone": "DELETE FOR EVERYONE",
+        "deleteForMeButton": "DELETE FOR ME",
         "okButton": "OK",
         "cancelButton": "CANCEL"
     },
@@ -69,8 +69,8 @@
         "reply": "Reply"
     },
     "deleteMessagesPopup": {
-        "popupHeaderText": "",
-        "popupContent": "Delete message?"
+        "popupHeaderText": "Changes to clearing or deleting this chat?",
+        "popupContent": ""
     },
     "timestampFormatter": {
         "TODAY" : "TODAY",
