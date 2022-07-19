@@ -1,11 +1,18 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 
+import { useI18n } from 'vue-i18n'
+
 import { useColorStore } from '../../stores/colorStore'
-import { useMainStore } from '../../stores/mainStore'
+
+const { t } = useI18n({
+    inheritLocale: true,
+    useScope: 'global'
+})
 
 const colorStore = useColorStore()
-const mainStore = useMainStore()
+
+const props = defineProps(['showBackgroundColorSetting'])
 
 const colorList = computed(() => {
     return colorStore.colorList
@@ -22,6 +29,9 @@ const textColor = computed(() => {
 const iconColor = computed(() => {
     return colorStore.icon
 })
+const backgroundColor = computed(() => {
+    return colorStore.background
+})
 
 const selectedColor = ref(chatBackground.value)
 
@@ -33,15 +43,15 @@ function selectColor(color: string) {
 
 <template>
 
-    <div class='wrapper' v-if="mainStore.chatPage == 'settings'">
+    <div class='wrapper' v-if='props.showBackgroundColorSetting.value'>
         <div class='header'>
             <div class='contentMenuTitle'>
-                <div class='iconContainer' @click="mainStore.chatPage = 'chat'">
+                <div class='iconContainer' @click='props.showBackgroundColorSetting.value = false;'>
                     <font-awesome-icon :icon="['fas', 'arrow-left']" size='lg' />
                 </div>
                 <div class='textContainerBig'>
                     <div class='contentTextBodyBig'>
-                        Change Chat Background Color
+                        {{ t('chatSettings.changeBackgroundColorHeader')}}
                     </div>
                 </div>
             </div>
@@ -60,15 +70,15 @@ function selectColor(color: string) {
 
 <style scoped>
 .wrapper {
-    position: fixed;
-    z-index: 9998;
-    top: 0;
-    right: 0;
-    width: 30%;
+    position: absolute;
+    z-index: 10000;
+    top: 0px;
+    right: 0px;
+    width: 100%;
     height: 100%;
     overflow-y: hidden;
     overflow-x: hidden;
-    background-color: v-bind(chatBackground);
+    background-color: v-bind(backgroundColor);
 }
 
 .header {
@@ -82,7 +92,7 @@ function selectColor(color: string) {
     height: 100%;
     overflow-y: hidden;
     overflow-x: hidden;
-    background-color: v-bind(chatBackground);
+    background-color: v-bind(backgroundColor);
 }
 
 .contentMenuTitle {
@@ -117,7 +127,7 @@ function selectColor(color: string) {
 }
 
 .contentTextBodyBig {
-    font-size: large;
+    font-size: medium;
 
     display: flex;
     justify-content: flex-start;

@@ -7,27 +7,24 @@ import { useTimeformatter } from '../../composables/timeformatter'
 import { useHAMediaResize } from '../../composables/haMediaResize'
 
 import { useColorStore } from '../../stores/colorStore'
-import { useMainStore } from '../../stores/mainStore'
 
 import Popup from './Popup.vue'
 import Quote from './Quote.vue'
 import FullScreener from './FullScreener.vue'
 import MediaCollage from './MediaCollage.vue'
+import Notification from './Notification.vue'
 
 const colorStore = useColorStore()
-const mainStore = useMainStore()
-
-const { formatTimeDateOnlyChat, formatTimeChat, formatTimeFullChat } = useTimeformatter()
-const { setMediaSizeInMediaList } = useHAMediaResize()
 
 const { t, locale } = useI18n({
     inheritLocale: true,
     useScope: 'global'
 })
 
-const props = defineProps(['messageList'])
+const { formatTimeDateOnlyChat, formatTimeChat, formatTimeFullChat } = useTimeformatter()
+const { setMediaSizeInMediaList } = useHAMediaResize()
 
-const emits = defineEmits(['deleteMessage'])
+const props = defineProps(['messageList', 'replyQuoteIdx'])
 
 const menu = ref<HTMLElement | null>(null)
 const content = ref<HTMLElement | null>(null)
@@ -42,12 +39,16 @@ let handleScrollTimer: any
 const showJumpDownButton = ref(false)
 const showMenu = ref(false)
 const showReply = ref(false)
-const showFullScreener = ref({'value' : false})
+const showFullScreener = ref({ 'value': false })
+const showPopup = ref({ 'value': false, 'type': 'delete', 'messageType': 'normal' })
+const isForDeletedMessage = ref(false)
 
 const selectMessageIdx = ref(-1)
 const selectMediaList = ref()
-const selectMediaIndex = ref()
+const selectMediaIdx = ref()
 const menuTimestamp = ref('')
+const quoteMessage = ref({})
+const NotificationQueue = ref(<string[]>[])
 
 // set floating time stamp's content
 const currentMsgTimestamp = ref()
@@ -56,18 +57,44 @@ const messageNumber = computed(() => {
     return props.messageList.length
 })
 
+// listen to msg list, when a new msg comes in, scroll to the bottom
+watch(messageNumber, (newVal, oldVal) => {
+    if (newVal > oldVal) {
+        showReply.value = false
+        nextTick(() => {
+            gotoBottom('smooth')
+            handleScroll()
+        })
+    }
+})
+
+watch(chatPanelHeight, () => {
+    nextTick(() => {
+        gotoBottom('auto')
+    })
+})
+
 // pre-process messageList
 const data = computed(() => {
     let result = JSON.parse(JSON.stringify(props.messageList))
     for (var i = 0; i < result.length; i++) {
         if (result[i].type != 'timestamp') {
-            let time = formatTimeChat(parseInt(result[i].timestamp), <string>locale.value)
-            let resMsg = appendSpaceForMsgInfo(props.messageList[i].message, time, result[i].type == 'outBound')
-            result[i].message = resMsg[0]
-            result[i].font = resMsg[1]
-            result[i].timestamp = time
-            if (result[i].media) {
-                setMediaSizeInMediaList(result[i].media)
+            // message still exists
+            if (result[i].timestamp) {
+                let time = formatTimeChat(parseInt(result[i].timestamp), <string>locale.value)
+                let resMsg = appendSpaceForMsgInfo(props.messageList[i].message, time, result[i].type == 'outBound')
+                result[i].message = resMsg[0]
+                result[i].font = resMsg[1]
+                result[i].timestamp = time
+                if (result[i].media) {
+                    setMediaSizeInMediaList(result[i].media)
+                }
+            }
+            // message has been deleted for everyone
+            else {
+                result[i].timestamp = ''
+                result[i].message = 'You deleted this message.'
+                result[i].font = 'deletedMessage'
             }
         }
         else {
@@ -77,8 +104,6 @@ const data = computed(() => {
 
     return result
 })
-
-const quoteMessage = ref({})
 
 const headerColor = computed(() => {
     return colorStore.header
@@ -136,29 +161,18 @@ function appendSpaceForMsgInfo(msg: string, time: string, isOutBound: boolean) {
         '\ud83d[\ude80-\udeff]', // U+1F680 to U+1F6FF
     ]
 
-    let pureText = (msg.replaceAll(new RegExp(patterns.join('|'), 'g'), '') == '')
+    let isPureEmoji = (msg.replaceAll(new RegExp(patterns.join('|'), 'g'), '') == '')
     let numOfEmoji = msg.split(new RegExp(patterns.join('|'))).length - 1
-    let font = (numOfEmoji > 0 && numOfEmoji <= 3 && pureText)
+    let lessThanThreeEmoji = (numOfEmoji > 0 && numOfEmoji <= 3 && isPureEmoji)
+    let font = ''
+    if (lessThanThreeEmoji) {
+        font = 'onlyEmoji'
+    }
+    else {
+        font = 'noOverflow'
+    }
     return [result, font]
 }
-
-// listen to msg list, when a new msg comes in, scroll to the bottom
-watch(messageNumber, (newVal, oldVal) => {
-    if (newVal > oldVal) {
-        showReply.value = false
-        mainStore.gotoChatPage('')
-        nextTick(() => {
-            gotoBottom('smooth')
-            handleScroll()
-        })
-    }
-})
-
-watch(chatPanelHeight, () => {
-    nextTick(() => {
-        gotoBottom('auto')
-    })
-})
 
 function setChatPanelHeight() {
     chatPanelHeight.value = content.value ? content.value.clientHeight : 0
@@ -244,9 +258,18 @@ function openMenu(event: any, forInBound: boolean, idx: number) {
         return
     }
 
-    menuTimestamp.value = formatTimeFullChat(parseInt(props.messageList[idx].timestamp), <string>locale.value)
-    selectMessageIdx.value = idx
+    // if this is a deleted message
+    if (!props.messageList[idx].timestamp) {
+        isForDeletedMessage.value = true
+        selectMessageIdx.value = idx
+    }
+    else {
+        isForDeletedMessage.value = false
+        menuTimestamp.value = formatTimeFullChat(parseInt(props.messageList[idx].timestamp), <string>locale.value)
+        selectMessageIdx.value = idx
+    }
 
+    // set floating menu position
     let bounds = event.target.getBoundingClientRect()
     for (let key in bounds) {
         if (key == 'right') {
@@ -265,7 +288,7 @@ function openMenu(event: any, forInBound: boolean, idx: number) {
             if (content.value) {
                 floatMenuPositionY.value = -1 * (content.value?.scrollHeight - bounds[key] - content.value?.scrollTop) + 20
                 let bottomOffset = content.value?.clientHeight - bounds[key]
-                // visual offset, not let part of menu hidden under input box
+                // visual offset, do not let part of menu hidden under input box
                 if (bottomOffset <= 80) {
                     let msgBubble
                     // get msg bubble's height
@@ -281,13 +304,16 @@ function openMenu(event: any, forInBound: boolean, idx: number) {
                         msgBubble = event.target.parentElement.parentElement
                         floatMenuPositionY.value -= msgBubble.clientHeight
                     }
-                    floatMenuPositionY.value -= 70
+                    
+                    // move 90px upwards if this message is not deleted
+                    if (!isForDeletedMessage.value) {
+                        floatMenuPositionY.value -= 90
+                    }
                 }
             }
         }
     }
 }
-
 
 // add listener on floating menu
 function closeMenu() {
@@ -302,18 +328,46 @@ onUnmounted(() => {
     document.removeEventListener("click", closeMenu)
 })
 
+function deleteMessage(idx: number, deleteForEveryone: boolean) {
+    // delete msg at idx
+    if (idx >= 0) {
+        // delete for everyone
+        if (deleteForEveryone) {
+            const type = props.messageList[idx].type
+            props.messageList[idx] = {
+                type: type,
+                display: true
+            }
+        }
+        // delete for me
+        else {
+            props.messageList[idx].display = false
+        }
+    }
+}
+
+function openPopup() {
+    if (isForDeletedMessage.value) {
+        showPopup.value.messageType = 'deleted'
+    }
+    else {
+        showPopup.value.messageType = 'normal'
+    }
+    showPopup.value.value = true
+}
+
 function openMedia(mediaList: any, idx: number) {
     selectMediaList.value = mediaList
-    selectMediaIndex.value = idx
+    selectMediaIdx.value = idx
     // go to fullscreener
     showFullScreener.value.value = true
 }
 
 function openReply() {
-    mainStore.gotoChatPage('reply' + selectMessageIdx.value)
     showReply.value = true
     showMenu.value = false
     // get quote message
+    props.replyQuoteIdx.value = selectMessageIdx.value
     quoteMessage.value = getQuoteMessageData(props.messageList[selectMessageIdx.value])
 }
 
@@ -327,74 +381,108 @@ function getQuoteMessageData(message: any) {
     }
     return data
 }
+
+function gotoQuoteMessage(quoteIdx: number) {
+    if (!props.messageList[quoteIdx].display) {
+        // message has been deleted!
+        NotificationQueue.value.push(t('chatNotification.messageDeleted'))
+    }
+    else {
+        const targetElement = document.getElementById('messageBubble' + quoteIdx)
+        if (targetElement) {
+            const offsetTop = targetElement.offsetTop - targetElement.offsetHeight
+            content.value?.scrollTo({ left: 0, top: offsetTop, behavior: 'smooth' })
+            setTimeout(() => {
+                targetElement.classList.add('chatBubbleAnimation')
+                setTimeout(() => {
+                    targetElement.classList.remove('chatBubbleAnimation')
+                }, 5000)
+            }, 1000)
+        }
+    }
+}
 </script>
 
 <template>
+
     <div class='contents' ref='content' @scroll='handleScroll()'>
         <!-- chat msg -->
         <div class='containerChat' v-for='(value, idx) in data'>
+
             <!-- inbound msg -->
-            <div v-if="value.type == 'inBound'" class='contentTextBody contentTextBodyInBound'
+            <div v-if="value.display && value.type == 'inBound'" class='contentTextBody contentTextBodyInBound'
                 :class="idx == 0 || (idx != 0 && data[idx - 1].type != 'inBound') ? 'chatBubbleBigMargin' : 'chatBubbleSmallMargin'">
-                <div class='chatBubble chatBubbleInBound'>
+                <div class='chatBubble chatBubbleInBound' :id='"messageBubble" + idx'>
+
                     <!-- toggler -->
                     <div class='menuToggler menuTogglerInBound'>
                         <div class='togglerIconContainer' @click.stop='openMenu($event, true, idx)'>
                             <font-awesome-icon :icon="['fas', 'angle-down']" size='xs' />
                         </div>
                     </div>
+
+                    <!-- quote -->
+                    <div class='chatReplyContainer' v-if='value.quoteIdx && value.quoteIdx > -1'
+                        @click='gotoQuoteMessage(value.quoteIdx)'>
+                        <Quote :quoteMessage='getQuoteMessageData(messageList[value.quoteIdx])' />
+                    </div>
+
                     <!-- media -->
                     <div class='mediaContainer' v-if='value.media && value.media != ""'>
-                        <MediaCollage @open-media='openMedia' :media-list='value.media'/>
+                        <MediaCollage @openMedia='openMedia' :media-list='value.media' />
                     </div>
-                    <!-- quote -->
-                    <div class='chatReplyContainer' v-if='value.quoteIdx && value.quoteIdx > -1'>
-                        <Quote :quote-message='getQuoteMessageData(messageList[value.quoteIdx])' />
-                    </div>
+
                     <!-- text -->
-                    <div class='chatTextContainer' :class='{ bigChatTextContainer: value.font }'>
+                    <div class='chatTextContainer' :class='{ bigChatTextContainer: value.font == "onlyEmoji" }'>
                         <!-- show message content -->
-                        <span v-html='value.message' :class="value.font ? 'onlyEmoji' : 'noOverflow'">
+                        <span v-html='value.message' :class='value.font'>
                         </span>
                     </div>
+
                     <!-- timestamp -->
-                    <div class='msgInfoContainer'>
+                    <div class='msgInfoContainer' v-if='value.timestamp'>
                         <div class='msgInfoContent'>
                             <div class='timestamp'>
                                 {{ value.timestamp }}
                             </div>
                         </div>
                     </div>
+
                 </div>
             </div>
 
             <!-- outBound msg -->
-            <div v-else-if="value.type == 'outBound'" class='contentTextBody contentTextBodyOutBound'
+            <div v-else-if="value.display && value.type == 'outBound'" class='contentTextBody contentTextBodyOutBound'
                 :class="idx == 0 || (idx != 0 && data[idx - 1].type != 'outBound') ? 'chatBubbleBigMargin' : 'chatBubbleSmallMargin'">
-                <div class='chatBubble chatBubbleoutBound'>
+                <div class='chatBubble chatBubbleoutBound' :id='"messageBubble" + idx'>
+
                     <!-- toggler -->
                     <div class='menuToggler menuTogglerOutBound'>
                         <div class='togglerIconContainer' @click.stop='openMenu($event, false, idx)'>
                             <font-awesome-icon :icon="['fas', 'angle-down']" size='xs' />
                         </div>
                     </div>
+
+                    <!-- quote -->
+                    <div class='chatReplyContainer' v-if='value.quoteIdx && value.quoteIdx > -1'
+                        @click='gotoQuoteMessage(value.quoteIdx)'>
+                        <Quote :quoteMessage='getQuoteMessageData(messageList[value.quoteIdx])' />
+                    </div>
+
                     <!-- media -->
                     <div class='mediaContainer' v-if='value.media && value.media != ""'>
-                        <MediaCollage @open-media='openMedia' :media-list='value.media'/>
+                        <MediaCollage @openMedia='openMedia' :media-list='value.media' />
                     </div>
-                    <!-- quote -->
-                    <div class='chatReplyContainer' v-if='value.quoteIdx && value.quoteIdx > -1'>
-                        <Quote :quote-message='getQuoteMessageData(messageList[value.quoteIdx])' />
-                    </div>
+
                     <!-- text -->
-                    <div class='chatTextContainer' :class='{ bigChatTextContainer: value.font }'>
+                    <div class='chatTextContainer' :class='{ bigChatTextContainer: value.font == "onlyEmoji" }'>
                         <!-- show message content -->
-                        <span v-html='value.message' :class="value.font ? 'onlyEmoji' : 'noOverflow'"
-                            @click="gotoProfile($event)">
+                        <span v-html='value.message' :class='value.font' @click="gotoProfile($event)">
                         </span>
                     </div>
+
                     <!-- timestamp -->
-                    <div class='msgInfoContainer'>
+                    <div class='msgInfoContainer' v-if='value.timestamp'>
                         <div class='msgInfoContent'>
                             <div class='timestamp'>
                                 {{ value.timestamp }}
@@ -404,6 +492,7 @@ function getQuoteMessageData(message: any) {
                             </div>
                         </div>
                     </div>
+
                 </div>
             </div>
 
@@ -417,6 +506,7 @@ function getQuoteMessageData(message: any) {
                     </div>
                 </div>
             </div>
+
         </div>
 
         <!-- floating timestamp -->
@@ -445,49 +535,60 @@ function getQuoteMessageData(message: any) {
         <!-- floating menu -->
         <div class='chatSettingsContanier' v-if='showMenu' @click.stop>
             <div class='menu' ref='menu'>
-                <div class='menuContainer' @mousedown='mainStore.gotoChatPage("delete")'>
+
+                <div class='menuContainer' @mousedown='openPopup'>
                     <div class='textContainer'>
                         <div class='contentTextBody contentTextBodyForSettings'>
                             {{ t('chatMsgBubbleSettings.deleteMessage') }}
                         </div>
                     </div>
                 </div>
-                <div class='menuContainer' @mousedown='openReply'>
+
+                <div v-if='!isForDeletedMessage' class='menuContainer' @mousedown='openReply'>
                     <div class='textContainer'>
                         <div class='contentTextBody contentTextBodyForSettings'>
                             {{ t('chatMsgBubbleSettings.reply') }}
                         </div>
                     </div>
                 </div>
-                <div class='menuTimestampLong'>
+
+                <div v-if='!isForDeletedMessage' class='menuTimestampLong'>
                     <div class='timestampContainerBig'>
                         <div class='timestampBig'>
                             {{ menuTimestamp }}
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
 
     <!-- popup -->
-    <Popup @confirm-Ok="$emit('deleteMessage', selectMessageIdx)" />
+    <Popup @deleteForEveryone='deleteMessage(selectMessageIdx, true)'
+        @deleteForMe='deleteMessage(selectMessageIdx, false)' 
+        @confirmOk='deleteMessage(selectMessageIdx, false)'
+        :showPopup='showPopup' />
 
     <!-- Reply -->
     <div class='containerReply' v-if='showReply'>
         <div class='containerReplyWithRightMargin'>
-            <Quote :quote-message='quoteMessage' />
+            <Quote :quoteMessage='quoteMessage' />
         </div>
         <div class='closeIconContainer'>
-            <div class='iconContainer closeIcon' @click="showReply = false; mainStore.gotoChatPage('')">
+            <div class='iconContainer closeIcon' @click="showReply = false">
                 <font-awesome-icon :icon="['fas', 'xmark']" size='lg' />
             </div>
         </div>
     </div>
 
     <!-- show media in full screen -->
-    <FullScreener :show-full-screener='showFullScreener' :select-media-index='selectMediaIndex' 
-        :select-media-list='selectMediaList' />
+    <FullScreener :showFullScreener='showFullScreener' 
+        :selectMediaIndex='selectMediaIdx'
+        :selectMediaList='selectMediaList' />
+
+    <!-- notification -->
+    <Notification :NotificationQueue='NotificationQueue'/>
 
 </template>
 
@@ -541,6 +642,10 @@ function getQuoteMessageData(message: any) {
     margin-bottom: 5px;
 }
 
+.chatReplyContainer:hover {
+    cursor: pointer;
+}
+
 .contentTextBody {
     width: 100%;
 
@@ -572,6 +677,30 @@ function getQuoteMessageData(message: any) {
     position: relative;
     box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.08);
     border: 0.5px solid rgba(0, 0, 0, 0.1);
+}
+
+@keyframes fade {
+    0% {
+        box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    10% {
+        box-shadow: 0px 0px 10px 5px rgba(148, 148, 148, 0.6);
+    }
+
+    90% {
+        box-shadow: 0px 0px 10px 5px rgba(148, 148, 148, 0.6);
+    }
+
+    100% {
+        box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.08);
+    }
+}
+
+.chatBubbleAnimation {
+    opacity: 1;
+    animation: fade 2s linear;
+    z-index: 1;
 }
 
 .chatBubble:hover .menuToggler {
@@ -624,7 +753,7 @@ function getQuoteMessageData(message: any) {
 }
 
 .bigChatTextContainer {
-    margin-top: 10px;
+    padding-top: 10px;
 }
 
 .noOverflow {
@@ -635,6 +764,11 @@ function getQuoteMessageData(message: any) {
 
 .onlyEmoji {
     font-size: xx-large;
+}
+
+.deletedMessage {
+    font-size: small;
+    color: v-bind(timestampColor)
 }
 
 .msgInfoContainer {
@@ -796,7 +930,7 @@ img:hover {
 
 .menu {
     position: absolute;
-    width: 200px;
+    width: fit-content;
     padding: 0px;
     right: 10px;
     background-color: v-bind(backgroundColor);
@@ -808,6 +942,7 @@ img:hover {
 .menuContainer {
     display: flex;
     flex-direction: row;
+    justify-content: center;
     align-items: center;
 }
 
@@ -843,7 +978,7 @@ img:hover {
 .contentTextBodyForSettings {
     flex-direction: row;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
 }
 
 .containerReply {

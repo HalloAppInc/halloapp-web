@@ -2,15 +2,14 @@
 import { ref, computed } from 'vue'
 
 import { useHAText } from '../../composables/haText'
-import { useColorStore } from '../../stores/colorStore'
-import { useMainStore } from '../../stores/mainStore'
 
-const colorStore = useColorStore()
-const mainStore = useMainStore()
+import { useColorStore } from '../../stores/colorStore'
 
 const { processText } = useHAText()
 
-const props = defineProps(['messageList', 'contactList', 'uploadFiles', 'alwaysShowSendButton'])
+const colorStore = useColorStore()
+
+const props = defineProps(['messageList', 'contactList', 'uploadFiles', 'replyQuoteIdx', 'alwaysShowSendButton'])
 
 const inputArea = ref(<HTMLElement | null>(null))
 const chatBox = ref(<HTMLElement | null>(null))
@@ -31,9 +30,6 @@ const showSendButton = ref(false)
 
 const chatBoxHeight = ref(0)
 
-const iconColor = computed(() => {
-    return colorStore.icon
-})
 const inBoundMsgBubbleColor = computed(() => {
     return colorStore.inBoundMsgBubble
 })
@@ -127,12 +123,14 @@ function analyzeKeyDown(event: any) {
 function sendMessage() {
     if (inputArea.value?.innerText.trim().length !== 0 || props.uploadFiles != '') {
         props.messageList.push({
-            quoteIdx: mainStore.chatPage.includes('reply') ? mainStore.chatPage.substring(5) : -1, // get reply id
+            quoteIdx: props.replyQuoteIdx.value, // get reply id
             type: 'outBound',
             media: JSON.parse(JSON.stringify(props.uploadFiles)), // deep copy
             message: processText(inputArea.value?.innerText.trim(), props.contactList).html,
             timestamp: Date.now() / 1000 | 0, // get current time
+            display: true,
             })
+        props.replyQuoteIdx.value = -1
         // hide send button
         showSendButton.value = false
         // clean text inside input box
@@ -445,27 +443,27 @@ function closeContactsAndFocusOnInputBox() {
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
 
     <div class='chatBoxTray' ref='chatBox'>
+
         <div class='inputBoxContainer'>
             <div class='textarea' ref='inputArea' contenteditable='true' placeholder='Type a message...'
                 @focusout='closeContactsAndFocusOnInputBox' @keydown='analyzeKeyDown($event)'
                 @keyup='analyzeKeyUp($event)' @click='analyzeMouseMovement()'>
             </div>
         </div>
+
         <!-- send button -->
         <div class='buttonContainer' v-show='alwaysShowSendButton || showSendButton' @click='sendMessage(); showSendButton = false'>
             <div class='buttonIconContainer'>
                 <font-awesome-icon :icon="['fas', 'paper-plane']" size='lg' />
             </div>
         </div>
-    </div>
 
-    
+    </div>
 
 </template>
 

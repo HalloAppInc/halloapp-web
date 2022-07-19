@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 
-import { useMainStore } from '../../stores/mainStore'
 import { useColorStore } from '../../stores/colorStore'
 
 import InputBox from './InputBox.vue'
 import Composer from './Composer.vue'
 
-const mainStore = useMainStore()
 const colorStore = useColorStore()
 
-const props = defineProps(['uploadFiles', 'messageList', 'contactList'])
+const props = defineProps(['messageList', 'contactList', 'replyQuoteIdx'])
+
+const uploadFiles: any = ref([])
 
 const selectAndUploadfile = ref(<HTMLElement | null>(null))
 const chatBox = ref(<HTMLElement | null>(null))
@@ -43,7 +43,7 @@ function openAttachMenu() {
 
 function onFilePicked(event: any) {
     // make upload file array empty
-    props.uploadFiles.splice(0, props.uploadFiles.length)
+    uploadFiles.value.splice(0, uploadFiles.value.length)
     const files = event.target.files
     const numOfFile = files.length
     for (let i = 0; i < numOfFile; i++) {
@@ -52,7 +52,7 @@ function onFilePicked(event: any) {
         if (file) {
             let img = new Image()
             img.onload = function () {
-                props.uploadFiles.push({
+                uploadFiles.value.push({
                     'file': file,
                     'url': img.src,
                     'width': img.width,
@@ -88,29 +88,42 @@ function onFilePicked(event: any) {
     </transition>
 
     <div class='chatBoxTray' ref='chatBox'>
+
         <!-- <div class='iconContainer'>
             <div class='iconShadow' :class="{ 'showIconShadow': showAttachMenu == true }">
                 <font-awesome-icon :icon="['fas', 'face-smile']" size='lg' />
             </div>
         </div> -->
+
         <div class='iconContainer' tabindex='0' @click='openAttachMenu' @focusout='showAttachMenu = false'>
             <div class='iconShadow' :class="{ 'showIconShadow': showAttachMenu == true }">
                 <font-awesome-icon :icon="['fas', 'paperclip']" size='lg' />
             </div>
         </div>
-        <!-- uploadfile = "" does not attachment heren -->
-        <InputBox :message-list='props.messageList' :contact-list='props.contactList' :upload-files='""'
-            :always-show-send-button='false' />
+
+        <InputBox 
+            :messageList='props.messageList' 
+            :contactList='props.contactList' 
+            :uploadFiles='""'
+            :alwaysShowSendButton='false'
+            :replyQuoteIdx='props.replyQuoteIdx' />
+
         <!-- <div class='iconContainer'>
             <div class='iconShadow' :class="{ 'showIconShadow': showAttachMenu == true }">
                 <font-awesome-icon :icon="['fas', 'microphone']" size='lg' />
             </div>
         </div> -->
+
     </div>
 
     <!-- composer -->
-    <Composer :show-composer='showComposer' :upload-files='uploadFiles' 
-        :message-list='messageList' :contact-list='contactList' />
+    <Composer 
+        :showComposer='showComposer' 
+        :uploadFiles='uploadFiles' 
+        :messageList='messageList' 
+        :contactList='contactList'
+        :replyQuoteIdx='replyQuoteIdx' />
+        
 </template>
 
 <style scoped>
@@ -124,7 +137,6 @@ function onFilePicked(event: any) {
     transform: scale(0.1);
     opacity: 0;
 }
-
 
 .iconContainer {
     margin: 5px;
@@ -146,6 +158,8 @@ function onFilePicked(event: any) {
     position: fixed;
     bottom: v-bind(chatBoxHeight + 'px');
     margin: 10px 10px;
+
+    z-index: 2;
 }
 
 .iconShadow {

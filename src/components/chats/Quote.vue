@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 
 import { useColorStore } from '../../stores/colorStore'
 
@@ -24,9 +24,6 @@ const quoteMedia = computed(() => {
 const textColor = computed(() => {
     return colorStore.text
 })
-const backgroundColor = computed(() => {
-    return colorStore.background
-})
 const iconColor = computed(() => {
     return colorStore.icon
 })
@@ -36,12 +33,17 @@ const iconColor = computed(() => {
 
     <!-- Quote -->
     <div class='quoteContainer'>
+
         <div class='quoteMessageContainer'>
+
+            <!-- sender infomation -->
             <div class='contentHeader'>
                 <div class='contentTitle'>
                     {{ quoteMessage.sender }}
                 </div>
             </div>
+
+            <!-- message details -->
             <div class='contentBody'>
                 <!-- if attached media -->
                 <div class='iconContainer' v-if='quoteMessage.media'>
@@ -51,10 +53,13 @@ const iconColor = computed(() => {
                     <span v-html='quoteMessage.message' class='noOverFlow'></span>
                 </div>
             </div>
+
         </div>
+        
         <div class='attachMediaContainer' v-if='quoteMessage.media'>
             <img class='imgSmall' :height='quoteMedia.height' :width='quoteMedia.width' :src='quoteMedia.url'/>
         </div>
+
     </div>
 
 </template>
