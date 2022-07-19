@@ -385,8 +385,7 @@ function getQuoteMessageData(message: any) {
 function gotoQuoteMessage(quoteIdx: number) {
     if (!props.messageList[quoteIdx].display) {
         // message has been deleted!
-        console.log('message has been deleted!')
-        NotificationQueue.value.push('Message deleted')
+        NotificationQueue.value.push(t('chatNotification.messageDeleted'))
     }
     else {
         const targetElement = document.getElementById('messageBubble' + quoteIdx)

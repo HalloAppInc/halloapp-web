@@ -72,6 +72,9 @@
         "popupHeaderText": "Delete selected message?",
         "popupContent": ""
     },
+    "chatNotification": {
+        "messageDeleted": "Message deleted"
+    },
     "timestampFormatter": {
         "TODAY" : "TODAY",
         "YESTERDAY" : "YESTERDAY"
