@@ -1,11 +1,17 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 
 import { useI18n } from 'vue-i18n'
 
 import { useMainStore } from '../../stores/mainStore'
 import { useConnStore } from '../../stores/connStore'
 import { useColorStore } from '../../stores/colorStore'
+
+import HelpMenu from './Help.vue'
+import NotificationsMenu from './Notifications.vue'
+import PrivacyMenu from './Privacy.vue'
+import SecurityMenu from './Security.vue'
+import Popup from '../chats/Popup.vue'
 
 const mainStore = useMainStore()
 const connStore = useConnStore()
@@ -16,38 +22,64 @@ const { t } = useI18n({
     useScope: 'global'
 })
 
+const showNotificationsMenu = ref({'value': false})
+const showPopup = ref({'value': false, 'type': 'theme', 'mode': ref(mainStore.preferColorScheme)})
+const showHelpMenu = ref({'value': false})
+const showPrivacyMenu = ref({'value': false})
+const showSecurityMenu = ref({'value': false})
+
 const hoverColor = computed(() => {
     return colorStore.hover
 })
-
 const textColor = computed(() => {
     return colorStore.text
 })
-
 const backgroundColor = computed(() => {
     return "1px solid " + colorStore.background
 })
-
 const secondaryTextColor = computed(() => {
     return colorStore.secondaryText
 })
-
 const iconColor = computed(() => {
     return colorStore.icon
 })
-
 const lineColor = computed(() => {
     return colorStore.line
 })
-
 const headerColor = computed(() => {
     return colorStore.header
 })
+
+function gotoNotificationsMenu() {
+    showNotificationsMenu.value.value = true
+}
+
+function gotoHelpMenu() {
+    showHelpMenu.value.value = true
+}
+
+function gotoPrivacyMenu() {
+    showPrivacyMenu.value.value = true
+}
+
+function gotoSecurityMenu() {
+    showSecurityMenu.value.value = true
+}
+
+function gotoThemeMenu() {
+    showPopup.value.value = true
+    showPopup.value.type = 'theme'
+    showPopup.value.mode = mainStore.preferColorScheme
+}
+
+function changePreferColorScheme(mode: string) {
+    colorStore.changePreferColorSchema(mode)
+}
 </script>
 
 <template>
     <transition name='main'>
-        <div v-if="mainStore.settingsPage == '' || mainStore.settingsPage == 'theme'">
+        <div v-if="mainStore.settingsPage == ''">
             <div id='header'>
 
             </div>
@@ -69,6 +101,7 @@ const headerColor = computed(() => {
                             </div>
                         </div>
                     </div>
+
                     <!-- menu -->
                     <div class="container">
                         <div class="iconContainer">
@@ -81,7 +114,7 @@ const headerColor = computed(() => {
                         </div>
                     </div>
 
-<!--                     <div class="container" @click="mainStore.gotoSettingsPage('privacy')">
+                    <!-- <div class="container" @click="mainStore.gotoSettingsPage('privacy')">
                         <div class="iconContainer">
                             <font-awesome-icon :icon="['fas', 'lock']" size="lg" />
                         </div>
@@ -92,7 +125,7 @@ const headerColor = computed(() => {
                         </div>
                     </div> -->
 
-<!--                     <div class="container" @click="mainStore.gotoSettingsPage('security')">
+                    <!-- <div class="container" @click="mainStore.gotoSettingsPage('security')">
                         <div class="iconContainer">
                             <font-awesome-icon :icon="['fas', 'shield-halved']" size="lg" />
                         </div>
@@ -103,7 +136,7 @@ const headerColor = computed(() => {
                         </div>
                     </div> -->
 
-                    <div class="container" @click="mainStore.gotoSettingsPage('theme')">
+                    <div class="container" @click='gotoThemeMenu'>
                         <div class="iconContainer">
                             <font-awesome-icon :icon="['fas', 'circle-half-stroke']" size="lg" />
                         </div>
@@ -139,9 +172,17 @@ const headerColor = computed(() => {
                 </div>
             </div>
         </div>
-
-
     </transition>
+
+    <PrivacyMenu :showPrivacy='showPrivacyMenu' />
+    <NotificationsMenu :showNotificationsMenu='showNotificationsMenu' />
+    <HelpMenu :showHelpMenu='showHelpMenu' />
+    <SecurityMenu :showSecurityMenu='showSecurityMenu'/>
+
+    <!-- change color scheme popup -->
+    <Popup :showPopup='showPopup'
+        @changePreferColorScheme='changePreferColorScheme'/>
+
 </template>
 
 <style scoped>

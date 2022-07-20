@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { directive } from '@babel/types';
+import { ref, computed, nextTick } from 'vue'
 
 import { useI18n } from 'vue-i18n'
-import colors from '../../common/colors';
 
 import { useColorStore } from '../../stores/colorStore'
 
@@ -15,12 +15,20 @@ const colorStore = useColorStore()
 
 const props = defineProps(['showPopup'])
 
+const emit = defineEmits(['deleteForEveryone', 'deleteForMe', 'confirmOk', 'changePreferColorScheme'])
+
+const mode = ref()
+
 const title = computed(() => {
     if (props.showPopup.type == 'clear') {
         return t('clearMessagesPopup.popupHeaderText')
     }
     else if (props.showPopup.type == 'delete') {
         return t('deleteMessagesPopup.popupHeaderText')
+    }
+    else if (props.showPopup.type == 'theme') {
+        mode.value = props.showPopup.mode
+        return t('themePopup.popupHeaderText')
     }
 })
 
@@ -30,6 +38,9 @@ const content = computed(() => {
     }
     else if (props.showPopup.type == 'delete') {
         return t('deleteMessagesPopup.popupContent')
+    }
+    else if (props.showPopup.type == 'theme') {
+        return ''
     }
 })
 
@@ -45,6 +56,9 @@ const buttonType = computed(() => {
             return 'twoButton'
         }
     }
+    else if (props.showPopup.type == 'theme') {
+        return 'themeButton'
+    }
 })
 
 const backgroundColor = computed(() => {
@@ -59,6 +73,19 @@ const wraperColor = computed(() => {
 const shadowColor = computed(() => {
     return colorStore.shadow
 })
+
+function closeMenu(emitEventName: any = null, emitEventData: any = null) {
+    props.showPopup.value = false
+    if (props.showPopup.type == 'theme') {
+        mode.value = props.showPopup.mode
+        emit(emitEventName, emitEventData)
+    }
+    else{
+        if (emitEventName) {
+            emit(emitEventName)
+        }
+    }
+}
 </script>
 
 <template>
@@ -74,34 +101,56 @@ const shadowColor = computed(() => {
                     </div>
 
                     <div class='body'>
-                        <div class='textContent' value='light'>
+                        <div v-if='content' class='textContent'>
                             {{ content }}
+                        </div>
+                        <div v-if='showPopup.type == "theme"'>
+                            <div class='selectionContent'>
+                                <input type='radio' value='light' v-model='mode'> {{ t('themePopup.lightModeText') }} <br>
+                            </div>
+                            <div class='selectionContent'>
+                                <input type='radio' value='dark' v-model='mode'> {{ t('themePopup.darkModeText') }} <br>
+                            </div>
+                            <div class='selectionContent'>
+                                <input type='radio' value='auto' v-model='mode'> {{ t('themePopup.autoModeText') }} <br>
+                            </div>
                         </div>
                     </div>
 
                     <div class='footer'>
 
-                        <div v-if="buttonType== 'threeButton'" class='buttonContainerCol'>
-                            <div  class='button buttonLong buttonRed' @click="$emit('deleteForEveryone');props.showPopup.value = false">
+                        <div v-if="buttonType == 'threeButton'" class='buttonContainerCol'>
+                            <div class='button buttonLong buttonRed'
+                                @click='closeMenu("deleteForEveryone")'>
                                 {{ t('button.deleteForEveryone') }}
                             </div>
-                            <div class='button buttonLong buttonRed' @click="$emit('deleteForMe');props.showPopup.value = false">
+                            <div class='button buttonLong buttonRed'
+                                @click='closeMenu("deleteForMe")'>
                                 {{ t('button.deleteForMeButton') }}
                             </div>
-                            <div class='button buttonLong buttonGray' @click="props.showPopup.value = false">
+                            <div class='button buttonLong buttonGray' @click="closeMenu">
                                 {{ t('button.cancelButton') }}
                             </div>
                         </div>
 
                         <div v-else-if="buttonType == 'twoButton'" class='buttonContainerRow'>
-                            <div class='button buttonBlue' @click="$emit('confirmOk');props.showPopup.value = false">
+                            <div class='button buttonBlue' @click='closeMenu("confirmOk")'>
                                 {{ t('button.okButton') }}
                             </div>
-                            <div class='button buttonGray' @click="props.showPopup.value = false">
+                            <div class='button buttonGray' @click='closeMenu'>
                                 {{ t('button.cancelButton') }}
                             </div>
                         </div>
-                        
+
+                        <div v-else-if="buttonType == 'themeButton'" class='buttonContainerRow'>
+                            <div class='button buttonBlue' @click='closeMenu("changePreferColorScheme", mode)'>
+                                {{ t('button.okButton') }}
+                            </div>
+                            <div class='button buttonGray' @click='closeMenu("changePreferColorScheme")'>
+                                {{ t('button.cancelButton') }}
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -164,9 +213,12 @@ const shadowColor = computed(() => {
     color: v-bind(textColor);
 }
 
-
 .textContent {
     font-size: medium;
+}
+
+.selectionContent {
+    margin: 10px 0px;
 }
 
 .footer {
@@ -213,20 +265,20 @@ const shadowColor = computed(() => {
 }
 
 .buttonRed {
-    background-color: rgb(244,69,53);
+    background-color: rgb(244, 69, 53);
 }
 
 .buttonRed:hover {
-    background-color: rgb(207,57,46);
+    background-color: rgb(207, 57, 46);
 }
 
 .buttonGray {
     color: black;
-    background-color: rgb(233,233,233);
+    background-color: rgb(233, 233, 233);
 }
 
 .buttonGray:hover {
-    background-color: rgb(195,195,195);
+    background-color: rgb(195, 195, 195);
 }
 
 .buttonLong {
