@@ -226,6 +226,12 @@ function loadFonts() {
     -webkit-tap-highlight-color: transparent;
 }
 
+@font-face {
+    font-family: Emoji;
+    src: local('Apple Color Emoji'), local('Noto Color Emoji'), local('Segoe UI');
+    unicode-range: U+1F300-1F5FF, U+1F600-1F64F, U+1F680-1F6FF, U+2600-26FF;
+}
+
 html, body {
     height: 100%;
     width: 100%;
@@ -233,7 +239,8 @@ html, body {
 
 body {
     background: #F2F2F6;
-    font-family: Helvetica, "Helvetica Neue", Arial, Avenir, sans-serif;
+    font-family: Emoji, Helvetica, "Helvetica Neue", Arial, Avenir, sans-serif;
+
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;    
     font-size: 16px;
