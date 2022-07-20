@@ -22,11 +22,7 @@ const { t } = useI18n({
     useScope: 'global'
 })
 
-const showNotificationsMenu = ref({'value': false})
 const showPopup = ref({'value': false, 'type': 'theme', 'mode': ref(mainStore.preferColorScheme)})
-const showHelpMenu = ref({'value': false})
-const showPrivacyMenu = ref({'value': false})
-const showSecurityMenu = ref({'value': false})
 
 const hoverColor = computed(() => {
     return colorStore.hover
@@ -49,22 +45,6 @@ const lineColor = computed(() => {
 const headerColor = computed(() => {
     return colorStore.header
 })
-
-function gotoNotificationsMenu() {
-    showNotificationsMenu.value.value = true
-}
-
-function gotoHelpMenu() {
-    showHelpMenu.value.value = true
-}
-
-function gotoPrivacyMenu() {
-    showPrivacyMenu.value.value = true
-}
-
-function gotoSecurityMenu() {
-    showSecurityMenu.value.value = true
-}
 
 function gotoThemeMenu() {
     showPopup.value.value = true
@@ -174,10 +154,10 @@ function changePreferColorScheme(mode: string) {
         </div>
     </transition>
 
-    <PrivacyMenu :showPrivacy='showPrivacyMenu' />
-    <NotificationsMenu :showNotificationsMenu='showNotificationsMenu' />
-    <HelpMenu :showHelpMenu='showHelpMenu' />
-    <SecurityMenu :showSecurityMenu='showSecurityMenu'/>
+    <PrivacyMenu />
+    <NotificationsMenu />
+    <HelpMenu />
+    <SecurityMenu />
 
     <!-- change color scheme popup -->
     <Popup :showPopup='showPopup'
