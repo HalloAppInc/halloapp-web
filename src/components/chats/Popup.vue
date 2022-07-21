@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { directive } from '@babel/types';
 import { ref, computed, nextTick } from 'vue'
 
 import { useI18n } from 'vue-i18n'
@@ -74,15 +73,17 @@ const shadowColor = computed(() => {
     return colorStore.shadow
 })
 
-function closeMenu(emitEventName: any = null, emitEventData: any = null) {
+function closeMenu(emitEventName: any = undefined, emitEventData: any = undefined) {
     props.showPopup.value = false
-    if (props.showPopup.type == 'theme') {
-        mode.value = props.showPopup.mode
-        emit(emitEventName, emitEventData)
-    }
-    else{
-        if (emitEventName) {
-            emit(emitEventName)
+    if (emitEventName) {
+        if (props.showPopup.type == 'theme') {
+            mode.value = props.showPopup.mode
+            emit(emitEventName, emitEventData)
+        }
+        else {
+            if (emitEventName) {
+                emit(emitEventName)
+            }
         }
     }
 }
@@ -128,7 +129,7 @@ function closeMenu(emitEventName: any = null, emitEventData: any = null) {
                                 @click='closeMenu("deleteForMe")'>
                                 {{ t('button.deleteForMeButton') }}
                             </div>
-                            <div class='button buttonLong buttonGray' @click="closeMenu">
+                            <div class='button buttonLong buttonGray' @click='closeMenu()'>
                                 {{ t('button.cancelButton') }}
                             </div>
                         </div>
@@ -137,7 +138,7 @@ function closeMenu(emitEventName: any = null, emitEventData: any = null) {
                             <div class='button buttonBlue' @click='closeMenu("confirmOk")'>
                                 {{ t('button.okButton') }}
                             </div>
-                            <div class='button buttonGray' @click='closeMenu'>
+                            <div class='button buttonGray' @click='closeMenu()'>
                                 {{ t('button.cancelButton') }}
                             </div>
                         </div>
@@ -218,7 +219,8 @@ function closeMenu(emitEventName: any = null, emitEventData: any = null) {
 }
 
 .selectionContent {
-    margin: 10px 0px;
+    margin: 10px 10px;
+    font-size: 18px;
 }
 
 .footer {
