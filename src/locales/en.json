@@ -30,7 +30,7 @@
         "okButton": "OK",
         "cancelButton": "CANCEL"
     },
-    "popup": {
+    "themePopup": {
         "popupHeaderText": "Choose theme",
         "lightModeText": "Light",
         "darkModeText": "Dark",
