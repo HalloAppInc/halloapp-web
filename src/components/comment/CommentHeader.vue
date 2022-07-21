@@ -45,20 +45,23 @@ const backgroundColor = computed(() => {
 
 <template>
 
-    <div class='header'>
+    <div class='commentHeader'>
 
         <div class='container'>
-            <div class="leftGutter"></div>
+           
             <div class='iconContainer' @click="$emit('backClick')">
                 <div class='iconShadow'>
                     <font-awesome-icon v-if='!mainStore.isMobile' :icon="['fas', 'xmark']" style="font-size: 25px;"/>
                     <font-awesome-icon v-else :icon="['fas', 'angle-left']" style="font-size: 25px;"/>
                 </div>
             </div>
-            <div class="rightGutter"></div>
+            
             <div class='titleContainer'>
-                Post: {{ postID }}
-            </div>            
+                Comments ({{ postID }})
+            </div>
+
+            <div class='iconContainer'>
+            </div>
 
         </div>
     </div>
@@ -67,16 +70,18 @@ const backgroundColor = computed(() => {
 
 <style scoped>
 
-.header {
+.commentHeader {
     overflow-y: auto;
     overflow-x: hidden;
     
     height: 100%;
+    background-color: rgb(243, 243, 240);
 }
 
 .container {
     display: flex;
     flex-direction: row;
+    justify-content: space-between;
 }
 
 .leftGutter {
@@ -101,8 +106,12 @@ const backgroundColor = computed(() => {
 }
 
 .iconContainer {
+    flex: 0 0 50px;
     padding: 5px 0px 5px 0px;
     color: v-bind(iconColor);
+
+    display: flex;
+    justify-content: center;
 }
 
 .iconContainer:hover {
@@ -124,7 +133,9 @@ const backgroundColor = computed(() => {
 }
 
 .titleContainer {
-    padding: 5px 0px 5px 0px;
+    font-family: "Gotham", Helvetica, "Helvetica Neue", Arial, Avenir, sans-serif;
+    font-size: 14px;
+
     color: v-bind(iconColor);
 
     display: flex;

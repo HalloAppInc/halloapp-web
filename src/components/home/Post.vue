@@ -210,7 +210,7 @@ async function decodeProtobufToPostContainer(binArray: Uint8Array) {
         if (postContainerBlob && postContainerBlob.hasOwnProperty("postContainer")) {
             const containerTimestamp = <number>postContainerBlob.timestamp
             if (containerTimestamp) {
-                postTimestamp.value = formatTime(containerTimestamp, <string>locale.value)
+                postTimestamp.value = formatTime(containerTimestamp, locale.value)
             }
             return postContainerBlob.postContainer
         } else {
@@ -740,7 +740,7 @@ function expandText() {
             <!-- postHeader row -->
             <div id="postHeader">
                 <!-- <img id="avatarImage" crossorigin="" :src="avatarImageUrl" alt="Avatar"> -->
-                <Avatar></Avatar>
+                <Avatar :userID="'TonyTemp'" :width="'45px'"></Avatar>
                 <div id="nameBox">
                     <div id="name">
                         {{ pushname }} - {{ props.postID }}

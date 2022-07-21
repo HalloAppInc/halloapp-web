@@ -28,7 +28,7 @@ const { t } = useI18n({
                 <font-awesome-icon :icon="['fas', 'house']" />
             </div>
             <div class="sideIconLabel">
-                {{ t('sidestrip.home') }}
+                {{ t('general.home') }}
             </div>
         </div>
     </div>
@@ -39,7 +39,7 @@ const { t } = useI18n({
                 <font-awesome-icon :icon="['fas', 'user-group']" />
             </div>
             <div class="sideIconLabel">
-                {{ t('sidestrip.groups') }}
+                {{ t('general.groups') }}
             </div>
         </div>
     </div>    
@@ -50,7 +50,7 @@ const { t } = useI18n({
                 <font-awesome-icon :icon="['fas', 'message']" />
             </div>
             <div class="sideIconLabel">
-                {{ t('sidestrip.chats') }}
+                {{ t('general.chats') }}
             </div>
         </div>
     </div>
@@ -61,7 +61,7 @@ const { t } = useI18n({
                 <font-awesome-icon :icon="['fas', 'gear']" />
             </div>
             <div class="sideIconLabel">
-                {{ t('sidestrip.settings') }}
+                {{ t('general.settings') }}
             </div>
         </div>
     </div>    

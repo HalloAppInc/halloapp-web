@@ -5,6 +5,8 @@ import { useMainStore } from '../../stores/mainStore'
 import { useColorStore } from '../../stores/colorStore'
 import { useI18n } from 'vue-i18n'
 
+import Avatar from '../media/Avatar.vue'
+
 const props = defineProps(['postID'])
 
 const { t } = useI18n({
@@ -46,17 +48,19 @@ const backgroundColor = computed(() => {
     <div class='header'>
 
         <div class='container'>
-            <div class="leftGutter"></div>
-            <!-- <div class='iconContainer' @click="$emit('backClick')">
-                <div class='iconShadow'>
-                    <font-awesome-icon v-if='!mainStore.isMobile' :icon="['fas', 'xmark']" style="font-size: 25px;"/>
-                    <font-awesome-icon v-else :icon="['fas', 'angle-left']" style="font-size: 25px;"/>
-                </div>
-            </div> -->
-            <div class="rightGutter"></div>
-            <!-- <div class='titleContainer'>
-                Post: {{ postID }}
-            </div>             -->
+            
+            <div class="avatarContainer">
+                <Avatar :userID="'TonyTemp'" :width="'30px'"></Avatar>
+            </div>
+
+            <div class="titleContainer">
+                {{ t('general.home') }}
+                
+            </div>
+
+            <!-- for now, empty element only used to space things evenly -->
+            <div class="avatarContainer">
+            </div>
 
         </div>
     </div>
@@ -70,11 +74,15 @@ const backgroundColor = computed(() => {
     overflow-x: hidden;
     
     height: 100%;
+
+    background-color: rgb(243, 243, 240);
 }
 
 .container {
+    height: 100%;
     display: flex;
     flex-direction: row;
+    justify-content: space-between;
 }
 
 .leftGutter {
@@ -87,15 +95,11 @@ const backgroundColor = computed(() => {
 
 .avatarContainer {
     flex: 0 0 70px;
-    padding: 5px 0px 5px 0px;
-}
+    padding: 10px 0px 0px 0px;
 
-.avatar {
-    width: 40px;
-    height: 40px;
-
-    background-color: lightgray;
-    border-radius: 50%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
 }
 
 .iconContainer {
@@ -122,7 +126,9 @@ const backgroundColor = computed(() => {
 }
 
 .titleContainer {
-    padding: 5px 0px 5px 0px;
+    font-family: "Gotham", Helvetica, "Helvetica Neue", Arial, Avenir, sans-serif;
+    font-size: 14px;
+
     color: v-bind(iconColor);
 
     display: flex;

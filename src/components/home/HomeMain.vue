@@ -78,6 +78,18 @@ const listData = [
     },          
 ]
 
+function openCommentsIfNeeded(postID: string) {
+    if (showComments.value) {
+        inViewPostID.value = postID
+    } else {
+        commentsClick(postID)
+    }
+}
+
+function commentsBackClick() {
+    commentsClick('')
+}
+
 function commentsClick(postID: string) {
     if (listBoxWidth.value == '100%') {
         let width = '500px'
@@ -125,7 +137,7 @@ function debouncedHandleScroll() {
 
 <template>
 
-<div class="wrapper">
+<div class="homeMainWrapper">
     
     <div class="listBox" ref='content' @scroll='handleScroll()'>
 
@@ -135,17 +147,17 @@ function debouncedHandleScroll() {
 
         <div v-for="value in listData" class="container">
             <!-- data-ha-postID is used only for detecting post while scrolling -->
-            <Post 
+            <Post
                 :postID="value.postID"
                 userID="value.userID" 
-                @commentsClick="commentsClick(value.postID)" 
+                @commentsClick="openCommentsIfNeeded(value.postID)" 
                 :data-ha-postID="value.postID"> 
             </Post>
         </div>
     </div>
  
     <div v-if="showComments" class="comments">
-        <Comment :postID='inViewPostID' @backClick="commentsClick"></Comment>
+        <Comment :postID='inViewPostID' @backClick="commentsBackClick"></Comment>
     </div>
   
 </div>
@@ -168,7 +180,7 @@ function debouncedHandleScroll() {
     border: 0px solid white;  /* creates padding around scroll thumb */
 }
 
-.wrapper {
+.homeMainWrapper {
     width: 100%;
     height: 100%;
 
@@ -195,7 +207,6 @@ function debouncedHandleScroll() {
     width: 100%;
     height: 50px;
     z-index: 2;
-    background-color: #f0f2f5;
 }
 
 .comments {
