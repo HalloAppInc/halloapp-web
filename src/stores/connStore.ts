@@ -16,6 +16,8 @@ import createNoise from "noise-c.wasm"
 
 export const useConnStore = defineStore('conn', () => {
 
+    const testAgainstLocalServer = false /* used for testing, turn off for production releases */
+
     const mainStore = useMainStore()
     let { createPing, addKey, removeKey, check, createNoiseMessageIKB, uploadMedia } = network()
 
@@ -34,7 +36,6 @@ export const useConnStore = defineStore('conn', () => {
     let cipherStateSend: { EncryptWithAd: (arg0: never[], arg1: string) => any }
     let cipherStateReceive: { DecryptWithAd: (arg0: never[], arg1: any) => any }
 
-    const testAgainstLocalServer = false
     if (testAgainstLocalServer) {
         webSocketServer = 'wss://localhost:7071'
     }
@@ -268,8 +269,16 @@ export const useConnStore = defineStore('conn', () => {
 
         else if (action == noise.constants.NOISE_ACTION_READ_MESSAGE) { // 16642
             hal.prod('handleNoiseHandshakeMsg/action/read')
-            const fallbackSupported = false      
-            handshakeState.ReadMessage(contentBinArr, fallbackSupported)
+            const fallbackSupported = false
+            try {
+                handshakeState.ReadMessage(contentBinArr, fallbackSupported)
+            } catch (error) {
+                hal.prod('handleNoiseHandshakeMsg/action/read ' + error)
+                if (error == 'Error: NOISE_ERROR_MAC_FAILURE') {
+                    hal.prod('handleNoiseHandshakeMsg/action/read/error/mobile might be using a different web key\n\n')
+                }
+                return
+            }
 
             let nextAction = handshakeState.GetAction()
             if (nextAction != noise.constants.NOISE_ACTION_READ_MESSAGE) {
