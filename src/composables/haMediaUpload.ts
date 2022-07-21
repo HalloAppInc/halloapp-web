@@ -267,31 +267,38 @@ export function useHAMediaUpload() {
         return { status, recvBlob }
     }
 
-    async function uploadAndDownLoad(file: any, list: any) {
-        // if the file is valid
+    async function uploadAndDownLoad(file: any, list: any, type: any) {        // if the file is valid
         if (file) {
             // testEncryptionAndDecryption(file)
             //upload and download
-            await connStore.getMediaUrl(1000, async function (val: any) {
-                // file to blob, encrypt and upload
-                const fileBlob = new Blob([file])
-                const { encryptedBuffer, ciphertextHash } = await encrypt(fileBlob)
-                let resultPUT = await sendMediaToServer(encryptedBuffer, val.iq?.uploadMedia?.url?.put)
-                // proceed when upload succeessfully
-                if (resultPUT == 200) {
-                    // download
-                    const { status, recvBlob } = await getMediaFromServer(val.iq?.uploadMedia?.url?.get)
-                    // if download success
-                    if (status == 200) {
-                        // convert from blob to ArrayBuffer
-                        const recvEncryptedBuffer = await new File([recvBlob], '').arrayBuffer()
-                        // decrypt the arrayBuffer
-                        const decryptedBlob = await decrypt(recvEncryptedBuffer, ciphertextHash)
-                        const mediaBlobUrl = URL.createObjectURL(decryptedBlob)
-                        list.push(mediaBlobUrl)
+            if (type == 'image') {
+                await connStore.getMediaUrl(1000, async function (val: any) {
+                    // file to blob, encrypt and upload
+                    const fileBlob = new Blob([file])
+                    const { encryptedBuffer, ciphertextHash } = await encrypt(fileBlob)
+                    let resultPUT = await sendMediaToServer(encryptedBuffer, val.iq?.uploadMedia?.url?.put)
+                    // proceed when upload succeessfully
+                    if (resultPUT == 200) {
+                        // download
+                        const { status, recvBlob } = await getMediaFromServer(val.iq?.uploadMedia?.url?.get)
+                        // if download success
+                        if (status == 200) {
+                            // convert from blob to ArrayBuffer
+                            const recvEncryptedBuffer = await new File([recvBlob], '').arrayBuffer()
+                            // decrypt the arrayBuffer
+                            const decryptedBlob = await decrypt(recvEncryptedBuffer, ciphertextHash)
+                            const mediaBlobUrl = URL.createObjectURL(decryptedBlob)
+                            list.push(mediaBlobUrl)
+                        }
                     }
-                }
-            })
+                })
+            }
+            else {
+                // upload video
+            }
+        }
+        else {
+            hal.log('uploadAndDownLoad: file not exists!')
         }
     }
 

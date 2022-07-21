@@ -32,6 +32,12 @@ const hoverColor = computed(() => {
 const shadowColor = computed(() => {
     return colorStore.shadow
 })
+const hoverTextColor = computed(() => {
+    return colorStore.hoverText
+})
+const hoverTextBackgroundColor = computed(() => {
+    return colorStore.hoverTextBackground
+})
 
 function openAttachMenu() {
     showAttachMenu.value = !showAttachMenu.value
@@ -40,6 +46,19 @@ function openAttachMenu() {
         chatBoxHeight.value = chatBox.value.clientHeight
     }
 }
+
+function generateThumbnailForVideo(video: any, uploadFileIdx: number) {
+    let canvas = document.createElement('canvas')
+    canvas.width = video.width
+    canvas.height = video.height
+    video.currentTime = 0
+    let context = canvas.getContext('2d')
+    context?.drawImage(video, 0, 0, canvas.width, canvas.height)
+    const thumbnailUrl = canvas.toDataURL()
+    console.log(thumbnailUrl)
+    uploadFiles.value[uploadFileIdx].preview = thumbnailUrl
+}
+
 
 function onFilePicked(event: any) {
     // make upload file array empty
@@ -50,20 +69,51 @@ function onFilePicked(event: any) {
         let file = files[i]
         // if select at least one file
         if (file) {
-            let img = new Image()
-            img.onload = function () {
-                uploadFiles.value.push({
-                    'file': file,
-                    'url': img.src,
-                    'width': img.width,
-                    'height': img.height
-                    })
-                // goto composer after get width and height, and only go once
-                if (i == numOfFile - 1) {
-                    showComposer.value.value = true
+            let type = file.type.toString().includes('video') ? 'video' : 'image'
+            if (type == 'image') {
+                let img = new Image()
+                img.onload = function () {
+                    uploadFiles.value.push({
+                        'file': file,
+                        'type': type,
+                        'url': img.src,
+                        'width': img.width,
+                        'height': img.height
+                        })
+                    // goto composer after get width and height, and only go once
+                    if (i == numOfFile - 1) {
+                        showComposer.value.value = true
+                    }
                 }
+                img.src = URL.createObjectURL(file)
             }
-            img.src = URL.createObjectURL(file)
+            else {
+                const url = URL.createObjectURL(file)
+                const video = document.createElement('video')
+                video.addEventListener('loadeddata', function() {
+                    let canvas = document.createElement('canvas')
+                    canvas.width = video.width
+                    canvas.height = video.height
+                    video.currentTime = 20
+                    let context = canvas.getContext('2d')
+                    context?.drawImage(video, 0, 0, canvas.width, canvas.height)
+                    const thumbnailUrl = canvas.toDataURL()
+                    console.log(thumbnailUrl)
+                    uploadFiles.value.push({
+                        'file': file,
+                        'type': type,
+                        'url': url,
+                        'width': video.videoWidth,
+                        'height': video.videoHeight,
+                    })
+                    // goto composer after get width and height, and only go once
+                    if (i == numOfFile - 1) {
+                        showComposer.value.value = true
+                    }
+                })
+                video.src = url
+                video.load()
+            }
         }
     }
     event.target.value = ''
@@ -75,15 +125,42 @@ function onFilePicked(event: any) {
     <!-- attach menu -->
     <transition name='attach'>
         <div class='veriticalMenuContainer' v-if='showAttachMenu'>
-            <!-- upload file -->
-            <input type='file' multiple ref='selectAndUploadfile' accept='image/*' @change='onFilePicked'
-                style='display: none' />
-            <!-- icon -->
-            <div class='iconContainer' @mousedown='selectAndUploadfile?.click'>
-                <div class='iconShadowAttachPhoto'>
-                    <font-awesome-icon :icon="['fas', 'image']" size='lg' />
+
+            <!-- upload documents -->
+            <!-- <div class='container'>
+                <input type='file' ref='selectAndUploadfile' accept='*' @change='onFilePicked'
+                    style='display: none' />
+                <div class='iconContainer' @mousedown='selectAndUploadfile?.click'>
+                    <div class='iconShadowAttachPhoto'>
+                        <font-awesome-icon :icon="['fas', 'file']" size='lg' />
+                    </div>
+                </div>
+                <div class='hoverTextContainer'>
+                    <div class='textContainer'>
+                        Documents
+                    </div>
+                </div>
+            </div> -->
+
+            <!-- upload video and photo -->
+            <div class='container'>
+                <!-- select file -->
+                <input type='file' multiple ref='selectAndUploadfile' accept='image/*, video/*' @change='onFilePicked'
+                    style='display: none' />
+                <!-- icon -->
+                <div class='iconContainer' @mousedown='selectAndUploadfile?.click'>
+                    <div class='iconShadowAttachPhoto'>
+                        <font-awesome-icon :icon="['fas', 'image']" size='lg' />
+                    </div>
+                </div>
+                <!-- hover text -->
+                <div class='hoverTextContainer'>
+                    <div class='textContainer'>
+                        Photos & Videos
+                    </div>
                 </div>
             </div>
+
         </div>
     </transition>
 
@@ -138,12 +215,19 @@ function onFilePicked(event: any) {
     opacity: 0;
 }
 
+.container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
 .iconContainer {
     margin: 5px;
     color: v-bind(iconColor);
 }
 
 .iconContainer:hover {
+    display: flex;
     cursor: pointer;
 }
 
@@ -158,6 +242,9 @@ function onFilePicked(event: any) {
     position: fixed;
     bottom: v-bind(chatBoxHeight + 'px');
     margin: 10px 10px;
+
+    display: flex;
+    flex-direction: column;
 
     z-index: 2;
 }
@@ -191,6 +278,22 @@ function onFilePicked(event: any) {
     box-shadow: -2px 2px 8px v-bind(shadowColor);
     background-color: #E6E6FA;
     /* animation: colorChange 60s infinite; */
+}
+
+.hoverTextContainer {
+    background-color: v-bind(hoverTextBackgroundColor);
+    border-radius: 15px;
+    display: none;
+    padding: 5px 10px;
+}
+
+.iconContainer:hover+.hoverTextContainer {
+    display: flex;
+}
+
+.textContainer {
+    font-size: small;
+    color: v-bind(hoverTextColor);
 }
 
 /* @keyframes colorChange {

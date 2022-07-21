@@ -16,6 +16,12 @@ export default defineComponent({
     textLight: '#111b21',
     textDark: '#e9edef',
 
+    hoverTextLight: '#FFFFFF',
+    hoverTextDark: '#000000',
+
+    hoverTextBackgroundLight: '#111b21',
+    hoverTextBackgroundDark: '#FFFFFF',
+
     secondaryTextLight: '#83939d',
     secondaryTextDark: '#83939d',
 
