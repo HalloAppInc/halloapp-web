@@ -426,6 +426,7 @@ function gotoQuoteMessage(quoteIdx: number) {
 <template>
 
     <div class='contents' ref='content' @scroll='handleScroll()'>
+        <slot name="subHeader"></slot>
         <!-- chat msg -->
         <div class='containerChat' v-for='(value, idx) in data'>
 

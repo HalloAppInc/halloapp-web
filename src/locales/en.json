@@ -1,6 +1,10 @@
 {
     "general": {
-        "logout": "Log out"
+        "home": "Home",
+        "groups": "Groups",
+        "chats": "Chats",
+        "settings": "Settings",
+        "logout": "Log out"    
     },
     "login": {
         "howtoTitle": "To use HalloApp on your computer:",
@@ -8,12 +12,6 @@
         "howtoStepTwo": "2. Tap <b>Settings</b> and select <b>Linked Device</b>",
         "howtoStepThree": "3. Point your phone to this screen and scan the QR code",
         "getQRCode": "Get QR Code"
-    },
-    "sidestrip": {
-        "home": "Home",
-        "groups": "Groups",
-        "chats": "Chats",
-        "settings": "Settings"
     },
     "post": {
         "more": "more",
