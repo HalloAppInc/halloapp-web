@@ -3,12 +3,7 @@ import { computed } from 'vue'
 
 import { useI18n } from 'vue-i18n'
 
-import popup from './Popup.vue'
-import mainMenu from './Main.vue'
-import helpMenu from './help.vue'
-import notificationsMenu from './Notifications.vue'
-import privacyMenu from './Privacy.vue'
-import securityMenu from './Security.vue'
+import MainMenu from './Main.vue'
 
 import { useColorStore } from '../../stores/colorStore'
 
@@ -28,13 +23,7 @@ const backgroundColor = computed(() => {
 
 <template>
     <div class="wrapper">
-        <mainMenu />
-        <privacyMenu />
-        <notificationsMenu />
-        <helpMenu />
-        <securityMenu />
-
-        <popup />
+        <MainMenu />
     </div>
 </template>
 
