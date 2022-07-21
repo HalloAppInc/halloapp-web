@@ -2,6 +2,7 @@
 import { ref, computed, nextTick, watch, onMounted, onUnmounted } from 'vue'
 
 import { useI18n } from 'vue-i18n'
+import GraphemeSplitter from 'grapheme-splitter'
 
 import { useTimeformatter } from '../../composables/timeformatter'
 import { useHAMediaResize } from '../../composables/haMediaResize'
@@ -156,22 +157,33 @@ function appendSpaceForMsgInfo(msg: string, time: string, isOutBound: boolean) {
     let newDiv = "<span style='padding: 0px " + width + "px;display: inline-block;'></span>" // padding:0px "+ width +"px;
     result = msg.concat(newDiv)
 
-    var patterns = [
-        '\ud83c[\udf00-\udfff]', // U+1F300 to U+1F3FF
-        '\ud83d[\udc00-\ude4f]', // U+1F400 to U+1F64F
-        '\ud83d[\ude80-\udeff]', // U+1F680 to U+1F6FF
-    ]
-
-    let isPureEmoji = (msg.replaceAll(new RegExp(patterns.join('|'), 'g'), '') == '')
-    let numOfEmoji = msg.split(new RegExp(patterns.join('|'))).length - 1
-    let lessThanThreeEmoji = (numOfEmoji > 0 && numOfEmoji <= 3 && isPureEmoji)
     let font = ''
+    let lessThanThreeEmoji = false
+
+    let splitter = new GraphemeSplitter()
+    const graphemes = splitter.splitGraphemes(msg)
+
+    if (graphemes.length <= 3) {
+
+        lessThanThreeEmoji = true // assume true to begin
+  
+        const emojiRegx = /(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])/i
+
+        for (let i = 0; i < graphemes.length; i++) {
+            if (!emojiRegx.test(graphemes[i])) {
+                lessThanThreeEmoji = false
+                break
+            }
+        }
+    } 
+    
     if (lessThanThreeEmoji) {
         font = 'onlyEmoji'
     }
     else {
         font = 'noOverflow'
     }
+
     return [result, font]
 }
 
