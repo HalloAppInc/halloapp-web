@@ -19,8 +19,7 @@ export const useConnStore = defineStore('conn', () => {
     const mainStore = useMainStore()
     let { createPing, addKey, removeKey, check, createNoiseMessageIKB, uploadMedia } = network()
 
-    // const webSocketServer = "wss://localhost:7071"
-    const webSocketServer = 'wss://ws-test.halloapp.net/ws'
+    let webSocketServer = 'wss://ws-test.halloapp.net/ws'
 
     let connectionTimer: any    // timer used for debouncing
     let sendMessagesTimer: any  // timer used for debouncing
@@ -34,6 +33,11 @@ export const useConnStore = defineStore('conn', () => {
     let handshakeState: any
     let cipherStateSend: { EncryptWithAd: (arg0: never[], arg1: string) => any }
     let cipherStateReceive: { DecryptWithAd: (arg0: never[], arg1: any) => any }
+
+    const testAgainstLocalServer = false
+    if (testAgainstLocalServer) {
+        webSocketServer = 'wss://localhost:7071'
+    }
 
     async function connectToServerIfNeeded() {
         hal.log('connStore/connectToServerIfNeeded')
@@ -61,10 +65,12 @@ export const useConnStore = defineStore('conn', () => {
         /* temporary: for debugging */
         hal.log('websocketOnopen/web client public key (base64): ' + mainStore.publicKeyBase64)
 
-        // addKeyToServer(function() {
-        //     hal.log('connStore/connectToServer/added public key successfully')
-        //     mainStore.haveAddedPublicKeyToServer = true
-        // })
+        if (!testAgainstLocalServer) {
+            addKeyToServer(function() {
+                hal.log('connStore/connectToServer/added public key successfully')
+                mainStore.haveAddedPublicKeyToServer = true
+            })
+        }
 
         sendReadyMessagesInQueue()
     }
@@ -154,14 +160,15 @@ export const useConnStore = defineStore('conn', () => {
         if (packet == undefined) {
             hal.log('connStore/handleInboundMsg/undefined packet')
 
-            /* temporary: testing against local noise protocol server */
-            // if (noise == undefined) {
-            //     noise = await initNoise()
-            // }            
-            // if (handshakeState == undefined) {
-            //     initHandshake(noise)
-            // }
-            // handleNoiseHandshakeMsg(eventDataBinArr)
+            if (testAgainstLocalServer) {
+                if (noise == undefined) {
+                    noise = await initNoise()
+                }            
+                if (handshakeState == undefined) {
+                    initHandshake(noise)
+                }
+                handleNoiseHandshakeMsg(eventDataBinArr)
+            }
 
             return
         }
@@ -274,10 +281,12 @@ export const useConnStore = defineStore('conn', () => {
             hal.prod('handleNoiseHandshakeMsg/action/write')
             const writeMessageBuf = handshakeState.WriteMessage()
 
-            const noiseMessageIKBBuf = createNoiseMessageIKB(writeMessageBuf)
-            webSocket.send(noiseMessageIKBBuf)
-
-            // webSocket.send(writeMessageBuf)
+            if (testAgainstLocalServer) {
+                webSocket.send(writeMessageBuf)
+            } else {
+                const noiseMessageIKBBuf = createNoiseMessageIKB(writeMessageBuf)
+                webSocket.send(noiseMessageIKBBuf)
+            }
 
             let nextAction = handshakeState.GetAction()
             if (nextAction != noise.constants.NOISE_ACTION_READ_MESSAGE) {
