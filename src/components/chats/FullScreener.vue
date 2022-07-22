@@ -114,7 +114,7 @@ function openBigImg(idx: number) {
                     <img :src='mediaUrlList[selectMediaIdx].url' />
                 </div>
 
-                <div v-else-if='mediaUrlList[selectMediaIdx].type == "video"' class='videoContainer' >
+                <div v-show='mediaUrlList[selectMediaIdx].type == "video"' class='videoContainer' >
                     <video controls id='videoFullScreener'>
                         <source :src='mediaUrlList[selectMediaIdx].url'>
                     </video>

@@ -16,40 +16,34 @@ const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
 
         <div class='imgBigContainer' @click="$emit('openMedia', mediaList, 0)">
 
-            <img v-if='firstMedia.type == "image"' :src='firstMedia.url' 
-                :width='firstMedia.width' :height='firstMedia.hieght' />
-
-            <video v-else-if='firstMedia.type == "video"' :width='firstMedia.width' :height='firstMedia.height'>
-                <source :src='firstMedia.url + "#t=0"'>
-            </video>
+            <img :src='firstMedia.preview' :width='firstMedia.width' :height='firstMedia.hieght' />
+            <div class='iconContainerBig' v-if='firstMedia.type == "video"'>
+                <font-awesome-icon :icon="['fas', 'play']" size='2x' />
+            </div>
 
         </div>
 
     </div>
 
-    
+
 
     <div class='containerMoreThanOneMedia' v-else-if='numberOfMedia == 2'>
 
         <div class='imgVerticalRectangleContainer' @click="$emit('openMedia', mediaList, 0)">
 
-            <img v-if='firstMedia.type == "image"' :src='firstMedia.url' 
-                :height='firstMedia.hieght' :width='firstMedia.width' />
-
-            <video v-else-if='firstMedia.type == "video"' :width='firstMedia.width' :height='firstMedia.height'>
-                <source :src='firstMedia.url + "#t=0"'>
-            </video>   
+            <img :src='firstMedia.preview' :height='firstMedia.hieght' :width='firstMedia.width' />
+            <div class='iconContainerVerticalRectangle' v-if='firstMedia.type == "video"'>
+                <font-awesome-icon :icon="['fas', 'play']" size='2x' />
+            </div>
 
         </div>
 
         <div class='imgVerticalRectangleContainer lastElementInLine' @click="$emit('openMedia', mediaList, 1)">
 
-            <img v-if='secondMedia.type == "image"' :src='secondMedia.url' 
-                :height='secondMedia.hieght' :width='secondMedia.width' />
-
-            <video v-else-if='secondMedia.type == "video"' :width='secondMedia.width' :height='secondMedia.height'>
-                <source :src='secondMedia.url + "#t=0"'>
-            </video>
+            <img :src='secondMedia.preview' :height='secondMedia.hieght' :width='secondMedia.width' />
+            <div class='iconContainerVerticalRectangle' v-if='secondMedia.type == "video"'>
+                <font-awesome-icon :icon="['fas', 'play']" size='2x' />
+            </div>
 
         </div>
 
@@ -61,73 +55,61 @@ const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
 
         <div class='imgSquareContainer' @click="$emit('openMedia', mediaList, 0)">
 
-            <img v-if='firstMedia.type == "image"' :src='firstMedia.url' 
-                :height='firstMedia.hieght' :width='firstMedia.width' />
-
-            <video v-else-if='firstMedia.type == "video"' :width='firstMedia.width' :height='firstMedia.height'>
-                <source :src='firstMedia.url + "#t=0"'>
-            </video> 
+            <img :src='firstMedia.preview' :height='firstMedia.hieght' :width='firstMedia.width' />
+            <div class='iconContainerSquare' v-if='firstMedia.type == "video"'>
+                <font-awesome-icon :icon="['fas', 'play']" size='2x' />
+            </div>
 
         </div>
 
         <div class='imgSquareContainer imgSquareContainerLastElement' @click="$emit('openMedia', mediaList, 1)">
 
-            <img v-if='secondMedia.type == "image"' :src='secondMedia.url' 
-                :height='secondMedia.hieght' :width='secondMedia.width' />
-
-            <video v-else-if='secondMedia.type == "video"' :width='secondMedia.width' :height='secondMedia.height'>
-                <source :src='secondMedia.url + "#t=0"'>
-            </video>
+            <img :src='secondMedia.preview' :height='secondMedia.hieght' :width='secondMedia.width' />
+            <div class='iconContainerSquare' v-if='secondMedia.type == "video"'>
+                <font-awesome-icon :icon="['fas', 'play']" size='2x' />
+            </div>
 
         </div>
 
         <div class='imgHorizontalRectangleContainer' @click="$emit('openMedia', mediaList, 2)">
 
-            <img v-if='thirdMedia.type == "image"' :src='thirdMedia.url' 
-                :height='thirdMedia.hieght' :width='thirdMedia.width' />
+            <img :src='thirdMedia.preview' :height='thirdMedia.hieght' :width='thirdMedia.width' />
+            <div class='iconContainerHorizontalRectangle' v-if='thirdMedia.type == "video"'>
+                <font-awesome-icon :icon="['fas', 'play']" size='2x' />
+            </div>
 
-            <video v-else-if='thirdMedia.type == "video"' :width='thirdMedia.width'>
-                <source :src='thirdMedia.url + "#t=0"'>
-            </video>
-            
         </div>
 
     </div>
 
-    
+
 
     <div class='containerMoreThanOneMedia' v-else-if='numberOfMedia >= 4'>
 
         <div class='imgSquareContainer' @click="$emit('openMedia', mediaList, 0)">
 
-           <img v-if='firstMedia.type == "image"' :src='firstMedia.url' 
-                :height='firstMedia.hieght' :width='firstMedia.width' />
-
-            <video v-else-if='firstMedia.type == "video"' :width='firstMedia.width' :height='firstMedia.height'>
-                <source :src='firstMedia.url + "#t=0"'>
-            </video>
+            <img :src='firstMedia.preview' :height='firstMedia.hieght' :width='firstMedia.width' />
+            <div class='iconContainerSquare' v-if='firstMedia.type == "video"'>
+                <font-awesome-icon :icon="['fas', 'play']" size='2x' />
+            </div>
 
         </div>
 
         <div class='imgSquareContainer imgSquareContainerLastElement' @click="$emit('openMedia', mediaList, 1)">
 
-            <img v-if='secondMedia.type == "image"' :src='secondMedia.url' 
-                :height='secondMedia.hieght' :width='secondMedia.width' />
-
-            <video v-else-if='secondMedia.type == "video"' :width='secondMedia.width' :height='secondMedia.height'>
-                <source :src='secondMedia.url + "#t=0"'>
-            </video>
+            <img :src='secondMedia.preview' :height='secondMedia.hieght' :width='secondMedia.width' />
+            <div class='iconContainerSquare' v-if='secondMedia.type == "video"'>
+                <font-awesome-icon :icon="['fas', 'play']" size='2x' />
+            </div>
 
         </div>
 
         <div class='imgSquareContainer' @click="$emit('openMedia', mediaList, 2)">
 
-            <img v-if='thirdMedia.type == "image"' :src='thirdMedia.url' 
-                :height='thirdMedia.hieght' :width='thirdMedia.width' />
-
-            <video v-else-if='thirdMedia.type == "video"' :width='thirdMedia.width' :height='thirdMedia.height'>
-                <source :src='thirdMedia.url + "#t=0"'>
-            </video>
+            <img :src='thirdMedia.preview' :height='thirdMedia.hieght' :width='thirdMedia.width' />
+            <div class='iconContainerSquare' v-if='thirdMedia.type == "video"'>
+                <font-awesome-icon :icon="['fas', 'play']" size='2x' />
+            </div>
 
         </div>
 
@@ -135,12 +117,10 @@ const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
         <div v-if='numberOfMedia == 4' class='imgSquareContainer imgSquareContainerLastElement'
             @click="$emit('openMedia', mediaList, 3)">
 
-            <img v-if='fourthMedia.type == "image"' :src='fourthMedia.url' 
-                :height='fourthMedia.hieght' :width='fourthMedia.width' />
-
-            <video v-else-if='fourthMedia.type == "video"' :width='fourthMedia.width' :height='fourthMedia.height'>
-                <source :src='fourthMedia.url + "#t=0"'>
-            </video>
+            <img :src='fourthMedia.preview' :height='fourthMedia.hieght' :width='fourthMedia.width' />
+            <div class='iconContainerSquare' v-if='fourthMedia.type == "video"'>
+                <font-awesome-icon :icon="['fas', 'play']" size='2x' />
+            </div>
 
         </div>
 
@@ -148,13 +128,7 @@ const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
         <div v-else-if='numberOfMedia > 4' @click="$emit('openMedia', mediaList, 3)">
             <div class='imgSquareContainer imgSquareContainerLastElement'>
 
-                <img v-if='fourthMedia.type == "image"' class='blurImg' :src='fourthMedia.url' 
-                :height='fourthMedia.hieght' :width='fourthMedia.width' />
-
-                <video v-else-if='fourthMedia.type == "video"' class='blurImg'
-                    :width='fourthMedia.width' :height='fourthMedia.height'>
-                    <source :src='fourthMedia.url + "#t=0"'>
-                </video>
+                <img class='blurImg' :src='fourthMedia.preview' :height='fourthMedia.hieght' :width='fourthMedia.width' />
 
             </div>
 
@@ -238,12 +212,52 @@ img {
     overflow: hidden;
 }
 
+.iconContainerBig {
+    position: relative;
+    width: 20px;
+    height: 20px;
+    top: -160px;
+    left: 150px;
+
+    color: gainsboro;
+}
+
+.iconContainerVerticalRectangle {
+    position: relative;
+    width: 20px;
+    height: 20px;
+    top: -160px;
+    left: 75px;
+
+    color: gainsboro;
+}
+
+.iconContainerSquare {
+    position: relative;
+    width: 20px;
+    height: 20px;
+    top: -95px;
+    left: 65px;
+
+    color: gainsboro;
+}
+
+.iconContainerHorizontalRectangle {
+    position: relative;
+    width: 20px;
+    height: 20px;
+    top: -210px;
+    left: 150px;
+
+    color: gainsboro;
+}
+
 .iconContainer {
     position: relative;
     width: 20px;
     height: 20px;
-    top: -100px;
-    left: 60px;
+    top: -95px;
+    left: 65px;
 
     color: gainsboro;
 }

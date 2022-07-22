@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, ComputedRef } from 'vue'
 
 import { useColorStore } from '../../stores/colorStore'
 
@@ -21,14 +21,12 @@ const test = ref()
 const addUploadMedia = ref()
 
 const selectMediaIdx = ref(0)
-const selectImageUrl = ref('')
-const selectVideoUrl = ref('')
 
 const messageNumber = computed(() => {
     return props.messageList.length
 })
 
-const mediaUrlList = computed(() => {
+const mediaUrlList: ComputedRef = computed(() => {
     const result = []
     for (let i = 0; i < props.uploadFiles.length; i++) {
         let media = props.uploadFiles[i]
@@ -38,8 +36,8 @@ const mediaUrlList = computed(() => {
             'type': props.uploadFiles[i].type,
             'width': res?.mediaItemWidth,
             'height': res?.mediaItemHeight,
-            'preview': media.preview ? media.preview : null
-            })
+            'preview': media.preview
+        })
     }
     console.log(result)
     return result
@@ -70,49 +68,92 @@ function testUploadAndDownload(file: any, type: any) {
     }
 }
 
+function saveMetaDataFromImage(file: any, idx: number, numOfFileAdd: number, numOfFileOld: number) {
+    let img = new Image()
+    img.onload = function () {
+        props.uploadFiles.push({
+            'file': file,
+            'preview': img.src,
+            'type': 'image',
+            'url': img.src,
+            'width': img.width,
+            'height': img.height
+        })
+        if (idx == 0) {
+            selectMediaIdx.value = numOfFileOld
+        }
+    }
+    img.src = URL.createObjectURL(file)
+}
+
+function saveMetaDataFromVideo(file: any, idx: number, numOfFileAdd: number, numOfFileOld: number) {
+    const canvas = document.createElement('canvas')
+    const video = document.createElement('video')
+    const source = document.createElement('source')
+    const context = canvas.getContext('2d')
+    const url = URL.createObjectURL(file)
+    const urlRef = url
+
+    video.style.display = 'none'
+    canvas.style.display = 'none'
+
+    source.setAttribute('src', urlRef)
+    video.setAttribute('crossorigin', 'anonymous')
+
+    video.appendChild(source)
+    document.body.appendChild(canvas)
+    document.body.appendChild(video)
+
+    if (!context) {
+        console.log(`Couldn't retrieve context 2d`)
+        return
+    }
+
+    video.currentTime = 0.1
+    video.load()
+    video.addEventListener('loadedmetadata', function () {
+        canvas.width = video.videoWidth
+        canvas.height = video.videoHeight
+    })
+
+    video.addEventListener('loadeddata', function () {
+        context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight)
+        canvas.toBlob((blob) => {
+            if (blob) {
+                let img = new File([blob], 'preview')
+                props.uploadFiles.push({
+                    'file': file,
+                    'preview': URL.createObjectURL(img),
+                    'type': 'video',
+                    'url': url,
+                    'width': video.videoWidth,
+                    'height': video.videoHeight,
+                })
+
+                if (idx == 0) {
+                    selectMediaIdx.value = numOfFileOld
+                }
+            }
+            video.remove()
+            canvas.remove()
+        })
+    })
+}
+
 function onFilePicked(event: any) {
     const files = event.target.files
     const numOfFileOld = mediaUrlList.value.length
     const numOfFileAdd = files.length
-    for (let i = 0; i < numOfFileAdd ; i++) {
+    for (let i = 0; i < numOfFileAdd; i++) {
         let file = files[i]
         // if select at least one file
         if (file) {
             let type = file.type.toString().includes('video') ? 'video' : 'image'
             if (type == 'image') {
-                let img = new Image()
-                img.onload = function () {
-                    props.uploadFiles.push({
-                        'file': file,
-                        'type': type,
-                        'url': img.src,
-                        'width': img.width,
-                        'height': img.height
-                        })
-                    if (i == numOfFileAdd - 1) {
-                        selectMediaIdx.value = numOfFileOld + numOfFileAdd - 1 
-                    }
-                }
-                img.src = URL.createObjectURL(file)
+                saveMetaDataFromImage(file, i, numOfFileAdd, numOfFileOld)
             }
             else {
-                const url = URL.createObjectURL(file)
-                const video = document.createElement('video')
-                video.onloadedmetadata = event => {
-                    props.uploadFiles.push({
-                        'file': file,
-                        'type': type,
-                        'url': url,
-                        'width': video.videoWidth,
-                        'height': video.videoHeight,
-                    })
-                    if (i == numOfFileAdd - 1) {
-                        selectMediaIdx.value = numOfFileOld + numOfFileAdd - 1 
-                    }
-                }
-                
-                video.src = url
-                video.load()
+                saveMetaDataFromVideo(file, i, numOfFileAdd, numOfFileOld)
             }
         }
     }
@@ -178,7 +219,8 @@ function closeComposer() {
                 </div>
 
                 <!-- TODO: delete this one, only for testing! -->
-                <div class='iconContainer' @click='testUploadAndDownload(props.uploadFiles[selectMediaIdx].file, props.uploadFiles[0].type)'>
+                <div class='iconContainer'
+                    @click='testUploadAndDownload(props.uploadFiles[selectMediaIdx].file, props.uploadFiles[0].type)'>
                     <div class='iconShadow'>
                         <font-awesome-icon :icon="['fas', 'hammer']" size='lg' />
                     </div>
@@ -190,13 +232,13 @@ function closeComposer() {
 
                 <div v-if='mediaUrlList[selectMediaIdx].type == "image"' class='imgBigContainer'>
                     <img class='imgBig' :src='mediaUrlList[selectMediaIdx].url' />
-                    <!-- TODO: delete this one, only for test -->
                     <img class='imgBig' ref='test' />
                 </div>
 
-                <div v-if='mediaUrlList[selectMediaIdx].type == "video"' class='videoContainer' >
-                    <video controls id='videoComposer' preload='metadata' playsinline controlslist=''>
-                        <source :src='mediaUrlList[selectMediaIdx].url'>
+                <div v-show='mediaUrlList[selectMediaIdx].type == "video"' class='videoContainer' >
+                    <video controls :src='props.uploadFiles[selectMediaIdx].url'
+                        id='videoComposer' preload='metadata' playsinline controlslist=''>
+                        <source :src='props.uploadFiles[selectMediaIdx].url'>
                     </video>
                 </div>
 
@@ -206,29 +248,19 @@ function closeComposer() {
             <div class='footer'>
 
                 <div class='chatBoxTray' ref='chatBox'>
-                    <InputBox 
-                        :messageList='messageList' 
-                        :contactList='contactList' 
-                        :uploadFiles='uploadFiles'
-                        :alwaysShowSendButton='true'
-                        :replyQuoteIdx='replyQuoteIdx' />
+                    <InputBox :messageList='messageList' :contactList='contactList' :uploadFiles='uploadFiles'
+                        :alwaysShowSendButton='true' :replyQuoteIdx='replyQuoteIdx' />
                 </div>
 
                 <!-- media preview and add more media -->
                 <div class='mediaTray'>
                     <div class='smallPreviewContainer'>
                         <div v-for='(value, idx) in mediaUrlList' @click='openBigImg($event, idx)'
-                            :class="{ 'squareContainer': true, 'selected': idx == selectMediaIdx }" >
+                            :class="{ 'squareContainer': true, 'selected': idx == selectMediaIdx }">
 
-                            <div v-if='value.type == "image"' class='imgSmallContainer'>
-                                <img class='imgSmall' :width='value.width' :height='value.height' :src='value.url' />
-                            </div>
-
-                            <!-- create a thumbnail from video -->
-                            <div v-else-if='value.type == "video"' class='imgSmallContainer'>
-                                <video :width='value.width' :height='value.height'>
-                                    <source :src='value.url + "#t=0"'>
-                                </video>
+                            <div class='imgSmallContainer'>
+                                <img class='imgSmall' :width='value.width' :height='value.height'
+                                    :src='value.preview' />
                             </div>
 
                             <!-- close toggler -->
@@ -243,13 +275,13 @@ function closeComposer() {
 
                     <div class='addMoreIconContainer'>
                         <!-- upload file -->
-                        <input type='file' multiple ref='addUploadMedia' accept='image/*, video/*' @change='onFilePicked($event)'
-                            style='display: none' />
+                        <input type='file' multiple ref='addUploadMedia' accept='image/*, video/*'
+                            @change='onFilePicked($event)' style='display: none' />
                         <div class='iconContainer' @click='addUploadMedia?.click'>
                             <font-awesome-icon :icon="['fas', 'plus']" size='lg' />
                         </div>
                     </div>
-                    
+
                 </div>
             </div>
         </div>
@@ -323,7 +355,7 @@ function closeComposer() {
 
 .videoContainer {
     width: fit-content;
-    height: 500px;
+    height: 70vh;
 }
 
 video {

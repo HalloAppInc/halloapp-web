@@ -47,16 +47,75 @@ function openAttachMenu() {
     }
 }
 
-function generateThumbnailForVideo(video: any, uploadFileIdx: number) {
-    let canvas = document.createElement('canvas')
-    canvas.width = video.width
-    canvas.height = video.height
-    video.currentTime = 0
-    let context = canvas.getContext('2d')
-    context?.drawImage(video, 0, 0, canvas.width, canvas.height)
-    const thumbnailUrl = canvas.toDataURL()
-    console.log(thumbnailUrl)
-    uploadFiles.value[uploadFileIdx].preview = thumbnailUrl
+function saveMetaDataFromImage(file: any, idx: number, numOfFileAdd: number) {
+    let img = new Image()
+    img.onload = function () {
+        uploadFiles.value.push({
+            'file': file,
+            'preview': img.src,
+            'type': 'image',
+            'url': img.src,
+            'width': img.width,
+            'height': img.height
+        })
+        if (idx == numOfFileAdd - 1) {
+            showComposer.value.value = true
+        }
+    }
+    img.src = URL.createObjectURL(file)
+}
+
+function saveMetaDataFromVideo(file: any, idx: number, numOfFileAdd: number) {
+    const canvas = document.createElement('canvas')
+    const video = document.createElement('video')
+    const source = document.createElement('source')
+    const context = canvas.getContext('2d')
+    const url = URL.createObjectURL(file)
+    const urlRef = url
+
+    video.style.display = 'none'
+    canvas.style.display = 'none'
+
+    source.setAttribute('src', urlRef)
+    video.setAttribute('crossorigin', 'anonymous')
+
+    video.appendChild(source)
+    document.body.appendChild(canvas)
+    document.body.appendChild(video)
+
+    if (!context) {
+        console.log(`Couldn't retrieve context 2d`)
+        return
+    }
+
+    video.currentTime = 0.1
+    video.load()
+    video.addEventListener('loadedmetadata', function () {
+        canvas.width = video.videoWidth
+        canvas.height = video.videoHeight
+    })
+
+    video.addEventListener('loadeddata', function () {
+        context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight)
+        canvas.toBlob((blob) => {
+            if (blob) {
+                let img = new File([blob], 'preview')
+                uploadFiles.value.push({
+                    'file': file,
+                    'preview': URL.createObjectURL(img),
+                    'type': 'video',
+                    'url': url,
+                    'width': video.videoWidth,
+                    'height': video.videoHeight,
+                })
+                if (idx == numOfFileAdd - 1) {
+                    showComposer.value.value = true
+                }
+            }
+            video.remove()
+            canvas.remove()
+        })
+    })
 }
 
 
@@ -71,48 +130,10 @@ function onFilePicked(event: any) {
         if (file) {
             let type = file.type.toString().includes('video') ? 'video' : 'image'
             if (type == 'image') {
-                let img = new Image()
-                img.onload = function () {
-                    uploadFiles.value.push({
-                        'file': file,
-                        'type': type,
-                        'url': img.src,
-                        'width': img.width,
-                        'height': img.height
-                        })
-                    // goto composer after get width and height, and only go once
-                    if (i == numOfFile - 1) {
-                        showComposer.value.value = true
-                    }
-                }
-                img.src = URL.createObjectURL(file)
+                saveMetaDataFromImage(file, i, numOfFile)
             }
             else {
-                const url = URL.createObjectURL(file)
-                const video = document.createElement('video')
-                video.addEventListener('loadeddata', function() {
-                    let canvas = document.createElement('canvas')
-                    canvas.width = video.width
-                    canvas.height = video.height
-                    video.currentTime = 20
-                    let context = canvas.getContext('2d')
-                    context?.drawImage(video, 0, 0, canvas.width, canvas.height)
-                    const thumbnailUrl = canvas.toDataURL()
-                    console.log(thumbnailUrl)
-                    uploadFiles.value.push({
-                        'file': file,
-                        'type': type,
-                        'url': url,
-                        'width': video.videoWidth,
-                        'height': video.videoHeight,
-                    })
-                    // goto composer after get width and height, and only go once
-                    if (i == numOfFile - 1) {
-                        showComposer.value.value = true
-                    }
-                })
-                video.src = url
-                video.load()
+                saveMetaDataFromVideo(file, i, numOfFile)
             }
         }
     }
