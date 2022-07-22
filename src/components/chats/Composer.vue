@@ -162,15 +162,12 @@ function onFilePicked(event: any) {
 }
 
 function openBigImg(event: any, idx: number) {
-    if (event.target.nodeName == 'IMG' || event.target.nodeName == 'VIDEO') {
+    if (event.target.nodeName == 'IMG') {
         selectMediaIdx.value = idx
         if (mediaUrlList.value[selectMediaIdx.value].type == 'video') {
             let targetElement = document.getElementById('videoComposer') as HTMLVideoElement
             targetElement.src = mediaUrlList.value[selectMediaIdx.value].url
         }
-    }
-    else {
-        deleteMedia(idx)
     }
 }
 
@@ -264,7 +261,7 @@ function closeComposer() {
                             </div>
 
                             <!-- close toggler -->
-                            <div class='menuToggler'>
+                            <div class='menuToggler' @click='deleteMedia(idx)'>
                                 <div class='togglerIconContainer'>
                                     <font-awesome-icon :icon="['fas', 'xmark']" size='xs' />
                                 </div>
@@ -297,7 +294,7 @@ function closeComposer() {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: #FFFFFF;
+    background-color: v-bind(backgroundColor);
     display: table;
 }
 
@@ -389,7 +386,6 @@ video {
 
 .smallPreviewContainer {
     width: fit-content;
-    overflow-x: auto;
     padding-left: 5px;
     height: 56px;
     display: flex;
@@ -409,27 +405,27 @@ video {
     justify-content: center;
     align-items: center;
     border-radius: 5px;
-    overflow: hidden;
 
-    border: 1px solid gainsboro;
+    outline: 1px solid gainsboro;
 }
 
 .squareContainer:hover {
     cursor: pointer;
 }
 
-.squareContainer:hover .menuToggler {
-    display: flex;
-}
-
 .menuToggler {
     z-index: 3;
-    display: none;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
     position: relative;
-    width: 0;
-    top: -45px;
-    left: 10px;
-    box-shadow: 2px -20px 50px 30px rgba(0, 0, 0, 0.5);
+    width: 15px;
+    height: 15px;
+    top: -58px;
+    left: 25px;
+    border-radius: 50%;
+    background-color: #1E90FF;
 }
 
 .togglerIconContainer {
@@ -437,15 +433,13 @@ video {
 }
 
 .imgSmallContainer {
-    z-index: 1;
-
+    border-radius: 5px;
     width: 50px;
     height: 50px;
     overflow: hidden;
 }
 
 .imgSmall {
-    z-index: 0;
 
     overflow: hidden;
 }
