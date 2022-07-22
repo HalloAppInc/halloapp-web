@@ -18,7 +18,8 @@ export interface Contact {
 export interface Avatar {
     id?: number
     userID: string
-    image: ArrayBuffer
+    avatarID?: string
+    image?: ArrayBuffer
 }
 
 export class HADexie extends Dexie {
