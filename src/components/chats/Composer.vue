@@ -425,11 +425,11 @@ video {
     top: -58px;
     left: 25px;
     border-radius: 50%;
-    background-color: #1E90FF;
+    background-color: gray;
 }
 
 .togglerIconContainer {
-    color: v-bind(iconColor);
+    color: white;
 }
 
 .imgSmallContainer {

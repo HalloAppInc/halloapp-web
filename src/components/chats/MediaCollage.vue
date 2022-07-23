@@ -15,12 +15,10 @@ const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
     <div class='containerOneMedia' v-if='numberOfMedia == 1'>
 
         <div class='imgBigContainer' @click="$emit('openMedia', mediaList, 0)">
-
             <img :src='firstMedia.preview' :width='firstMedia.width' :height='firstMedia.hieght' />
-            <div class='iconContainerBig' v-if='firstMedia.type == "video"'>
+            <div class='iconContainer' v-if='firstMedia.type == "video"'>
                 <font-awesome-icon :icon="['fas', 'play']" size='2x' />
             </div>
-
         </div>
 
     </div>
@@ -32,7 +30,7 @@ const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
         <div class='imgVerticalRectangleContainer' @click="$emit('openMedia', mediaList, 0)">
 
             <img :src='firstMedia.preview' :height='firstMedia.hieght' :width='firstMedia.width' />
-            <div class='iconContainerVerticalRectangle' v-if='firstMedia.type == "video"'>
+            <div class='iconContainer' v-if='firstMedia.type == "video"'>
                 <font-awesome-icon :icon="['fas', 'play']" size='2x' />
             </div>
 
@@ -41,7 +39,7 @@ const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
         <div class='imgVerticalRectangleContainer lastElementInLine' @click="$emit('openMedia', mediaList, 1)">
 
             <img :src='secondMedia.preview' :height='secondMedia.hieght' :width='secondMedia.width' />
-            <div class='iconContainerVerticalRectangle' v-if='secondMedia.type == "video"'>
+            <div class='iconContainer' v-if='secondMedia.type == "video"'>
                 <font-awesome-icon :icon="['fas', 'play']" size='2x' />
             </div>
 
@@ -56,7 +54,7 @@ const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
         <div class='imgSquareContainer' @click="$emit('openMedia', mediaList, 0)">
 
             <img :src='firstMedia.preview' :height='firstMedia.hieght' :width='firstMedia.width' />
-            <div class='iconContainerSquare' v-if='firstMedia.type == "video"'>
+            <div class='iconContainer' v-if='firstMedia.type == "video"'>
                 <font-awesome-icon :icon="['fas', 'play']" size='2x' />
             </div>
 
@@ -65,7 +63,7 @@ const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
         <div class='imgSquareContainer imgSquareContainerLastElement' @click="$emit('openMedia', mediaList, 1)">
 
             <img :src='secondMedia.preview' :height='secondMedia.hieght' :width='secondMedia.width' />
-            <div class='iconContainerSquare' v-if='secondMedia.type == "video"'>
+            <div class='iconContainer' v-if='secondMedia.type == "video"'>
                 <font-awesome-icon :icon="['fas', 'play']" size='2x' />
             </div>
 
@@ -74,7 +72,7 @@ const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
         <div class='imgHorizontalRectangleContainer' @click="$emit('openMedia', mediaList, 2)">
 
             <img :src='thirdMedia.preview' :height='thirdMedia.hieght' :width='thirdMedia.width' />
-            <div class='iconContainerHorizontalRectangle' v-if='thirdMedia.type == "video"'>
+            <div class='iconContainer' v-if='thirdMedia.type == "video"'>
                 <font-awesome-icon :icon="['fas', 'play']" size='2x' />
             </div>
 
@@ -89,7 +87,7 @@ const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
         <div class='imgSquareContainer' @click="$emit('openMedia', mediaList, 0)">
 
             <img :src='firstMedia.preview' :height='firstMedia.hieght' :width='firstMedia.width' />
-            <div class='iconContainerSquare' v-if='firstMedia.type == "video"'>
+            <div class='iconContainer' v-if='firstMedia.type == "video"'>
                 <font-awesome-icon :icon="['fas', 'play']" size='2x' />
             </div>
 
@@ -98,7 +96,7 @@ const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
         <div class='imgSquareContainer imgSquareContainerLastElement' @click="$emit('openMedia', mediaList, 1)">
 
             <img :src='secondMedia.preview' :height='secondMedia.hieght' :width='secondMedia.width' />
-            <div class='iconContainerSquare' v-if='secondMedia.type == "video"'>
+            <div class='iconContainer' v-if='secondMedia.type == "video"'>
                 <font-awesome-icon :icon="['fas', 'play']" size='2x' />
             </div>
 
@@ -107,7 +105,7 @@ const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
         <div class='imgSquareContainer' @click="$emit('openMedia', mediaList, 2)">
 
             <img :src='thirdMedia.preview' :height='thirdMedia.hieght' :width='thirdMedia.width' />
-            <div class='iconContainerSquare' v-if='thirdMedia.type == "video"'>
+            <div class='iconContainer' v-if='thirdMedia.type == "video"'>
                 <font-awesome-icon :icon="['fas', 'play']" size='2x' />
             </div>
 
@@ -118,7 +116,7 @@ const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
             @click="$emit('openMedia', mediaList, 3)">
 
             <img :src='fourthMedia.preview' :height='fourthMedia.hieght' :width='fourthMedia.width' />
-            <div class='iconContainerSquare' v-if='fourthMedia.type == "video"'>
+            <div class='iconContainer' v-if='fourthMedia.type == "video"'>
                 <font-awesome-icon :icon="['fas', 'play']" size='2x' />
             </div>
 
@@ -129,11 +127,10 @@ const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
             <div class='imgSquareContainer imgSquareContainerLastElement'>
 
                 <img class='blurImg' :src='fourthMedia.preview' :height='fourthMedia.hieght' :width='fourthMedia.width' />
+                <div class='iconContainer'>
+                    <font-awesome-icon :icon="['fas', 'plus']" size='2x' />
+                </div>
 
-            </div>
-
-            <div class='iconContainer'>
-                <font-awesome-icon :icon="['fas', 'plus']" size='2x' />
             </div>
 
         </div>
@@ -165,6 +162,8 @@ img {
     height: 300px;
     border-radius: 5px;
     overflow: hidden;
+
+    position: relative;
 }
 
 .imgVerticalRectangleContainer {
@@ -173,6 +172,8 @@ img {
     overflow: hidden;
     margin-right: 5px;
     border-radius: 5px;
+
+    position: relative;
 }
 
 .lastElementInLine {
@@ -190,6 +191,8 @@ img {
     margin-right: 5px;
     border-radius: 5px;
     margin-bottom: 5px;
+
+    position: relative;
 }
 
 .imgSquareContainerLastElement {
@@ -201,6 +204,8 @@ img {
     height: 150px;
     overflow: hidden;
     border-radius: 5px;
+
+    position: relative;
 }
 
 .blurImg {
@@ -212,52 +217,14 @@ img {
     overflow: hidden;
 }
 
-.iconContainerBig {
-    position: relative;
-    width: 20px;
-    height: 20px;
-    top: -160px;
-    left: 150px;
-
-    color: gainsboro;
-}
-
-.iconContainerVerticalRectangle {
-    position: relative;
-    width: 20px;
-    height: 20px;
-    top: -160px;
-    left: 75px;
-
-    color: gainsboro;
-}
-
-.iconContainerSquare {
-    position: relative;
-    width: 20px;
-    height: 20px;
-    top: -95px;
-    left: 65px;
-
-    color: gainsboro;
-}
-
-.iconContainerHorizontalRectangle {
-    position: relative;
-    width: 20px;
-    height: 20px;
-    top: -210px;
-    left: 150px;
-
-    color: gainsboro;
-}
-
 .iconContainer {
-    position: relative;
-    width: 20px;
-    height: 20px;
-    top: -95px;
-    left: 65px;
+    position: absolute;
+    width: fit-content;
+    height: fit-content;
+    left: 50%;
+    bottom: 50%;
+
+    transform: translate(-50%, 50%);
 
     color: gainsboro;
 }

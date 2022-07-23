@@ -79,42 +79,43 @@ watch(chatPanelHeight, () => {
 const data = computed(() => {
     let result = []
     for (let i = 0; i < props.messageList.length; i++) {
-        if (props.messageList[i].type != 'timestamp') {
+        const message = props.messageList[i]
+        if (message.type != 'timestamp') {
             // message still exists
-            if (props.messageList[i].timestamp) {
-                let time = formatTimeChat(parseInt(props.messageList[i].timestamp), <string>locale.value)
-                let resMsg = appendSpaceForMsgInfo(props.messageList[i].message, time, props.messageList[i].type == 'outBound')
+            if (message.timestamp) {
+                let time = formatTimeChat(parseInt(message.timestamp), <string>locale.value)
+                let resMsg = appendSpaceForMsgInfo(message.message, time, message.type == 'outBound')
                 let media
-                if (props.messageList[i].media) {
-                    media = JSON.parse(JSON.stringify(props.messageList[i].media))
+                if (message.media) {
+                    media = JSON.parse(JSON.stringify(message.media))
                     setMediaSizeInMediaList(media)
                 }
                 result.push({
-                    'type': props.messageList[i].type,
+                    'type': message.type,
                     'timestamp': time,
                     'message': resMsg[0],
                     'font': resMsg[1],
-                    'unixTimestamp': props.messageList[i].timestamp,
-                    'display': props.messageList[i].display,
+                    'unixTimestamp': message.timestamp,
+                    'display': message.display,
                     'media': media,
-                    'quoteIdx': props.messageList[i].quoteIdx 
+                    'quoteIdx': message.quoteIdx 
                 })
             }
             // message has been deleted for everyone
             else {
                 result.push({
-                    'type': props.messageList[i].type,
+                    'type': message.type,
                     'timestamp': '',
                     'message': 'You deleted this message.',
                     'font': 'deletedMessage',
-                    'display': props.messageList[i].display,
+                    'display': message.display,
                 })
             }
         }
         else {
             result.push({
-                'type': props.messageList[i].type,
-                'timestamp': formatTimeDateOnlyChat(parseInt(props.messageList[i].timestamp), <string>locale.value),
+                'type': message.type,
+                'timestamp': formatTimeDateOnlyChat(parseInt(message.timestamp), <string>locale.value),
             })
         }
     }
@@ -768,7 +769,7 @@ function gotoQuoteMessage(quoteIdx: number) {
 }
 
 .chatBubbleSmallMargin {
-    padding: 1px 0px 0px 0px;
+    padding: 3px 0px 0px 0px;
 }
 
 .chatBubbleBigMargin {
