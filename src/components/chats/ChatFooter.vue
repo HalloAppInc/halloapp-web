@@ -3,10 +3,14 @@ import { ref, computed } from 'vue'
 
 import { useColorStore } from '../../stores/colorStore'
 
+import { useHAMediaUpload } from '../../composables/haMediaUpload'
+
 import InputBox from './InputBox.vue'
 import Composer from './Composer.vue'
 
 const colorStore = useColorStore()
+
+const { saveMetaDataFromImage, saveMetaDataFromVideo } = useHAMediaUpload()
 
 const props = defineProps(['messageList', 'contactList', 'replyQuoteIdx'])
 
@@ -47,73 +51,6 @@ function openAttachMenu() {
     }
 }
 
-function saveMetaDataFromImage(file: any, idx: number, numOfFileAdd: number) {
-    let img = new Image()
-    img.onload = function () {
-        uploadFiles.value.push({
-            'file': file,
-            'preview': img.src,
-            'type': 'image',
-            'url': img.src,
-            'width': img.width,
-            'height': img.height
-        })
-        
-    }
-    img.src = URL.createObjectURL(file)
-}
-
-function saveMetaDataFromVideo(file: any, idx: number, numOfFileAdd: number) {
-    const canvas = document.createElement('canvas')
-    const video = document.createElement('video')
-    const source = document.createElement('source')
-    const context = canvas.getContext('2d')
-    const url = URL.createObjectURL(file)
-    const urlRef = url
-
-    video.style.display = 'none'
-    canvas.style.display = 'none'
-
-    source.setAttribute('src', urlRef)
-    video.setAttribute('crossorigin', 'anonymous')
-
-    video.appendChild(source)
-    document.body.appendChild(canvas)
-    document.body.appendChild(video)
-
-    if (!context) {
-        console.log(`Couldn't retrieve context 2d`)
-        return
-    }
-
-    video.currentTime = 0.1
-    video.load()
-    video.addEventListener('loadedmetadata', function () {
-        canvas.width = video.videoWidth
-        canvas.height = video.videoHeight
-    })
-
-    video.addEventListener('loadeddata', function () {
-        context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight)
-        canvas.toBlob((blob) => {
-            if (blob) {
-                let img = new File([blob], 'preview')
-                uploadFiles.value.push({
-                    'file': file,
-                    'preview': URL.createObjectURL(img),
-                    'type': 'video',
-                    'url': url,
-                    'width': video.videoWidth,
-                    'height': video.videoHeight,
-                })
-            }
-            video.remove()
-            canvas.remove()
-        })
-    })
-}
-
-
 function onFilePicked(event: any) {
     // make upload file array empty
     uploadFiles.value.splice(0, uploadFiles.value.length)
@@ -128,10 +65,10 @@ function onFilePicked(event: any) {
                 showComposer.value.value = true
             }
             if (type == 'image') {
-                saveMetaDataFromImage(file, i, numOfFile)
+                saveMetaDataFromImage(file, uploadFiles.value)
             }
             else {
-                saveMetaDataFromVideo(file, i, numOfFile)
+                saveMetaDataFromVideo(file, uploadFiles.value)
             }
         }
     }
