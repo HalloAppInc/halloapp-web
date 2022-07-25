@@ -316,7 +316,8 @@ video {
     width: fit-content;
     height: 56px;
     padding-left: 5px;
-    overflow-y: scroll;
+    overflow-y: hidden;
+    overflow-x: auto;
     display: flex;
     flex-direction: row;
     justify-content: center;
