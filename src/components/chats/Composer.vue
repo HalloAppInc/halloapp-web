@@ -132,6 +132,7 @@ function deleteMedia(idx: number) {
 
 function closeComposer() {
     selectMediaIdx.value = 0
+    init.value = false
     props.showComposer.value = false
     props.uploadFiles.splice(0, props.uploadFiles.length)
 }
