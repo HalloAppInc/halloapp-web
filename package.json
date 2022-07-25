@@ -7,33 +7,36 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@babel/types": "^7.18.9",
     "@fortawesome/fontawesome-svg-core": "^6.1.1",
     "@fortawesome/free-solid-svg-icons": "^6.1.1",
     "@fortawesome/vue-fontawesome": "^3.0.0-5",
-    "@intlify/vite-plugin-vue-i18n": "^3.4.0",
-    "@types/luxon": "^2.3.2",
+    "@intlify/vite-plugin-vue-i18n": "^5.0.1",
+    "@types/luxon": "^3.0.0",
+    "@vitejs/plugin-basic-ssl": "^0.1.1",
     "autolinker": "^3.15.0",
     "dexie": "^3.2.2",
     "grapheme-splitter": "^1.0.4",
     "js-base64": "^3.7.2",
     "js-crypto-hkdf": "^1.0.3",
-    "luxon": "^2.4.0",
+    "luxon": "^3.0.1",
     "mp4box": "^0.5.2",
-    "nanoid": "^3.3.4",
+    "nanoid": "^4.0.0",
     "noise-c.wasm": "^0.4.0",
     "pinia": "^2.0.13",
     "pinia-plugin-persistedstate": "^1.5.1",
     "protobufjs": "^6.11.2",
     "qr-code-styling": "^1.6.0-rc.1",
+    "terser": "^5.14.2",
     "tweetnacl": "^1.0.3",
     "vue": "^3.2.25",
     "vue-i18n": "^9.1.10",
     "vue-router": "^4.0.14"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^2.0.0",
+    "@vitejs/plugin-vue": "^3.0.1",
     "typescript": "^4.4.4",
-    "vite": "^2.7.2",
-    "vue-tsc": "^0.29.8"
+    "vite": "^3.0.3",
+    "vue-tsc": "^0.39.0"
   }
 }
