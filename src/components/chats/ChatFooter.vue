@@ -58,9 +58,7 @@ function saveMetaDataFromImage(file: any, idx: number, numOfFileAdd: number) {
             'width': img.width,
             'height': img.height
         })
-        if (idx == numOfFileAdd - 1) {
-            showComposer.value.value = true
-        }
+        
     }
     img.src = URL.createObjectURL(file)
 }
@@ -108,9 +106,6 @@ function saveMetaDataFromVideo(file: any, idx: number, numOfFileAdd: number) {
                     'width': video.videoWidth,
                     'height': video.videoHeight,
                 })
-                if (idx == numOfFileAdd - 1) {
-                    showComposer.value.value = true
-                }
             }
             video.remove()
             canvas.remove()
@@ -129,6 +124,9 @@ function onFilePicked(event: any) {
         // if select at least one file
         if (file) {
             let type = file.type.toString().includes('video') ? 'video' : 'image'
+            if (i == numOfFile - 1) {
+                showComposer.value.value = true
+            }
             if (type == 'image') {
                 saveMetaDataFromImage(file, i, numOfFile)
             }

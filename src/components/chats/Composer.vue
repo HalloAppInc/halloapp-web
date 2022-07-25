@@ -39,8 +39,21 @@ const mediaUrlList: ComputedRef = computed(() => {
             'preview': media.preview
         })
     }
-    console.log(result)
     return result
+})
+
+const init = ref(false)
+
+const isReady = computed(() => {
+    if (mediaUrlList.value[selectMediaIdx.value]) {
+        if (init.value == false) {
+            init.value = true
+        }
+        return true
+    }
+    else {
+        return false
+    }
 })
 
 // if message is sent, close preview
@@ -79,9 +92,6 @@ function saveMetaDataFromImage(file: any, idx: number, numOfFileAdd: number, num
             'width': img.width,
             'height': img.height
         })
-        if (idx == 0) {
-            selectMediaIdx.value = numOfFileOld
-        }
     }
     img.src = URL.createObjectURL(file)
 }
@@ -129,10 +139,6 @@ function saveMetaDataFromVideo(file: any, idx: number, numOfFileAdd: number, num
                     'width': video.videoWidth,
                     'height': video.videoHeight,
                 })
-
-                if (idx == 0) {
-                    selectMediaIdx.value = numOfFileOld
-                }
             }
             video.remove()
             canvas.remove()
@@ -149,6 +155,9 @@ function onFilePicked(event: any) {
         // if select at least one file
         if (file) {
             let type = file.type.toString().includes('video') ? 'video' : 'image'
+            if (i == 0) {
+                selectMediaIdx.value = numOfFileOld
+            }
             if (type == 'image') {
                 saveMetaDataFromImage(file, i, numOfFileAdd, numOfFileOld)
             }
@@ -196,7 +205,7 @@ function closeComposer() {
 <template>
 
     <div class='mask' v-if='props.showComposer.value'>
-        <div class='wrapper'>
+        <div class='wrapper' v-if='isReady || init' >
 
             <!-- close icon -->
             <div class='closeIconContainer'>
@@ -227,16 +236,24 @@ function closeComposer() {
             <!-- image box: show the image -->
             <div class='content'>
 
-                <div v-if='mediaUrlList[selectMediaIdx].type == "image"' class='imgBigContainer'>
-                    <img class='imgBig' :src='mediaUrlList[selectMediaIdx].url' />
-                    <img class='imgBig' ref='test' />
+                <div v-if='isReady'>
+                    <div v-if='mediaUrlList[selectMediaIdx].type == "image"' class='imgBigContainer'>
+                        <img class='imgBig' :src='mediaUrlList[selectMediaIdx].url' />
+                        <img class='imgBig' ref='test' />
+                    </div>
+
+                    <div v-show='mediaUrlList[selectMediaIdx].type == "video"' class='videoContainer'>
+                        <video controls :src='props.uploadFiles[selectMediaIdx].url' id='videoComposer'
+                            preload='metadata' playsinline controlslist=''>
+                            <source :src='props.uploadFiles[selectMediaIdx].url'>
+                        </video>
+                    </div>
                 </div>
 
-                <div v-show='mediaUrlList[selectMediaIdx].type == "video"' class='videoContainer' >
-                    <video controls :src='props.uploadFiles[selectMediaIdx].url'
-                        id='videoComposer' preload='metadata' playsinline controlslist=''>
-                        <source :src='props.uploadFiles[selectMediaIdx].url'>
-                    </video>
+                <div v-else>
+                    <div class='loaderContainer'>
+                        <div class='loader'></div>
+                    </div>
                 </div>
 
             </div>
@@ -251,6 +268,7 @@ function closeComposer() {
 
                 <!-- media preview and add more media -->
                 <div class='mediaTray'>
+
                     <div class='smallPreviewContainer'>
                         <div v-for='(value, idx) in mediaUrlList' @click='openBigImg($event, idx)'
                             :class="{ 'squareContainer': true, 'selected': idx == selectMediaIdx }">
@@ -281,7 +299,23 @@ function closeComposer() {
 
                 </div>
             </div>
-        </div>
+         </div>
+         <div class='wrapper' v-else>
+
+            <!-- close icon -->
+            <div class='closeIconContainer'>
+                <div class='iconContainer' @click='closeComposer'>
+                    <div class='iconShadow'>
+                        <font-awesome-icon :icon="['fas', 'xmark']" size='lg' />
+                    </div>
+                </div>
+            </div>
+
+            <div class='loaderContainer'>
+                <div class='loader'></div>
+            </div>
+
+         </div>
     </div>
 
 </template>
@@ -339,6 +373,14 @@ function closeComposer() {
     align-items: center;
 }
 
+.footer {
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
 .imgBigContainer {
     width: fit-content;
     height: fit-content;
@@ -360,14 +402,6 @@ video {
     max-height: 70vh;
     background-color: v-bind(backgroundColor);
     box-shadow: 0px 0px 20px 2px v-bind(shadowColor);
-}
-
-.footer {
-    bottom: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
 }
 
 .chatBoxTray {
@@ -458,5 +492,45 @@ video {
     border-radius: 5px;
     overflow: hidden;
     border: 1px solid gainsboro;
+}
+
+.loader {
+    border: 15px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 15px solid #007AFF;
+    width: 100px;
+    height: 100px;
+    -webkit-animation: spin 2s linear infinite;
+    /* Safari */
+    animation: spin 2s linear infinite;
+}
+
+/* Safari */
+@-webkit-keyframes spin {
+    0% {
+        -webkit-transform: rotate(0deg);
+    }
+
+    100% {
+        -webkit-transform: rotate(360deg);
+    }
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.loaderContainer {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
 }
 </style>
