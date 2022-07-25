@@ -23,6 +23,7 @@ const mediaUrlList = computed(() => {
         let res = setPreviewMediaSizes(media)
         result.push({
             'url': media.url,
+            'type': media.type,
             'width': res?.mediaItemWidth,
             'height': res?.mediaItemHeight
             })
@@ -47,20 +48,34 @@ const hoverColor = computed(() => {
     return colorStore.hover
 })
 
+function setVideoSrc(selectMediaIdx: number) {
+    let targetElement = document.getElementById('videoFullScreener') as HTMLVideoElement
+    targetElement.src = mediaUrlList.value[selectMediaIdx].url
+}
+
 function lastMedia() {
     if (selectMediaIdx.value > 0) {
         selectMediaIdx.value -= 1
+        if (mediaUrlList.value[selectMediaIdx.value].type == 'video') {
+            setVideoSrc(selectMediaIdx.value)
+        }
     }
 }
 
 function nextMedia() {
     if (selectMediaIdx.value < mediaUrlList.value.length - 1) {
         selectMediaIdx.value += 1
+        if (mediaUrlList.value[selectMediaIdx.value].type == 'video') {
+            setVideoSrc(selectMediaIdx.value)
+        }
     }
 }
 
 function openBigImg(idx: number) {
     selectMediaIdx.value = idx
+    if (mediaUrlList.value[selectMediaIdx.value].type == 'video') {
+        setVideoSrc(selectMediaIdx.value)
+    }
 }
 </script>
 
@@ -94,9 +109,15 @@ function openBigImg(idx: number) {
                         </div>
                     </div>
                 </div>
-
-                <div class='imgContainer'>
+                
+                <div v-if='mediaUrlList[selectMediaIdx].type == "image"' class='imgContainer'>
                     <img :src='mediaUrlList[selectMediaIdx].url' />
+                </div>
+
+                <div v-show='mediaUrlList[selectMediaIdx].type == "video"' class='videoContainer' >
+                    <video controls id='videoFullScreener'>
+                        <source :src='mediaUrlList[selectMediaIdx].url'>
+                    </video>
                 </div>
 
                 <div class='rightArrowIconContainer'>
@@ -119,9 +140,17 @@ function openBigImg(idx: number) {
                         <div class='squareContainer' v-for='(value, idx) in mediaUrlList'
                             @click='openBigImg(idx)'
                             :class="{ 'selected': idx == selectMediaIdx }">
-                            <div class='imgSmallContainer'>
+
+                            <div v-if='value.type == "image"' class='imgSmallContainer'>
                                 <img class='imgSmall' :width='value.width' :height='value.height' :src='value.url' />
                             </div>
+
+                            <div v-else-if='value.type == "video"' class='imgSmallContainer'>
+                                <video :width='value.width' :height='value.height'>
+                                    <source :src='value.url + "#t=0"'>
+                                </video>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -186,6 +215,18 @@ function openBigImg(idx: number) {
 }
 
 img {
+    max-width: 70vw;
+    max-height: 70vh;
+    background-color: v-bind(backgroundColor);
+    box-shadow: 0px 0px 20px 2px v-bind(shadowColor);
+}
+
+.videoContainer {
+    width: fit-content;
+    height: 500px;
+}
+
+video {
     max-width: 70vw;
     max-height: 70vh;
     background-color: v-bind(backgroundColor);
@@ -275,7 +316,8 @@ img {
     width: fit-content;
     height: 56px;
     padding-left: 5px;
-    overflow-y: scroll;
+    overflow-y: hidden;
+    overflow-x: auto;
     display: flex;
     flex-direction: row;
     justify-content: center;

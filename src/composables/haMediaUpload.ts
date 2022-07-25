@@ -14,6 +14,71 @@ export function useHAMediaUpload() {
     const mainStore = useMainStore()
     const connStore = useConnStore()
 
+    function saveMetaDataFromImage(file: any, uploadFiles: any) {
+        let img = new Image()
+        img.onload = function () {
+            uploadFiles.push({
+                'file': file,
+                'preview': img.src,
+                'type': 'image',
+                'url': img.src,
+                'width': img.width,
+                'height': img.height
+            })      
+        }
+        img.src = URL.createObjectURL(file)
+    }
+
+    function saveMetaDataFromVideo(file: any, uploadFiles: any) {
+        const canvas = document.createElement('canvas')
+        const video = document.createElement('video')
+        const source = document.createElement('source')
+        const context = canvas.getContext('2d')
+        const url = URL.createObjectURL(file)
+        const urlRef = url
+    
+        video.style.display = 'none'
+        canvas.style.display = 'none'
+    
+        source.setAttribute('src', urlRef)
+        video.setAttribute('crossorigin', 'anonymous')
+    
+        video.appendChild(source)
+        document.body.appendChild(canvas)
+        document.body.appendChild(video)
+    
+        if (!context) {
+            console.log(`Couldn't retrieve context 2d`)
+            return
+        }
+    
+        video.currentTime = 0.1
+        video.load()
+        video.addEventListener('loadedmetadata', function () {
+            canvas.width = video.videoWidth
+            canvas.height = video.videoHeight
+        })
+    
+        video.addEventListener('loadeddata', function () {
+            context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight)
+            canvas.toBlob((blob) => {
+                if (blob) {
+                    let img = new File([blob], 'preview')
+                    uploadFiles.push({
+                        'file': file,
+                        'preview': URL.createObjectURL(img),
+                        'type': 'video',
+                        'url': url,
+                        'width': video.videoWidth,
+                        'height': video.videoHeight,
+                    })
+                }
+                video.remove()
+                canvas.remove()
+            })
+        })
+    }
+
     async function encrypt(plaintext: any) {
         const base64Key = "ni-rEmBOXV4bUpuX1NGh"
         const base64Blob = "c8lxbGwFwYBOomnApInTTqiIX8rB7DGR9p6WSeDMFBQFK4qs4YUj8E5E7TVd28tbqgP6_jRWqEm19sat-99mMA2u-_tHJxHG5N9QuklFJ47vEePHV70OwcSZj8LcNRVwbbVLXFLmwsWR3X3kIgsU87P-x1BNxTOJOGMtIB8kcXXthGGGfVJXlWd7H0LqCPsvmV7t1a5v6WEA7ww0ymuqwJ4OyqW7DksxOaISfhPOw2ryo78KMc6-bY9cZU7g9zdYAozdcle65pZcDh4RdQyAdzstQhK67HbuLVLRwkfa6tq2Sx-zzWKQjy8j6_G7h5lKNRhIkKzVDFDS1MMuH_qqqVc16rMvy5PgZ0HVEwrGUV5wXj-8LQ570bmOGxGg68wDH-feQW44ONo7QTx-hCj-oW99y8KJ55vD93n19oH76aV8sSYIJ59dY3L3zLG3b3Xb3hCieXnVrbJP-aBR1ozxRA0kk5MzcuzcKcB1DtuIKnjdyWse4YE8O81J-dyYyj_x3BugFj_6zcH3uzEtfvUnt5Myikn33qihk6k1sD-GMV0"
@@ -267,33 +332,40 @@ export function useHAMediaUpload() {
         return { status, recvBlob }
     }
 
-    async function uploadAndDownLoad(file: any, list: any) {
-        // if the file is valid
+    async function uploadAndDownLoad(file: any, list: any, type: any) {        // if the file is valid
         if (file) {
             // testEncryptionAndDecryption(file)
             //upload and download
-            await connStore.getMediaUrl(1000, async function (val: any) {
-                // file to blob, encrypt and upload
-                const fileBlob = new Blob([file])
-                const { encryptedBuffer, ciphertextHash } = await encrypt(fileBlob)
-                let resultPUT = await sendMediaToServer(encryptedBuffer, val.iq?.uploadMedia?.url?.put)
-                // proceed when upload succeessfully
-                if (resultPUT == 200) {
-                    // download
-                    const { status, recvBlob } = await getMediaFromServer(val.iq?.uploadMedia?.url?.get)
-                    // if download success
-                    if (status == 200) {
-                        // convert from blob to ArrayBuffer
-                        const recvEncryptedBuffer = await new File([recvBlob], '').arrayBuffer()
-                        // decrypt the arrayBuffer
-                        const decryptedBlob = await decrypt(recvEncryptedBuffer, ciphertextHash)
-                        const mediaBlobUrl = URL.createObjectURL(decryptedBlob)
-                        list.push(mediaBlobUrl)
+            if (type == 'image') {
+                await connStore.getMediaUrl(1000, async function (val: any) {
+                    // file to blob, encrypt and upload
+                    const fileBlob = new Blob([file])
+                    const { encryptedBuffer, ciphertextHash } = await encrypt(fileBlob)
+                    let resultPUT = await sendMediaToServer(encryptedBuffer, val.iq?.uploadMedia?.url?.put)
+                    // proceed when upload succeessfully
+                    if (resultPUT == 200) {
+                        // download
+                        const { status, recvBlob } = await getMediaFromServer(val.iq?.uploadMedia?.url?.get)
+                        // if download success
+                        if (status == 200) {
+                            // convert from blob to ArrayBuffer
+                            const recvEncryptedBuffer = await new File([recvBlob], '').arrayBuffer()
+                            // decrypt the arrayBuffer
+                            const decryptedBlob = await decrypt(recvEncryptedBuffer, ciphertextHash)
+                            const mediaBlobUrl = URL.createObjectURL(decryptedBlob)
+                            list.push(mediaBlobUrl)
+                        }
                     }
-                }
-            })
+                })
+            }
+            else {
+                // upload video
+            }
+        }
+        else {
+            hal.log('uploadAndDownLoad: file not exists!')
         }
     }
 
-    return { uploadAndDownLoad }
+    return { saveMetaDataFromImage, saveMetaDataFromVideo, uploadAndDownLoad }
 }

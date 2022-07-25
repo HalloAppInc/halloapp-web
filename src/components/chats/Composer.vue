@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, ComputedRef } from 'vue'
 
 import { useColorStore } from '../../stores/colorStore'
 
@@ -10,7 +10,7 @@ import InputBox from './InputBox.vue'
 
 const colorStore = useColorStore()
 
-const { uploadAndDownLoad } = useHAMediaUpload()
+const { saveMetaDataFromImage, saveMetaDataFromVideo, uploadAndDownLoad } = useHAMediaUpload()
 const { setPreviewMediaSizes } = useHAMediaResize()
 
 const props = defineProps(['showComposer', 'uploadFiles', 'messageList', 'replyQuoteIdx', 'contactList'])
@@ -26,19 +26,34 @@ const messageNumber = computed(() => {
     return props.messageList.length
 })
 
-const mediaUrlList = computed(() => {
+const mediaUrlList: ComputedRef = computed(() => {
     const result = []
     for (let i = 0; i < props.uploadFiles.length; i++) {
         let media = props.uploadFiles[i]
         let res = setPreviewMediaSizes(media)
         result.push({
             'url': media.url,
+            'type': props.uploadFiles[i].type,
             'width': res?.mediaItemWidth,
-            'height': res?.mediaItemHeight
-            })
+            'height': res?.mediaItemHeight,
+            'preview': media.preview
+        })
     }
-
     return result
+})
+
+const init = ref(false)
+
+const isReady = computed(() => {
+    if (mediaUrlList.value[selectMediaIdx.value]) {
+        if (init.value == false) {
+            init.value = true
+        }
+        return true
+    }
+    else {
+        return false
+    }
 })
 
 // if message is sent, close preview
@@ -46,6 +61,9 @@ watch(messageNumber, (newVal, oldVal) => {
     closeComposer()
 })
 
+const backgroundColor = computed(() => {
+    return colorStore.background
+})
 const shadowColor = computed(() => {
     return colorStore.shadow
 })
@@ -53,9 +71,9 @@ const iconColor = computed(() => {
     return colorStore.icon
 })
 
-function testUploadAndDownload(file: any) {
+function testUploadAndDownload(file: any, type: any) {
     if (file) {
-        uploadAndDownLoad(file, attachMediaList.value)
+        uploadAndDownLoad(file, attachMediaList.value, type)
         // wait for uploadAndDownLoad
         setTimeout(() => {
             test.value.src = attachMediaList.value[attachMediaList.value.length - 1]
@@ -67,23 +85,20 @@ function onFilePicked(event: any) {
     const files = event.target.files
     const numOfFileOld = mediaUrlList.value.length
     const numOfFileAdd = files.length
-    for (let i = 0; i < numOfFileAdd ; i++) {
+    for (let i = 0; i < numOfFileAdd; i++) {
         let file = files[i]
         // if select at least one file
         if (file) {
-            let img = new Image()
-            img.onload = function () {
-                props.uploadFiles.push({
-                    'file': file,
-                    'url': img.src,
-                    'width': img.width,
-                    'height': img.height
-                    })
-                if (i == numOfFileAdd - 1) {
-                    selectMediaIdx.value = numOfFileOld + numOfFileAdd - 1 
-                }
+            let type = file.type.toString().includes('video') ? 'video' : 'image'
+            if (i == 0) {
+                selectMediaIdx.value = numOfFileOld
             }
-            img.src = URL.createObjectURL(file)
+            if (type == 'image') {
+                saveMetaDataFromImage(file, props.uploadFiles)
+            }
+            else {
+                saveMetaDataFromVideo(file, props.uploadFiles)
+            }
         }
     }
     // reset select to allow second use of same media
@@ -93,9 +108,10 @@ function onFilePicked(event: any) {
 function openBigImg(event: any, idx: number) {
     if (event.target.nodeName == 'IMG') {
         selectMediaIdx.value = idx
-    }
-    else {
-        deleteMedia(idx)
+        if (mediaUrlList.value[selectMediaIdx.value].type == 'video') {
+            let targetElement = document.getElementById('videoComposer') as HTMLVideoElement
+            targetElement.src = mediaUrlList.value[selectMediaIdx.value].url
+        }
     }
 }
 
@@ -116,6 +132,7 @@ function deleteMedia(idx: number) {
 
 function closeComposer() {
     selectMediaIdx.value = 0
+    init.value = false
     props.showComposer.value = false
     props.uploadFiles.splice(0, props.uploadFiles.length)
 }
@@ -124,7 +141,7 @@ function closeComposer() {
 <template>
 
     <div class='mask' v-if='props.showComposer.value'>
-        <div class='wrapper'>
+        <div class='wrapper' v-if='isReady || init' >
 
             <!-- close icon -->
             <div class='closeIconContainer'>
@@ -144,7 +161,8 @@ function closeComposer() {
                 </div>
 
                 <!-- TODO: delete this one, only for testing! -->
-                <div class='iconContainer' @click='testUploadAndDownload(props.uploadFiles[selectMediaIdx].file)'>
+                <div class='iconContainer'
+                    @click='testUploadAndDownload(props.uploadFiles[selectMediaIdx].file, props.uploadFiles[0].type)'>
                     <div class='iconShadow'>
                         <font-awesome-icon :icon="['fas', 'hammer']" size='lg' />
                     </div>
@@ -153,37 +171,51 @@ function closeComposer() {
 
             <!-- image box: show the image -->
             <div class='content'>
-                <div class='imgBigContainer'>
-                    <img class='imgBig' :src='mediaUrlList[selectMediaIdx].url' />
-                    <!-- TODO: delete this one, only for test -->
-                    <img class='imgBig' ref='test' />
+
+                <div v-if='isReady'>
+                    <div v-if='mediaUrlList[selectMediaIdx].type == "image"' class='imgBigContainer'>
+                        <img class='imgBig' :src='mediaUrlList[selectMediaIdx].url' />
+                        <img class='imgBig' ref='test' />
+                    </div>
+
+                    <div v-show='mediaUrlList[selectMediaIdx].type == "video"' class='videoContainer'>
+                        <video controls :src='props.uploadFiles[selectMediaIdx].url' id='videoComposer'
+                            preload='metadata' playsinline controlslist=''>
+                            <source :src='props.uploadFiles[selectMediaIdx].url'>
+                        </video>
+                    </div>
                 </div>
+
+                <div v-else>
+                    <div class='loaderContainer'>
+                        <div class='loader'></div>
+                    </div>
+                </div>
+
             </div>
 
             <!-- input box: add caption -->
             <div class='footer'>
 
                 <div class='chatBoxTray' ref='chatBox'>
-                    <InputBox 
-                        :messageList='messageList' 
-                        :contactList='contactList' 
-                        :uploadFiles='uploadFiles'
-                        :alwaysShowSendButton='true'
-                        :replyQuoteIdx='replyQuoteIdx' />
+                    <InputBox :messageList='messageList' :contactList='contactList' :uploadFiles='uploadFiles'
+                        :alwaysShowSendButton='true' :replyQuoteIdx='replyQuoteIdx' />
                 </div>
 
                 <!-- media preview and add more media -->
                 <div class='mediaTray'>
+
                     <div class='smallPreviewContainer'>
                         <div v-for='(value, idx) in mediaUrlList' @click='openBigImg($event, idx)'
-                            :class="{ 'squareContainer': true, 'selected': idx == selectMediaIdx }" >
+                            :class="{ 'squareContainer': true, 'selected': idx == selectMediaIdx }">
 
                             <div class='imgSmallContainer'>
-                                <img class='imgSmall' :width='value.width' :height='value.height' :src='value.url' />
+                                <img class='imgSmall' :width='value.width' :height='value.height'
+                                    :src='value.preview' />
                             </div>
 
                             <!-- close toggler -->
-                            <div class='menuToggler'>
+                            <div class='menuToggler' @click='deleteMedia(idx)'>
                                 <div class='togglerIconContainer'>
                                     <font-awesome-icon :icon="['fas', 'xmark']" size='xs' />
                                 </div>
@@ -194,16 +226,32 @@ function closeComposer() {
 
                     <div class='addMoreIconContainer'>
                         <!-- upload file -->
-                        <input type='file' multiple ref='addUploadMedia' accept='image/*' @change='onFilePicked'
-                            style='display: none' />
+                        <input type='file' multiple ref='addUploadMedia' accept='image/*, video/*'
+                            @change='onFilePicked($event)' style='display: none' />
                         <div class='iconContainer' @click='addUploadMedia?.click'>
                             <font-awesome-icon :icon="['fas', 'plus']" size='lg' />
                         </div>
                     </div>
-                    
+
                 </div>
             </div>
-        </div>
+         </div>
+         <div class='wrapper' v-else>
+
+            <!-- close icon -->
+            <div class='closeIconContainer'>
+                <div class='iconContainer' @click='closeComposer'>
+                    <div class='iconShadow'>
+                        <font-awesome-icon :icon="['fas', 'xmark']" size='lg' />
+                    </div>
+                </div>
+            </div>
+
+            <div class='loaderContainer'>
+                <div class='loader'></div>
+            </div>
+
+         </div>
     </div>
 
 </template>
@@ -216,7 +264,7 @@ function closeComposer() {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: #FFFFFF;
+    background-color: v-bind(backgroundColor);
     display: table;
 }
 
@@ -261,6 +309,14 @@ function closeComposer() {
     align-items: center;
 }
 
+.footer {
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
 .imgBigContainer {
     width: fit-content;
     height: fit-content;
@@ -272,12 +328,16 @@ function closeComposer() {
     box-shadow: 0px 0px 20px 2px v-bind(shadowColor);
 }
 
-.footer {
-    bottom: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+.videoContainer {
+    width: fit-content;
+    height: 70vh;
+}
+
+video {
+    max-width: 70vw;
+    max-height: 70vh;
+    background-color: v-bind(backgroundColor);
+    box-shadow: 0px 0px 20px 2px v-bind(shadowColor);
 }
 
 .chatBoxTray {
@@ -296,7 +356,6 @@ function closeComposer() {
 
 .smallPreviewContainer {
     width: fit-content;
-    overflow-x: auto;
     padding-left: 5px;
     height: 56px;
     display: flex;
@@ -316,43 +375,41 @@ function closeComposer() {
     justify-content: center;
     align-items: center;
     border-radius: 5px;
-    overflow: hidden;
 
-    border: 1px solid gainsboro;
+    outline: 1px solid gainsboro;
 }
 
 .squareContainer:hover {
     cursor: pointer;
 }
 
-.squareContainer:hover .menuToggler {
-    display: flex;
-}
-
 .menuToggler {
     z-index: 3;
-    display: none;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
     position: relative;
-    width: 0;
-    top: -45px;
-    left: 10px;
-    box-shadow: 2px -20px 50px 30px rgba(0, 0, 0, 0.5);
+    width: 15px;
+    height: 15px;
+    top: -58px;
+    left: 25px;
+    border-radius: 50%;
+    background-color: gray;
 }
 
 .togglerIconContainer {
-    color: v-bind(iconColor);
+    color: white;
 }
 
 .imgSmallContainer {
-    z-index: 1;
-
+    border-radius: 5px;
     width: 50px;
     height: 50px;
     overflow: hidden;
 }
 
 .imgSmall {
-    z-index: 0;
 
     overflow: hidden;
 }
@@ -371,5 +428,45 @@ function closeComposer() {
     border-radius: 5px;
     overflow: hidden;
     border: 1px solid gainsboro;
+}
+
+.loader {
+    border: 15px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 15px solid #007AFF;
+    width: 100px;
+    height: 100px;
+    -webkit-animation: spin 2s linear infinite;
+    /* Safari */
+    animation: spin 2s linear infinite;
+}
+
+/* Safari */
+@-webkit-keyframes spin {
+    0% {
+        -webkit-transform: rotate(0deg);
+    }
+
+    100% {
+        -webkit-transform: rotate(360deg);
+    }
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.loaderContainer {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
 }
 </style>
