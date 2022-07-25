@@ -1,6 +1,6 @@
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch, watchEffect, computed } from 'vue'
 
 import { useMainStore } from '../../stores/mainStore'
 
@@ -77,6 +77,17 @@ const listData = [
         postID: "8"
     },          
 ]
+
+watchEffect(() => {
+    if (mainStore.scrollToTop == 'home') {
+        scrollToTop()
+        mainStore.scrollToTop = ''
+    }
+})
+
+function scrollToTop() {    
+    content.value?.scrollTo({ left: 0, top: 0, behavior: 'smooth' })
+}
 
 function openCommentsIfNeeded(postID: string) {
     if (showComments.value) {

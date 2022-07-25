@@ -45,6 +45,8 @@ export const useMainStore = defineStore('main', {
         homePanel: '',
         settingsPage: '',
 
+        scrollToTop: '',
+
         sounds: false,
         desktopAlerts: false,
 
@@ -78,7 +80,11 @@ export const useMainStore = defineStore('main', {
             hal.log('mainStore/logged out')
         },
         gotoPage(page: string) {
-            this.page = page
+            if (page == this.page) {
+                this.scrollToTop = page
+            } else { 
+                this.page = page
+            }
         },
         gotoSettingsPage(page: string) {
             this.settingsPage = page
