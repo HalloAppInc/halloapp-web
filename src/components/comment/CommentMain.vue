@@ -164,13 +164,14 @@ const messageNumber = computed(() => {
 
         <!-- input tray -->
         <div class='footer'>
+
             <InputBox 
                 :messageList='messageList' 
                 :contactList='contactList' 
                 :uploadFiles='""'
                 :alwaysShowSendButton='false'
                 :replyQuoteIdx='replyQuoteIdx' />
-
+            
         </div>
 
     </div>
@@ -183,7 +184,7 @@ const messageNumber = computed(() => {
     height: 100%;
     position: relative;
 
-    background-color: rgb(229, 229, 247);
+    background-color: rgb(243, 243, 240);
 
     display: flex;
     flex-direction: column;
@@ -198,6 +199,8 @@ const messageNumber = computed(() => {
 .subHeader {
     background-color: rgb(243, 243, 240);
     padding: 5px 15px 10px 15px;
+
+    border-bottom: 1px solid rgb(232,232,232);
 
     display: flex;
     flex-direction: row;
@@ -219,9 +222,11 @@ const messageNumber = computed(() => {
 }
 
 .footer {
-    bottom: 0;
     width: 100%;
+
     background-color: rgb(243, 243, 240);
+
+    padding: 5px 10px 5px 10px;
 }
 
 
