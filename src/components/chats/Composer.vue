@@ -71,9 +71,9 @@ const iconColor = computed(() => {
     return colorStore.icon
 })
 
-function testUploadAndDownload(file: any, type: any) {
+function testUploadAndDownload(file: any) {
     if (file) {
-        uploadAndDownLoad(file, attachMediaList.value, type)
+        uploadAndDownLoad(file, attachMediaList.value)
         // wait for uploadAndDownLoad
         setTimeout(() => {
             test.value.src = attachMediaList.value[attachMediaList.value.length - 1]
@@ -162,7 +162,7 @@ function closeComposer() {
 
                 <!-- TODO: delete this one, only for testing! -->
                 <div class='iconContainer'
-                    @click='testUploadAndDownload(props.uploadFiles[selectMediaIdx].file, props.uploadFiles[0].type)'>
+                    @click='testUploadAndDownload(props.uploadFiles[selectMediaIdx])'>
                     <div class='iconShadow'>
                         <font-awesome-icon :icon="['fas', 'hammer']" size='lg' />
                     </div>
