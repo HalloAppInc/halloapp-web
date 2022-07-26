@@ -15,13 +15,13 @@ const mainStore = useMainStore()
 <div id="wrapper">
 
     <keep-alive>
-        <HomeMain v-if='mainStore.page == "home"' />
+        <HomeMain v-if='mainStore.page == "home"'/>
     </keep-alive>
     <keep-alive>
-        <GroupsMain v-if='mainStore.page == "groups"' />
+        <GroupsMain v-if='mainStore.page == "groups"'/>
     </keep-alive>    
     <keep-alive>
-        <ChatsMain v-if='mainStore.page == "chats"' />
+        <ChatsMain v-if='mainStore.page == "chats"'/>
     </keep-alive>
 
 </div>

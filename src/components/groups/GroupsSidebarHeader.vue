@@ -54,7 +54,7 @@ const backgroundColor = computed(() => {
             </div>
 
             <div class="titleContainer">
-                {{ t('general.home') }}
+                {{ t('general.groups') }}
                 
             </div>
 
@@ -76,6 +76,7 @@ const backgroundColor = computed(() => {
     height: 100%;
 
     background-color: rgb(243, 243, 240);
+    
 }
 
 .container {
@@ -83,6 +84,8 @@ const backgroundColor = computed(() => {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    align-items: center;
+    background-color: rgb(243, 243, 240);
 }
 
 .leftGutter {
@@ -95,7 +98,7 @@ const backgroundColor = computed(() => {
 
 .avatarContainer {
     flex: 0 0 55px;
-    padding: 10px 0px 0px 0px;
+    padding: 0px 0px 0px 0px;
 
     display: flex;
     flex-direction: row;

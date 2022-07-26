@@ -1,140 +1,140 @@
 <script setup lang="ts">
-import { ref, onMounted, ComputedRef, computed } from 'vue'
+    import { ref, onMounted, ComputedRef, computed } from 'vue'
 
-import QRCode from './components/login/QRCode.vue'
-import Sidebar from './components/Sidebar.vue'
-import Sidestrip from './components/Sidestrip.vue'
-import MainPanel from './components/MainPanel.vue'
+    import QRCode from './components/login/QRCode.vue'
+    import Sidebar from './components/Sidebar.vue'
+    import Sidestrip from './components/Sidestrip.vue'
+    import MainPanel from './components/MainPanel.vue'
 
-import hal from './common/halogger'
+    import hal from './common/halogger'
 
-import { useMainStore } from './stores/mainStore'
-import { useConnStore } from './stores/connStore'
-import { useColorStore } from './stores/colorStore'
+    import { useMainStore } from './stores/mainStore'
+    import { useConnStore } from './stores/connStore'
+    import { useColorStore } from './stores/colorStore'
 
-import { useI18n } from 'vue-i18n'
-import BottomNav from './components/BottomNav.vue'
+    import { useI18n } from 'vue-i18n'
+    import BottomNav from './components/BottomNav.vue'
 
-const mainStore = useMainStore()
-const connStore = useConnStore()
-const colorStore = useColorStore()
+    const mainStore = useMainStore()
+    const connStore = useConnStore()
+    const colorStore = useColorStore()
 
-const { t } = useI18n({
-    inheritLocale: true,
-    useScope: 'global'
-})
+    const { t } = useI18n({
+        inheritLocale: true,
+        useScope: 'global'
+    })
 
-const sideBarWidth: ComputedRef<string> = computed((): string => {
-    let widthPercent = '30%'
-    if (mainStore.page == 'home') {
-        widthPercent = '0%'
+    const sideBarWidth: ComputedRef<string> = computed((): string => {
+        let widthPercent = '30%'
+        if (mainStore.page == 'home' || !mainStore.showSidebar) {
+            widthPercent = '0%'
+            return widthPercent
+        } 
+
+        if (mainStore.isMobile) {
+            widthPercent = '100%'
+        }
+
         return widthPercent
-    } 
+    })
 
-    if (mainStore.isMobile) {
-        widthPercent = '100%'
+    const showBottomNav: ComputedRef<boolean> = computed((): boolean => {
+        if (!mainStore.isMobile) { return false }
+
+        if (mainStore.mobileNavlessPanel == 'comments') {
+            return false
+        }
+
+        return true
+    })
+
+    if (process.env.NODE_ENV?.toString() == 'development') {
+        mainStore.isDebug = true
+        mainStore.devCORSWorkaroundUrlPrefix = 'https://cors-anywhere.herokuapp.com/'
     }
 
-    return widthPercent
-})
+    const gothamFontUrl = ref("https://web.halloapp.com/fonts/gotham/woff2/Gotham-Book_Web.woff2")
+    const gothamMediumFontUrl = ref("https://web.halloapp.com/fonts/gotham/woff2/Gotham-Medium_Web.woff2")
 
-const showBottomNav: ComputedRef<boolean> = computed((): boolean => {
-    if (!mainStore.isMobile) { return false }
+    applyPlatformSpecifics()
+    loadFonts()
 
-    if (mainStore.homePanel == 'comments') {
-        return false
+    colorStore.init() // initialize color scheme
+    init()
+
+    async function init() {
+        hal.log('app/init')
+        connStore.clearMessagesInQueue()
+
+        mainStore.isConnectedToServer = false // needs to be reset on refresh
+        connStore.connectToServerIfNeeded()
+
+        /* temporary: used for testing uploadMedia 
+        * temporary: timeout used to send uploadMedia after addKeuy
+        */
+        setTimeout(() => {
+            // connStore.getMediaUrl(1000)
+        }, 3000)
+        
     }
 
-    return true
-})
+    function applyPlatformSpecifics() {
+        const userAgent = navigator.userAgent || navigator.vendor || (<any>window).opera
 
-if (process.env.NODE_ENV?.toString() == 'development') {
-    mainStore.isDebug = true
-    mainStore.devCORSWorkaroundUrlPrefix = 'https://cors-anywhere.herokuapp.com/'
-}
+        if ('ontouchstart' in document.documentElement && userAgent.match(/Mobi/)) {
+            mainStore.isMobile = true
+        } else {
+            mainStore.isMobile = false
+        }
 
-const gothamFontUrl = ref("https://web.halloapp.com/fonts/gotham/woff2/Gotham-Book_Web.woff2")
-const gothamMediumFontUrl = ref("https://web.halloapp.com/fonts/gotham/woff2/Gotham-Medium_Web.woff2")
+        if (/iPad|iPhone|iPod/.test(userAgent) && !(<any>window).MSStream) {
+            mainStore.isIOS = true
+        }
+        if (/android/i.test(userAgent)) {
+            mainStore.isAndroid = true
+        }
 
-applyPlatformSpecifics()
-loadFonts()
-
-colorStore.init() // initialize color scheme
-init()
-
-async function init() {
-    hal.log('app/init')
-    connStore.clearMessagesInQueue()
-
-    mainStore.isConnectedToServer = false // needs to be reset on refresh
-    connStore.connectToServerIfNeeded()
-
-    /* temporary: used for testing uploadMedia 
-     * temporary: timeout used to send uploadMedia after addKeuy
-     */
-    setTimeout(() => {
-        // connStore.getMediaUrl(1000)
-    }, 3000)
-    
-}
-
-function applyPlatformSpecifics() {
-    const userAgent = navigator.userAgent || navigator.vendor || (<any>window).opera
-
-    if ('ontouchstart' in document.documentElement && userAgent.match(/Mobi/)) {
-        mainStore.isMobile = true
-    } else {
-        mainStore.isMobile = false
+        if (userAgent.indexOf('Safari') != -1 && userAgent.indexOf('Chrome') == -1) {
+            mainStore.isSafari = true
+        } else if (navigator.userAgent.indexOf('Firefox') != -1) {
+            mainStore.isFirefox = true
+        }
     }
 
-    if (/iPad|iPhone|iPod/.test(userAgent) && !(<any>window).MSStream) {
-        mainStore.isIOS = true
+    /* 
+        Fonts are loaded dynamically to make development on localhost easier 
+            1. Assets on AWS are cors enabled and thus a proxy server is needed on localhost
+            2. There's no way to use variables in @font-face src's url in css
+    */
+    function loadFonts() {
+
+        let normalFont = gothamFontUrl.value
+        let mediumFont = gothamMediumFontUrl.value
+
+        // non-Safari browsers require a proxy server for font fetches
+        if (!mainStore.isSafari) {
+            normalFont = mainStore.devCORSWorkaroundUrlPrefix + normalFont
+            mediumFont = mainStore.devCORSWorkaroundUrlPrefix + mediumFont
+        }
+
+        let style = document.createElement('style')
+
+        style.appendChild(document.createTextNode("\
+        @font-face {\
+            font-family: 'Gotham';\
+            src: url('" + normalFont + "') format('woff2');\
+            font-weight: 300;\
+            font-style: normal;\
+        }\
+        @font-face {\
+            font-family: 'Gotham';\
+            src: url('" + mediumFont + "') format('woff2');\
+            font-weight: 500;\
+            font-style: normal;\
+        }\
+        "))
+        document.head.appendChild(style)
     }
-    if (/android/i.test(userAgent)) {
-        mainStore.isAndroid = true
-    }
-
-    if (userAgent.indexOf('Safari') != -1 && userAgent.indexOf('Chrome') == -1) {
-        mainStore.isSafari = true
-    } else if (navigator.userAgent.indexOf('Firefox') != -1) {
-        mainStore.isFirefox = true
-    }
-}
-
-/* 
-    Fonts are loaded dynamically to make development on localhost easier 
-        1. Assets on AWS are cors enabled and thus a proxy server is needed on localhost
-        2. There's no way to use variables in @font-face src's url in css
-*/
-function loadFonts() {
-
-    let normalFont = gothamFontUrl.value
-    let mediumFont = gothamMediumFontUrl.value
-
-    // non-Safari browsers require a proxy server for font fetches
-    if (!mainStore.isSafari) {
-        normalFont = mainStore.devCORSWorkaroundUrlPrefix + normalFont
-        mediumFont = mainStore.devCORSWorkaroundUrlPrefix + mediumFont
-    }
-
-    let style = document.createElement('style')
-
-    style.appendChild(document.createTextNode("\
-    @font-face {\
-        font-family: 'Gotham';\
-        src: url('" + normalFont + "') format('woff2');\
-        font-weight: 300;\
-        font-style: normal;\
-    }\
-    @font-face {\
-        font-family: 'Gotham';\
-        src: url('" + mediumFont + "') format('woff2');\
-        font-weight: 500;\
-        font-style: normal;\
-    }\
-    "))
-    document.head.appendChild(style)
-}
 
 </script>
 
@@ -180,7 +180,8 @@ function loadFonts() {
             <Sidestrip/>
         </div>
 
-        <div id="Sidebar">
+        <!-- <div id="Sidebar" :class="[{'animateSlide': mainStore.page == 'groups'}]"> -->
+        <div id="Sidebar" :class="[{'animateSlide': mainStore.animateSidebar}]">
             <Sidebar/>
         </div>
 
@@ -217,195 +218,196 @@ function loadFonts() {
 <!-- Global Styles -->
 <style>
 
-* {
-    box-sizing: border-box;
-}
-
-/* mobile iOS: prevent unsightly brief flicker of highlight when tapping */
-* {
-    -webkit-tap-highlight-color: transparent;
-}
-
-@font-face {
-    font-family: Emoji;
-    src: local('Apple Color Emoji'), local('Noto Color Emoji'), local('Segoe UI');
-    unicode-range: U+1F300-1F5FF, U+1F600-1F64F, U+1F680-1F6FF, U+2600-26FF;
-}
-
-html, body {
-    height: 100%;
-    width: 100%;
-}
-
-body {
-    background: #F2F2F6;
-    font-family: Emoji, Helvetica, "Helvetica Neue", Arial, Avenir, sans-serif;
-
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;    
-    font-size: 16px;
-
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-}
-
-a {
-    color: rgba(0,0,0,.6);
-    text-decoration: underline;
-    font-weight: bold;
-    transition: all 0.6s ease;
-}
-
-a:hover {
-    text-decoration: underline;
-    font-weight: bold;
-    color: rgba(0,0,0,1);
-    transition: all 0.15s ease;
-}
-
-h1, h2, h3, h4, h5, h6 {
-    font-family: Nunito, Aria, "Helvetica Neue", Helvetica, sans-serif;
-    font-weight: 400;
-}
-
-#app {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
-
-#signInWrapper {
-    width: 100%;
-    height: 100%;
-    
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    overflow: auto;  
-}
-
-#signInWrapperHeader {
-    margin-top: 20px;
-    width: 80%;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 5px 5px;    
-
-}
-#signInWrapperHeader #logoBox {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    gap: 0px 8px;
-}
-#signInWrapperHeader #logoBox img {
-    margin-top: 4px;
-}
-#signInWrapperHeader #logoText {
-    font-family: "Gotham", Helvetica, "Helvetica Neue", Arial, Avenir, sans-serif;
-    font-size: 18px;
-    font-weight: 600;
-    color: rgb(0, 0 , 0, 0.8);
-}
-
-#qrCodeBanner {
-    margin-top: 50px;
-    margin-bottom: 100px;
-    width: 100%;
-    
-    max-width: 800px;
-    padding: 50px 30px 100px 30px;
-    background-color: white;
-
-    border-radius: 10px;
-    box-shadow:
-        0 1px 1px hsl(0deg 0% 0% / 0.075),
-        0 2px 2px hsl(0deg 0% 0% / 0.075),
-        0 4px 4px hsl(0deg 0% 0% / 0.075),
-        0 8px 8px hsl(0deg 0% 0% / 0.075),
-        0 16px 16px hsl(0deg 0% 0% / 0.075);
-
-
-    overflow: hidden;  
-
-    display: flex;
-    flex-direction: horizontal;
-    justify-content: center;
-    align-items: flex-start;
-    gap: 30px 30px;
-}
-#howTo .howToTitle {
-    font-size: 24px;
-    margin-bottom: 50px;
-    color: rgb(0, 0, 0, 0.80);
-}
-
-#howTo .howToBullet {
-    margin-bottom: 30px;
-    font-size: 18px;
-    color: rgb(0, 0, 0, 0.80);
-}
-
-
-#MainWrapper {
-    width: 100%;
-    height: 100%;
-
-    display: flex;
-    flex-direction: horizonal;
-}
-
-#Sidestrip {
-    background-color: black;
-    flex: 0 0 auto;
-    overflow: hidden;
-}
-
-#Sidebar {
-    background-color: white;
-    flex: 0 0 v-bind(sideBarWidth);
-    overflow: hidden;
-}
-
-#MainPanel {
-    flex: 1 1 auto;
-
-    /* 
-     * needed for mobile Safari where input box would keep expanding flexbox
-     * reference: https://stackoverflow.com/questions/36247140/why-dont-flex-items-shrink-past-content-size
-     */
-    min-width: 0;
-}
-
-#BottomNav {
-    position: absolute;
-    bottom: 0px;
-    z-index: 1;
-
-    width: 100%;
-
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px); /* mobile Safari */
-}
-
-@supports not ((-webkit-backdrop-filter: none) or (backdrop-filter: none)) {
-    #BottomNav {
-        background-color: rgb(243, 243, 240); /* firefox does not support backdrop-filter yet */
+    * {
+        box-sizing: border-box;
     }
-}
 
-#Settings {
-    display: flex;
-}
+    /* mobile iOS: prevent unsightly brief flicker of highlight when tapping */
+    * {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    @font-face {
+        font-family: Emoji;
+        src: local('Apple Color Emoji'), local('Noto Color Emoji'), local('Segoe UI');
+        unicode-range: U+1F300-1F5FF, U+1F600-1F64F, U+1F680-1F6FF, U+2600-26FF;
+    }
+
+    html, body {
+        height: 100%;
+        width: 100%;
+    }
+
+    body {
+        background: #F2F2F6;
+        font-family: Emoji, Helvetica, "Helvetica Neue", Arial, Avenir, sans-serif;
+
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;    
+        font-size: 16px;
+
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+    }
+
+    a {
+        color: rgba(0,0,0,.6);
+        text-decoration: underline;
+        font-weight: bold;
+        transition: all 0.6s ease;
+    }
+
+    a:hover {
+        text-decoration: underline;
+        font-weight: bold;
+        color: rgba(0,0,0,1);
+        transition: all 0.15s ease;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        font-family: Nunito, Aria, "Helvetica Neue", Helvetica, sans-serif;
+        font-weight: 400;
+    }
+
+    #app {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    #signInWrapper {
+        width: 100%;
+        height: 100%;
+        
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        overflow: auto;  
+    }
+
+    #signInWrapperHeader {
+        margin-top: 20px;
+        width: 80%;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 5px 5px;    
+    }
+    #signInWrapperHeader #logoBox {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        gap: 0px 8px;
+    }
+    #signInWrapperHeader #logoBox img {
+        margin-top: 4px;
+    }
+    #signInWrapperHeader #logoText {
+        font-family: "Gotham", Helvetica, "Helvetica Neue", Arial, Avenir, sans-serif;
+        font-size: 18px;
+        font-weight: 600;
+        color: rgb(0, 0 , 0, 0.8);
+    }
+
+    #qrCodeBanner {
+        margin-top: 50px;
+        margin-bottom: 100px;
+        width: 100%;
+        
+        max-width: 800px;
+        padding: 50px 30px 100px 30px;
+        background-color: white;
+
+        border-radius: 10px;
+        box-shadow:
+            0 1px 1px hsl(0deg 0% 0% / 0.075),
+            0 2px 2px hsl(0deg 0% 0% / 0.075),
+            0 4px 4px hsl(0deg 0% 0% / 0.075),
+            0 8px 8px hsl(0deg 0% 0% / 0.075),
+            0 16px 16px hsl(0deg 0% 0% / 0.075);
+
+        overflow: hidden;  
+
+        display: flex;
+        flex-direction: horizontal;
+        justify-content: center;
+        align-items: flex-start;
+        gap: 30px 30px;
+    }
+    #howTo .howToTitle {
+        font-size: 24px;
+        margin-bottom: 50px;
+        color: rgb(0, 0, 0, 0.80);
+    }
+
+    #howTo .howToBullet {
+        margin-bottom: 30px;
+        font-size: 18px;
+        color: rgb(0, 0, 0, 0.80);
+    }
+
+    #MainWrapper {
+        width: 100%;
+        height: 100%;
+
+        display: flex;
+        flex-direction: horizonal;
+    }
+
+    #Sidestrip {
+        background-color: black;
+        flex: 0 0 auto;
+        overflow: hidden;
+    }
+
+    #Sidebar {
+        background-color: white;
+        flex: 0 0 v-bind(sideBarWidth);
+        overflow: hidden;
+        
+    }
+
+    .animateSlide {
+        transition: flex 300ms ease-in-out;
+    }
+
+    #MainPanel {
+        flex: 1 1 auto;
+        /* 
+        * needed for mobile Safari where input box would keep expanding flexbox
+        * reference: https://stackoverflow.com/questions/36247140/why-dont-flex-items-shrink-past-content-size
+        */
+        min-width: 0;
+    }
+
+    #BottomNav {
+        position: absolute;
+        bottom: 0px;
+        z-index: 1;
+
+        width: 100%;
+
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px); /* mobile Safari */
+    }
+
+    @supports not ((-webkit-backdrop-filter: none) or (backdrop-filter: none)) {
+        #BottomNav {
+            background-color: rgb(243, 243, 240); /* firefox does not support backdrop-filter yet */
+        }
+    }
+
+    #Settings {
+        display: flex;
+    }
 
 </style>

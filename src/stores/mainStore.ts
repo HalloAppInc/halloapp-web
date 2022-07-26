@@ -41,10 +41,14 @@ export const useMainStore = defineStore('main', {
         haveInitialHandshakeCompleted: false,
         mobilePublicKeyBase64: '', 
 
+        showSidebar: true,
+        animateSidebar: false,
+
         page: 'home',
-        homePanel: '',
+        groupsPageGroup: <any>{},
         settingsPage: '',
 
+        mobileNavlessPanel: '',
         scrollToTop: '',
 
         sounds: false,
@@ -84,6 +88,19 @@ export const useMainStore = defineStore('main', {
                 this.scrollToTop = page
             } else { 
                 this.page = page
+            }
+
+            /* wait 1s before activating so users flicking between tabs won't see the animation */
+            if (page == 'groups') {
+                setTimeout(this.activateSidebarAnimation, 1000)
+            } else {
+                this.showSidebar = true
+                this.animateSidebar = false
+            }
+        },
+        activateSidebarAnimation() {
+            if (this.page == 'groups') {
+                this.animateSidebar = true
             }
         },
         gotoSettingsPage(page: string) {
