@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 
-import { useMainStore } from '../../stores/mainStore'
 import { useColorStore } from '../../stores/colorStore'
+
+import { useMainStore } from '../../stores/mainStore'
+
 import { useI18n } from 'vue-i18n'
 
 import Avatar from '../media/Avatar.vue'
 
-const props = defineProps(['postID'])
+const props = defineProps(['title'])
 
 const { t } = useI18n({
     inheritLocale: true,
@@ -22,44 +24,31 @@ const hoverColor = computed(() => {
     return colorStore.hover
 })
 
-const lineColor = computed(() => {
-    return colorStore.line
-})
-
-const textColor = computed(() => {
-    return colorStore.text
-})
-
-const headerColor = computed(() => {
-    return colorStore.header
-})
-
 const iconColor = computed(() => {
     return colorStore.icon
 })
 
-const backgroundColor = computed(() => {
-    return colorStore.background
-})
+
 </script>
 
 <template>
 
-    <div class='header'>
+    <div class='groupHeader'>
 
         <div class='container'>
-            
+           
+            <div v-if="!mainStore.showSidebar" class='iconContainer' @click="$emit('toggleSidebar')">
+                <div class='iconShadow'>
+                    <font-awesome-icon :icon="['fas', 'angle-left']" style="font-size: 25px;"/>
+                </div>
+            </div>
+           
             <div class="avatarContainer">
                 <Avatar :userID="'TonyTemp'" :width="'30px'"></Avatar>
-            </div>
+            </div>           
 
-            <div class="titleContainer">
-                {{ t('general.home') }}
-                
-            </div>
-
-            <!-- for now, empty element only used to space things evenly -->
-            <div class="avatarContainer">
+            <div class='titleContainer'>
+                {{ mainStore.groupsPageGroup.title }}
             </div>
 
         </div>
@@ -69,20 +58,22 @@ const backgroundColor = computed(() => {
 
 <style scoped>
 
-.header {
-    overflow-y: auto;
-    overflow-x: hidden;
-    
-    height: 100%;
-
+.groupHeader {
+    position: sticky;
+    top: 0px;
+    width: 100%;
+    height: 50px;
     background-color: rgb(243, 243, 240);
+    z-index: 2;
 }
 
 .container {
-    height: 100%;
+    height: 50px;
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: flex-start;
+    align-items: center;
+
 }
 
 .leftGutter {
@@ -93,18 +84,13 @@ const backgroundColor = computed(() => {
     flex: 0 0 10px;
 }
 
-.avatarContainer {
-    flex: 0 0 55px;
-    padding: 10px 0px 0px 0px;
+.iconContainer {
+    flex: 0 0 50px;
+    
+    color: v-bind(iconColor);
 
     display: flex;
-    flex-direction: row;
     justify-content: center;
-}
-
-.iconContainer {
-    padding: 5px 0px 5px 0px;
-    color: v-bind(iconColor);
 }
 
 .iconContainer:hover {
@@ -123,6 +109,18 @@ const backgroundColor = computed(() => {
 
 .iconShadow:hover {
     background-color: v-bind(hoverColor);
+}
+
+.avatarContainer {
+    padding-top: 5px;
+    padding-left: 15px;
+    flex: 0 0 65px;
+}
+
+.avatar {
+
+    background-color: lightgray;
+    border-radius: 50%;
 }
 
 .titleContainer {

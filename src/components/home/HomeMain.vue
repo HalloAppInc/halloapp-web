@@ -111,13 +111,13 @@ function commentsClick(postID: string) {
 
         inViewPostID.value = postID
         showComments.value = true
-        mainStore.homePanel = 'comments'
+        mainStore.mobileNavlessPanel = 'comments'
     } else {
         listBoxWidth.value = '100%'
 
         inViewPostID.value = ''
         showComments.value = false
-        mainStore.homePanel = ''
+        mainStore.mobileNavlessPanel = ''
     }
 }
 
