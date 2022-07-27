@@ -190,7 +190,7 @@ export const useConnStore = defineStore('conn', () => {
         } else if (webStanza) {
             hal.log('connStore/handleInboundMsg/webStanza')
 
-            const webStanzaContentsBinArr = new Uint8Array(webStanza.contents)
+            const webStanzaContentsBinArr = new Uint8Array(webStanza.content)
             const webContainer = await decodeWebContainer(webStanzaContentsBinArr)
             const noiseMessage = webContainer?.noiseMessage
 
@@ -207,7 +207,7 @@ export const useConnStore = defineStore('conn', () => {
                         initHandshake(noise)
                     }
 
-                    if (noiseMessage.messageType == noiseMessage.MessageType.IK_A) {
+                    if (noiseMessage.messageType == web.NoiseMessage.MessageType.IK_A) {
                         hal.log('connStore/handleInboundMsg/webStanza/noiseMessage/IK_A')
                         handleNoiseHandshakeMsg(noiseMessage.content)
                     } 
