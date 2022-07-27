@@ -7,6 +7,7 @@ import { useHAMediaUpload } from '../../composables/haMediaUpload'
 import { useHAMediaResize } from '../../composables/haMediaResize'
 
 import InputBox from './InputBox.vue'
+import hal from '../../common/halogger'
 
 const colorStore = useColorStore()
 
@@ -17,7 +18,8 @@ const props = defineProps(['showComposer', 'uploadFiles', 'messageList', 'replyQ
 
 const attachMediaList = ref(<any>[])
 
-const test = ref()
+const testImage = ref()
+const testVideo = ref()
 const addUploadMedia = ref()
 
 const selectMediaIdx = ref(0)
@@ -71,15 +73,31 @@ const iconColor = computed(() => {
     return colorStore.icon
 })
 
-function testUploadAndDownload(file: any, type: any) {
+// To test upload and download, set openTest = true
+const openTest = false
+
+function testUploadAndDownload(file: any) {
     if (file) {
-        uploadAndDownLoad(file, attachMediaList.value, type)
-        // wait for uploadAndDownLoad
-        setTimeout(() => {
-            test.value.src = attachMediaList.value[attachMediaList.value.length - 1]
-        }, 5000)
+        uploadAndDownLoad(file, attachMediaList.value)
     }
 }
+
+const numOfFile = computed(() => {
+    return attachMediaList.value.length
+})
+
+watch(numOfFile, (newVal, oldVal) => {
+    const newUrl = attachMediaList.value[attachMediaList.value.length - 1]
+    if (testImage.value) {
+        testImage.value.src = newUrl
+    }
+    if (testVideo.value) {
+        testVideo.value.src = newUrl
+    }
+    hal.log('Composer/testUploadAndDownload/recevice new media, ' + 
+        attachMediaList.value[attachMediaList.value.length - 1] 
+        + 'number of total = ' + newVal)
+})
 
 function onFilePicked(event: any) {
     const files = event.target.files
@@ -160,9 +178,9 @@ function closeComposer() {
                     </div>
                 </div>
 
-                <!-- TODO: delete this one, only for testing! -->
-                <div class='iconContainer'
-                    @click='testUploadAndDownload(props.uploadFiles[selectMediaIdx].file, props.uploadFiles[0].type)'>
+                <!-- only for testing! -->
+                <div v-if='openTest' class='iconContainer'
+                    @click='testUploadAndDownload(props.uploadFiles[selectMediaIdx])'>
                     <div class='iconShadow'>
                         <font-awesome-icon :icon="['fas', 'hammer']" size='lg' />
                     </div>
@@ -175,13 +193,17 @@ function closeComposer() {
                 <div v-if='isReady'>
                     <div v-if='mediaUrlList[selectMediaIdx].type == "image"' class='imgBigContainer'>
                         <img class='imgBig' :src='mediaUrlList[selectMediaIdx].url' />
-                        <img class='imgBig' ref='test' />
+                        <!-- only for testing! -->
+                        <img v-if='openTest' class='imgBig' ref='testImage' />
                     </div>
 
                     <div v-show='mediaUrlList[selectMediaIdx].type == "video"' class='videoContainer'>
                         <video controls :src='props.uploadFiles[selectMediaIdx].url' id='videoComposer'
                             preload='metadata' playsinline controlslist=''>
                             <source :src='props.uploadFiles[selectMediaIdx].url'>
+                        </video>
+                        <!-- only for testing! -->
+                        <video v-if='openTest' controls ref='testVideo' preload='metadata' playsinline controlslist=''>
                         </video>
                     </div>
                 </div>
