@@ -340,8 +340,8 @@ export const useConnStore = defineStore('conn', () => {
     
         const pattern   = 'IK'
         const curve     = '25519'
-        const cipher    = 'ChaChaPoly'
-        const hash      = 'BLAKE2b'
+        const cipher    = 'AESGCM'
+        const hash      = 'SHA256'
         const protocolName = `Noise_${pattern}_${curve}_${cipher}_${hash}`
         handshakeState = noise.HandshakeState(protocolName, noise.constants.NOISE_ROLE_RESPONDER)
         hal.log("initHandshake: ")
