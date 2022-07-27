@@ -7,6 +7,7 @@ import { useHAMediaUpload } from '../../composables/haMediaUpload'
 import { useHAMediaResize } from '../../composables/haMediaResize'
 
 import InputBox from './InputBox.vue'
+import hal from '../../common/halogger'
 
 const colorStore = useColorStore()
 
@@ -18,6 +19,7 @@ const props = defineProps(['showComposer', 'uploadFiles', 'messageList', 'replyQ
 const attachMediaList = ref(<any>[])
 
 const test = ref()
+const test1 = ref()
 const addUploadMedia = ref()
 
 const selectMediaIdx = ref(0)
@@ -74,12 +76,25 @@ const iconColor = computed(() => {
 function testUploadAndDownload(file: any) {
     if (file) {
         uploadAndDownLoad(file, attachMediaList.value)
-        // wait for uploadAndDownLoad
-        setTimeout(() => {
-            test.value.src = attachMediaList.value[attachMediaList.value.length - 1]
-        }, 5000)
     }
 }
+
+const numOfFile = computed(() => {
+    return attachMediaList.value.length
+})
+
+watch(numOfFile, (newVal, oldVal) => {
+    if (test1.value) {
+        test1.value.src = attachMediaList.value[attachMediaList.value.length - 1]
+    }
+    if (test.value) {
+        console.log(test.value)
+        test.value.src = attachMediaList.value[attachMediaList.value.length - 1]
+    }
+    hal.log('Composer/testUploadAndDownload/recevice new media, ' + 
+        attachMediaList.value[attachMediaList.value.length - 1] 
+        + 'number of total = ' + newVal)
+})
 
 function onFilePicked(event: any) {
     const files = event.target.files
@@ -175,13 +190,17 @@ function closeComposer() {
                 <div v-if='isReady'>
                     <div v-if='mediaUrlList[selectMediaIdx].type == "image"' class='imgBigContainer'>
                         <img class='imgBig' :src='mediaUrlList[selectMediaIdx].url' />
+                        <!-- TODO: delete this one, only for testing! -->
                         <img class='imgBig' ref='test' />
                     </div>
 
-                    <div v-show='mediaUrlList[selectMediaIdx].type == "video"' class='videoContainer'>
+                    <div v-if='mediaUrlList[selectMediaIdx].type == "video"' class='videoContainer'>
                         <video controls :src='props.uploadFiles[selectMediaIdx].url' id='videoComposer'
                             preload='metadata' playsinline controlslist=''>
                             <source :src='props.uploadFiles[selectMediaIdx].url'>
+                        </video>
+                        <!-- TODO: delete this one, only for testing! -->
+                        <video controls ref='test1' preload='metadata' playsinline controlslist=''>
                         </video>
                     </div>
                 </div>

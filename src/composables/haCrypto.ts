@@ -9,10 +9,8 @@ export function useHACrypto() {
     const imageInfo = Base64.fromBase64("SGFsbG9BcHAgaW1hZ2U=")
     const videoInfo = Base64.fromBase64("SGFsbG9BcHAgdmlkZW8=")
 
-    async function encrypt(plaintext: any, encryptionKey: Uint8Array) {
-        const key = encryptionKey
-
-        const derivedKeyObj = await getDerivedKey(key, imageInfo)
+    async function encryptImage(plaintext: any, encryptionKey: Uint8Array) {
+        const derivedKeyObj = await getDerivedKey(encryptionKey, imageInfo)
         const derivedKey = derivedKeyObj.key
 
         const IV = derivedKey.slice(0, 16)
@@ -31,16 +29,21 @@ export function useHACrypto() {
         const hash = await crypto.subtle.digest("SHA-256", encryptedArrayWithMAC)
         const ciphertextHash = new Uint8Array(hash)
 
-        const encryptedBuffer = encryptedArrayWithMAC.buffer
+        const encryptedBuffer = encryptedArrayWithMAC.buffer as ArrayBuffer
+
+        /* hal.log(
+            'haCrypto/encryptImage/' +
+            'plaintextArray: ' + plaintextArray.byteLength + 
+            '\nencryptedBinaryArray' + encryptedBinaryArray.byteLength +
+            '\nencryptedArrayWithMAC' + encryptedArrayWithMAC.byteLength + 
+            '\nencryptedBuffer' + encryptedBuffer.byteLength) */
 
         return { encryptedBuffer, ciphertextHash }
 
     }
 
-    async function decrypt(encryptedBuffer: ArrayBuffer, ciphertextHash: any, decryptionKey: Uint8Array) {
-        const key = decryptionKey
-
-        const derivedKeyObj = await getDerivedKey(key, imageInfo)
+    async function decryptImage(encryptedBuffer: ArrayBuffer, ciphertextHash: any, decryptionKey: Uint8Array) {
+        const derivedKeyObj = await getDerivedKey(decryptionKey, imageInfo)
         const derivedKey = derivedKeyObj.key
 
         const IV = derivedKey.slice(0, 16)
@@ -64,7 +67,7 @@ export function useHACrypto() {
             hal.log("decrypt/mismatch HMAC")
         }
 
-        const decryptedBinaryArray = await dedecryptBlob(AESKey, IV, encryptedBinaryArray)
+        const decryptedBinaryArray = await decryptBlob(AESKey, IV, encryptedBinaryArray)
 
         return new Blob([decryptedBinaryArray])
     }
@@ -143,7 +146,7 @@ export function useHACrypto() {
         return encryptedBinaryArray
     }
 
-    async function dedecryptBlob(rawKey: any, IV: any, ciphertext: any) {
+    async function decryptBlob(rawKey: any, IV: any, ciphertext: any) {
         const baseKey = await window.crypto.subtle.importKey(
             "raw",
             rawKey,
@@ -151,14 +154,14 @@ export function useHACrypto() {
             true,
             ["decrypt"]
         )
-            .catch((error) => { hal.log("dedecryptBlob/importKey error: " + error) })
+            .catch((error) => { hal.log("decryptBlob/importKey error: " + error) })
 
         const decryptedCiphertext = await window.crypto.subtle.decrypt(
             { name: "AES-CBC", iv: IV },
             baseKey as CryptoKey,
             ciphertext
         )
-            .catch((error) => { hal.log("dedecryptBlob/decrypt error: " + error) })
+            .catch((error) => { hal.log("decryptBlob/decrypt error: " + error) })
 
         let decryptedCiphertextArray = new Uint8Array(decryptedCiphertext)
         return decryptedCiphertextArray
@@ -183,28 +186,190 @@ export function useHACrypto() {
     }
 
 
-    async function encrytImage(image: any, encryptionKey: Uint8Array) {
-        return await encrypt(image, encryptionKey)
+    async function encryptVideo(video: Blob, encryptionKey: Uint8Array, chunkSize: number) {
+        const plaintextBuffer = await new Response(video).arrayBuffer()
+        const plaintextArray =  new Uint8Array(plaintextBuffer)
+
+        const encryptedchunksArr = []
+        let chunkCounter = 0
+        for (let i = 0; i < plaintextArray.length; i += chunkSize) {
+            const chunkplaintextArray = plaintextArray.slice(i, i + chunkSize)
+            const chunkInfo = videoInfo + ' ' + chunkCounter
+            const encryptedChunkBuffer = await encryptChunk(chunkplaintextArray, encryptionKey, chunkInfo)
+            encryptedchunksArr.push(encryptedChunkBuffer)
+            chunkCounter++
+        }
+
+        const combinedBinArr = combineBinaryArrays(encryptedchunksArr)
+        const encryptedBuffer = combinedBinArr.buffer as ArrayBuffer
+
+        // count chunksize and blobsize after encryption
+        const encryptChunkSize = encryptedchunksArr[0].byteLength
+        const encryptBlobSize = encryptedBuffer.byteLength
+
+        // calculate hash
+        const hash = await crypto.subtle.digest("SHA-256", combinedBinArr)
+        const ciphertextHash = new Uint8Array(hash)
+
+        return { encryptedBuffer, ciphertextHash, encryptChunkSize, encryptBlobSize }
     }
 
 
-    async function encrytVideo(video: any, encryptionKey: Uint8Array, chunkSize: number) {
-        const plaintextArray = await new Response(video).arrayBuffer()
+    async function encryptChunk(plaintextChunk: any, encryptionKey: any, chunkInfo: any) {
+        const derivedKeyObj = await getDerivedKey(encryptionKey, chunkInfo)
+        const derivedKey = derivedKeyObj.key
 
-        /* const chunksArr = []
+        const IV = derivedKey.slice(0, 16)
+        const AESKey = derivedKey.slice(16, 48)
+        const SHA256Key = derivedKey.slice(48, 80)
+
+        const plaintextChunkBuffer = await new Response(plaintextChunk).arrayBuffer()
+
+        // encryt plain text
+        const encryptedBinaryChunk = await encryptBlob(AESKey, IV, plaintextChunkBuffer)
+
+        // add HMAC
+        const encryptedChunkWithMAC = await attachHMAC(SHA256Key, encryptedBinaryChunk)
+
+        /* hal.log(
+            'haCrypto/encryptChunk/' +
+            'chunk Info: ' + chunkInfo + 
+            '\nplaintextArray: ' + plaintextChunkBuffer.byteLength + 
+            '\nencryptedBinaryArray' + encryptedBinaryChunk.byteLength +
+            '\nencryptedArrayWithMAC' + encryptedChunkWithMAC.byteLength) */
+
+        // hal.log('haCrypto/encryptChunk/Encrypted chunk ' + chunkInfo)
+        return encryptedChunkWithMAC
+    }
+
+
+    function combineBinaryArrays(arrays: any) {
+        let totalLength = arrays.reduce((a: any, b: any) => a + b.byteLength, 0)
+        let result = new Uint8Array(totalLength)
+        let offset = 0
+        for (let arr of arrays) {
+            result.set(arr, offset)
+            offset += arr.byteLength
+        }
+        return result
+    }
+
+
+    async function decryptVideo(encryptedBuffer: ArrayBuffer, ciphertextHash: Uint8Array, 
+        decryptionKey: Uint8Array, chunkSize: number) {
+        const encryptedArray = new Uint8Array(encryptedBuffer)
+
+        // check hash
+        const hash = await crypto.subtle.digest("SHA-256", encryptedArray)
+        const isCorrectHash = isUint8ArrayEqual(new Uint8Array(hash), ciphertextHash)
+        if (!isCorrectHash) {
+            hal.log('decryptVideo/hash does not match')
+        }
+
+        const chunksArr = []
         let chunkCounter = 0
-        for (let i = 0; i < plaintextArray.length; i += chunkSize) {
-            const chunkWithMAC = plaintextArray.slice(i, i + chunkSize)
-            const chunkInfo = info + ' ' + chunkCounter
-            const decryptedBinArr = await encrypt(chunkWithMAC, encryptionKey, chunkInfo)
+        for (let i = 0; i < encryptedArray.length; i += chunkSize) {
+            const chunkWithMAC = encryptedArray.slice(i, i + chunkSize)
+            const chunkInfo = videoInfo + ' ' + chunkCounter
+            const decryptedBinArr = await decryptChunk(chunkWithMAC, decryptionKey, chunkInfo)
             chunksArr.push(decryptedBinArr)
             chunkCounter++
         }
 
         const combinedBinArr = combineBinaryArrays(chunksArr)
-        return new Blob([combinedBinArr]) */
+        return new Blob([combinedBinArr])
+    }
+
+    async function decryptChunk(encryptedArray: any, decryptionKey: any, chunkInfo: any) {
+        const derivedKeyObj = await getDerivedKey(decryptionKey, chunkInfo)
+        const derivedKey = derivedKeyObj.key
+
+        const IV = derivedKey.slice(0, 16)
+        const AESKey = derivedKey.slice(16, 48)
+        const SHA256Key = derivedKey.slice(48, 80)
+
+        const MAC = encryptedArray.slice(-32)
+        const chunk = encryptedArray.slice(0, -32)
+
+        /* hal.log(
+            'haCrypto/decryptChunk/' +
+            'chunk Info: ' + chunkInfo + 
+            '\nMAC: ' + MAC.byteLength + 
+            '\nchunk: ' + chunk.byteLength +
+            '\nencryptedArrayWithMAC: ' + encryptedArray.byteLength) */
+
+        const isHMACMatch = await verifyHMAC(SHA256Key, chunk, MAC)
+        if (!isHMACMatch) {
+            hal.log('decryptChunk/' + chunkInfo + '/mismatch HMAC')
+        }
+
+        const decryptedBinArr = await decryptBlob(AESKey, IV, chunk)
+        return decryptedBinArr
     }
 
 
-    return { encrypt, decrypt, keygen}
+    async function decryptStream(reader: any, ciphertextHash: Uint8Array, 
+        decryptionKey: Uint8Array, chunkSize: number, fullBinArr: Uint8Array, mp4box: any) {
+        
+        let fullBinArrOffset = 0
+        let chunkCounter = 0
+    
+        let videoInfoCount  = 0 // info for decryption, starts at 0
+        let fileStartOffset = 0 // mp4box file offset, starts at 0
+
+        while (true) {
+            const { value, done } = await reader.read()
+            if (done) {
+                hal.log('haCrypto/decryptStream/finish fetching')
+    
+                // check hash of full binary array
+                const hash = await crypto.subtle.digest("SHA-256", fullBinArr)
+                const isCorrectHash = isUint8ArrayEqual(new Uint8Array(hash), ciphertextHash)
+                if (!isCorrectHash) {
+                    hal.log('haCrypto/decryptStream/hash does not match')
+                }
+        
+                let start = chunkCounter * chunkSize
+                let end = (chunkCounter + 1) * chunkSize
+                const chunkWithMAC = fullBinArr.slice(start, end)
+                const chunkInfo = videoInfo + ' ' + videoInfoCount
+                const decryptedBinArr = await decryptChunk(chunkWithMAC, decryptionKey, chunkInfo)
+    
+                let buf: any = decryptedBinArr.buffer
+                buf.fileStart = fileStartOffset
+                mp4box.appendBuffer(buf)
+    
+                break
+            }
+    
+            // copies received data to full binary array
+            fullBinArr.set(value, fullBinArrOffset)
+    
+            const presetChunkedOffset = chunkCounter * chunkSize
+            const diffOffset = fullBinArrOffset - presetChunkedOffset
+    
+            fullBinArrOffset += value.length
+    
+            let chunksToProcess = Math.floor((diffOffset + value.length)/chunkSize)
+       
+            for(let i = 0; i < chunksToProcess; i++) {
+             
+                let start = chunkCounter * chunkSize
+                let end = (chunkCounter + 1) * chunkSize
+                const chunkWithMAC = fullBinArr.slice(start, end)
+                const chunkInfo = videoInfo + ' ' + videoInfoCount
+                const decryptedBinArr = await decryptChunk(chunkWithMAC, decryptionKey, chunkInfo)
+    
+                let buf: any = decryptedBinArr.buffer
+                buf.fileStart = fileStartOffset
+                mp4box.appendBuffer(buf)
+                
+                chunkCounter++
+                videoInfoCount++
+                fileStartOffset += decryptedBinArr.length
+            }
+        }
+    }
+
+    return { encryptImage, decryptImage, encryptVideo, decryptVideo, decryptStream, keygen}
 }

@@ -1,8 +1,10 @@
 import { clients } from '../proto/clients.js'
+import hal from '../common/halogger'
 
 export function useHAProtobuf() {
 
-    function createMedia(media: any, ciphertextHash: Uint8Array, downloadUrl: string, encryptionKey: Uint8Array, chunkSize?: number) {
+    function createMedia(media: any, ciphertextHash: Uint8Array, downloadUrl: string,
+        encryptionKey: Uint8Array, isStream?: boolean, chunkSize?: number, blobSize?: number) {
         if (media.type == 'image') {
             let encryptedResource = clients.EncryptedResource.create({
                 'ciphertextHash': ciphertextHash,
@@ -20,6 +22,8 @@ export function useHAProtobuf() {
                 'image': image
             }))
 
+            hal.log('haProtobuf/haProtobuf/Create Image')
+
             return albumMedia
         }
         else if (media.type == 'video') {
@@ -30,11 +34,14 @@ export function useHAProtobuf() {
                 'encryptionKey': encryptionKey
             })
 
-            let streamingInfo = clients.StreamingInfo.create({
-                'blobVersion': clients.BlobVersion.BLOB_VERSION_DEFAULT, // ?
-                'blobSize': media.size,
-                'chunkSize': chunkSize
-            })
+            let streamingInfo = null
+            if (isStream) {
+                streamingInfo = clients.StreamingInfo.create({
+                    'blobVersion': clients.BlobVersion.BLOB_VERSION_DEFAULT, // ?
+                    'blobSize': blobSize,
+                    'chunkSize': chunkSize
+                })
+            }
 
             let video = clients.Video.create({
                 'video': encryptedResource,
@@ -46,6 +53,8 @@ export function useHAProtobuf() {
             let albumMedia = clients.AlbumMedia.create(({
                 'video': video
             }))
+
+            hal.log('haProtobuf/haProtobuf/Create Video')
 
             return albumMedia
         }
@@ -79,10 +88,13 @@ export function useHAProtobuf() {
 
         let chatContainerBuf = clients.ChatContainer.encodeDelimited(chatContainer).finish()
 
+        hal.log('haProtobuf/createChatContainer/Create ChatContainer')
+
         return chatContainerBuf
     }
 
     function decodeFromChatContainer(binArray: Uint8Array) {
+        hal.log('haProtobuf/decodeFromChatContainer/Decode ChatContainer')
         return clients.ChatContainer.decodeDelimited(binArray)
     }
 
@@ -92,14 +104,41 @@ export function useHAProtobuf() {
             const downloadUrl = media.image.img?.downloadUrl as string
             const ciphertextHash = media.image.img?.ciphertextHash as Uint8Array
             const decryptionKey = media.image.img?.encryptionKey as Uint8Array
-            return {downloadUrl, ciphertextHash, decryptionKey}
+            const type = 'image'
+            const chunkSize = -1
+            const blobSize = -1
+
+            hal.log('haProtobuf/decodeFromMedia/Decode Image')
+
+            return { type, chunkSize, blobSize, downloadUrl, ciphertextHash, decryptionKey }
         }
         // media type is video
         else {
-            const downloadUrl = media.video?.video?.downloadUrl as string
-            const ciphertextHash = media.video?.video?.ciphertextHash as Uint8Array
-            const decryptionKey = media.video?.video?.encryptionKey as Uint8Array
-            return {downloadUrl, ciphertextHash, decryptionKey}
+            const isStream = JSON.stringify(media.video?.streamingInfo) !== '{}'
+            if (isStream) {
+                const downloadUrl = media.video?.video?.downloadUrl as string
+                const ciphertextHash = media.video?.video?.ciphertextHash as Uint8Array
+                const decryptionKey = media.video?.video?.encryptionKey as Uint8Array
+                const type = 'video'
+                const chunkSize = media.video?.streamingInfo?.chunkSize as number
+                const blobSize = media.video?.streamingInfo?.blobSize as number
+
+                hal.log('haProtobuf/decodeFromMedia/Decode Streaming Video')
+
+                return { type, chunkSize, blobSize, downloadUrl, ciphertextHash, decryptionKey }
+            }
+            else {
+                const downloadUrl = media.video?.video?.downloadUrl as string
+                const ciphertextHash = media.video?.video?.ciphertextHash as Uint8Array
+                const decryptionKey = media.video?.video?.encryptionKey as Uint8Array
+                const type = 'video'
+                const chunkSize = -1
+                const blobSize = -1
+
+                hal.log('haProtobuf/decodeFromMedia/Decode Video')
+
+                return { type, chunkSize, blobSize, downloadUrl, ciphertextHash, decryptionKey }
+            }
         }
     }
 
