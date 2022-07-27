@@ -193,7 +193,7 @@ function closeComposer() {
                         <img class='imgBig' ref='test' />
                     </div>
 
-                    <div v-if='mediaUrlList[selectMediaIdx].type == "video"' class='videoContainer'>
+                    <div v-show='mediaUrlList[selectMediaIdx].type == "video"' class='videoContainer'>
                         <video controls :src='props.uploadFiles[selectMediaIdx].url' id='videoComposer'
                             preload='metadata' playsinline controlslist=''>
                             <source :src='props.uploadFiles[selectMediaIdx].url'>
