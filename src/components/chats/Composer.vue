@@ -88,7 +88,6 @@ watch(numOfFile, (newVal, oldVal) => {
         test1.value.src = attachMediaList.value[attachMediaList.value.length - 1]
     }
     if (test.value) {
-        console.log(test.value)
         test.value.src = attachMediaList.value[attachMediaList.value.length - 1]
     }
     hal.log('Composer/testUploadAndDownload/recevice new media, ' + 
