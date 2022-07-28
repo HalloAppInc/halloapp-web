@@ -6,6 +6,7 @@ import GraphemeSplitter from 'grapheme-splitter'
 
 import { useTimeformatter } from '../../composables/timeformatter'
 import { useHAMediaResize } from '../../composables/haMediaResize'
+import { useHADatabase } from '../../composables/haDb'
 
 import { useColorStore } from '../../stores/colorStore'
 
@@ -24,6 +25,10 @@ const { t, locale } = useI18n({
 
 const { formatTimeDateOnlyChat, formatTimeChat, formatTimeFullChat } = useTimeformatter()
 const { setMediaSizeInMediaList } = useHAMediaResize()
+const { loadMessageList ,initMessageList } = useHADatabase()
+
+// initMessageList()
+const messageListFromDB = loadMessageList('X9l9StZ_IjuqFqGvBqa27')
 
 const props = defineProps(['messageList', 'replyQuoteIdx'])
 
