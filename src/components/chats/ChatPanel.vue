@@ -97,8 +97,50 @@ watch(chatPanelHeight, () => {
     })
 })
 
-async function parseMessage() {
+watch(messageListFromDB, () => {
+    parseMessage()
+})
 
+notifyWhenChanged(listenerFunction)
+
+const headerColor = computed(() => {
+    return colorStore.header
+})
+const textColor = computed(() => {
+    return colorStore.text
+})
+const outBoundMsgBubbleColor = computed(() => {
+    return colorStore.outBoundMsgBubble
+})
+const inBoundMsgBubbleColor = computed(() => {
+    return colorStore.inBoundMsgBubble
+})
+const timeBubbleColor = computed(() => {
+    return colorStore.timeBubble
+})
+const timestampColor = computed(() => {
+    return colorStore.timestamp
+})
+const iconColor = computed(() => {
+    return colorStore.icon
+})
+const hoverColor = computed(() => {
+    return colorStore.hover
+})
+const lineColor = computed(() => {
+    return colorStore.line
+})
+const backgroundColor = computed(() => {
+    return colorStore.background
+})
+
+nextTick(() => {
+    handleScroll()
+    gotoBottom('auto')
+    new ResizeObserver(setChatPanelHeight).observe(content.value!)
+})
+
+async function parseMessage() {
     if (!messageListFromDB.value) {
         data.value = []
         return
@@ -193,49 +235,6 @@ async function parseMessage() {
     data.value = result
 }
 
-watch(messageListFromDB, () => {
-    parseMessage()
-})
-
-notifyWhenChanged(listenerFunction)
-
-const headerColor = computed(() => {
-    return colorStore.header
-})
-const textColor = computed(() => {
-    return colorStore.text
-})
-const outBoundMsgBubbleColor = computed(() => {
-    return colorStore.outBoundMsgBubble
-})
-const inBoundMsgBubbleColor = computed(() => {
-    return colorStore.inBoundMsgBubble
-})
-const timeBubbleColor = computed(() => {
-    return colorStore.timeBubble
-})
-const timestampColor = computed(() => {
-    return colorStore.timestamp
-})
-const iconColor = computed(() => {
-    return colorStore.icon
-})
-const hoverColor = computed(() => {
-    return colorStore.hover
-})
-const lineColor = computed(() => {
-    return colorStore.line
-})
-const backgroundColor = computed(() => {
-    return colorStore.background
-})
-
-nextTick(() => {
-    handleScroll()
-    gotoBottom('auto')
-    new ResizeObserver(setChatPanelHeight).observe(content.value!)
-})
-
 async function listenerFunction(type: string) {
     hal.log('ChatPanel/notifyWhenChanged/' + type)
     loadMessageListIntoChatPanel()
@@ -247,6 +246,10 @@ function loadMessageListIntoChatPanel() {
     .then(res => {
         messageListFromDB.value = res
     }) */
+    /* 
+    wait for transaction to finish, add timeout because 
+    db.hook may be trigger before it actual ends.
+    */
     clearTimeout(load)
     load = setTimeout(() => {
         loadMessageList('X9l9StZ_IjuqFqGvBqa27')
