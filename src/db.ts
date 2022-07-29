@@ -1,5 +1,24 @@
 import Dexie, { Table } from 'dexie'
 
+export interface MessageList {
+    id?: number
+    fromUserID?: string
+    toUserID?: string
+    quoteId?: number
+    mediaID?: number
+    timestamp?: string
+    text?: string
+}
+
+export interface Media {
+    id?: number
+    type: string,
+    file: ArrayBuffer,
+    preview?: ArrayBuffer,
+    width: number,
+    height: number
+}
+
 export interface Feed {
     id?: number
     proto: ArrayBuffer
@@ -12,7 +31,8 @@ export interface Chat {
 
 export interface Contact {
     id?: number
-    proto: ArrayBuffer
+    userName: string,
+    userID: string,
 }
 
 export interface Avatar {
@@ -24,6 +44,8 @@ export interface Avatar {
 
 export class HADexie extends Dexie {
 
+    messageList!: Table<MessageList>
+    media!: Table<Media>
     feed!: Table<Feed>
     chat!: Table<Chat>
     contact!: Table<Contact>
@@ -32,12 +54,15 @@ export class HADexie extends Dexie {
     constructor() {
         super('myDatabase')
         this.version(1).stores({
+            messageList: '++id, fromUserID, toUserID',
+            media: '++id',
             feed: '++id, proto',
             chat: '++id, proto',
-            contact: '++id, proto',
+            contact: '++id, userName, userID',
             avatar: '++id, userID, image'
         })
     }
+    
 }
 
 export const db = new HADexie()

@@ -54,6 +54,8 @@ const listData = [
     },          
 ]
 
+function openChat() {
+}
 
 </script>
 
@@ -64,7 +66,7 @@ const listData = [
         
     </div>
     <div class="listBox"> 
-        <div v-for="value in listData" class="container">
+        <div v-for="value in listData" class="container" @click='openChat()'>
             <div class="avatarContainer">
                 <div class="avatar"></div>
             </div>

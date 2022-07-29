@@ -9,106 +9,10 @@ import ChatFooter from './ChatFooter.vue'
 
 const colorStore = useColorStore()
 
-const messageList = ref([
-    {
-        type: "timestamp",
-        timestamp: "1649204213",
-    },
-    {
-        type: "inBound",
-        message: "Short text testing:<br> ~123~ <s>123</s>,_123_<i>123</i>,*123*<b>123</b>",
-        timestamp: "1649204213",
-        display: true,
-    },
-    {
-        type: "outBound",
-        message: "Long text testing: The item is sized according to its width and height properties, The item is sized according to its width and height properties, The item is sized according to its width and height properties",
-        timestamp: "1649204213",
-        display: true
-    },
-    {
-        type: "timestamp",
-        timestamp: "1656853200"
-    },
-    {
-        type: "inBound",
-        message: "Long text testing: The item is sized according to its width and height properties, The item is sized according to its width and height properties, The item is sized according to its width and height properties",
-        timestamp: "1656853200",
-        display: true
-    },
-    {
-        type: "timestamp",
-        timestamp: "1657026000",
-    },
-    {
-        type: "inBound",
-        quoteIdx: 1,
-        message: "asdfasdfsadfasdflsadkfl;sdakf;lasdkf;asdkf;lasdkf;lsadkf;lsadkf;sadkf;lasdfksd;lfksd;lfdsf",
-        timestamp: "1657026000",
-        display: true
-    },
-    {
-        type: "inBound",
-        quoteIdx: 2,
-        message: "😍😍😍😍",
-        timestamp: "1657026000",
-        display: true
-    },
-    {
-        type: "inBound",
-        message: "😍!",
-        timestamp: "1657026000",
-        display: true
-    },
-    {
-        type: "inBound",
-        message: "😍",
-        timestamp: "1657026000",
-        display: true
-    },
-    {
-        type: "inBound",
-        message: "☺️", // this emoji can't be displayed 
-        timestamp: "1657026000",
-        display: true
-    },
-    {
-        type: "inBound",
-        message: "❤️",  // this emoji can't be detected
-        timestamp: "1657026000",
-        display: true
-    },
-    {
-        type: "timestamp",
-        timestamp: "1657112400",
-    },
-    {
-        type: "inBound",
-        message: "asdfasdfsadfasdflsadkfl;sdakf;lasdkf;asdkf;lasdkf;lsadkf;",
-        timestamp: "1657112400",
-        display: true
-    }
-])
-
-const contactList = ref([
-    "UserA",
-    "UserB",
-    "abcd123",
-    "?@#$%^&",
-])
-
 const replyQuoteIdx = ref({'value': -1})
 
 const chatName = ref('chat1')
 const chatInformation = ref('chatInfo')
-
-const messageNumber = computed(() => {
-    return messageList.value.length
-})
-
-watch(messageNumber, () => {
-    // notifyMe()
-})
 
 const chatBackground = computed(() => {
     return colorStore.chatBackground
@@ -143,17 +47,17 @@ function notifyMe() {
 
         <!-- chat header with chatname chatinfo and settings -->
         <div class='header'>
-            <ChatHeader :messageList='messageList'  :chatName='chatName' :chatInformation='chatInformation'/>
+            <ChatHeader :chatName='chatName' :chatInformation='chatInformation'/>
         </div>
 
         <!-- chatting area -->
         <div class='content'>
-            <ChatPanel :messageList='messageList' :replyQuoteIdx='replyQuoteIdx'/>
+            <ChatPanel :replyQuoteIdx='replyQuoteIdx'/>
         </div>
 
         <!-- input tray -->
         <div class='footer'>
-            <ChatFooter :messageList='messageList' :contactList='contactList' :replyQuoteIdx='replyQuoteIdx'/>
+            <ChatFooter :replyQuoteIdx='replyQuoteIdx'/>
         </div>
 
     </div>

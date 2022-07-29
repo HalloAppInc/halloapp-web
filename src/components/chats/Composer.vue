@@ -5,16 +5,18 @@ import { useColorStore } from '../../stores/colorStore'
 
 import { useHAMediaUpload } from '../../composables/haMediaUpload'
 import { useHAMediaResize } from '../../composables/haMediaResize'
+import { useHADatabase } from '../../composables/haDb'
 
 import InputBox from './InputBox.vue'
 import hal from '../../common/halogger'
 
 const colorStore = useColorStore()
 
+const { notifyWhenChanged } = useHADatabase()
 const { saveMetaDataFromImage, saveMetaDataFromVideo, uploadAndDownLoad } = useHAMediaUpload()
 const { setPreviewMediaSizes } = useHAMediaResize()
 
-const props = defineProps(['showComposer', 'uploadFiles', 'messageList', 'replyQuoteIdx', 'contactList'])
+const props = defineProps(['showComposer', 'uploadFiles', 'replyQuoteIdx'])
 
 const attachMediaList = ref(<any>[])
 
@@ -23,10 +25,6 @@ const testVideo = ref()
 const addUploadMedia = ref()
 
 const selectMediaIdx = ref(0)
-
-const messageNumber = computed(() => {
-    return props.messageList.length
-})
 
 const mediaUrlList: ComputedRef = computed(() => {
     const result = []
@@ -38,7 +36,7 @@ const mediaUrlList: ComputedRef = computed(() => {
             'type': props.uploadFiles[i].type,
             'width': res?.mediaItemWidth,
             'height': res?.mediaItemHeight,
-            'preview': media.preview
+            'previewUrl': media.previewUrl
         })
     }
     return result
@@ -58,10 +56,15 @@ const isReady = computed(() => {
     }
 })
 
-// if message is sent, close preview
-watch(messageNumber, (newVal, oldVal) => {
-    closeComposer()
-})
+
+function listener(type: string) {
+    if (type == 'create' && props.showComposer.value) {
+        hal.log('Composer/notifyWhenChanged/' + type)
+        closeComposer()
+    }
+}
+
+notifyWhenChanged(listener)
 
 const backgroundColor = computed(() => {
     return colorStore.background
@@ -158,7 +161,7 @@ function closeComposer() {
 
 <template>
 
-    <div class='mask' v-if='props.showComposer.value'>
+    <div class='mask' v-if='showComposer.value'>
         <div class='wrapper' v-if='isReady || init' >
 
             <!-- close icon -->
@@ -220,8 +223,10 @@ function closeComposer() {
             <div class='footer'>
 
                 <div class='chatBoxTray' ref='chatBox'>
-                    <InputBox :messageList='messageList' :contactList='contactList' :uploadFiles='uploadFiles'
-                        :alwaysShowSendButton='true' :replyQuoteIdx='replyQuoteIdx' />
+                    <InputBox 
+                        :uploadFiles='uploadFiles'
+                        :alwaysShowSendButton='true' 
+                        :replyQuoteIdx='replyQuoteIdx' />
                 </div>
 
                 <!-- media preview and add more media -->
@@ -233,7 +238,7 @@ function closeComposer() {
 
                             <div class='imgSmallContainer'>
                                 <img class='imgSmall' :width='value.width' :height='value.height'
-                                    :src='value.preview' />
+                                    :src='value.previewUrl' />
                             </div>
 
                             <!-- close toggler -->
@@ -258,6 +263,8 @@ function closeComposer() {
                 </div>
             </div>
          </div>
+
+        <!-- loader -->
          <div class='wrapper' v-else>
 
             <!-- close icon -->
@@ -274,6 +281,7 @@ function closeComposer() {
             </div>
 
          </div>
+
     </div>
 
 </template>

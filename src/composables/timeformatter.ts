@@ -86,6 +86,18 @@ export function useTimeformatter() {
         return res
     }
 
+    function timeDiffBiggerThanOneDay(secondsOld: number, secondsNew: number) {
+        const oldTime = DateTime.fromSeconds(secondsOld)
+        const newTime = DateTime.fromSeconds(secondsNew)
+        
+        if (newTime.diff(oldTime, 'days').days < 1) {
+            return false
+        }
+        else {
+            return true
+        }
+    }
 
-    return { formatTime, formatTimer, formatTimeDateOnlyChat, formatTimeChat, formatTimeFullChat }
+
+    return { formatTime, formatTimer, formatTimeDateOnlyChat, formatTimeChat, formatTimeFullChat, timeDiffBiggerThanOneDay }
 }

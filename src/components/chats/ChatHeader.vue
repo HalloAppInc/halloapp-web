@@ -5,10 +5,12 @@ import { useI18n } from 'vue-i18n'
 
 import { useColorStore } from '../../stores/colorStore'
 
+import { useHADatabase } from '../../composables/haDb'
+
 import Popup from './Popup.vue'
 import ChatSettings from './ChatSettings.vue'
 
-const props = defineProps(['messageList', 'chatName', 'chatInformation'])
+const props = defineProps(['chatName', 'chatInformation'])
 
 const { t } = useI18n({
     inheritLocale: true,
@@ -16,6 +18,8 @@ const { t } = useI18n({
 })
 
 const colorStore = useColorStore()
+
+const { clearAllMessages } = useHADatabase()
 
 const showChatSettings = ref(false)
 const showBackgroundColorSetting = ref({ 'value': false})
@@ -41,7 +45,7 @@ const backgroundColor = computed(() => {
 })
 
 function clearMessage() {
-    props.messageList.splice(0, props.messageList.length)
+    clearAllMessages('X9l9StZ_IjuqFqGvBqa27')
 }
 
 function openPopup() {

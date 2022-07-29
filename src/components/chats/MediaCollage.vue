@@ -15,7 +15,7 @@ const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
     <div class='containerOneMedia' v-if='numberOfMedia == 1'>
 
         <div class='imgBigContainer' @click="$emit('openMedia', mediaList, 0)">
-            <img :src='firstMedia.preview' :width='firstMedia.width' :height='firstMedia.hieght' />
+            <img :src='firstMedia.previewUrl' :width='firstMedia.width' :height='firstMedia.hieght' />
             <div class='iconContainer' v-if='firstMedia.type == "video"'>
                 <font-awesome-icon :icon="['fas', 'play']" size='2x' />
             </div>
@@ -29,7 +29,7 @@ const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
 
         <div class='imgVerticalRectangleContainer' @click="$emit('openMedia', mediaList, 0)">
 
-            <img :src='firstMedia.preview' :height='firstMedia.hieght' :width='firstMedia.width' />
+            <img :src='firstMedia.previewUrl' :height='firstMedia.hieght' :width='firstMedia.width' />
             <div class='iconContainer' v-if='firstMedia.type == "video"'>
                 <font-awesome-icon :icon="['fas', 'play']" size='2x' />
             </div>
@@ -38,7 +38,7 @@ const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
 
         <div class='imgVerticalRectangleContainer lastElementInLine' @click="$emit('openMedia', mediaList, 1)">
 
-            <img :src='secondMedia.preview' :height='secondMedia.hieght' :width='secondMedia.width' />
+            <img :src='secondMedia.previewUrl' :height='secondMedia.hieght' :width='secondMedia.width' />
             <div class='iconContainer' v-if='secondMedia.type == "video"'>
                 <font-awesome-icon :icon="['fas', 'play']" size='2x' />
             </div>
@@ -53,7 +53,7 @@ const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
 
         <div class='imgSquareContainer' @click="$emit('openMedia', mediaList, 0)">
 
-            <img :src='firstMedia.preview' :height='firstMedia.hieght' :width='firstMedia.width' />
+            <img :src='firstMedia.previewUrl' :height='firstMedia.hieght' :width='firstMedia.width' />
             <div class='iconContainer' v-if='firstMedia.type == "video"'>
                 <font-awesome-icon :icon="['fas', 'play']" size='2x' />
             </div>
@@ -62,7 +62,7 @@ const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
 
         <div class='imgSquareContainer imgSquareContainerLastElement' @click="$emit('openMedia', mediaList, 1)">
 
-            <img :src='secondMedia.preview' :height='secondMedia.hieght' :width='secondMedia.width' />
+            <img :src='secondMedia.previewUrl' :height='secondMedia.hieght' :width='secondMedia.width' />
             <div class='iconContainer' v-if='secondMedia.type == "video"'>
                 <font-awesome-icon :icon="['fas', 'play']" size='2x' />
             </div>
@@ -71,7 +71,7 @@ const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
 
         <div class='imgHorizontalRectangleContainer' @click="$emit('openMedia', mediaList, 2)">
 
-            <img :src='thirdMedia.preview' :height='thirdMedia.hieght' :width='thirdMedia.width' />
+            <img :src='thirdMedia.previewUrl' :height='thirdMedia.hieght' :width='thirdMedia.width' />
             <div class='iconContainer' v-if='thirdMedia.type == "video"'>
                 <font-awesome-icon :icon="['fas', 'play']" size='2x' />
             </div>
@@ -86,7 +86,7 @@ const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
 
         <div class='imgSquareContainer' @click="$emit('openMedia', mediaList, 0)">
 
-            <img :src='firstMedia.preview' :height='firstMedia.hieght' :width='firstMedia.width' />
+            <img :src='firstMedia.previewUrl' :height='firstMedia.hieght' :width='firstMedia.width' />
             <div class='iconContainer' v-if='firstMedia.type == "video"'>
                 <font-awesome-icon :icon="['fas', 'play']" size='2x' />
             </div>
@@ -95,7 +95,7 @@ const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
 
         <div class='imgSquareContainer imgSquareContainerLastElement' @click="$emit('openMedia', mediaList, 1)">
 
-            <img :src='secondMedia.preview' :height='secondMedia.hieght' :width='secondMedia.width' />
+            <img :src='secondMedia.previewUrl' :height='secondMedia.hieght' :width='secondMedia.width' />
             <div class='iconContainer' v-if='secondMedia.type == "video"'>
                 <font-awesome-icon :icon="['fas', 'play']" size='2x' />
             </div>
@@ -104,7 +104,7 @@ const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
 
         <div class='imgSquareContainer' @click="$emit('openMedia', mediaList, 2)">
 
-            <img :src='thirdMedia.preview' :height='thirdMedia.hieght' :width='thirdMedia.width' />
+            <img :src='thirdMedia.previewUrl' :height='thirdMedia.hieght' :width='thirdMedia.width' />
             <div class='iconContainer' v-if='thirdMedia.type == "video"'>
                 <font-awesome-icon :icon="['fas', 'play']" size='2x' />
             </div>
@@ -115,7 +115,7 @@ const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
         <div v-if='numberOfMedia == 4' class='imgSquareContainer imgSquareContainerLastElement'
             @click="$emit('openMedia', mediaList, 3)">
 
-            <img :src='fourthMedia.preview' :height='fourthMedia.hieght' :width='fourthMedia.width' />
+            <img :src='fourthMedia.previewUrl' :height='fourthMedia.hieght' :width='fourthMedia.width' />
             <div class='iconContainer' v-if='fourthMedia.type == "video"'>
                 <font-awesome-icon :icon="['fas', 'play']" size='2x' />
             </div>
@@ -126,7 +126,7 @@ const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
         <div v-else-if='numberOfMedia > 4' @click="$emit('openMedia', mediaList, 3)">
             <div class='imgSquareContainer imgSquareContainerLastElement'>
 
-                <img class='blurImg' :src='fourthMedia.preview' :height='fourthMedia.hieght' :width='fourthMedia.width' />
+                <img class='blurImg' :src='fourthMedia.previewUrl' :height='fourthMedia.hieght' :width='fourthMedia.width' />
                 <div class='iconContainer'>
                     <font-awesome-icon :icon="['fas', 'plus']" size='2x' />
                 </div>

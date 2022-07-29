@@ -12,7 +12,7 @@ const colorStore = useColorStore()
 
 const { saveMetaDataFromImage, saveMetaDataFromVideo } = useHAMediaUpload()
 
-const props = defineProps(['messageList', 'contactList', 'replyQuoteIdx'])
+const props = defineProps(['replyQuoteIdx'])
 
 const uploadFiles: any = ref([])
 
@@ -134,9 +134,7 @@ function onFilePicked(event: any) {
             </div>
         </div>
 
-        <InputBox 
-            :messageList='props.messageList' 
-            :contactList='props.contactList' 
+        <InputBox
             :uploadFiles='""'
             :alwaysShowSendButton='false'
             :replyQuoteIdx='props.replyQuoteIdx' />
@@ -152,9 +150,7 @@ function onFilePicked(event: any) {
     <!-- composer -->
     <Composer 
         :showComposer='showComposer' 
-        :uploadFiles='uploadFiles' 
-        :messageList='messageList' 
-        :contactList='contactList'
+        :uploadFiles='uploadFiles'
         :replyQuoteIdx='replyQuoteIdx' />
         
 </template>

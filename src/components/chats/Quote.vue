@@ -5,6 +5,8 @@ import { useColorStore } from '../../stores/colorStore'
 
 import { useHAMediaResize } from '../../composables/haMediaResize'
 
+import hal from '../../common/halogger'
+
 const colorStore = useColorStore()
 
 const { setQuoteMediaSize } = useHAMediaResize()
@@ -18,6 +20,7 @@ const quoteMedia = computed(() => {
         'width': res?.mediaItemWidth,
         'height': res?.mediaItemHeight 
     }
+    hal.log('Quote/compute quoteMedia/', result)
     return result
 })
 
@@ -50,7 +53,7 @@ const iconColor = computed(() => {
                     <font-awesome-icon :icon="['fas', 'camera']" size='xs' />
                 </div>
                 <div class='TextContainer'>
-                    <span v-html='quoteMessage.message' class='noOverFlow'></span>
+                    <span v-html='quoteMessage.text' class='noOverFlow'></span>
                 </div>
             </div>
 
