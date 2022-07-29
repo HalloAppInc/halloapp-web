@@ -2,17 +2,21 @@ import Dexie, { Table } from 'dexie'
 
 export interface MessageList {
     id?: number
-    fromUserId?: string
-    toUserId?: string
+    fromUserID?: string
+    toUserID?: string
     quoteId?: number
-    mediaId?: number
+    mediaID?: number
     timestamp?: string
     text?: string
 }
 
 export interface Media {
     id?: number
-    proto: ArrayBuffer 
+    type: string,
+    file: ArrayBuffer,
+    preview?: ArrayBuffer,
+    width: number,
+    height: number
 }
 
 export interface Feed {
@@ -49,14 +53,15 @@ export class HADexie extends Dexie {
     constructor() {
         super('myDatabase')
         this.version(1).stores({
-            messageList: '++id, fromUserId, toUserId',
-            media: '++id, proto',
+            messageList: '++id, fromUserID, toUserID',
+            media: '++id',
             feed: '++id, proto',
             chat: '++id, proto',
             contact: '++id, proto',
             avatar: '++id, userID, image'
         })
     }
+    
 }
 
 export const db = new HADexie()

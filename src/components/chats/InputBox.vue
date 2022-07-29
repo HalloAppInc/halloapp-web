@@ -5,11 +5,16 @@ import { useHAText } from '../../composables/haText'
 
 import { useColorStore } from '../../stores/colorStore'
 
+import { useHADatabase } from '../../composables/haDb'
+import { useHAProtobuf } from '../../composables/haProtobuf'
+
 const { processText } = useHAText()
 
 const colorStore = useColorStore()
 
-const props = defineProps(['messageList', 'contactList', 'uploadFiles', 'replyQuoteIdx', 'alwaysShowSendButton'])
+const { putMessage, putMedia } = useHADatabase()
+
+const props = defineProps(['contactList', 'uploadFiles', 'replyQuoteIdx', 'alwaysShowSendButton'])
 
 const inputArea = ref(<HTMLElement | null>(null))
 const chatBox = ref(<HTMLElement | null>(null))
@@ -120,16 +125,38 @@ function analyzeKeyDown(event: any) {
 }
 
 // send the text in input box
-function sendMessage() {
-    if (inputArea.value?.innerText.trim().length !== 0 || props.uploadFiles != '') {
-        props.messageList.push({
-            quoteIdx: props.replyQuoteIdx.value, // get reply id
-            type: 'outBound',
-            media: JSON.parse(JSON.stringify(props.uploadFiles)), // deep copy
-            message: processText(inputArea.value?.innerText.trim(), props.contactList).html,
-            timestamp: Date.now() / 1000 | 0, // get current time
-            display: true,
-            })
+async function sendMessage() {
+    if (inputArea.value?.innerText.trim().length !== 0 || props.uploadFiles != '') {  
+        const message: any = {
+            fromUserID: 'j_1H1YKQy74sDoCylPCEA',
+            toUserID: 'X9l9StZ_IjuqFqGvBqa27',
+            text: processText(inputArea.value?.innerText.trim(), props.contactList).html,
+            timestamp: (Date.now() / 1000 | 0).toString(),
+        }
+        if (props.replyQuoteIdx.value > -1) {
+            message['quoteId'] = props.replyQuoteIdx.value
+        }
+        if (props.uploadFiles) {
+            const mediaIDArr: number[] = []
+            for(const media of props.uploadFiles) {
+                const file = await new Blob([media.file]).arrayBuffer()
+                const newMedia: any = {
+                    'type': media.type,
+                    'file': file,
+                    'width': media.width,
+                    'height': media.height
+                }
+                if (media.type == 'video') {
+                    const preview = await new Blob([media.preview]).arrayBuffer()
+                    newMedia['preview'] = preview
+                }
+                const id = await putMedia(newMedia)
+                mediaIDArr.push(id)
+            }
+            message['mediaID'] = mediaIDArr
+        }
+        await putMessage(message)
+
         props.replyQuoteIdx.value = -1
         // hide send button
         showSendButton.value = false

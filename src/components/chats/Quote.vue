@@ -12,12 +12,14 @@ const { setQuoteMediaSize } = useHAMediaResize()
 const props = defineProps(['quoteMessage'])
 
 const quoteMedia = computed(() => {
+    console.log(props.quoteMessage)
     let res = setQuoteMediaSize(props.quoteMessage.media[0])
     let result = {
         'url': props.quoteMessage.media[0].url,
         'width': res?.mediaItemWidth,
         'height': res?.mediaItemHeight 
     }
+    console.log(result, props.quoteMessage)
     return result
 })
 
@@ -50,7 +52,7 @@ const iconColor = computed(() => {
                     <font-awesome-icon :icon="['fas', 'camera']" size='xs' />
                 </div>
                 <div class='TextContainer'>
-                    <span v-html='quoteMessage.message' class='noOverFlow'></span>
+                    <span v-html='quoteMessage.text' class='noOverFlow'></span>
                 </div>
             </div>
 
