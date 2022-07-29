@@ -5,6 +5,8 @@ import { useColorStore } from '../../stores/colorStore'
 
 import { useHAMediaResize } from '../../composables/haMediaResize'
 
+import hal from '../../common/halogger'
+
 const colorStore = useColorStore()
 
 const { setQuoteMediaSize } = useHAMediaResize()
@@ -12,14 +14,13 @@ const { setQuoteMediaSize } = useHAMediaResize()
 const props = defineProps(['quoteMessage'])
 
 const quoteMedia = computed(() => {
-    console.log(props.quoteMessage)
     let res = setQuoteMediaSize(props.quoteMessage.media[0])
     let result = {
         'url': props.quoteMessage.media[0].url,
         'width': res?.mediaItemWidth,
         'height': res?.mediaItemHeight 
     }
-    console.log(result, props.quoteMessage)
+    hal.log('Quote/compute quoteMedia/', result)
     return result
 })
 
