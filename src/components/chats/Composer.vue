@@ -58,7 +58,7 @@ const isReady = computed(() => {
 
 
 function listener(type: string) {
-    if (type == 'create') {
+    if (type == 'create' && props.showComposer.value) {
         hal.log('Composer/notifyWhenChanged/' + type)
         closeComposer()
     }

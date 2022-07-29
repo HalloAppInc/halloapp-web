@@ -243,17 +243,17 @@ async function listenerFunction(type: string) {
 
 let load: any
 function loadMessageListIntoChatPanel() {
-    loadMessageList('X9l9StZ_IjuqFqGvBqa27')
+    /* loadMessageList('X9l9StZ_IjuqFqGvBqa27')
     .then(res => {
         messageListFromDB.value = res
-    })
-    /* clearTimeout(load)
+    }) */
+    clearTimeout(load)
     load = setTimeout(() => {
         loadMessageList('X9l9StZ_IjuqFqGvBqa27')
         .then(res => {
             messageListFromDB.value = res
         })
-    }, 15) */
+    }, 15)
 }
 
 // add extra space after text to fit time stamp and checkmarks

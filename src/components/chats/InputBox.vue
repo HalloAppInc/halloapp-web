@@ -6,7 +6,6 @@ import { useHAText } from '../../composables/haText'
 import { useColorStore } from '../../stores/colorStore'
 
 import { useHADatabase } from '../../composables/haDb'
-import { useHAProtobuf } from '../../composables/haProtobuf'
 
 const { processText } = useHAText()
 

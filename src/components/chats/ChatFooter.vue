@@ -150,7 +150,6 @@ function onFilePicked(event: any) {
 
     <!-- composer -->
     <Composer 
-        v-if='showComposer.value'
         :showComposer='showComposer' 
         :uploadFiles='uploadFiles'
         :contactList='contactList'
