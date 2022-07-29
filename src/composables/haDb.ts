@@ -118,7 +118,15 @@ export function useHADatabase() {
     }
 
     async function initMessageListAndMediaList() {
+        // if no contact add contact
+        const allContact = await db.contact.toArray()
+        if (allContact.length == 0) {
+            for (const contact of contactList) {
+                const id = await db.contact.put(contact)
+            }
+        }
 
+        // if have old messages, delete all
         const all = await db.messageList.toArray()
         if (all.length != 0) {
             await db.messageList.clear()

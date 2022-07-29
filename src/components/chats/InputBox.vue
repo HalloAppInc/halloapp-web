@@ -2,10 +2,11 @@
 import { ref, computed } from 'vue'
 
 import { useHAText } from '../../composables/haText'
+import { useHADatabase } from '../../composables/haDb'
 
 import { useColorStore } from '../../stores/colorStore'
 
-import { useHADatabase } from '../../composables/haDb'
+import hal from '../../common/halogger'
 
 const { processText } = useHAText()
 
@@ -68,6 +69,7 @@ fetchContactList()
 function fetchContactList() {
     getContactByID([2,3,4,5])
     .then(res => {
+        hal.log('InputBox/fetchContactList/load contactList ', res)
         contactList.value = res
     })
 }
