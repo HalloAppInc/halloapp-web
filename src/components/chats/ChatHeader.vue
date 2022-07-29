@@ -4,7 +4,8 @@ import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { useColorStore } from '../../stores/colorStore'
-
+import { useMainStore } from '../../stores/mainStore'
+ 
 import { useHADatabase } from '../../composables/haDb'
 
 import Popup from './Popup.vue'
@@ -18,6 +19,7 @@ const { t } = useI18n({
 })
 
 const colorStore = useColorStore()
+const mainStore = useMainStore()
 
 const { clearAllMessages } = useHADatabase()
 
@@ -45,7 +47,7 @@ const backgroundColor = computed(() => {
 })
 
 function clearMessage() {
-    clearAllMessages('X9l9StZ_IjuqFqGvBqa27')
+    clearAllMessages(mainStore.chatID)
 }
 
 function openPopup() {

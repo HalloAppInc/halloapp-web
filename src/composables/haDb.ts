@@ -76,6 +76,42 @@ export function useHADatabase() {
             text: "😍☺️❤️",
             timestamp: "1657026000",
         },
+        {
+            fromUserID: contactList[2].userID,
+            toUserID: contactList[0].userID,
+            text: "?",
+            timestamp: "1657026000",
+        },
+        {
+            fromUserID: contactList[0].userID,
+            toUserID: contactList[2].userID,
+            text: "...Hi~",
+            timestamp: "1657026000",
+        },
+        {
+            fromUserID: contactList[3].userID,
+            toUserID: contactList[0].userID,
+            text: "How are you?",
+            timestamp: "1657026000",
+        },
+        {
+            fromUserID: contactList[0].userID,
+            toUserID: contactList[3].userID,
+            text: "yes",
+            timestamp: "1657026000",
+        },
+        {
+            fromUserID: contactList[4].userID,
+            toUserID: contactList[0].userID,
+            text: "This is a link",
+            timestamp: "1657026000",
+        },
+        {
+            fromUserID: contactList[0].userID,
+            toUserID: contactList[4].userID,
+            text: "This is a link",
+            timestamp: "1657026000",
+        }
     ]
 
     async function loadMessageList(userID: string) {

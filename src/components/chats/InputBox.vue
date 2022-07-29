@@ -5,12 +5,14 @@ import { useHAText } from '../../composables/haText'
 import { useHADatabase } from '../../composables/haDb'
 
 import { useColorStore } from '../../stores/colorStore'
+import { useMainStore } from '../../stores/mainStore'
 
 import hal from '../../common/halogger'
 
 const { processText } = useHAText()
 
 const colorStore = useColorStore()
+const mainStore = useMainStore()
 
 const { putMessage, putMedia, getContactByID } = useHADatabase()
 
@@ -148,8 +150,8 @@ function analyzeKeyDown(event: any) {
 async function sendMessage() {
     if (inputArea.value?.innerText.trim().length !== 0 || props.uploadFiles != '') {  
         const message: any = {
-            fromUserID: 'j_1H1YKQy74sDoCylPCEA',
-            toUserID: 'X9l9StZ_IjuqFqGvBqa27',
+            fromUserID: mainStore.loginUserID,
+            toUserID: mainStore.chatID,
             text: processText(inputArea.value?.innerText.trim(), contactNameList.value).html,
             timestamp: (Date.now() / 1000 | 0).toString(),
         }

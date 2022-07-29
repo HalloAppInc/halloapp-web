@@ -4,7 +4,11 @@ import { ref } from 'vue'
 import { useTimeformatter } from '../../composables/timeformatter'
 import { useI18n } from 'vue-i18n'
 
+import { useMainStore } from '../../stores/mainStore'
+
 const { formatTime } = useTimeformatter()
+
+const mainStore = useMainStore()
 
 const { t, locale } = useI18n({
     inheritLocale: true,
@@ -54,7 +58,37 @@ const listData = [
     },          
 ]
 
-function openChat() {
+const chatList = [
+    { 
+        title: "UserB",
+        subtitle: "apple",
+        timestamp: "1649204213",
+        userID: 'X9l9StZ_IjuqFqGvBqa27',
+    },
+    {
+        title: 'abcd123',
+        subtitle: 'this is a link',
+        timestamp: "1649204213",
+        userID: 'i7tenqOTRKxvqknYdrihB',
+    },
+    {
+        title: '?@#$%^&',
+        subtitle: 'this is a link',
+        timestamp: "1649204213",
+        userID: 'BoXcNaWI5BAAuiPaPE9Of',
+    },
+    {
+        title: '123_A',
+        subtitle: 'this is a link',
+        timestamp: "1649204213",
+        userID: 'Zgd_82oo6kNmsIdLyqbB6',
+    }
+
+]
+
+function openChat(userID: string) {
+    mainStore.chatID = userID
+    console.log('ChatSidebar/openChat/', mainStore.chatID)
 }
 
 </script>
@@ -66,7 +100,7 @@ function openChat() {
         
     </div>
     <div class="listBox"> 
-        <div v-for="value in listData" class="container" @click='openChat()'>
+        <div v-for="value in chatList" class="container" @click='openChat(value.userID)'>
             <div class="avatarContainer">
                 <div class="avatar"></div>
             </div>

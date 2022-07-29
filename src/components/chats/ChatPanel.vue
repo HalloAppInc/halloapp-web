@@ -11,6 +11,7 @@ import { useHAMediaResize } from '../../composables/haMediaResize'
 import { useHADatabase } from '../../composables/haDb'
 
 import { useColorStore } from '../../stores/colorStore'
+import { useMainStore } from '../../stores/mainStore'
 
 import Popup from './Popup.vue'
 import Quote from './Quote.vue'
@@ -20,6 +21,7 @@ import Notification from './Notification.vue'
 import { number } from '@intlify/core-base'
 
 const colorStore = useColorStore()
+const mainStore = useMainStore()
 
 const { t, locale } = useI18n({
     inheritLocale: true,
@@ -78,6 +80,15 @@ const messageNumber = computed(() => {
     else {
         return 0
     }
+})
+
+// listen to chatID, if choose another chat in chatlist, update chatPanel
+const chatID = computed(() => {
+    return mainStore.chatID
+})
+
+watch(chatID, () => {
+    loadMessageListIntoChatPanel()
 })
 
 // listen to msg list, when a new msg comes in, scroll to the bottom
@@ -175,7 +186,8 @@ async function parseMessage() {
         }
 
         let time = formatTimeChat(parseInt(message.timestamp), <string>locale.value)
-        let type = (message.fromUserID == 'j_1H1YKQy74sDoCylPCEA') ? 'outBound' : 'inBound'
+        let type = (message.fromUserID == mainStore.loginUserID) ? 'outBound' : 'inBound'
+        console.log('message from id=', message.fromUserID, 'me=', mainStore.loginUserID)
         // not delete
         if ( message.text != undefined) {
             let resMsg = appendSpaceForMsgInfo(message.text, time, type == 'outBound')
@@ -242,7 +254,7 @@ async function listenerFunction(type: string) {
 
 let load: any
 function loadMessageListIntoChatPanel() {
-    /* loadMessageList('X9l9StZ_IjuqFqGvBqa27')
+    /* loadMessageList('mainStore.chatID')
     .then(res => {
         messageListFromDB.value = res
     }) */
@@ -252,7 +264,7 @@ function loadMessageListIntoChatPanel() {
     */
     clearTimeout(load)
     load = setTimeout(() => {
-        loadMessageList('X9l9StZ_IjuqFqGvBqa27')
+        loadMessageList(mainStore.chatID)
         .then(res => {
             messageListFromDB.value = res
         })
@@ -513,7 +525,7 @@ async function getQuoteMessageData(id: number) {
     }
     else {
         const data = JSON.parse(JSON.stringify(message))
-        if (message.fromUserID == 'j_1H1YKQy74sDoCylPCEA') {
+        if (message.fromUserID == mainStore.loginUserID) {
             data['sender'] = 'YOU'
         }
         else {
