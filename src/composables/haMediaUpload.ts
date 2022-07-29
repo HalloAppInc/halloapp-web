@@ -24,7 +24,8 @@ export function useHAMediaUpload() {
         img.onload = function () {
             uploadFiles.push({
                 'file': file,
-                'preview': img.src,
+                'preview': file,
+                'previewUrl': img.src,
                 'type': 'image',
                 'url': img.src,
                 'width': img.width,
@@ -72,7 +73,8 @@ export function useHAMediaUpload() {
                     let img = new File([blob], 'preview')
                     uploadFiles.push({
                         'file': file,
-                        'preview': URL.createObjectURL(img),
+                        'preview': img,
+                        'previewUrl': URL.createObjectURL(img),
                         'type': 'video',
                         'url': url,
                         'width': video.videoWidth,
@@ -201,10 +203,14 @@ export function useHAMediaUpload() {
     /* encrypt media inside message, send media to server and create protobuf chatContainer */
     async function encryptAndUpload(message: any, chunkSize: number) {
         let mediaArray: clients.AlbumMedia[] = []
+        let mediaIDArray: number[] = []
 
         for (const media of message.media) {
             let albumMedia = await sendEncryptedMediaAndCreateProtobuf(media, chunkSize) as clients.AlbumMedia
             mediaArray.push(albumMedia)
+            /* const albumMediaBuf = clients.AlbumMedia.encode(albumMedia).finish().buffer as ArrayBuffer
+            const mediaID = await putMedia(albumMediaBuf)
+            mediaIDArray.push(mediaID) */
         }
 
         let chatContainerBuf = createChatContainer(message, mediaArray)

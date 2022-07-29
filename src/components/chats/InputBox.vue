@@ -2,14 +2,21 @@
 import { ref, computed } from 'vue'
 
 import { useHAText } from '../../composables/haText'
+import { useHADatabase } from '../../composables/haDb'
 
 import { useColorStore } from '../../stores/colorStore'
+
+import hal from '../../common/halogger'
 
 const { processText } = useHAText()
 
 const colorStore = useColorStore()
 
-const props = defineProps(['messageList', 'contactList', 'uploadFiles', 'replyQuoteIdx', 'alwaysShowSendButton'])
+const { putMessage, putMedia, getContactByID } = useHADatabase()
+
+const props = defineProps(['uploadFiles', 'replyQuoteIdx', 'alwaysShowSendButton'])
+
+const contactList = ref()
 
 const inputArea = ref(<HTMLElement | null>(null))
 const chatBox = ref(<HTMLElement | null>(null))
@@ -48,6 +55,24 @@ const lineColor = computed(() => {
 const hoverColor = computed(() => {
     return colorStore.hover
 })
+
+const contactNameList = computed(() => {
+    let result = []
+    for(const contact of contactList.value){
+        result.push(contact.userName)
+    }
+    return result
+})
+
+fetchContactList()
+
+function fetchContactList() {
+    getContactByID([2,3,4,5])
+    .then(res => {
+        hal.log('InputBox/fetchContactList/load contactList ', res)
+        contactList.value = res
+    })
+}
 
 // deal with different keydown: enter, enter+shift, cmd+a, space, delete
 function analyzeKeyDown(event: any) {
@@ -120,16 +145,38 @@ function analyzeKeyDown(event: any) {
 }
 
 // send the text in input box
-function sendMessage() {
-    if (inputArea.value?.innerText.trim().length !== 0 || props.uploadFiles != '') {
-        props.messageList.push({
-            quoteIdx: props.replyQuoteIdx.value, // get reply id
-            type: 'outBound',
-            media: JSON.parse(JSON.stringify(props.uploadFiles)), // deep copy
-            message: processText(inputArea.value?.innerText.trim(), props.contactList).html,
-            timestamp: Date.now() / 1000 | 0, // get current time
-            display: true,
-            })
+async function sendMessage() {
+    if (inputArea.value?.innerText.trim().length !== 0 || props.uploadFiles != '') {  
+        const message: any = {
+            fromUserID: 'j_1H1YKQy74sDoCylPCEA',
+            toUserID: 'X9l9StZ_IjuqFqGvBqa27',
+            text: processText(inputArea.value?.innerText.trim(), contactNameList.value).html,
+            timestamp: (Date.now() / 1000 | 0).toString(),
+        }
+        if (props.replyQuoteIdx.value > -1) {
+            message['quoteId'] = props.replyQuoteIdx.value
+        }
+        if (props.uploadFiles) {
+            const mediaIDArr: number[] = []
+            for(const media of props.uploadFiles) {
+                const file = await new Blob([media.file]).arrayBuffer()
+                const newMedia: any = {
+                    'type': media.type,
+                    'file': file,
+                    'width': media.width,
+                    'height': media.height
+                }
+                if (media.type == 'video') {
+                    const preview = await new Blob([media.preview]).arrayBuffer()
+                    newMedia['preview'] = preview
+                }
+                const id = await putMedia(newMedia)
+                mediaIDArr.push(id)
+            }
+            message['mediaID'] = mediaIDArr
+        }
+        await putMessage(message)
+
         props.replyQuoteIdx.value = -1
         // hide send button
         showSendButton.value = false
@@ -153,8 +200,8 @@ function analyzeMouseMovement() {
 function needUpdate(inputChar: string) {
     let result = false
     // get the old and new input's HTML
-    let newInputMessage = processText(inputArea.value?.innerText, props.contactList, false, 100, true).html
-    let oldInputMessage = processText(inputMessage.value, props.contactList, false, 100, true).html
+    let newInputMessage = processText(inputArea.value?.innerText, contactNameList.value, false, 100, true).html
+    let oldInputMessage = processText(inputMessage.value, contactNameList.value, false, 100, true).html
 
     // count pair of ~|*|_ and number of mention
     let numOfPairOldBTag = oldInputMessage.split('<b>').length - 1
@@ -282,7 +329,7 @@ function updateCursorPosition(forAddMention: boolean = false) {
 
 function updateInputContent() {
     if (inputArea.value) {
-        inputArea.value.innerHTML = processText(inputArea.value?.innerText, props.contactList, false, 100, true).html
+        inputArea.value.innerHTML = processText(inputArea.value?.innerText, contactNameList.value, false, 100, true).html
     }
 }
 
@@ -365,7 +412,7 @@ function addContactToInputBox(contact: string) {
     let numOfLine = getCursorLine()
     let newText = inputArea.value?.innerText.substring(0, contactPosition.value + (numOfLine - 1))
         + contact + inputArea.value?.innerText.substring(cursorPosition.value + (numOfLine - 1))
-    let newHTML = processText(newText, props.contactList, false, 100, true).html
+    let newHTML = processText(newText, contactNameList.value, false, 100, true).html
     if (inputArea.value) {
         inputArea.value.innerHTML = newHTML
         // update cursor position
@@ -402,8 +449,8 @@ function checkContacts() {
             if (idx_old != -1) {
                 let contact = input.substring(idx_old + 1, cursorPosition.value)
                 // if this contact is in contactList
-                for (idx = 0; idx < props.contactList.length; idx++) {
-                    if (chatBox.value && props.contactList[idx].includes(contact)) {
+                for (idx = 0; idx < contactNameList.value.length; idx++) {
+                    if (chatBox.value && contactNameList.value[idx].includes(contact)) {
                         showContacts.value = true
                         let offsetY = window.innerHeight - chatBox.value.offsetTop
                         chatBoxHeight.value = offsetY // update offset of contact list
@@ -432,14 +479,14 @@ function closeContactsAndFocusOnInputBox() {
     
     <div class='contactList' v-if='showContacts'>
         <div class='listBox'>
-            <div v-for='(value, idx) in contactList' class='container' @mousedown='addContactToInputBox(value)'>
+            <div v-for='(value, idx) in contactList' class='container' @mousedown='addContactToInputBox(value.userName)'>
                 <div class='avatarContainer'>
                     <div class='avatar'></div>
                 </div>
-                <div class='content' :class="{ 'contentLastElement': idx == contactList.length - 1 }">
+                <div class='content' :class="{ 'contentLastElement': idx == contactNameList.length - 1 }">
                     <div class='contentHeader'>
                         <div class='contentTitle'>
-                            {{ value }}
+                            {{ value.userName }}
                         </div>
                     </div>
                 </div>
