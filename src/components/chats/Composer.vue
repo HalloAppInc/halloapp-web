@@ -16,7 +16,7 @@ const { notifyWhenChanged } = useHADatabase()
 const { saveMetaDataFromImage, saveMetaDataFromVideo, uploadAndDownLoad } = useHAMediaUpload()
 const { setPreviewMediaSizes } = useHAMediaResize()
 
-const props = defineProps(['showComposer', 'uploadFiles', 'replyQuoteIdx', 'contactList'])
+const props = defineProps(['showComposer', 'uploadFiles', 'replyQuoteIdx'])
 
 const attachMediaList = ref(<any>[])
 
@@ -224,7 +224,6 @@ function closeComposer() {
 
                 <div class='chatBoxTray' ref='chatBox'>
                     <InputBox 
-                        :contactList='contactList' 
                         :uploadFiles='uploadFiles'
                         :alwaysShowSendButton='true' 
                         :replyQuoteIdx='replyQuoteIdx' />

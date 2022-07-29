@@ -9,13 +9,6 @@ import ChatFooter from './ChatFooter.vue'
 
 const colorStore = useColorStore()
 
-const contactList = ref([
-    "UserA",
-    "UserB",
-    "abcd123",
-    "?@#$%^&",
-])
-
 const replyQuoteIdx = ref({'value': -1})
 
 const chatName = ref('chat1')
@@ -64,7 +57,7 @@ function notifyMe() {
 
         <!-- input tray -->
         <div class='footer'>
-            <ChatFooter :contactList='contactList' :replyQuoteIdx='replyQuoteIdx'/>
+            <ChatFooter :replyQuoteIdx='replyQuoteIdx'/>
         </div>
 
     </div>

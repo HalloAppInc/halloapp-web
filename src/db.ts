@@ -31,7 +31,8 @@ export interface Chat {
 
 export interface Contact {
     id?: number
-    proto: ArrayBuffer
+    userName: string,
+    userID: string,
 }
 
 export interface Avatar {
@@ -57,7 +58,7 @@ export class HADexie extends Dexie {
             media: '++id',
             feed: '++id, proto',
             chat: '++id, proto',
-            contact: '++id, proto',
+            contact: '++id, userName, userID',
             avatar: '++id, userID, image'
         })
     }
