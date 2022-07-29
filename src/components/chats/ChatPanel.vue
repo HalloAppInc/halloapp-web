@@ -187,7 +187,6 @@ async function parseMessage() {
 
         let time = formatTimeChat(parseInt(message.timestamp), <string>locale.value)
         let type = (message.fromUserID == mainStore.loginUserID) ? 'outBound' : 'inBound'
-        console.log('message from id=', message.fromUserID, 'me=', mainStore.loginUserID)
         // not delete
         if ( message.text != undefined) {
             let resMsg = appendSpaceForMsgInfo(message.text, time, type == 'outBound')

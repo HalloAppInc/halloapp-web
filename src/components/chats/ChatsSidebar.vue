@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-
 import { useTimeformatter } from '../../composables/timeformatter'
 import { useI18n } from 'vue-i18n'
+
+import hal from '../../common/halogger'
 
 import { useMainStore } from '../../stores/mainStore'
 
@@ -14,49 +14,6 @@ const { t, locale } = useI18n({
     inheritLocale: true,
     useScope: 'global'
 })
-
-const listData = [
-    { 
-        title: "Thou with no name",
-        subtitle: "this is a link",
-        timestamp: "1649204213",
-    },
-    { 
-        title: "Tree",
-        subtitle: "apple",
-        timestamp: "1649204213",
-    },
-    { 
-        title: "Bob",
-        subtitle: "this is a link",
-        timestamp: "1649204213",
-    },     
-    { 
-        title: "Jessy",
-        subtitle: "this is a link",
-        timestamp: "1649204213",
-    },
-    { 
-        title: "Nathan",
-        subtitle: "this is a link",
-        timestamp: "1649204213",
-    },
-    { 
-        title: "Kai",
-        subtitle: "this is a link",
-        timestamp: "1649204213",
-    },
-    { 
-        title: "Rebecca",
-        subtitle: "this is a link",
-        timestamp: "1649204213",
-    },     
-    { 
-        title: "Dylan",
-        subtitle: "this is a link",
-        timestamp: "1649204213",
-    },          
-]
 
 const chatList = [
     { 
@@ -88,7 +45,7 @@ const chatList = [
 
 function openChat(userID: string) {
     mainStore.chatID = userID
-    console.log('ChatSidebar/openChat/', mainStore.chatID)
+    hal.log('ChatSidebar/openChat/' + mainStore.chatID)
 }
 
 </script>
