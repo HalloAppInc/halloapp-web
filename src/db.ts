@@ -53,7 +53,7 @@ export class HADexie extends Dexie {
     
     constructor() {
         super('myDatabase')
-        this.version(1).stores({
+        this.version(2).stores({
             messageList: '++id, fromUserID, toUserID',
             media: '++id',
             feed: '++id, proto',
