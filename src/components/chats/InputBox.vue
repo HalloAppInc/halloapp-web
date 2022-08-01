@@ -14,7 +14,7 @@ const { processText } = useHAText()
 const colorStore = useColorStore()
 const mainStore = useMainStore()
 
-const { putMessage, putMedia, getContactByID } = useHADatabase()
+const { putMessage, putMedia, getContacts } = useHADatabase()
 
 const props = defineProps(['uploadFiles', 'replyQuoteIdx', 'alwaysShowSendButton'])
 
@@ -69,7 +69,7 @@ const contactNameList = computed(() => {
 fetchContactList()
 
 function fetchContactList() {
-    getContactByID([2,3,4,5])
+    getContacts()
     .then(res => {
         // hal.log('InputBox/fetchContactList/load contactList ', res)
         contactList.value = res
@@ -152,7 +152,7 @@ async function sendMessage() {
         const message: any = {
             fromUserID: mainStore.loginUserID,
             toUserID: mainStore.chatID,
-            text: processText(inputArea.value?.innerText.trim(), contactNameList.value).html,
+            text: inputArea.value?.innerText.trim(),//processText(inputArea.value?.innerText.trim(), contactNameList.value).html,
             timestamp: (Date.now() / 1000 | 0).toString(),
         }
         if (props.replyQuoteIdx.value > -1) {

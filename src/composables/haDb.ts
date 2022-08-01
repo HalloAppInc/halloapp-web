@@ -4,8 +4,6 @@ import { nanoid } from 'nanoid'
 
 import hal from '../common/halogger'
 
-import { useHAProtobuf } from './haProtobuf'
-
 import { useMainStore } from '../stores/mainStore'
 
 export function useHADatabase() {
@@ -39,7 +37,7 @@ export function useHADatabase() {
         {
             fromUserID: contactList[1].userID,
             toUserID: contactList[0].userID,
-            text: "Short text testing:<br> ~123~ <s>123</s>,_123_<i>123</i>,*123*<b>123</b>",
+            text: "Short text testing:~123~,_123_,*123*",
             timestamp: "1649204213",
         },
         {
@@ -119,7 +117,7 @@ export function useHADatabase() {
     async function loadMessageList(userID: string) {
         const messageArray = await db.messageList.where('fromUserID').equals(userID)
             .or('toUserID').equals(userID).sortBy('timestamp')
-        //hal.log('haDb/loadMessageList/query result ', messageArray)
+        // hal.log('haDb/loadMessageList/query result ', messageArray)
 
         return messageArray
     }
@@ -155,14 +153,15 @@ export function useHADatabase() {
         return id
     }
 
-    async function initMessageListAndMediaList() {
-        if (false) {
+    async function initMessageListAndMediaList(isTrue: boolean = false) {
+        if (isTrue) {
             // if no contact add contact
             const allContact = await db.contact.toArray()
-            if (allContact.length == 0) {
-                for (const contact of contactList) {
-                    const id = await db.contact.put(contact)
-                }
+            if (allContact.length != 0) {
+                await db.contact.clear()
+            }
+            for (const contact of contactList) {
+                const id = await db.contact.put(contact)
             }
 
             // if have old messages, delete all
@@ -175,13 +174,13 @@ export function useHADatabase() {
             if (allMedia.length != 0) {
                 await db.media.clear()
             }
-
             for(const message of messageList) {
                 const id = await db.messageList.put(message)
                 const record = await db.messageList.where('id').equals(id).toArray()
-                // hal.log('haDb/initMessageListAndMediaList/finished')
             }
         }
+
+        // hal.log('haDb/initMessageListAndMediaList/finished')
     }
 
     function notifyWhenChanged(listener: any) {
@@ -216,11 +215,22 @@ export function useHADatabase() {
         return id
     }
 
-    async function getContactByID(idList: number[]) {
-        const contactArray = await db.contact.where('id').anyOf(idList).toArray()
+    async function getContacts() {
+        const contactArray = await db.contact.where('userID')
+        .noneOf([mainStore.loginUserID, mainStore.chatID])
+        .toArray()   
         // hal.log('haDb/getContact/query result ', contactArray)
 
         return contactArray
+    }
+
+    async function getContactByName(userName: string) {
+        const contact = await db.contact.where('userName')
+        .equals(userName)
+        .first()
+        // hal.log('haDb/getContactByName/query result ', contact)
+
+        return contact
     }
 
     async function putContact(contact: any) {
@@ -252,8 +262,8 @@ export function useHADatabase() {
                         .toArray()
                         .then(res => {
                             const chat = {
-                                'title': res[0].userName,
-                                'subtitle': text,
+                                'userName': res[0].userName,
+                                'text': text,
                                 'timestamp': lastEle.timestamp,
                                 'userID': userID
                             }
@@ -270,7 +280,7 @@ export function useHADatabase() {
             return b.timestamp - a.timestamp
         })
 
-        hal.log('haDb/getAllChat/chat', chatArray)
+        // hal.log('haDb/getAllChat/chat', chatArray)
 
         return chatArray
     }
@@ -279,5 +289,6 @@ export function useHADatabase() {
         getMessageByID, deleteMessageByID, cleanMessageContentByID, 
         clearAllMessages, loadMessageList, initMessageListAndMediaList, 
         notifyWhenChanged, putMessage, getMedia, 
-        putMedia, getContactByID, getAllChat }
+        putMedia, getContacts, getAllChat,
+        getContactByName }
 }

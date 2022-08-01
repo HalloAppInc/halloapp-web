@@ -1,14 +1,17 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch, computed } from 'vue'
 
 import { useTimeformatter } from '../../composables/timeformatter'
 import { useHADatabase } from '../../composables/haDb'
+import { useHAText } from '../../composables/haText'
+
 import { useI18n } from 'vue-i18n'
 
 import hal from '../../common/halogger'
 
 import { useMainStore } from '../../stores/mainStore'
 
+const { processText } = useHAText()
 const { formatTime } = useTimeformatter()
 const { notifyWhenChanged, getAllChat } = useHADatabase()
 
@@ -19,8 +22,20 @@ const { t, locale } = useI18n({
     useScope: 'global'
 })
 
-const selectIdx = ref(-1)
+const selectIdx = ref(0)
 const chatList = ref()
+
+const chatID = computed(() => {
+    return mainStore.chatID
+})
+
+watch(chatID,() => {
+    for(let i = 0; i < chatList.value.length; i++) {
+        if (chatList.value[i].userID == mainStore.chatID) {
+            selectIdx.value = i
+        }
+    }
+})
 
 let load: any
 function loadAllChat() {
@@ -28,10 +43,23 @@ function loadAllChat() {
     load = setTimeout(() => {
         getAllChat()
         .then(res => {
-            chatList.value = res
+            const result: any =[]
+            for (const chat of res) {
+                result.push({
+                    'title': chat.userName,
+                    'subtitle': processText(chat.text, []).html,
+                    'timestamp': chat.timestamp,
+                    'userID': chat.userID
+                })
+            }
+            chatList.value = result
+
+            hal.log('ChatSideBar/loadAllChat/chatList/', chatList.value)
         })
     }, 15)
 }
+
+loadAllChat()
 
 function listener(type: string) {
     hal.log('ChatSidebar/notifyWhenChanged/' + type)
@@ -39,10 +67,8 @@ function listener(type: string) {
 }
 
 notifyWhenChanged(listener)
-loadAllChat()
 
-function openChat(idx: number, userID: string) {
-    selectIdx.value = idx
+function openChat(userID: string) {
     mainStore.chatID = userID
     hal.log('ChatSidebar/openChat/' + mainStore.chatID)
 }
@@ -57,7 +83,7 @@ function openChat(idx: number, userID: string) {
     </div>
     <div class="listBox"> 
         <div v-for="(value, idx) in chatList" class="container" 
-            @click='openChat(idx, value.userID)'
+            @click='openChat(value.userID)'
             :class='{"selected" : idx == selectIdx}'>
 
             <div class="avatarContainer">
@@ -73,7 +99,7 @@ function openChat(idx: number, userID: string) {
                     </div>
                 </div>
                 <div class="contentBody">
-                    {{ value.subtitle }}
+                    <span v-html='value.subtitle'></span>
                 </div>
             </div>
             

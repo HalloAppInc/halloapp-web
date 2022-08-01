@@ -21,7 +21,7 @@ const { t } = useI18n({
 const colorStore = useColorStore()
 const mainStore = useMainStore()
 
-const { clearAllMessages } = useHADatabase()
+const { clearAllMessages, initMessageListAndMediaList } = useHADatabase()
 
 const showChatSettings = ref(false)
 const showBackgroundColorSetting = ref({ 'value': false})
@@ -92,6 +92,14 @@ function openBackgroundColorSetting() {
                 @focusout='showChatSettings = false'>
                 <div class='iconShadow' :class='{ showShadow: showChatSettings == true }'>
                     <font-awesome-icon :icon="['fas', 'angle-down']" size='lg' />
+                </div>
+            </div>
+
+            <!-- TODO: delete, only for test -->
+            <!-- reload all message and contacts -->
+            <div class='iconContainer' tabindex='0' @click='initMessageListAndMediaList(true)'>
+                <div class='iconShadow' :class='{ showShadow: showChatSettings == true }'>
+                    <font-awesome-icon :icon="['fas', 'hammer']" size='lg' />
                 </div>
             </div>
             
