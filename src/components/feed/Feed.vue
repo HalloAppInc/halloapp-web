@@ -1,7 +1,7 @@
 
 <script setup lang="ts">
 
-    import { ref, watchEffect, defineExpose, defineEmits } from 'vue'
+    import { ref, watchEffect } from 'vue'
 
     import { useMainStore } from '../../stores/mainStore'
 

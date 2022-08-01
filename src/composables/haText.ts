@@ -24,55 +24,71 @@ export function useHAText() {
 
     function decorateTextWithMarkdownPlaceholders(text: any) {
         let splitter = new GraphemeSplitter()
-        const graphemes = splitter.splitGraphemes(text)
-        const markdownTags = ['~', '*', '_']
-        const unpaired = 'unpaired'
-        const opening = 'opening'
-        const closing = 'closing'
+        const GraphemesList = splitter.splitGraphemes(text)
+        const MarkdownTags = ['~', '*', '_']
+        const Unpaired = 'unpaired'
+        const Opening = 'opening'
+        const Closing = 'closing'
     
         let result = ''
         let foundTags = []
 
-        for (let i = 0; i < graphemes.length; i++) {
+        for (let i = 0; i < GraphemesList.length; i++) {
             
-            const char = graphemes[i]
+            const Grapheme = GraphemesList[i]
 
-            if (char == '\n') {
+            if (Grapheme == '\n') {
 
                 /* remove any unpaired tags since we don't pair after newlines (ios logic) */
                 let w = foundTags.length
                 while (w--) {
-                    if (foundTags[w].type == unpaired) { 
+                    if (foundTags[w].type == Unpaired) { 
                         foundTags.splice(w, 1)
                     } 
                 }
 
-            } else if (markdownTags.includes(char)) {
+            } else if (MarkdownTags.includes(Grapheme)) {
 
-                /* find an unpaired tag and close it if found */
-                let foundUnpaired = false
-                for (let j = foundTags.length - 1; j >= 0; j--) {
-                    let foundTag: any = foundTags[j]
-                    if (foundTag.tag == char && foundTag.type == unpaired) {
-                        foundTags[j].type = opening
-                        foundUnpaired = true
-                        break
+                // special case where ~ is after @ for unknown mentions */
+                const IsAfterMention = (Grapheme == '~') && (i > 0) && (GraphemesList[i - 1] == '@')
+
+                if (!IsAfterMention) {                
+
+                    /* find an unpaired tag and close it if found */
+                    let foundUnpaired = false
+                    let isEmptyMarkdown = false
+                    for (let j = foundTags.length - 1; j >= 0; j--) {
+                        let foundTag: any = foundTags[j]
+                        if (foundTag.tag == Grapheme && foundTag.type == Unpaired) {
+
+                            foundUnpaired = true
+
+                            isEmptyMarkdown = (i > 0) && (GraphemesList[i - 1] == Grapheme) && (foundTags[j].index == i - 1)
+                            if (!isEmptyMarkdown) {
+                                foundTags[j].type = Opening
+                            }
+
+                            break
+                        }
                     }
-                }
 
-                if (foundUnpaired) {
-                    foundTags.push({ tag: char, index: i, type: closing })
-                } else {
-                    foundTags.push({ tag: char, index: i, type: unpaired })
+                    if (foundUnpaired) {
+                        if (!isEmptyMarkdown) {
+                            foundTags.push({ tag: Grapheme, index: i, type: Closing })
+                        }
+                    } else {
+                        foundTags.push({ tag: Grapheme, index: i, type: Unpaired })
+                    }
+
                 }
             }
     
-            result += char
+            result += Grapheme
         }
 
         while (foundTags.length > 0) {
             const tag: any = foundTags.pop() // start from end or else indexes will not match after replacement
-            if (tag.type == unpaired) {
+            if (tag.type == Unpaired) {
                 continue
             }
             let placeholderTag = ''
@@ -84,9 +100,9 @@ export function useHAText() {
                 placeholderTag = 'i]]'
             }
 
-            if (tag.type == opening) {
+            if (tag.type == Opening) {
                 placeholderTag = '[[' + placeholderTag
-            } else if (tag.type == closing) {
+            } else if (tag.type == Closing) {
                 placeholderTag = '[[/' + placeholderTag
             }
             result = strReplaceCharAt(result, tag.index, placeholderTag)
@@ -231,7 +247,7 @@ export function useHAText() {
             .replaceAll('[[/s]]', '</s><span style="color:gray">~</span>')
             .replaceAll('[[b]]', '<span style="color:gray">*</span><b>')
             .replaceAll('[[/b]]', '</b><span style="color:gray">*</span>')
-            .replaceAll('[[aa]]', '<span style="color:#6495ED">')
+            .replaceAll('[[aa]]', '<span style="display: inline-block; text-decoration: none; color:#6495ED">')
             .replaceAll('[[/aa]]&nbsp;', '[[/aa]]')
             .replaceAll('[[/aa]]', '</span>&nbsp;')
             .replaceAll('[[a]]', '<a')

@@ -166,8 +166,7 @@ const messageNumber = computed(() => {
         <div class='footer'>
 
             <InputBox 
-                :messageList='messageList' 
-                :contactList='contactList' 
+
                 :uploadFiles='""'
                 :alwaysShowSendButton='false'
                 :replyQuoteIdx='replyQuoteIdx' />

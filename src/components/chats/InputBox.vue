@@ -212,8 +212,8 @@ function needUpdate(inputChar: string) {
     let numOfPairNewITag = newInputMessage.split('<i>').length - 1
     let numOfPairOldSTag = oldInputMessage.split('<s>').length - 1
     let numOfPairNewSTag = newInputMessage.split('<s>').length - 1
-    let numOfMentionOld = oldInputMessage.split('<span style="color:#6495ED">@').length - 1
-    let numOfMentionNew = newInputMessage.split('<span style="color:#6495ED">@').length - 1
+    let numOfMentionOld = oldInputMessage.split('<span style="display: inline-block; text-decoration: none; color:#6495ED">@').length - 1
+    let numOfMentionNew = newInputMessage.split('<span style="display: inline-block; text-decoration: none; color:#6495ED">@').length - 1
 
     // get element at cursor's position
     currentNode.value = null

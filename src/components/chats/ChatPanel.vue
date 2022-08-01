@@ -1046,6 +1046,8 @@ function gotoQuoteMessage(quoteIdx: number) {
 }
 
 .noOverflow :deep(.mention) {
+    display: inline-block; /* needed so text-decoration here can overwrite the markdowns */
+
     color: #6495ED;
     text-decoration: none;
 }
