@@ -6,9 +6,11 @@ import hal from '../common/halogger'
 
 import { useHAProtobuf } from './haProtobuf'
 
+import { useMainStore } from '../stores/mainStore'
+
 export function useHADatabase() {
 
-    const { createMedia, createChatContainer, decodeChatContainer, decodeMedia } = useHAProtobuf()
+    const mainStore = useMainStore()
 
     const contactList = [
         {
@@ -154,29 +156,31 @@ export function useHADatabase() {
     }
 
     async function initMessageListAndMediaList() {
-        // if no contact add contact
-        const allContact = await db.contact.toArray()
-        if (allContact.length == 0) {
-            for (const contact of contactList) {
-                const id = await db.contact.put(contact)
+        if (false) {
+            // if no contact add contact
+            const allContact = await db.contact.toArray()
+            if (allContact.length == 0) {
+                for (const contact of contactList) {
+                    const id = await db.contact.put(contact)
+                }
             }
-        }
 
-        // if have old messages, delete all
-        const all = await db.messageList.toArray()
-        if (all.length != 0) {
-            await db.messageList.clear()
-        }
+            // if have old messages, delete all
+            const all = await db.messageList.toArray()
+            if (all.length != 0) {
+                await db.messageList.clear()
+            }
 
-        const allMedia = await db.media.toArray()
-        if (allMedia.length != 0) {
-            await db.media.clear()
-        }
+            const allMedia = await db.media.toArray()
+            if (allMedia.length != 0) {
+                await db.media.clear()
+            }
 
-        for(const message of messageList) {
-            const id = await db.messageList.put(message)
-            const record = await db.messageList.where('id').equals(id).toArray()
-            // hal.log('haDb/initMessageListAndMediaList/finished')
+            for(const message of messageList) {
+                const id = await db.messageList.put(message)
+                const record = await db.messageList.where('id').equals(id).toArray()
+                // hal.log('haDb/initMessageListAndMediaList/finished')
+            }
         }
     }
 
@@ -226,9 +230,54 @@ export function useHADatabase() {
         return id
     }
 
+    async function getAllChat() {
+        const chatArray = await db.transaction('r', db.messageList, db.contact, () => {
+            return db.messageList.where('fromUserID')
+            .notEqual(mainStore.loginUserID)
+            .uniqueKeys()
+            .then(IDArray => {
+                const chatArray: any = []
+                for (const ID of IDArray) {
+                    // find latest message
+                    db.messageList.where('fromUserID').equals(ID)
+                    .or('toUserID').equals(ID)
+                    .sortBy('timestamp')
+                    .then(messageArray => {
+                        const lastEle = messageArray[messageArray.length - 1]
+                        const text = lastEle.text
+                        const userID: string = lastEle.fromUserID != mainStore.loginUserID ? 
+                        lastEle.fromUserID as string : lastEle.toUserID as string
+                        db.contact.where('userID')
+                        .equals(userID)
+                        .toArray()
+                        .then(res => {
+                            const chat = {
+                                'title': res[0].userName,
+                                'subtitle': text,
+                                'timestamp': lastEle.timestamp,
+                                'userID': userID
+                            }
+                            chatArray.push(chat)
+                        })
+                    })
+                }
+                return chatArray
+            })
+        })
+
+        // sort according to array
+        chatArray.sort(function compareFn(a: any, b: any) {
+            return b.timestamp - a.timestamp
+        })
+
+        hal.log('haDb/getAllChat/chat', chatArray)
+
+        return chatArray
+    }
+
     return {
         getMessageByID, deleteMessageByID, cleanMessageContentByID, 
         clearAllMessages, loadMessageList, initMessageListAndMediaList, 
         notifyWhenChanged, putMessage, getMedia, 
-        putMedia, getContactByID }
+        putMedia, getContactByID, getAllChat }
 }

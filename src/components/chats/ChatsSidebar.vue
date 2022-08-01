@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import { ref } from 'vue'
+
 import { useTimeformatter } from '../../composables/timeformatter'
+import { useHADatabase } from '../../composables/haDb'
 import { useI18n } from 'vue-i18n'
 
 import hal from '../../common/halogger'
@@ -7,6 +10,7 @@ import hal from '../../common/halogger'
 import { useMainStore } from '../../stores/mainStore'
 
 const { formatTime } = useTimeformatter()
+const { notifyWhenChanged, getAllChat } = useHADatabase()
 
 const mainStore = useMainStore()
 
@@ -15,35 +19,30 @@ const { t, locale } = useI18n({
     useScope: 'global'
 })
 
-const chatList = [
-    { 
-        title: "UserB",
-        subtitle: "apple",
-        timestamp: "1649204213",
-        userID: 'X9l9StZ_IjuqFqGvBqa27',
-    },
-    {
-        title: 'abcd123',
-        subtitle: 'this is a link',
-        timestamp: "1649204213",
-        userID: 'i7tenqOTRKxvqknYdrihB',
-    },
-    {
-        title: '?@#$%^&',
-        subtitle: 'this is a link',
-        timestamp: "1649204213",
-        userID: 'BoXcNaWI5BAAuiPaPE9Of',
-    },
-    {
-        title: '123_A',
-        subtitle: 'this is a link',
-        timestamp: "1649204213",
-        userID: 'Zgd_82oo6kNmsIdLyqbB6',
-    }
+const selectIdx = ref(-1)
+const chatList = ref()
 
-]
+let load: any
+function loadAllChat() {
+    clearTimeout(load)
+    load = setTimeout(() => {
+        getAllChat()
+        .then(res => {
+            chatList.value = res
+        })
+    }, 15)
+}
 
-function openChat(userID: string) {
+function listener(type: string) {
+    hal.log('ChatSidebar/notifyWhenChanged/' + type)
+    loadAllChat()
+}
+
+notifyWhenChanged(listener)
+loadAllChat()
+
+function openChat(idx: number, userID: string) {
+    selectIdx.value = idx
     mainStore.chatID = userID
     hal.log('ChatSidebar/openChat/' + mainStore.chatID)
 }
@@ -57,7 +56,10 @@ function openChat(userID: string) {
         
     </div>
     <div class="listBox"> 
-        <div v-for="value in chatList" class="container" @click='openChat(value.userID)'>
+        <div v-for="(value, idx) in chatList" class="container" 
+            @click='openChat(idx, value.userID)'
+            :class='{"selected" : idx == selectIdx}'>
+
             <div class="avatarContainer">
                 <div class="avatar"></div>
             </div>
@@ -121,6 +123,10 @@ function openChat(userID: string) {
     overflow-y: auto;
     overflow-x: hidden;
     height: 100%;
+}
+
+.selected {
+    background-color: rgb(226, 226, 226);
 }
 
 .container {

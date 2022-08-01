@@ -71,7 +71,7 @@ fetchContactList()
 function fetchContactList() {
     getContactByID([2,3,4,5])
     .then(res => {
-        hal.log('InputBox/fetchContactList/load contactList ', res)
+        // hal.log('InputBox/fetchContactList/load contactList ', res)
         contactList.value = res
     })
 }
