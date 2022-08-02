@@ -9,8 +9,10 @@ import hal from '../../common/halogger'
 import { useTimeformatter } from '../../composables/timeformatter'
 import { useHAMediaResize } from '../../composables/haMediaResize'
 import { useHADatabase } from '../../composables/haDb'
+import { useHAText } from '../../composables/haText'
 
 import { useColorStore } from '../../stores/colorStore'
+import { useMainStore } from '../../stores/mainStore'
 
 import Popup from './Popup.vue'
 import Quote from './Quote.vue'
@@ -20,23 +22,22 @@ import Notification from './Notification.vue'
 import { number } from '@intlify/core-base'
 
 const colorStore = useColorStore()
+const mainStore = useMainStore()
 
 const { t, locale } = useI18n({
     inheritLocale: true,
     useScope: 'global'
 })
 
+const { processText } = useHAText()
 const { formatTimeDateOnlyChat, formatTimeChat, formatTimeFullChat, timeDiffBiggerThanOneDay } = useTimeformatter()
 const { setMediaSizeInMediaList } = useHAMediaResize()
-const { getMessageByID, deleteMessageByID, 
-        cleanMessageContentByID, loadMessageList, 
-        notifyWhenChanged, initMessageListAndMediaList,
-        getMedia } = useHADatabase()
+const { getMessageByID, deleteMessageByID, cleanMessageContentByID, 
+        loadMessageList, notifyWhenChanged, getMedia, 
+        getContactByName, getContacts } = useHADatabase()
 
-// TODO: delete this, only for testing!
-initMessageListAndMediaList().then(() => {
-    loadMessageListIntoChatPanel()  
-})
+
+fetchContactList()
 
 const messageListFromDB = ref()
 
@@ -71,6 +72,9 @@ const currentMsgTimestamp = ref()
 
 const data = ref()
 
+const contactList = ref()
+const contactNameList = ref()
+
 const messageNumber = computed(() => {
     if (data.value) {
         return data.value.length
@@ -78,6 +82,15 @@ const messageNumber = computed(() => {
     else {
         return 0
     }
+})
+
+// listen to chatID, if choose another chat in chatlist, update chatPanel
+const chatID = computed(() => {
+    return mainStore.chatID
+})
+
+watch(chatID, () => {
+    loadMessageListIntoChatPanel()
 })
 
 // listen to msg list, when a new msg comes in, scroll to the bottom
@@ -140,6 +153,19 @@ nextTick(() => {
     new ResizeObserver(setChatPanelHeight).observe(content.value!)
 })
 
+function fetchContactList() {
+    getContacts()
+    .then(res => {
+        hal.log('ChatPanel/fetchContactList/load contactList ', res)
+        contactList.value = res
+        let result = []
+        for(const contact of contactList.value){
+            result.push(contact.userName)
+        }
+        contactNameList.value = result
+    })
+}
+
 async function parseMessage() {
     if (!messageListFromDB.value) {
         data.value = []
@@ -175,10 +201,11 @@ async function parseMessage() {
         }
 
         let time = formatTimeChat(parseInt(message.timestamp), <string>locale.value)
-        let type = (message.fromUserID == 'j_1H1YKQy74sDoCylPCEA') ? 'outBound' : 'inBound'
+        let type = (message.fromUserID == mainStore.loginUserID) ? 'outBound' : 'inBound'
         // not delete
         if ( message.text != undefined) {
-            let resMsg = appendSpaceForMsgInfo(message.text, time, type == 'outBound')
+            let text = processText(message.text, contactNameList.value).html
+            let resMsg = appendSpaceForMsgInfo(text, time, type == 'outBound')
             let newMediaList
             if (message.mediaID) {
                 const mediaArray = await getMedia(message.mediaID)
@@ -242,7 +269,7 @@ async function listenerFunction(type: string) {
 
 let load: any
 function loadMessageListIntoChatPanel() {
-    /* loadMessageList('X9l9StZ_IjuqFqGvBqa27')
+    /* loadMessageList('mainStore.chatID')
     .then(res => {
         messageListFromDB.value = res
     }) */
@@ -252,12 +279,14 @@ function loadMessageListIntoChatPanel() {
     */
     clearTimeout(load)
     load = setTimeout(() => {
-        loadMessageList('X9l9StZ_IjuqFqGvBqa27')
+        loadMessageList(mainStore.chatID)
         .then(res => {
             messageListFromDB.value = res
         })
     }, 15)
 }
+
+loadMessageListIntoChatPanel()
 
 // add extra space after text to fit time stamp and checkmarks
 function appendSpaceForMsgInfo(msg: string, time: string, isOutBound: boolean) {
@@ -381,9 +410,14 @@ function gotoBottom(type: ScrollBehavior | undefined) {
     content.value?.scrollTo({ left: 0, top: content.value?.scrollHeight, behavior: type })
 }
 
-function gotoProfile(event: any) {
+async function gotoChatWith(event: any) {
     let contactName = event.target.innerText.substring(1)
-    // go to user's profile page
+    // go to chat with that user
+    hal.log('ChatPanel/gotoChatWith/' + contactName)
+    const contact = await getContactByName(contactName)
+    if (contact) {
+        mainStore.chatID = contact.userID
+    }
 }
 
 function openMenu(event: any, forInBound: boolean, idx: number, timestamp: string) {
@@ -513,7 +547,7 @@ async function getQuoteMessageData(id: number) {
     }
     else {
         const data = JSON.parse(JSON.stringify(message))
-        if (message.fromUserID == 'j_1H1YKQy74sDoCylPCEA') {
+        if (message.fromUserID == mainStore.loginUserID) {
             data['sender'] = 'YOU'
         }
         else {
@@ -629,7 +663,7 @@ function gotoQuoteMessage(quoteIdx: number) {
                     <!-- text -->
                     <div class='chatTextContainer' :class='{ bigChatTextContainer: value.font == "onlyEmoji" }'>
                         <!-- show message content -->
-                        <span v-html='value.text' :class='value.font' @click="gotoProfile($event)">
+                        <span v-html='value.text' :class='value.font' @click="gotoChatWith($event)">
                         </span>
                     </div>
 

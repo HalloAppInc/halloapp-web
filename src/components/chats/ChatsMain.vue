@@ -11,9 +11,6 @@ const colorStore = useColorStore()
 
 const replyQuoteIdx = ref({'value': -1})
 
-const chatName = ref('chat1')
-const chatInformation = ref('chatInfo')
-
 const chatBackground = computed(() => {
     return colorStore.chatBackground
 })
@@ -47,7 +44,7 @@ function notifyMe() {
 
         <!-- chat header with chatname chatinfo and settings -->
         <div class='header'>
-            <ChatHeader :chatName='chatName' :chatInformation='chatInformation'/>
+            <ChatHeader/>
         </div>
 
         <!-- chatting area -->

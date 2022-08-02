@@ -1,62 +1,104 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch, computed, nextTick } from 'vue'
 
 import { useTimeformatter } from '../../composables/timeformatter'
+import { useHADatabase } from '../../composables/haDb'
+import { useHAText } from '../../composables/haText'
+
 import { useI18n } from 'vue-i18n'
 
+import hal from '../../common/halogger'
+
+import { useMainStore } from '../../stores/mainStore'
+import { useColorStore } from '../../stores/colorStore'
+
+const { processText } = useHAText()
 const { formatTime } = useTimeformatter()
+const { notifyWhenChanged, getAllChat } = useHADatabase()
+
+const mainStore = useMainStore()
+const colorStore = useColorStore()
 
 const { t, locale } = useI18n({
     inheritLocale: true,
     useScope: 'global'
 })
 
-const listData = [
-    { 
-        title: "Thou with no name",
-        subtitle: "this is a link",
-        timestamp: "1649204213",
-    },
-    { 
-        title: "Tree",
-        subtitle: "apple",
-        timestamp: "1649204213",
-    },
-    { 
-        title: "Bob",
-        subtitle: "this is a link",
-        timestamp: "1649204213",
-    },     
-    { 
-        title: "Jessy",
-        subtitle: "this is a link",
-        timestamp: "1649204213",
-    },
-    { 
-        title: "Nathan",
-        subtitle: "this is a link",
-        timestamp: "1649204213",
-    },
-    { 
-        title: "Kai",
-        subtitle: "this is a link",
-        timestamp: "1649204213",
-    },
-    { 
-        title: "Rebecca",
-        subtitle: "this is a link",
-        timestamp: "1649204213",
-    },     
-    { 
-        title: "Dylan",
-        subtitle: "this is a link",
-        timestamp: "1649204213",
-    },          
-]
+const selectIdx = ref(-1)
+const chatList = ref()
 
-function openChat() {
+const chatID = computed(() => {
+    return mainStore.chatID
+})
+
+const timestampColor = computed(() => {
+    return colorStore.timestamp
+})
+
+watch(chatID,() => {
+    setSelectIdx()
+})
+
+function setSelectIdx() {
+    for(let i = 0; i < chatList.value.length; i++) {
+        if (chatList.value[i].userID == mainStore.chatID) {
+            selectIdx.value = i
+        }
+    }
 }
 
+let load: any
+function loadAllChat() {
+    clearTimeout(load)
+    load = setTimeout(() => {
+        getAllChat()
+        .then(res => {
+            const result: any =[]
+            for (const chat of res) {
+                let subtitle
+                let font
+                if (chat.text) {
+                    let text = JSON.parse(JSON.stringify(chat.text))
+                    // truncate text
+                    if (text.length > 15) {
+                        text = text.slice(0, 15) + '...'
+                        console.log(text)
+                    }
+                    subtitle = processText(text, []).html
+                    font = 'normal'
+                }
+                else {
+                    subtitle = 'message has been deleted'
+                    font = 'deleted'
+                }
+                result.push({
+                    'title': chat.userName,
+                    'subtitle': subtitle,
+                    'font': font,
+                    'timestamp': chat.timestamp,
+                    'userID': chat.userID,
+                })
+            }
+            chatList.value = result
+
+            hal.log('ChatSideBar/loadAllChat/chatList/', res)
+        })
+    }, 15)
+}
+
+loadAllChat()
+
+function listener(type: string) {
+    hal.log('ChatSidebar/notifyWhenChanged/' + type)
+    loadAllChat()
+}
+
+notifyWhenChanged(listener)
+
+function openChat(userID: string) {
+    mainStore.chatID = userID
+    hal.log('ChatSidebar/openChat/' + mainStore.chatID)
+}
 </script>
 
 <template>
@@ -66,7 +108,10 @@ function openChat() {
         
     </div>
     <div class="listBox"> 
-        <div v-for="value in listData" class="container" @click='openChat()'>
+        <div v-for="(value, idx) in chatList" class="container" 
+            @click='openChat(value.userID)'
+            :class='{"selected" : idx == selectIdx}'>
+
             <div class="avatarContainer">
                 <div class="avatar"></div>
             </div>
@@ -80,7 +125,7 @@ function openChat() {
                     </div>
                 </div>
                 <div class="contentBody">
-                    {{ value.subtitle }}
+                    <span v-html='value.subtitle' :class='value.font'></span>
                 </div>
             </div>
             
@@ -130,6 +175,10 @@ function openChat() {
     overflow-y: auto;
     overflow-x: hidden;
     height: 100%;
+}
+
+.selected {
+    background-color: rgb(226, 226, 226);
 }
 
 .container {
@@ -196,6 +245,20 @@ function openChat() {
     color: gray;
 
     user-select: none;
+}
+
+.contentBody {
+    overflow: hidden;
+}
+
+.normal {
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.deleted {
+    font-size: small;
+    color: v-bind(timestampColor);
 }
 
 </style>

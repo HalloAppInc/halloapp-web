@@ -56,7 +56,8 @@ export const useMainStore = defineStore('main', {
 
         preferColorScheme: '',
 
-        chatPage: 'chat',
+        loginUserID: '',
+        chatID: '',
     }),
     getters: {
     },
@@ -65,6 +66,7 @@ export const useMainStore = defineStore('main', {
             if (!this.isLoggedIntoApp) {
                 this.page = 'home'
                 this.isLoggedIntoApp = true
+                this.loginUserID = 'j_1H1YKQy74sDoCylPCEA'
             }
         },
         logoutMain() {
@@ -75,6 +77,7 @@ export const useMainStore = defineStore('main', {
             // todo: delete all saved data including from indexeddb
             // todo: remove public key from server? (what if there's no connection)
             this.isLoggedIntoApp = false
+            this.loginUserID = ''
             
             /* manual reset instead of $reset() so we can preserve the states we want */
             this.page = 'home'
@@ -105,9 +108,6 @@ export const useMainStore = defineStore('main', {
         },
         gotoSettingsPage(page: string) {
             this.settingsPage = page
-        },
-        gotoChatPage(page: string) {
-            this.chatPage = page
         }
     },
 })

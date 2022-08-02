@@ -1,18 +1,20 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 import { useHAText } from '../../composables/haText'
 import { useHADatabase } from '../../composables/haDb'
 
 import { useColorStore } from '../../stores/colorStore'
+import { useMainStore } from '../../stores/mainStore'
 
 import hal from '../../common/halogger'
 
 const { processText } = useHAText()
 
 const colorStore = useColorStore()
+const mainStore = useMainStore()
 
-const { putMessage, putMedia, getContactByID } = useHADatabase()
+const { putMessage, putMedia, getContacts } = useHADatabase()
 
 const props = defineProps(['uploadFiles', 'replyQuoteIdx', 'alwaysShowSendButton'])
 
@@ -37,6 +39,14 @@ const showSendButton = ref(false)
 
 const chatBoxHeight = ref(0)
 
+const chatID = computed(() => {
+    return mainStore.chatID
+})
+
+watch(chatID,() => {
+    fetchContactList()
+})
+
 const inBoundMsgBubbleColor = computed(() => {
     return colorStore.inBoundMsgBubble
 })
@@ -56,21 +66,20 @@ const hoverColor = computed(() => {
     return colorStore.hover
 })
 
-const contactNameList = computed(() => {
-    let result = []
-    for(const contact of contactList.value){
-        result.push(contact.userName)
-    }
-    return result
-})
+const contactNameList = ref()
 
 fetchContactList()
 
 function fetchContactList() {
-    getContactByID([2,3,4,5])
+    getContacts()
     .then(res => {
         hal.log('InputBox/fetchContactList/load contactList ', res)
         contactList.value = res
+        let result = []
+        for(const contact of contactList.value){
+            result.push(contact.userName)
+        }
+        contactNameList.value = result
     })
 }
 
@@ -148,9 +157,9 @@ function analyzeKeyDown(event: any) {
 async function sendMessage() {
     if (inputArea.value?.innerText.trim().length !== 0 || props.uploadFiles != '') {  
         const message: any = {
-            fromUserID: 'j_1H1YKQy74sDoCylPCEA',
-            toUserID: 'X9l9StZ_IjuqFqGvBqa27',
-            text: processText(inputArea.value?.innerText.trim(), contactNameList.value).html,
+            fromUserID: mainStore.loginUserID,
+            toUserID: mainStore.chatID,
+            text: inputArea.value?.innerText.trim(),
             timestamp: (Date.now() / 1000 | 0).toString(),
         }
         if (props.replyQuoteIdx.value > -1) {

@@ -4,11 +4,11 @@ import { nanoid } from 'nanoid'
 
 import hal from '../common/halogger'
 
-import { useHAProtobuf } from './haProtobuf'
+import { useMainStore } from '../stores/mainStore'
 
 export function useHADatabase() {
 
-    const { createMedia, createChatContainer, decodeChatContainer, decodeMedia } = useHAProtobuf()
+    const mainStore = useMainStore()
 
     const contactList = [
         {
@@ -37,7 +37,7 @@ export function useHADatabase() {
         {
             fromUserID: contactList[1].userID,
             toUserID: contactList[0].userID,
-            text: "Short text testing:<br> ~123~ <s>123</s>,_123_<i>123</i>,*123*<b>123</b>",
+            text: "Short text testing:~123~,_123_,*123*",
             timestamp: "1649204213",
         },
         {
@@ -76,12 +76,48 @@ export function useHADatabase() {
             text: "😍☺️❤️",
             timestamp: "1657026000",
         },
+        {
+            fromUserID: contactList[2].userID,
+            toUserID: contactList[0].userID,
+            text: "?",
+            timestamp: "1657026000",
+        },
+        {
+            fromUserID: contactList[0].userID,
+            toUserID: contactList[2].userID,
+            text: "...Hi~",
+            timestamp: "1657026000",
+        },
+        {
+            fromUserID: contactList[3].userID,
+            toUserID: contactList[0].userID,
+            text: "How are you?",
+            timestamp: "1657026000",
+        },
+        {
+            fromUserID: contactList[0].userID,
+            toUserID: contactList[3].userID,
+            text: "yes",
+            timestamp: "1657026000",
+        },
+        {
+            fromUserID: contactList[4].userID,
+            toUserID: contactList[0].userID,
+            text: "This is a link",
+            timestamp: "1657026000",
+        },
+        {
+            fromUserID: contactList[0].userID,
+            toUserID: contactList[4].userID,
+            text: "This is a link",
+            timestamp: "1657026000",
+        }
     ]
 
     async function loadMessageList(userID: string) {
         const messageArray = await db.messageList.where('fromUserID').equals(userID)
             .or('toUserID').equals(userID).sortBy('timestamp')
-        //hal.log('haDb/loadMessageList/query result ', messageArray)
+        // hal.log('haDb/loadMessageList/query result ', messageArray)
 
         return messageArray
     }
@@ -117,31 +153,34 @@ export function useHADatabase() {
         return id
     }
 
-    async function initMessageListAndMediaList() {
-        // if no contact add contact
-        const allContact = await db.contact.toArray()
-        if (allContact.length == 0) {
+    async function initMessageListAndMediaList(isTrue: boolean = false) {
+        if (isTrue) {
+            // if no contact add contact
+            const allContact = await db.contact.toArray()
+            if (allContact.length != 0) {
+                await db.contact.clear()
+            }
             for (const contact of contactList) {
                 const id = await db.contact.put(contact)
             }
+
+            // if have old messages, delete all
+            const allMessage = await db.messageList.toArray()
+            if (allMessage.length != 0) {
+                await db.messageList.clear()
+            }
+
+            const allMedia = await db.media.toArray()
+            if (allMedia.length != 0) {
+                await db.media.clear()
+            }
+            for(const message of messageList) {
+                const id = await db.messageList.put(message)
+                const record = await db.messageList.where('id').equals(id).toArray()
+            }
         }
 
-        // if have old messages, delete all
-        const all = await db.messageList.toArray()
-        if (all.length != 0) {
-            await db.messageList.clear()
-        }
-
-        const allMedia = await db.media.toArray()
-        if (allMedia.length != 0) {
-            await db.media.clear()
-        }
-
-        for(const message of messageList) {
-            const id = await db.messageList.put(message)
-            const record = await db.messageList.where('id').equals(id).toArray()
-            // hal.log('haDb/initMessageListAndMediaList/finished')
-        }
+        // hal.log('haDb/initMessageListAndMediaList/finished')
     }
 
     function notifyWhenChanged(listener: any) {
@@ -176,11 +215,31 @@ export function useHADatabase() {
         return id
     }
 
-    async function getContactByID(idList: number[]) {
-        const contactArray = await db.contact.where('id').anyOf(idList).toArray()
+    async function getContacts() {
+        const contactArray = await db.contact.where('userID')
+        .noneOf([mainStore.loginUserID, mainStore.chatID])
+        .toArray()   
         // hal.log('haDb/getContact/query result ', contactArray)
 
         return contactArray
+    }
+
+    async function getContactByUserID(userID: string){
+        const contact = await db.contact.where('userID')
+        .equals(userID)
+        .first()
+        // hal.log('haDb/getContactByUserID/query result ', contact)
+
+        return contact
+    }
+
+    async function getContactByName(userName: string) {
+        const contact = await db.contact.where('userName')
+        .equals(userName)
+        .first()
+        // hal.log('haDb/getContactByName/query result ', contact)
+
+        return contact
     }
 
     async function putContact(contact: any) {
@@ -190,9 +249,55 @@ export function useHADatabase() {
         return id
     }
 
+    async function getAllChat() {
+        const chatArray = await db.transaction('r', db.messageList, db.contact, () => {
+            return db.messageList.where('fromUserID')
+            .notEqual(mainStore.loginUserID)
+            .uniqueKeys()
+            .then(IDArray => {
+                const chatArray: any = []
+                for (const ID of IDArray) {
+                    // find latest message
+                    db.messageList.where('fromUserID').equals(ID)
+                    .or('toUserID').equals(ID)
+                    .sortBy('timestamp')
+                    .then(messageArray => {
+                        const lastEle = messageArray[messageArray.length - 1]
+                        const text = lastEle.text
+                        const userID: string = lastEle.fromUserID != mainStore.loginUserID ? 
+                        lastEle.fromUserID as string : lastEle.toUserID as string
+                        db.contact.where('userID')
+                        .equals(userID)
+                        .toArray()
+                        .then(res => {
+                            const chat = {
+                                'userName': res[0].userName,
+                                'text': text,
+                                'timestamp': lastEle.timestamp,
+                                'userID': userID
+                            }
+                            chatArray.push(chat)
+                        })
+                    })
+                }
+                return chatArray
+            })
+        })
+
+        // sort according to array
+        chatArray.sort(function compareFn(a: any, b: any) {
+            return b.timestamp - a.timestamp
+        })
+
+        // hal.log('haDb/getAllChat/chat', chatArray)
+
+        return chatArray
+    }
+
     return {
         getMessageByID, deleteMessageByID, cleanMessageContentByID, 
         clearAllMessages, loadMessageList, initMessageListAndMediaList, 
         notifyWhenChanged, putMessage, getMedia, 
-        putMedia, getContactByID }
+        putMedia, getContacts, getAllChat,
+        getContactByName, getContactByUserID }
 }
