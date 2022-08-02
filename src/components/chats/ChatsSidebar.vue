@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, nextTick } from 'vue'
 
 import { useTimeformatter } from '../../composables/timeformatter'
 import { useHADatabase } from '../../composables/haDb'
@@ -10,32 +10,42 @@ import { useI18n } from 'vue-i18n'
 import hal from '../../common/halogger'
 
 import { useMainStore } from '../../stores/mainStore'
+import { useColorStore } from '../../stores/colorStore'
 
 const { processText } = useHAText()
 const { formatTime } = useTimeformatter()
 const { notifyWhenChanged, getAllChat } = useHADatabase()
 
 const mainStore = useMainStore()
+const colorStore = useColorStore()
 
 const { t, locale } = useI18n({
     inheritLocale: true,
     useScope: 'global'
 })
 
-const selectIdx = ref(0)
+const selectIdx = ref(-1)
 const chatList = ref()
 
 const chatID = computed(() => {
     return mainStore.chatID
 })
 
+const timestampColor = computed(() => {
+    return colorStore.timestamp
+})
+
 watch(chatID,() => {
+    setSelectIdx()
+})
+
+function setSelectIdx() {
     for(let i = 0; i < chatList.value.length; i++) {
         if (chatList.value[i].userID == mainStore.chatID) {
             selectIdx.value = i
         }
     }
-})
+}
 
 let load: any
 function loadAllChat() {
@@ -45,16 +55,33 @@ function loadAllChat() {
         .then(res => {
             const result: any =[]
             for (const chat of res) {
+                let subtitle
+                let font
+                if (chat.text) {
+                    let text = JSON.parse(JSON.stringify(chat.text))
+                    // truncate text
+                    if (text.length > 15) {
+                        text = text.slice(0, 15) + '...'
+                        console.log(text)
+                    }
+                    subtitle = processText(text, []).html
+                    font = 'normal'
+                }
+                else {
+                    subtitle = 'message has been deleted'
+                    font = 'deleted'
+                }
                 result.push({
                     'title': chat.userName,
-                    'subtitle': processText(chat.text, []).html,
+                    'subtitle': subtitle,
+                    'font': font,
                     'timestamp': chat.timestamp,
-                    'userID': chat.userID
+                    'userID': chat.userID,
                 })
             }
             chatList.value = result
 
-            hal.log('ChatSideBar/loadAllChat/chatList/', chatList.value)
+            hal.log('ChatSideBar/loadAllChat/chatList/', res)
         })
     }, 15)
 }
@@ -72,7 +99,6 @@ function openChat(userID: string) {
     mainStore.chatID = userID
     hal.log('ChatSidebar/openChat/' + mainStore.chatID)
 }
-
 </script>
 
 <template>
@@ -99,7 +125,7 @@ function openChat(userID: string) {
                     </div>
                 </div>
                 <div class="contentBody">
-                    <span v-html='value.subtitle'></span>
+                    <span v-html='value.subtitle' :class='value.font'></span>
                 </div>
             </div>
             
@@ -219,6 +245,20 @@ function openChat(userID: string) {
     color: gray;
 
     user-select: none;
+}
+
+.contentBody {
+    overflow: hidden;
+}
+
+.normal {
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.deleted {
+    font-size: small;
+    color: v-bind(timestampColor);
 }
 
 </style>

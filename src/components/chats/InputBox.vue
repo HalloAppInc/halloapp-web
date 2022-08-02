@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 import { useHAText } from '../../composables/haText'
 import { useHADatabase } from '../../composables/haDb'
@@ -39,6 +39,14 @@ const showSendButton = ref(false)
 
 const chatBoxHeight = ref(0)
 
+const chatID = computed(() => {
+    return mainStore.chatID
+})
+
+watch(chatID,() => {
+    fetchContactList()
+})
+
 const inBoundMsgBubbleColor = computed(() => {
     return colorStore.inBoundMsgBubble
 })
@@ -58,21 +66,20 @@ const hoverColor = computed(() => {
     return colorStore.hover
 })
 
-const contactNameList = computed(() => {
-    let result = []
-    for(const contact of contactList.value){
-        result.push(contact.userName)
-    }
-    return result
-})
+const contactNameList = ref()
 
 fetchContactList()
 
 function fetchContactList() {
     getContacts()
     .then(res => {
-        // hal.log('InputBox/fetchContactList/load contactList ', res)
+        hal.log('InputBox/fetchContactList/load contactList ', res)
         contactList.value = res
+        let result = []
+        for(const contact of contactList.value){
+            result.push(contact.userName)
+        }
+        contactNameList.value = result
     })
 }
 
@@ -152,7 +159,7 @@ async function sendMessage() {
         const message: any = {
             fromUserID: mainStore.loginUserID,
             toUserID: mainStore.chatID,
-            text: inputArea.value?.innerText.trim(),//processText(inputArea.value?.innerText.trim(), contactNameList.value).html,
+            text: inputArea.value?.innerText.trim(),
             timestamp: (Date.now() / 1000 | 0).toString(),
         }
         if (props.replyQuoteIdx.value > -1) {

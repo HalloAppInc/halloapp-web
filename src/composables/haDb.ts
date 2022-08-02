@@ -224,6 +224,15 @@ export function useHADatabase() {
         return contactArray
     }
 
+    async function getContactByUserID(userID: string){
+        const contact = await db.contact.where('userID')
+        .equals(userID)
+        .first()
+        // hal.log('haDb/getContactByUserID/query result ', contact)
+
+        return contact
+    }
+
     async function getContactByName(userName: string) {
         const contact = await db.contact.where('userName')
         .equals(userName)
@@ -290,5 +299,5 @@ export function useHADatabase() {
         clearAllMessages, loadMessageList, initMessageListAndMediaList, 
         notifyWhenChanged, putMessage, getMedia, 
         putMedia, getContacts, getAllChat,
-        getContactByName }
+        getContactByName, getContactByUserID }
 }
