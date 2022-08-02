@@ -168,7 +168,7 @@ function closeComposer() {
             <div class='closeIconContainer'>
                 <div class='iconContainer' @click='closeComposer'>
                     <div class='iconShadow'>
-                        <font-awesome-icon :icon="['fas', 'xmark']" size='lg' />
+                        <font-awesome-icon :icon="['fas', 'xmark']" size='xl' />
                     </div>
                 </div>
             </div>
@@ -177,7 +177,7 @@ function closeComposer() {
             <div class='header'>
                 <div class='iconContainer'>
                     <div class='iconShadow'>
-                        <font-awesome-icon :icon="['fas', 'face-smile']" size='lg' />
+                        <font-awesome-icon :icon="['fas', 'face-smile']" size='xl' />
                     </div>
                 </div>
 
@@ -185,7 +185,7 @@ function closeComposer() {
                 <div v-if='openTest' class='iconContainer'
                     @click='testUploadAndDownload(props.uploadFiles[selectMediaIdx])'>
                     <div class='iconShadow'>
-                        <font-awesome-icon :icon="['fas', 'hammer']" size='lg' />
+                        <font-awesome-icon :icon="['fas', 'hammer']" size='xl' />
                     </div>
                 </div>
             </div>
