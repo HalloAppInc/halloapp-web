@@ -137,7 +137,8 @@ function onFilePicked(event: any) {
         <InputBox
             :uploadFiles='""'
             :alwaysShowSendButton='false'
-            :replyQuoteIdx='props.replyQuoteIdx' />
+            :replyQuoteIdx='props.replyQuoteIdx' 
+            :init='showComposer.value'/>
 
         <!-- <div class='iconContainer'>
             <div class='iconShadow' :class="{ 'showIconShadow': showAttachMenu == true }">
