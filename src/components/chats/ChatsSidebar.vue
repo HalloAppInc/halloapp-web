@@ -62,7 +62,6 @@ function loadAllChat() {
                     // truncate text
                     if (text.length > 15) {
                         text = text.slice(0, 15) + '...'
-                        console.log(text)
                     }
                     subtitle = processText(text, []).html
                     font = 'normal'

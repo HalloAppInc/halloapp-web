@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 
 import { useHAText } from '../../composables/haText'
 import { useHADatabase } from '../../composables/haDb'
@@ -16,7 +16,7 @@ const mainStore = useMainStore()
 
 const { putMessage, putMedia, getContacts } = useHADatabase()
 
-const props = defineProps(['uploadFiles', 'replyQuoteIdx', 'alwaysShowSendButton'])
+const props = defineProps(['uploadFiles', 'replyQuoteIdx', 'alwaysShowSendButton', 'init'])
 
 const contactList = ref()
 
@@ -47,6 +47,8 @@ watch(chatID,() => {
     fetchContactList()
 })
 
+const contactNameList = ref()
+
 const inBoundMsgBubbleColor = computed(() => {
     return colorStore.inBoundMsgBubble
 })
@@ -66,9 +68,29 @@ const hoverColor = computed(() => {
     return colorStore.hover
 })
 
-const contactNameList = ref()
+const needInit = computed(() => {
+    return props.init
+})
 
-fetchContactList()
+watch(needInit, () => {
+    init()
+})
+
+function init() {
+    nextTick(() => {
+        if (inputArea.value) {
+            if (mainStore.inputArea.length != 0) {
+                showSendButton.value = true
+            }
+            else{
+                showSendButton.value = false
+            }
+            inputArea.value.innerHTML = processText(mainStore.inputArea, contactNameList.value, false, 100, true).html
+        }
+    })
+}
+
+init()
 
 function fetchContactList() {
     getContacts()
@@ -82,6 +104,8 @@ function fetchContactList() {
         contactNameList.value = result
     })
 }
+
+fetchContactList()
 
 // deal with different keydown: enter, enter+shift, cmd+a, space, delete
 function analyzeKeyDown(event: any) {
@@ -107,7 +131,7 @@ function analyzeKeyDown(event: any) {
                     if (nodeOffset.value == node.textContent.length) {
                         node.parentElement?.remove()
                         disableUpdate.value = true
-                        event.preventDefault(event)
+                        //event.preventDefault(event)
                     }
                 }
             }
@@ -156,6 +180,7 @@ function analyzeKeyDown(event: any) {
 // send the text in input box
 async function sendMessage() {
     if (inputArea.value?.innerText.trim().length !== 0 || props.uploadFiles != '') {  
+        mainStore.inputArea = ''
         const message: any = {
             fromUserID: mainStore.loginUserID,
             toUserID: mainStore.chatID,
@@ -261,6 +286,8 @@ function analyzeKeyUp(event: any) {
     if (inputArea.value && inputArea.value?.innerText.trim().length == 0) {
         // clean html inside
         inputArea.value.innerHTML = ''
+        // clean remain input
+        mainStore.inputArea = ''
         // hide send button
         showSendButton.value = false
         return
@@ -268,6 +295,11 @@ function analyzeKeyUp(event: any) {
     else {
         // have valid input show send button
         showSendButton.value = true
+    }
+
+    // save remain input
+    if (inputArea.value) {
+        mainStore.inputArea = inputArea.value?.innerText
     }
 
     if (event.keyCode != 16 && // Shift
@@ -482,6 +514,15 @@ function closeContactsAndFocusOnInputBox() {
         showContacts.value = false
     }
 }
+
+function clearText() {
+    if (inputArea.value) {
+        inputArea.value.innerHTML = ''
+        mainStore.inputArea = ''
+        inputArea.value.focus()
+        showSendButton.value = false
+    }
+}
 </script>
 
 <template>
@@ -510,7 +551,12 @@ function closeContactsAndFocusOnInputBox() {
                 @focusout='closeContactsAndFocusOnInputBox' @keydown='analyzeKeyDown($event)'
                 @keyup='analyzeKeyUp($event)' @click='analyzeMouseMovement()'>
             </div>
+            <div class='iconContainer' v-show='showSendButton' @click='clearText()'>
+                <font-awesome-icon :icon="['fas', 'xmark']" size='lg' />
+            </div>
         </div>
+
+                
 
         <!-- send button -->
         <div class='buttonContainer' v-show='alwaysShowSendButton || showSendButton' @click='sendMessage(); showSendButton = false'>
@@ -666,6 +712,20 @@ function closeContactsAndFocusOnInputBox() {
     white-space: nowrap;
     user-select: none;
     overflow: hidden;
+}
+
+.iconContainer {
+    width: 0px;
+    height: 0px;
+    position: relative;
+    right: 25px;
+    top: 10px;
+
+    color: gray;
+}
+
+.iconContainer:hover {
+    cursor: pointer;
 }
 
 .buttonContainer {
