@@ -1,16 +1,17 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+
+import hal from '../../common/halogger'
 
 import { useI18n } from 'vue-i18n'
 
 import { useColorStore } from '../../stores/colorStore'
-
+import { useMainStore } from '../../stores/mainStore'
+ 
 import { useHADatabase } from '../../composables/haDb'
 
 import Popup from './Popup.vue'
 import ChatSettings from './ChatSettings.vue'
-
-const props = defineProps(['chatName', 'chatInformation'])
 
 const { t } = useI18n({
     inheritLocale: true,
@@ -18,12 +19,25 @@ const { t } = useI18n({
 })
 
 const colorStore = useColorStore()
+const mainStore = useMainStore()
 
-const { clearAllMessages } = useHADatabase()
+const { clearAllMessages, initMessageListAndMediaList, getContactByUserID } = useHADatabase()
 
 const showChatSettings = ref(false)
 const showBackgroundColorSetting = ref({ 'value': false})
 const showPopup = ref({ 'value': false, 'type': 'clear' })
+
+
+const chatName = ref()
+const chatInformation = ref()
+
+const chatID = computed(() => {
+    return mainStore.chatID
+})
+
+watch(chatID,() => {
+    getChatInfo()
+})
 
 const hoverColor = computed(() => {
     return colorStore.hover
@@ -44,8 +58,19 @@ const backgroundColor = computed(() => {
     return colorStore.background
 })
 
+function getChatInfo() {
+    getContactByUserID(mainStore.chatID)
+    .then(res => {
+        hal.log('ChatHeader/getChatInfo/', res)
+        chatName.value = res?.userName
+        chatInformation.value = 'Online'
+    })
+}
+
+getChatInfo()
+
 function clearMessage() {
-    clearAllMessages('X9l9StZ_IjuqFqGvBqa27')
+    clearAllMessages(mainStore.chatID)
 }
 
 function openPopup() {
@@ -70,11 +95,11 @@ function openBackgroundColorSetting() {
             <div class='content'>
                 <div class='contentHeader'>
                     <div class='contentTitle'>
-                        {{ props.chatName }}
+                        {{ chatName }}
                     </div>
                 </div>
                 <div class='contentBody'>
-                    {{ props.chatInformation }}
+                    {{ chatInformation }}
                 </div>
             </div>
 
@@ -90,6 +115,15 @@ function openBackgroundColorSetting() {
                 @focusout='showChatSettings = false'>
                 <div class='iconShadow' :class='{ showShadow: showChatSettings == true }'>
                     <font-awesome-icon :icon="['fas', 'angle-down']" size='lg' />
+                </div>
+            </div>
+
+            <!-- TODO: delete, only for test -->
+            <!-- reload all message and contacts -->
+            <div class='iconContainer' @click='initMessageListAndMediaList(true)'
+                title="Reload database">
+                <div class='iconShadow' :class='{ showShadow: showChatSettings == true }'>
+                    <font-awesome-icon :icon="['fas', 'hammer']" size='lg' />
                 </div>
             </div>
             
