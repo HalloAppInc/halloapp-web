@@ -79,6 +79,12 @@ watch(needInit, () => {
 function init() {
     nextTick(() => {
         if (inputArea.value) {
+            if (mainStore.inputArea.length != 0) {
+                showSendButton.value = true
+            }
+            else{
+                showSendButton.value = false
+            }
             inputArea.value.innerHTML = processText(mainStore.inputArea, contactNameList.value, false, 100, true).html
         }
     })
@@ -508,6 +514,15 @@ function closeContactsAndFocusOnInputBox() {
         showContacts.value = false
     }
 }
+
+function clearText() {
+    if (inputArea.value) {
+        inputArea.value.innerHTML = ''
+        mainStore.inputArea = ''
+        inputArea.value.focus()
+        showSendButton.value = false
+    }
+}
 </script>
 
 <template>
@@ -536,7 +551,12 @@ function closeContactsAndFocusOnInputBox() {
                 @focusout='closeContactsAndFocusOnInputBox' @keydown='analyzeKeyDown($event)'
                 @keyup='analyzeKeyUp($event)' @click='analyzeMouseMovement()'>
             </div>
+            <div class='iconContainer' v-show='showSendButton' @click='clearText()'>
+                <font-awesome-icon :icon="['fas', 'xmark']" size='lg' />
+            </div>
         </div>
+
+                
 
         <!-- send button -->
         <div class='buttonContainer' v-show='alwaysShowSendButton || showSendButton' @click='sendMessage(); showSendButton = false'>
@@ -692,6 +712,20 @@ function closeContactsAndFocusOnInputBox() {
     white-space: nowrap;
     user-select: none;
     overflow: hidden;
+}
+
+.iconContainer {
+    width: 0px;
+    height: 0px;
+    position: relative;
+    right: 25px;
+    top: 10px;
+
+    color: gray;
+}
+
+.iconContainer:hover {
+    cursor: pointer;
 }
 
 .buttonContainer {
