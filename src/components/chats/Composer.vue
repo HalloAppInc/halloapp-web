@@ -79,6 +79,13 @@ const iconColor = computed(() => {
 // To test upload and download, set openTest = true
 const openTest = false
 
+// close composer when press esc
+document.addEventListener('keyup', (event) => {
+    if (event.keyCode == 27) {
+        closeComposer()
+    }
+})
+
 function testUploadAndDownload(file: any) {
     if (file) {
         uploadAndDownLoad(file, attachMediaList.value)
@@ -161,7 +168,7 @@ function closeComposer() {
 
 <template>
 
-    <div class='mask' v-if='showComposer.value'>
+    <div class='mask' v-if='showComposer.value' >
         <div class='wrapper' v-if='isReady || init' >
 
             <!-- close icon -->
