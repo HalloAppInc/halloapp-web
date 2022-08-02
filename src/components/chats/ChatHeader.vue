@@ -66,6 +66,7 @@ function getChatInfo() {
         chatInformation.value = 'Online'
     })
 }
+
 getChatInfo()
 
 function clearMessage() {

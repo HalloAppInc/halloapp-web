@@ -165,8 +165,8 @@ export function useHADatabase() {
             }
 
             // if have old messages, delete all
-            const all = await db.messageList.toArray()
-            if (all.length != 0) {
+            const allMessage = await db.messageList.toArray()
+            if (allMessage.length != 0) {
                 await db.messageList.clear()
             }
 

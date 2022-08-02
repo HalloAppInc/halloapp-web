@@ -33,8 +33,8 @@ const { processText } = useHAText()
 const { formatTimeDateOnlyChat, formatTimeChat, formatTimeFullChat, timeDiffBiggerThanOneDay } = useTimeformatter()
 const { setMediaSizeInMediaList } = useHAMediaResize()
 const { getMessageByID, deleteMessageByID, cleanMessageContentByID, 
-        loadMessageList, notifyWhenChanged, initMessageListAndMediaList,
-        getMedia, getContactByName, getContacts } = useHADatabase()
+        loadMessageList, notifyWhenChanged, getMedia, 
+        getContactByName, getContacts } = useHADatabase()
 
 
 fetchContactList()
