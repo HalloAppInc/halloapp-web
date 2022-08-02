@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 import { useColorStore } from '../../stores/colorStore'
 
@@ -62,7 +62,10 @@ function onFilePicked(event: any) {
         if (file) {
             let type = file.type.toString().includes('video') ? 'video' : 'image'
             if (i == numOfFile - 1) {
+                // open composer
                 showComposer.value.value = true
+                // close attach menu
+                showAttachMenu.value = false
             }
             if (type == 'image') {
                 saveMetaDataFromImage(file, uploadFiles.value)
@@ -74,13 +77,25 @@ function onFilePicked(event: any) {
     }
     event.target.value = ''
 }
+
+function closeMenu() {
+    showAttachMenu.value = false
+}
+
+onMounted(() => {
+    document.addEventListener("click", closeMenu)
+})
+
+onUnmounted(() => {
+    document.removeEventListener("click", closeMenu)
+})
 </script>
 
 <template>
 
     <!-- attach menu -->
     <transition name='attach'>
-        <div class='veriticalMenuContainer' v-if='showAttachMenu'>
+        <div class='veriticalMenuContainer' v-show='showAttachMenu'>
 
             <!-- upload documents -->
             <!-- <div class='container'>
@@ -102,9 +117,9 @@ function onFilePicked(event: any) {
             <div class='container'>
                 <!-- select file -->
                 <input type='file' multiple ref='selectAndUploadfile' accept='image/*, video/*' @change='onFilePicked'
-                    style='display: none' />
+                    style='display: none' @click.stop/>
                 <!-- icon -->
-                <div class='iconContainer' @mousedown='selectAndUploadfile?.click'>
+                <div class='iconContainer' @mousedown='selectAndUploadfile?.click()' @click.stop>
                     <div class='iconShadowAttachPhoto'>
                         <font-awesome-icon :icon="['fas', 'image']" size='lg' />
                     </div>
@@ -128,7 +143,7 @@ function onFilePicked(event: any) {
             </div>
         </div> -->
 
-        <div class='iconContainer' tabindex='0' @click='openAttachMenu' @focusout='showAttachMenu = false'>
+        <div class='iconContainer' @mousedown='openAttachMenu' @click.stop>
             <div class='iconShadow' :class="{ 'showIconShadow': showAttachMenu == true }">
                 <font-awesome-icon :icon="['fas', 'paperclip']" size='lg' />
             </div>
@@ -137,7 +152,8 @@ function onFilePicked(event: any) {
         <InputBox
             :uploadFiles='""'
             :alwaysShowSendButton='false'
-            :replyQuoteIdx='props.replyQuoteIdx' />
+            :replyQuoteIdx='props.replyQuoteIdx' 
+            :init='showComposer.value'/>
 
         <!-- <div class='iconContainer'>
             <div class='iconShadow' :class="{ 'showIconShadow': showAttachMenu == true }">

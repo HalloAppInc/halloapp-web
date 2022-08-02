@@ -79,6 +79,13 @@ const iconColor = computed(() => {
 // To test upload and download, set openTest = true
 const openTest = false
 
+// close composer when press esc
+document.addEventListener('keyup', (event) => {
+    if (event.keyCode == 27) {
+        closeComposer()
+    }
+})
+
 function testUploadAndDownload(file: any) {
     if (file) {
         uploadAndDownLoad(file, attachMediaList.value)
@@ -161,14 +168,14 @@ function closeComposer() {
 
 <template>
 
-    <div class='mask' v-if='showComposer.value'>
+    <div class='mask' v-if='showComposer.value' >
         <div class='wrapper' v-if='isReady || init' >
 
             <!-- close icon -->
             <div class='closeIconContainer'>
                 <div class='iconContainer' @click='closeComposer'>
                     <div class='iconShadow'>
-                        <font-awesome-icon :icon="['fas', 'xmark']" size='lg' />
+                        <font-awesome-icon :icon="['fas', 'xmark']" size='xl' />
                     </div>
                 </div>
             </div>
@@ -177,7 +184,7 @@ function closeComposer() {
             <div class='header'>
                 <div class='iconContainer'>
                     <div class='iconShadow'>
-                        <font-awesome-icon :icon="['fas', 'face-smile']" size='lg' />
+                        <font-awesome-icon :icon="['fas', 'face-smile']" size='xl' />
                     </div>
                 </div>
 
@@ -185,7 +192,7 @@ function closeComposer() {
                 <div v-if='openTest' class='iconContainer'
                     @click='testUploadAndDownload(props.uploadFiles[selectMediaIdx])'>
                     <div class='iconShadow'>
-                        <font-awesome-icon :icon="['fas', 'hammer']" size='lg' />
+                        <font-awesome-icon :icon="['fas', 'hammer']" size='xl' />
                     </div>
                 </div>
             </div>

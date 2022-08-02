@@ -58,6 +58,8 @@ export const useMainStore = defineStore('main', {
 
         loginUserID: '',
         chatID: '',
+
+        inputArea: '',
     }),
     getters: {
     },
