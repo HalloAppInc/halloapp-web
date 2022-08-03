@@ -169,6 +169,7 @@ function openBigImg(idx: number) {
     left: 0;
     width: 100%;
     height: 100%;
+    backdrop-filter: blur(10px);
     background-color: v-bind(wraperColor);
     display: table;
 }
@@ -178,7 +179,8 @@ function openBigImg(idx: number) {
     height: 100%;
     position: relative;
 
-    background-color: v-bind(wraperColor);
+    /* backdrop-filter: blur(10px);
+    background-color: v-bind(wraperColor); */
 
     display: flex;
     flex-direction: column;
@@ -210,6 +212,7 @@ function openBigImg(idx: number) {
 }
 
 .imgContainer {
+    user-select: none;
     width: fit-content;
     height: fit-content;
 }
@@ -222,6 +225,7 @@ img {
 }
 
 .videoContainer {
+    user-select: none;
     width: fit-content;
     height: 500px;
 }
@@ -325,6 +329,7 @@ video {
 }
 
 .squareContainer {
+    user-select: none;
     z-index: 2;
     width: 50px;
     height: 50px;
