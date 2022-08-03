@@ -91,6 +91,7 @@ function loadAllChat(updateSelectIdx: boolean) {
             }
             chatList.value = result
 
+            // if need to update selectIdx after reload chat list
             if (updateSelectIdx) {
                 setSelectIdx()
             }
@@ -111,6 +112,7 @@ function listener(type: string) {
 notifyWhenChanged(listener)
 
 function openChat(userID: string) {
+    // if chatID does not change, listener will not be triggered, need to update selectIdx here
     if (mainStore.chatID == userID) {
         setSelectIdx()
     }
