@@ -143,8 +143,8 @@ const iconColor = computed(() => {
 const hoverColor = computed(() => {
     return colorStore.hover
 })
-const lineColor = computed(() => {
-    return colorStore.line
+const borderlineColor = computed(() => {
+    return colorStore.borderline
 })
 const backgroundColor = computed(() => {
     return colorStore.background
@@ -1167,7 +1167,7 @@ img:hover {
     width: 100%;
     height: 2em;
     padding: 20px;
-    border-bottom: 1px solid v-bind(lineColor);
+    border-bottom: 1px solid v-bind(borderlineColor);
 
     display: flex;
     align-items: center;

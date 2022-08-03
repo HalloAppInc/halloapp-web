@@ -37,6 +37,21 @@ const timestampColor = computed(() => {
 const iconColor = computed(() => {
     return colorStore.icon
 })
+const headerColor = computed(() => {
+    return colorStore.header
+})
+const backgroundColor = computed(() => {
+    return colorStore.background
+})
+const textColor = computed(() => {
+    return colorStore.text
+})
+const hoverColor = computed(() => {
+    return colorStore.hover
+})
+const boderlineColor = computed(() => {
+    return colorStore.borderline
+})
 
 watch(chatID,() => {
     setSelectIdx()
@@ -181,18 +196,19 @@ function openChat(userID: string) {
 
     height: 100%;
 
-    border-right: 1px solid #b8b7b7;
+    border-right: 1px solid v-bind(boderlineColor);
 
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
 
     overflow: hidden;
+    background-color: v-bind(backgroundColor);
 }
 
 .header {
     flex: 0 0 50px;
-    background-color: #f0f2f5;
+    background-color: v-bind(headerColor);
     padding: 10px;
 }
 
@@ -203,7 +219,7 @@ function openChat(userID: string) {
 }
 
 .selected {
-    background-color: rgb(226, 226, 226);
+    background-color: v-bind(hoverColor);
 }
 
 .container {
@@ -212,7 +228,7 @@ function openChat(userID: string) {
     padding: 0px;
 }
 .container:hover {
-    background-color: rgb(226, 226, 226);
+    background-color: v-bind(hoverColor);
     cursor: pointer;
 }
 .avatarContainer {
@@ -230,7 +246,7 @@ function openChat(userID: string) {
     margin-top: 5px;
     width: 100%;
     padding: 10px 10px 10px 5px;
-    border-bottom: 1px solid rgb(226, 224, 224);
+    border-bottom: 1px solid v-bind(boderlineColor);
 
     color: #3b4a54;
 
@@ -251,7 +267,7 @@ function openChat(userID: string) {
 }
 
 .contentTitle {
-    color: #111b21;
+    color: v-bind(textColor);
     font-weight: 600; 
 
     flex: 1 1 auto;
@@ -276,6 +292,7 @@ function openChat(userID: string) {
     overflow: hidden;
     display: flex;
     flex-direction: row;
+    color: v-bind(textColor);
 }
 
 .normal {
@@ -286,6 +303,7 @@ function openChat(userID: string) {
 .deleted {
     font-size: small;
     color: v-bind(timestampColor);
+    font-style: italic;
 }
 
 .iconContainer {
