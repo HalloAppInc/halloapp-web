@@ -324,7 +324,7 @@ function appendSpaceForMsgInfo(msg: string, time: string, isOutBound: boolean) {
         }
     } 
     
-    if (lessThanThreeEmoji) {
+    if (msg.length != 0 && lessThanThreeEmoji) {
         font = 'onlyEmoji'
     }
     else {
@@ -555,6 +555,18 @@ async function getQuoteMessageData(id: number) {
         }
         else {
             data['sender'] = 'User1'
+        }
+        // if has media
+        if (message.mediaID != null) {
+            const mediaArray = await getMedia([message.mediaID[0]]) 
+            const file = new Blob([mediaArray[0].file]) 
+            const newMedia: any = {
+                'type': mediaArray[0].type,
+                'width': mediaArray[0].width,
+                'height': mediaArray[0].height,
+                'url': URL.createObjectURL(file),
+            }
+            data['media'] = newMedia
         }
         return data
     }
