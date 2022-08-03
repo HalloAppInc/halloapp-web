@@ -34,6 +34,9 @@ const chatID = computed(() => {
 const timestampColor = computed(() => {
     return colorStore.timestamp
 })
+const iconColor = computed(() => {
+    return colorStore.icon
+})
 
 watch(chatID,() => {
     setSelectIdx()
@@ -48,7 +51,7 @@ function setSelectIdx() {
 }
 
 let load: any
-function loadAllChat() {
+function loadAllChat(updateSelectIdx: boolean) {
     clearTimeout(load)
     load = setTimeout(() => {
         getAllChat()
@@ -57,13 +60,18 @@ function loadAllChat() {
             for (const chat of res) {
                 let subtitle
                 let font
-                if (chat.text) {
+                if (chat.text != null) {
                     let text = JSON.parse(JSON.stringify(chat.text))
                     // truncate text
                     if (text.length > 15) {
                         text = text.slice(0, 15) + '...'
                     }
-                    subtitle = processText(text, []).html
+                    if (text != '') {
+                        subtitle = chat.senderName + ': ' + processText(text, []).html
+                    }
+                    else if (chat.hasMedia) {
+                        subtitle = chat.senderName + ': ' + 'Media'                        
+                    }
                     font = 'normal'
                 }
                 else {
@@ -76,26 +84,37 @@ function loadAllChat() {
                     'font': font,
                     'timestamp': chat.timestamp,
                     'userID': chat.userID,
+                    'hasMedia': chat.hasMedia
                 })
             }
             chatList.value = result
+
+            if (updateSelectIdx) {
+                setSelectIdx()
+            }
 
             hal.log('ChatSideBar/loadAllChat/chatList/', res)
         })
     }, 15)
 }
 
-loadAllChat()
+loadAllChat(false)
 
 function listener(type: string) {
     hal.log('ChatSidebar/notifyWhenChanged/' + type)
-    loadAllChat()
+    // if receive new messgae, load chat list and update selectIdx
+    loadAllChat(true)
 }
 
 notifyWhenChanged(listener)
 
 function openChat(userID: string) {
-    mainStore.chatID = userID
+    if (mainStore.chatID == userID) {
+        setSelectIdx()
+    }
+    else {
+        mainStore.chatID = userID
+    }
     hal.log('ChatSidebar/openChat/' + mainStore.chatID)
 }
 </script>
@@ -124,6 +143,9 @@ function openChat(userID: string) {
                     </div>
                 </div>
                 <div class="contentBody">
+                    <div class='iconContainer' v-if='value.hasMedia'>
+                        <font-awesome-icon :icon="['fas', 'camera']" size='xs' />
+                    </div>
                     <span v-html='value.subtitle' :class='value.font'></span>
                 </div>
             </div>
@@ -248,6 +270,8 @@ function openChat(userID: string) {
 
 .contentBody {
     overflow: hidden;
+    display: flex;
+    flex-direction: row;
 }
 
 .normal {
@@ -260,4 +284,9 @@ function openChat(userID: string) {
     color: v-bind(timestampColor);
 }
 
+.iconContainer {
+    margin: 0px 5px;
+    width: fit-content;
+    color: v-bind(iconColor);
+}
 </style>

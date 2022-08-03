@@ -91,6 +91,7 @@ const chatID = computed(() => {
 
 watch(chatID, () => {
     loadMessageListIntoChatPanel()
+    fetchContactList()
 })
 
 // listen to msg list, when a new msg comes in, scroll to the bottom
@@ -112,6 +113,8 @@ watch(chatPanelHeight, () => {
 
 watch(messageListFromDB, () => {
     parseMessage()
+    // update timestamp
+    handleScroll()
 })
 
 notifyWhenChanged(listenerFunction)
