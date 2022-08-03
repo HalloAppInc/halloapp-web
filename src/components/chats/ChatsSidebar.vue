@@ -66,9 +66,11 @@ function loadAllChat(updateSelectIdx: boolean) {
                     if (text.length > 15) {
                         text = text.slice(0, 15) + '...'
                     }
+                    // if message has text
                     if (text != '') {
                         subtitle = chat.senderName + ': ' + processText(text, []).html
                     }
+                    // if message only has media
                     else if (chat.hasMedia) {
                         subtitle = chat.senderName + ': ' + 'Media'                        
                     }
