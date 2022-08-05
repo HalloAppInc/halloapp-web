@@ -882,20 +882,13 @@ function gotoQuoteMessage(quoteIdx: number) {
 }
 
 @keyframes fade {
-    0% {
-        box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.08);
-    }
 
     10% {
-        box-shadow: 0px 0px 10px 5px rgba(148, 148, 148, 0.6);
+        filter: invert(25%);
     }
 
     90% {
-        box-shadow: 0px 0px 10px 5px rgba(148, 148, 148, 0.6);
-    }
-
-    100% {
-        box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.08);
+        filter: invert(25%);
     }
 }
 
