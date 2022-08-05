@@ -536,6 +536,9 @@ async function openReply(id: number) {
     // get quote message
     props.replyQuoteIdx.value = id
     quoteMessage.value = await getQuoteMessageData(id)
+    // set focus on inputBox
+    const ele = document.getElementsByClassName('textarea')[0] as HTMLElement
+    ele.focus()
 }
 
 async function getQuoteMessageData(id: number) {
