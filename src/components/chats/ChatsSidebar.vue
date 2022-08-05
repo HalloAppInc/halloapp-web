@@ -34,6 +34,24 @@ const chatID = computed(() => {
 const timestampColor = computed(() => {
     return colorStore.timestamp
 })
+const iconColor = computed(() => {
+    return colorStore.icon
+})
+const headerColor = computed(() => {
+    return colorStore.header
+})
+const backgroundColor = computed(() => {
+    return colorStore.background
+})
+const textColor = computed(() => {
+    return colorStore.text
+})
+const hoverColor = computed(() => {
+    return colorStore.hover
+})
+const boderlineColor = computed(() => {
+    return colorStore.borderline
+})
 
 watch(chatID,() => {
     setSelectIdx()
@@ -48,7 +66,7 @@ function setSelectIdx() {
 }
 
 let load: any
-function loadAllChat() {
+function loadAllChat(updateSelectIdx: boolean) {
     clearTimeout(load)
     load = setTimeout(() => {
         getAllChat()
@@ -57,13 +75,20 @@ function loadAllChat() {
             for (const chat of res) {
                 let subtitle
                 let font
-                if (chat.text) {
+                if (chat.text != null) {
                     let text = JSON.parse(JSON.stringify(chat.text))
                     // truncate text
                     if (text.length > 15) {
                         text = text.slice(0, 15) + '...'
                     }
-                    subtitle = processText(text, []).html
+                    // if message has text
+                    if (text != '') {
+                        subtitle = chat.senderName + ': ' + processText(text, []).html
+                    }
+                    // if message only has media
+                    else if (chat.hasMedia) {
+                        subtitle = chat.senderName + ': ' + 'Media'                        
+                    }
                     font = 'normal'
                 }
                 else {
@@ -76,26 +101,39 @@ function loadAllChat() {
                     'font': font,
                     'timestamp': chat.timestamp,
                     'userID': chat.userID,
+                    'hasMedia': chat.hasMedia
                 })
             }
             chatList.value = result
+
+            // if need to update selectIdx after reload chat list
+            if (updateSelectIdx) {
+                setSelectIdx()
+            }
 
             hal.log('ChatSideBar/loadAllChat/chatList/', res)
         })
     }, 15)
 }
 
-loadAllChat()
+loadAllChat(false)
 
 function listener(type: string) {
     hal.log('ChatSidebar/notifyWhenChanged/' + type)
-    loadAllChat()
+    // if receive new messgae, load chat list and update selectIdx
+    loadAllChat(true)
 }
 
 notifyWhenChanged(listener)
 
 function openChat(userID: string) {
-    mainStore.chatID = userID
+    // if chatID does not change, listener will not be triggered, need to update selectIdx here
+    if (mainStore.chatID == userID) {
+        setSelectIdx()
+    }
+    else {
+        mainStore.chatID = userID
+    }
     hal.log('ChatSidebar/openChat/' + mainStore.chatID)
 }
 </script>
@@ -124,6 +162,9 @@ function openChat(userID: string) {
                     </div>
                 </div>
                 <div class="contentBody">
+                    <div class='iconContainer' v-if='value.hasMedia'>
+                        <font-awesome-icon :icon="['fas', 'camera']" size='xs' />
+                    </div>
                     <span v-html='value.subtitle' :class='value.font'></span>
                 </div>
             </div>
@@ -155,18 +196,19 @@ function openChat(userID: string) {
 
     height: 100%;
 
-    border-right: 1px solid #b8b7b7;
+    border-right: 1px solid v-bind(boderlineColor);
 
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
 
     overflow: hidden;
+    background-color: v-bind(backgroundColor);
 }
 
 .header {
     flex: 0 0 50px;
-    background-color: #f0f2f5;
+    background-color: v-bind(headerColor);
     padding: 10px;
 }
 
@@ -177,7 +219,7 @@ function openChat(userID: string) {
 }
 
 .selected {
-    background-color: rgb(226, 226, 226);
+    background-color: v-bind(hoverColor);
 }
 
 .container {
@@ -186,7 +228,7 @@ function openChat(userID: string) {
     padding: 0px;
 }
 .container:hover {
-    background-color: rgb(226, 226, 226);
+    background-color: v-bind(hoverColor);
     cursor: pointer;
 }
 .avatarContainer {
@@ -204,7 +246,7 @@ function openChat(userID: string) {
     margin-top: 5px;
     width: 100%;
     padding: 10px 10px 10px 5px;
-    border-bottom: 1px solid rgb(226, 224, 224);
+    border-bottom: 1px solid v-bind(boderlineColor);
 
     color: #3b4a54;
 
@@ -225,7 +267,7 @@ function openChat(userID: string) {
 }
 
 .contentTitle {
-    color: #111b21;
+    color: v-bind(textColor);
     font-weight: 600; 
 
     flex: 1 1 auto;
@@ -248,6 +290,9 @@ function openChat(userID: string) {
 
 .contentBody {
     overflow: hidden;
+    display: flex;
+    flex-direction: row;
+    color: v-bind(textColor);
 }
 
 .normal {
@@ -258,6 +303,12 @@ function openChat(userID: string) {
 .deleted {
     font-size: small;
     color: v-bind(timestampColor);
+    font-style: italic;
 }
 
+.iconContainer {
+    margin: 0px 5px;
+    width: fit-content;
+    color: v-bind(iconColor);
+}
 </style>

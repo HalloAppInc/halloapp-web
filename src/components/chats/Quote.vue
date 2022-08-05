@@ -14,9 +14,9 @@ const { setQuoteMediaSize } = useHAMediaResize()
 const props = defineProps(['quoteMessage'])
 
 const quoteMedia = computed(() => {
-    let res = setQuoteMediaSize(props.quoteMessage.media[0])
+    let res = setQuoteMediaSize(props.quoteMessage.media)
     let result = {
-        'url': props.quoteMessage.media[0].url,
+        'url': props.quoteMessage.media.url,
         'width': res?.mediaItemWidth,
         'height': res?.mediaItemHeight 
     }

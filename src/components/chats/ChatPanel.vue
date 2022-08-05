@@ -91,6 +91,7 @@ const chatID = computed(() => {
 
 watch(chatID, () => {
     loadMessageListIntoChatPanel()
+    fetchContactList()
 })
 
 // listen to msg list, when a new msg comes in, scroll to the bottom
@@ -112,6 +113,8 @@ watch(chatPanelHeight, () => {
 
 watch(messageListFromDB, () => {
     parseMessage()
+    // update timestamp
+    handleScroll()
 })
 
 notifyWhenChanged(listenerFunction)
@@ -140,8 +143,8 @@ const iconColor = computed(() => {
 const hoverColor = computed(() => {
     return colorStore.hover
 })
-const lineColor = computed(() => {
-    return colorStore.line
+const borderlineColor = computed(() => {
+    return colorStore.borderline
 })
 const backgroundColor = computed(() => {
     return colorStore.background
@@ -321,7 +324,7 @@ function appendSpaceForMsgInfo(msg: string, time: string, isOutBound: boolean) {
         }
     } 
     
-    if (lessThanThreeEmoji) {
+    if (msg.length != 0 && lessThanThreeEmoji) {
         font = 'onlyEmoji'
     }
     else {
@@ -552,6 +555,18 @@ async function getQuoteMessageData(id: number) {
         }
         else {
             data['sender'] = 'User1'
+        }
+        // if has media
+        if (message.mediaID != null) {
+            const mediaArray = await getMedia([message.mediaID[0]]) 
+            const file = new Blob([mediaArray[0].file]) 
+            const newMedia: any = {
+                'type': mediaArray[0].type,
+                'width': mediaArray[0].width,
+                'height': mediaArray[0].height,
+                'url': URL.createObjectURL(file),
+            }
+            data['media'] = newMedia
         }
         return data
     }
@@ -1152,7 +1167,7 @@ img:hover {
     width: 100%;
     height: 2em;
     padding: 20px;
-    border-bottom: 1px solid v-bind(lineColor);
+    border-bottom: 1px solid v-bind(borderlineColor);
 
     display: flex;
     align-items: center;

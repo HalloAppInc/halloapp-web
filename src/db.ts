@@ -5,7 +5,7 @@ export interface MessageList {
     fromUserID?: string
     toUserID?: string
     quoteId?: number
-    mediaID?: number
+    mediaID?: number[]
     timestamp?: string
     text?: string
 }

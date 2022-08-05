@@ -265,13 +265,17 @@ export function useHADatabase() {
                         const lastEle = messageArray[messageArray.length - 1]
                         const text = lastEle.text
                         const userID: string = lastEle.fromUserID != mainStore.loginUserID ? 
-                        lastEle.fromUserID as string : lastEle.toUserID as string
+                            lastEle.fromUserID as string : lastEle.toUserID as string
+                        const hasMedia: boolean = lastEle.mediaID != null
                         db.contact.where('userID')
                         .equals(userID)
                         .toArray()
                         .then(res => {
+                            const senderName = mainStore.loginUserID == lastEle.fromUserID ? 'You' : res[0].userName
                             const chat = {
                                 'userName': res[0].userName,
+                                'senderName': senderName,
+                                'hasMedia': hasMedia,
                                 'text': text,
                                 'timestamp': lastEle.timestamp,
                                 'userID': userID

@@ -31,7 +31,7 @@ const textColor = computed(() => {
     return colorStore.text
 })
 const backgroundColor = computed(() => {
-    return "1px solid " + colorStore.background
+    return colorStore.background
 })
 const secondaryTextColor = computed(() => {
     return colorStore.secondaryText
@@ -39,8 +39,8 @@ const secondaryTextColor = computed(() => {
 const iconColor = computed(() => {
     return colorStore.icon
 })
-const lineColor = computed(() => {
-    return colorStore.line
+const borderlineColor = computed(() => {
+    return colorStore.borderline
 })
 const headerColor = computed(() => {
     return colorStore.header
@@ -294,7 +294,7 @@ function changePreferColorScheme(mode: string) {
     width: 100%;
     height: 4em;
     padding: 20px 20px 20px 10px;
-    border-bottom: 1px solid v-bind(lineColor);
+    border-bottom: 1px solid v-bind(borderlineColor);
 
 
     display: flex;
