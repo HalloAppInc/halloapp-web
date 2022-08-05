@@ -28,8 +28,8 @@ export default defineComponent({
     lineLight: 'rgb(226, 224, 224)',
     lineDark: '#8899a6',
 
-    borderlineLight: '#rgb(226, 224, 224)',
-    borderlineDark: '#15202b',
+    borderlineLight: 'rgb(226, 224, 224)',
+    borderlineDark: '#22303c',
 
     iconLight: 'black',
     iconDark: '#FFFFFF',

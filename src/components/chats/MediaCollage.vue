@@ -60,7 +60,7 @@ const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
 
         </div>
 
-        <div class='imgSquareContainer imgSquareContainerLastElement' @click="$emit('openMedia', mediaList, 1)">
+        <div class='imgSquareContainer imgSquareContainerLastElementInRow' @click="$emit('openMedia', mediaList, 1)">
 
             <img :src='secondMedia.previewUrl' :height='secondMedia.hieght' :width='secondMedia.width' />
             <div class='iconContainer' v-if='secondMedia.type == "video"'>
@@ -93,7 +93,7 @@ const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
 
         </div>
 
-        <div class='imgSquareContainer imgSquareContainerLastElement' @click="$emit('openMedia', mediaList, 1)">
+        <div class='imgSquareContainer imgSquareContainerLastElementInRow' @click="$emit('openMedia', mediaList, 1)">
 
             <img :src='secondMedia.previewUrl' :height='secondMedia.hieght' :width='secondMedia.width' />
             <div class='iconContainer' v-if='secondMedia.type == "video"'>
@@ -102,7 +102,7 @@ const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
 
         </div>
 
-        <div class='imgSquareContainer' @click="$emit('openMedia', mediaList, 2)">
+        <div class='imgSquareContainer imgSquareContainerLastElementInCol' @click="$emit('openMedia', mediaList, 2)">
 
             <img :src='thirdMedia.previewUrl' :height='thirdMedia.hieght' :width='thirdMedia.width' />
             <div class='iconContainer' v-if='thirdMedia.type == "video"'>
@@ -112,7 +112,7 @@ const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
         </div>
 
         <!-- if 4 media -->
-        <div v-if='numberOfMedia == 4' class='imgSquareContainer imgSquareContainerLastElement'
+        <div v-if='numberOfMedia == 4' class='imgSquareContainer imgSquareContainerLastElementInRow imgSquareContainerLastElementInCol'
             @click="$emit('openMedia', mediaList, 3)">
 
             <img :src='fourthMedia.previewUrl' :height='fourthMedia.hieght' :width='fourthMedia.width' />
@@ -124,7 +124,7 @@ const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
 
         <!-- if more than 4 -->
         <div v-else-if='numberOfMedia > 4' @click="$emit('openMedia', mediaList, 3)">
-            <div class='imgSquareContainer imgSquareContainerLastElement'>
+            <div class='imgSquareContainer imgSquareContainerLastElementInRow imgSquareContainerLastElementInCol'>
 
                 <img class='blurImg' :src='fourthMedia.previewUrl' :height='fourthMedia.hieght' :width='fourthMedia.width' />
                 <div class='iconContainer'>
@@ -195,8 +195,12 @@ img {
     position: relative;
 }
 
-.imgSquareContainerLastElement {
+.imgSquareContainerLastElementInRow {
     margin-right: 0px;
+}
+
+.imgSquareContainerLastElementInCol {
+    margin-bottom: 0px;
 }
 
 .imgHorizontalRectangleContainer {
