@@ -544,7 +544,7 @@ function clearText() {
         </div>
     </div>
 
-    <div class='chatBoxTray' ref='chatBox'>
+    <div class='chatBoxTrayInputBox' ref='chatBox'>
 
         <div class='inputBoxContainer'>
             <div class='textarea' ref='inputArea' contenteditable='true' placeholder='Type a message...'
@@ -594,7 +594,7 @@ function clearText() {
     border-radius: 100px;
 }
 
-.chatBoxTray {
+.chatBoxTrayInputBox {
     width: 100%;
     display: flex;
     flex-direction: row;

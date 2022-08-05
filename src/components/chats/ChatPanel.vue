@@ -688,7 +688,7 @@ function gotoQuoteMessage(quoteIdx: number) {
                             <div class='timestamp' :data-msg-timestamp='value.unixTimestamp'>
                                 {{ value.timestamp }}
                             </div>
-                            <div class='iconContainer'>
+                            <div class='iconContainer checkIcon'>
                                 <font-awesome-icon :icon="['fas', 'check-double']" size='xs' />
                             </div>
                         </div>
@@ -776,10 +776,8 @@ function gotoQuoteMessage(quoteIdx: number) {
         <div class='containerReplyWithRightMargin'>
             <Quote :quoteMessage='quoteMessage' />
         </div>
-        <div class='closeIconContainer'>
-            <div class='iconContainer closeIcon' @click="showReply = false">
-                <font-awesome-icon :icon="['fas', 'xmark']" size='lg' />
-            </div>
+        <div class='iconContainer closeIcon' @click="showReply = false">
+            <font-awesome-icon :icon="['fas', 'xmark']" size='lg' />
         </div>
     </div>
 
@@ -997,6 +995,9 @@ function gotoQuoteMessage(quoteIdx: number) {
 
 .iconContainer {
     padding: 0px 5px;
+}
+
+.checkIcon {
     color: #1E90FF;
 }
 
@@ -1194,6 +1195,7 @@ img:hover {
     display: flex;
     flex-direction: row;
     justify-content: center;
+    align-items: center;
 
     z-index: 1;
 }
@@ -1203,21 +1205,10 @@ img:hover {
     margin: 5px 0px;
 }
 
-
-.closeIconContainer {
-    position: absolute;
-    bottom: 30px;
-    right: 20px;
-
-    width: 50px;
-    border-radius: 100%;
-}
-
 .closeIcon {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    width: fit-content;
+    height: fit-content;
+    color: gray;
 }
 
 .closeIcon:hover {
