@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch, nextTick } from 'vue'
 
 import { useI18n } from 'vue-i18n'
 
@@ -28,15 +28,22 @@ const boderlineColor = computed(() => {
 })
 
 const settingsSidebar = ref<HTMLDivElement>()
+const settingSidebarHeight = ref(0)
+const offsetTop = ref()
+
+watch(settingSidebarHeight, (newVal, oldVal) => {
+    offsetTop.value = -1 * newVal / 2
+})
 
 // find the offset to the top
-const offsetTop = computed(() => {
+nextTick(() => {
     if (settingsSidebar.value) {
-        console.log('*******',settingsSidebar.value.offsetTop)
-        let offset = settingsSidebar.value.clientHeight / 2
-        console.log(offset)
-        return -1 * offset
+        offsetTop.value = settingsSidebar.value?.clientHeight as number / 2 * (-1)
     }
+    new ResizeObserver(() => {
+        if (mainStore.page == 'settings')
+            settingSidebarHeight.value = settingsSidebar.value ? settingsSidebar.value.clientHeight : 0
+    }).observe(settingsSidebar.value!)
 })
 </script>
 
@@ -59,7 +66,7 @@ const offsetTop = computed(() => {
 }
 
 .settings-leave-active {
-    transition: all 2s;
+    transition: all 0.3s ease-in-out;
 }
 
 .settings-enter-from {
@@ -68,12 +75,12 @@ const offsetTop = computed(() => {
 }
 
 .settings-leave-from {
-    transform: translateY(-353px);
+    transform: translateY(v-bind(offsetTop + 'px'));
     opacity: 1;
 }
 
 .settings-leave-to {
-    transform: translateX(-200px) translateY(-353px);
+    transform: translateY(v-bind(offsetTop + 'px')) translateX(-200px);
     opacity: 0;
 }
 
