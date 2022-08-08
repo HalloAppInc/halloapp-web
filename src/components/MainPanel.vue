@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref, watch, computed } from 'vue'
 
 import { useMainStore } from '../stores/mainStore'
 
@@ -8,6 +9,34 @@ import ChatsMain from './chats/ChatsMain.vue'
 
 const mainStore = useMainStore()
 
+const page = computed(() => {
+    return mainStore.page
+})
+
+const openGroups = ref(false)
+const openChats = ref(false)
+
+watch(page, (newVal, oldVal) => {
+    if(newVal == 'settings') {
+        if (oldVal == 'chats') {
+            openChats.value = true
+            openGroups.value = false
+        }
+        else if (oldVal == 'groups') {
+            openChats.value = false
+            openGroups.value = true
+            console.log(openGroups.value)
+        }
+        else {
+            openChats.value = false
+            openGroups.value = false
+        }
+    }
+    else {
+        openChats.value = false
+        openGroups.value = false
+    }
+})
 </script>
 
 <template>
@@ -18,10 +47,10 @@ const mainStore = useMainStore()
         <HomeMain v-if='mainStore.page == "home"'/>
     </keep-alive>
     <keep-alive>
-        <GroupsMain v-if='mainStore.page == "groups"'/>
+        <GroupsMain v-if='mainStore.page == "groups" || openGroups'/>
     </keep-alive>    
     <keep-alive>
-        <ChatsMain v-if='mainStore.page == "chats"'/>
+        <ChatsMain v-if='mainStore.page == "chats" || openChats'/>
     </keep-alive>
 
 </div>
