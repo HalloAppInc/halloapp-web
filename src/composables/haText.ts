@@ -10,7 +10,7 @@ export function useHAText() {
 
         if (contactList) {
             for (var i = 0; i < contactList.length; i++) {
-                result = result.replaceAll('@' + contactList[i], '[[aa]]' + '@' + contactList[i] + '[[/aa]]')
+                result = result.replaceAll('@' + contactList[i], '[[am]]' + '@' + contactList[i] + '[[/am]]')
             }
         }
 
@@ -47,40 +47,56 @@ export function useHAText() {
                     } 
                 }
 
-            } else if (MarkdownTags.includes(Grapheme)) {
+            /* skip all markdown text inside mentions */
+            } else if (Grapheme == '[' && ((i + 5) < GraphemesList.length)) { // check for [ first to save some compute cycles
 
-                // special case where ~ is after @ for unknown mentions */
-                const IsAfterMention = (Grapheme == '~') && (i > 0) && (GraphemesList[i - 1] == '@')
+                const openStr = GraphemesList.slice(i, i + 6).join('')
+                const openingMentionTag = '[[am]]'
 
-                if (!IsAfterMention) {                
+                if (openStr == openingMentionTag) {
 
-                    /* find an unpaired tag and close it if found */
-                    let foundUnpaired = false
-                    let isEmptyMarkdown = false
-                    for (let j = foundTags.length - 1; j >= 0; j--) {
-                        let foundTag: any = foundTags[j]
-                        if (foundTag.tag == Grapheme && foundTag.type == Unpaired) {
+                    while ((i + 6) < GraphemesList.length) {
+                        const closeStr = GraphemesList.slice(i, i + 7).join('')
+                        const closingMentionTag = '[[/am]]'
 
-                            foundUnpaired = true
-
-                            isEmptyMarkdown = (i > 0) && (GraphemesList[i - 1] == Grapheme) && (foundTags[j].index == i - 1)
-                            if (!isEmptyMarkdown) {
-                                foundTags[j].type = Opening
-                            }
-
+                        if (closeStr == closingMentionTag) {
                             break
                         }
-                    }
 
-                    if (foundUnpaired) {
-                        if (!isEmptyMarkdown) {
-                            foundTags.push({ tag: Grapheme, index: i, type: Closing })
-                        }
-                    } else {
-                        foundTags.push({ tag: Grapheme, index: i, type: Unpaired })
+                        result += GraphemesList[i]
+                        i++
                     }
 
                 }
+
+            } else if (MarkdownTags.includes(Grapheme)) {
+
+                /* find an unpaired tag and close it if found */
+                let foundUnpaired = false
+                let isEmptyMarkdown = false
+                for (let j = foundTags.length - 1; j >= 0; j--) {
+                    let foundTag: any = foundTags[j]
+                    if (foundTag.tag == Grapheme && foundTag.type == Unpaired) {
+
+                        foundUnpaired = true
+
+                        isEmptyMarkdown = (i > 0) && (GraphemesList[i - 1] == Grapheme) && (foundTags[j].index == i - 1)
+                        if (!isEmptyMarkdown) {
+                            foundTags[j].type = Opening
+                        }
+
+                        break
+                    }
+                }
+
+                if (foundUnpaired) {
+                    if (!isEmptyMarkdown) {
+                        foundTags.push({ tag: Grapheme, index: i, type: Closing })
+                    }
+                } else {
+                    foundTags.push({ tag: Grapheme, index: i, type: Unpaired })
+                }
+
             }
     
             result += Grapheme
@@ -228,8 +244,8 @@ export function useHAText() {
             .replaceAll('[[/s]]', '</s>')
             .replaceAll('[[b]]', '<b>')
             .replaceAll('[[/b]]', '</b>')
-            .replaceAll('[[aa]]', '<a class="mention">')
-            .replaceAll('[[/aa]]', '</a>')
+            .replaceAll('[[am]]', '<a class="mention">')
+            .replaceAll('[[/am]]', '</a>')
 
             .replaceAll('[[a]]', '<a')
             .replaceAll('[[aAttr]]', '')
@@ -247,9 +263,9 @@ export function useHAText() {
             .replaceAll('[[/s]]', '</s><span style="color:gray">~</span>')
             .replaceAll('[[b]]', '<span style="color:gray">*</span><b>')
             .replaceAll('[[/b]]', '</b><span style="color:gray">*</span>')
-            .replaceAll('[[aa]]', '<span style="display: inline-block; text-decoration: none; color:#6495ED">')
-            .replaceAll('[[/aa]]&nbsp;', '[[/aa]]')
-            .replaceAll('[[/aa]]', '</span>&nbsp;')
+            .replaceAll('[[am]]', '<span style="display: inline-block; text-decoration: none; font-style: normal; font-weight: normal; color:#6495ED">')
+            .replaceAll('[[/am]]&nbsp;', '[[/am]]')
+            .replaceAll('[[/am]]', '</span>&nbsp;')
             .replaceAll('[[a]]', '<a')
             .replaceAll('[[aAttr]]', '')
             .replaceAll('[[/aAttr]]', '>')
