@@ -170,18 +170,15 @@ function openBigImg(idx: number) {
     width: 100%;
     height: 100%;
     backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     background-color: v-bind(wraperColor);
     display: table;
 }
 
 .wrapper {
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     position: relative;
-
-    /* backdrop-filter: blur(10px);
-    background-color: v-bind(wraperColor); */
-
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
@@ -227,7 +224,7 @@ img {
 .videoContainer {
     user-select: none;
     width: fit-content;
-    height: 500px;
+    height: fit-content;
 }
 
 video {
