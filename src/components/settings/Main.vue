@@ -7,10 +7,6 @@ import { useMainStore } from '../../stores/mainStore'
 import { useConnStore } from '../../stores/connStore'
 import { useColorStore } from '../../stores/colorStore'
 
-import HelpMenu from './Help.vue'
-import NotificationsMenu from './Notifications.vue'
-import PrivacyMenu from './Privacy.vue'
-import SecurityMenu from './Security.vue'
 import Popup from '../chats/Popup.vue'
 
 const mainStore = useMainStore()
@@ -153,11 +149,6 @@ function changePreferColorScheme(mode: string) {
             </div>
         </div>
     </transition>
-
-    <PrivacyMenu />
-    <NotificationsMenu />
-    <HelpMenu />
-    <SecurityMenu />
 
     <!-- change color scheme popup -->
     <Popup :showPopup='showPopup'
