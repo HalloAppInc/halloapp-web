@@ -539,6 +539,15 @@ async function openReply(id: number) {
     // set focus on inputBox
     const ele = document.getElementsByClassName('textarea')[0] as HTMLElement
     ele.focus()
+    // move cursor to the end
+    let range = document.createRange()
+    range.selectNodeContents(ele)
+    range.collapse(false)
+    let selection = window.getSelection()
+    if (selection) {
+        selection.removeAllRanges()
+        selection.addRange(range)
+    }
 }
 
 async function getQuoteMessageData(id: number) {
@@ -1202,6 +1211,7 @@ img:hover {
 }
 
 .closeIcon {
+    margin-left: 5px;
     width: fit-content;
     height: fit-content;
     color: gray;

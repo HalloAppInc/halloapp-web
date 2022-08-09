@@ -8,6 +8,7 @@ import { useColorStore } from '../../stores/colorStore'
 import { useMainStore } from '../../stores/mainStore'
 
 import hal from '../../common/halogger'
+import { on } from 'events'
 
 const { processText } = useHAText()
 
@@ -86,6 +87,14 @@ function init() {
                 showSendButton.value = false
             }
             inputArea.value.innerHTML = processText(mainStore.inputArea, contactNameList.value, false, 100, true).html
+            let range = document.createRange()
+            range.selectNodeContents(inputArea.value)
+            range.collapse(false)
+            let selection = window.getSelection()
+            if (selection) {
+                selection.removeAllRanges()
+                selection.addRange(range)
+            }
         }
     })
 }
@@ -551,8 +560,9 @@ function clearText() {
                 @focusout='closeContactsAndFocusOnInputBox' @keydown='analyzeKeyDown($event)'
                 @keyup='analyzeKeyUp($event)' @click='analyzeMouseMovement()'>
             </div>
+            <!-- X-mark -->
             <div class='iconContainer' v-show='showSendButton' @click='clearText()'>
-                <font-awesome-icon :icon="['fas', 'xmark']" size='lg' />
+                <font-awesome-icon :icon="['fas', 'xmark']" />
             </div>
         </div>
 
@@ -718,8 +728,9 @@ function clearText() {
     width: 0px;
     height: 0px;
     position: relative;
-    right: 25px;
+    right: 28px;
     top: 10px;
+    font-size: 18px;
 
     color: gray;
 }
