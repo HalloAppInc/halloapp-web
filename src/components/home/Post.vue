@@ -234,7 +234,7 @@ async function decodeProtobufToPostContainer(binArray: Uint8Array) {
 
 async function decodeAndProcessPostContainer(binArray: Uint8Array) {
     const postContainer = await decodeProtobufToPostContainer(binArray)
-    hal.log("decodeAndProcessPostContainer/decoded: ", postContainer)
+    // hal.log("decodeAndProcessPostContainer/decoded: ", postContainer)
     processPostContainer(postContainer)
 }
 

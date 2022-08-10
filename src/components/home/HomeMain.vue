@@ -9,6 +9,8 @@ import Post from './Post.vue'
 import Comment from '../comment/CommentMain.vue'
 import hal from '../../common/halogger'
 
+import { db } from '../../db'
+
 const mainStore = useMainStore()
 
 const listBoxWidth = ref('100%')
@@ -77,6 +79,23 @@ const listData = [
         postID: "8"
     },          
 ]
+
+init()
+
+async function init() {
+
+	const feedItems = await db.feed.where('id').above(0).sortBy('timestamp')
+
+    if (feedItems.length == 0) {
+        // console.log('HomeMain/init/no feed items')
+        /* todo: put in fake feed items */
+
+
+    } else {
+ 
+    }
+
+}
 
 watchEffect(() => {
     if (mainStore.scrollToTop == 'home') {
