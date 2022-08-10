@@ -200,9 +200,7 @@ export const useConnStore = defineStore('conn', () => {
         } else if (webStanza) {
             hal.log('connStore/handleInboundMsg/webStanza')
 
-            const webStanzaContentsBinArr = new Uint8Array(webStanza.content)
-            const webContainer = await decodeWebContainer(webStanzaContentsBinArr)
-            const noiseMessage = webContainer?.noiseMessage
+            let noiseMessage = webStanza?.noiseMessage
 
             if (noiseMessage) {
                 hal.log('connStore/handleInboundMsg/webStanza/noiseMessage')
@@ -217,7 +215,7 @@ export const useConnStore = defineStore('conn', () => {
                         initHandshake(noise)
                     }
 
-                    if (noiseMessage.messageType == web.NoiseMessage.MessageType.IK_A) {
+                    if (noiseMessage.messageType == server.NoiseMessage.MessageType.IK_A) {
                         hal.log('connStore/handleInboundMsg/webStanza/noiseMessage/IK_A')
                         handleNoiseHandshakeMsg(noiseMessage.content)
                     } 
@@ -234,10 +232,19 @@ export const useConnStore = defineStore('conn', () => {
             else {
                 hal.log('connStore/handleInboundMsg/webStanza/not a noiseMessage')
                 if (mainStore.isPublicKeyAuthenticated && mainStore.haveInitialHandshakeCompleted) {
-                    const decrypted = mainStore.cipherStateReceive.DecryptWithAd([], eventDataBinArr)
-                    hal.log('connStore/handleInboundMsg/webStanza/decrypted: ' + decrypted)
-                    const decoded = new TextDecoder().decode(decrypted)
-                    hal.log('connStore/handleInboundMsg/webStanza/decoded text(if so): ' + decoded)
+                    
+                    if (webStanza.content) {
+
+                        const webStanzaContentsBinArr = new Uint8Array(webStanza.content)
+
+                        const decrypted = mainStore.cipherStateReceive.DecryptWithAd([], webStanzaContentsBinArr)
+                        hal.log('connStore/handleInboundMsg/webStanza/decrypted: ' + decrypted)
+                        
+                        const webContainer = await decodeWebContainer(decrypted)
+
+                        hal.log('connStore/handleInboundMsg/webStanza/decoded: ' + webContainer)
+
+                    }
                 }                
             }
     

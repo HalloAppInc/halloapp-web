@@ -1213,237 +1213,6 @@ export const clients = $root.clients = (() => {
         return Phone;
     })();
 
-    clients.Contact = (function() {
-
-        /**
-         * Properties of a Contact.
-         * @memberof clients
-         * @interface IContact
-         * @property {string|null} [name] Contact name
-         * @property {Array.<clients.IPhone>|null} [phones] Contact phones
-         */
-
-        /**
-         * Constructs a new Contact.
-         * @memberof clients
-         * @classdesc Represents a Contact.
-         * @implements IContact
-         * @constructor
-         * @param {clients.IContact=} [properties] Properties to set
-         */
-        function Contact(properties) {
-            this.phones = [];
-            if (properties)
-                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
-                        this[keys[i]] = properties[keys[i]];
-        }
-
-        /**
-         * Contact name.
-         * @member {string} name
-         * @memberof clients.Contact
-         * @instance
-         */
-        Contact.prototype.name = "";
-
-        /**
-         * Contact phones.
-         * @member {Array.<clients.IPhone>} phones
-         * @memberof clients.Contact
-         * @instance
-         */
-        Contact.prototype.phones = $util.emptyArray;
-
-        /**
-         * Creates a new Contact instance using the specified properties.
-         * @function create
-         * @memberof clients.Contact
-         * @static
-         * @param {clients.IContact=} [properties] Properties to set
-         * @returns {clients.Contact} Contact instance
-         */
-        Contact.create = function create(properties) {
-            return new Contact(properties);
-        };
-
-        /**
-         * Encodes the specified Contact message. Does not implicitly {@link clients.Contact.verify|verify} messages.
-         * @function encode
-         * @memberof clients.Contact
-         * @static
-         * @param {clients.IContact} message Contact message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        Contact.encode = function encode(message, writer) {
-            if (!writer)
-                writer = $Writer.create();
-            if (message.name != null && Object.hasOwnProperty.call(message, "name"))
-                writer.uint32(/* id 1, wireType 2 =*/10).string(message.name);
-            if (message.phones != null && message.phones.length)
-                for (let i = 0; i < message.phones.length; ++i)
-                    $root.clients.Phone.encode(message.phones[i], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
-            return writer;
-        };
-
-        /**
-         * Encodes the specified Contact message, length delimited. Does not implicitly {@link clients.Contact.verify|verify} messages.
-         * @function encodeDelimited
-         * @memberof clients.Contact
-         * @static
-         * @param {clients.IContact} message Contact message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        Contact.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
-        };
-
-        /**
-         * Decodes a Contact message from the specified reader or buffer.
-         * @function decode
-         * @memberof clients.Contact
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @param {number} [length] Message length if known beforehand
-         * @returns {clients.Contact} Contact
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        Contact.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader))
-                reader = $Reader.create(reader);
-            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.clients.Contact();
-            while (reader.pos < end) {
-                let tag = reader.uint32();
-                switch (tag >>> 3) {
-                case 1:
-                    message.name = reader.string();
-                    break;
-                case 2:
-                    if (!(message.phones && message.phones.length))
-                        message.phones = [];
-                    message.phones.push($root.clients.Phone.decode(reader, reader.uint32()));
-                    break;
-                default:
-                    reader.skipType(tag & 7);
-                    break;
-                }
-            }
-            return message;
-        };
-
-        /**
-         * Decodes a Contact message from the specified reader or buffer, length delimited.
-         * @function decodeDelimited
-         * @memberof clients.Contact
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {clients.Contact} Contact
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        Contact.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader))
-                reader = new $Reader(reader);
-            return this.decode(reader, reader.uint32());
-        };
-
-        /**
-         * Verifies a Contact message.
-         * @function verify
-         * @memberof clients.Contact
-         * @static
-         * @param {Object.<string,*>} message Plain object to verify
-         * @returns {string|null} `null` if valid, otherwise the reason why it is not
-         */
-        Contact.verify = function verify(message) {
-            if (typeof message !== "object" || message === null)
-                return "object expected";
-            if (message.name != null && message.hasOwnProperty("name"))
-                if (!$util.isString(message.name))
-                    return "name: string expected";
-            if (message.phones != null && message.hasOwnProperty("phones")) {
-                if (!Array.isArray(message.phones))
-                    return "phones: array expected";
-                for (let i = 0; i < message.phones.length; ++i) {
-                    let error = $root.clients.Phone.verify(message.phones[i]);
-                    if (error)
-                        return "phones." + error;
-                }
-            }
-            return null;
-        };
-
-        /**
-         * Creates a Contact message from a plain object. Also converts values to their respective internal types.
-         * @function fromObject
-         * @memberof clients.Contact
-         * @static
-         * @param {Object.<string,*>} object Plain object
-         * @returns {clients.Contact} Contact
-         */
-        Contact.fromObject = function fromObject(object) {
-            if (object instanceof $root.clients.Contact)
-                return object;
-            let message = new $root.clients.Contact();
-            if (object.name != null)
-                message.name = String(object.name);
-            if (object.phones) {
-                if (!Array.isArray(object.phones))
-                    throw TypeError(".clients.Contact.phones: array expected");
-                message.phones = [];
-                for (let i = 0; i < object.phones.length; ++i) {
-                    if (typeof object.phones[i] !== "object")
-                        throw TypeError(".clients.Contact.phones: object expected");
-                    message.phones[i] = $root.clients.Phone.fromObject(object.phones[i]);
-                }
-            }
-            return message;
-        };
-
-        /**
-         * Creates a plain object from a Contact message. Also converts values to other types if specified.
-         * @function toObject
-         * @memberof clients.Contact
-         * @static
-         * @param {clients.Contact} message Contact
-         * @param {$protobuf.IConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        Contact.toObject = function toObject(message, options) {
-            if (!options)
-                options = {};
-            let object = {};
-            if (options.arrays || options.defaults)
-                object.phones = [];
-            if (options.defaults)
-                object.name = "";
-            if (message.name != null && message.hasOwnProperty("name"))
-                object.name = message.name;
-            if (message.phones && message.phones.length) {
-                object.phones = [];
-                for (let j = 0; j < message.phones.length; ++j)
-                    object.phones[j] = $root.clients.Phone.toObject(message.phones[j], options);
-            }
-            return object;
-        };
-
-        /**
-         * Converts this Contact to JSON.
-         * @function toJSON
-         * @memberof clients.Contact
-         * @instance
-         * @returns {Object.<string,*>} JSON object
-         */
-        Contact.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-        };
-
-        return Contact;
-    })();
-
     clients.SignedPreKey = (function() {
 
         /**
@@ -2112,6 +1881,8 @@ export const clients = $root.clients = (() => {
          * @property {clients.IContactCard|null} [contactCard] ChatContainer contactCard
          * @property {clients.IVoiceNote|null} [voiceNote] ChatContainer voiceNote
          * @property {clients.IFiles|null} [files] ChatContainer files
+         * @property {clients.IReaction|null} [reaction] ChatContainer reaction
+         * @property {clients.ILocation|null} [location] ChatContainer location
          */
 
         /**
@@ -2177,17 +1948,33 @@ export const clients = $root.clients = (() => {
          */
         ChatContainer.prototype.files = null;
 
+        /**
+         * ChatContainer reaction.
+         * @member {clients.IReaction|null|undefined} reaction
+         * @memberof clients.ChatContainer
+         * @instance
+         */
+        ChatContainer.prototype.reaction = null;
+
+        /**
+         * ChatContainer location.
+         * @member {clients.ILocation|null|undefined} location
+         * @memberof clients.ChatContainer
+         * @instance
+         */
+        ChatContainer.prototype.location = null;
+
         // OneOf field names bound to virtual getters and setters
         let $oneOfFields;
 
         /**
          * ChatContainer message.
-         * @member {"text"|"album"|"contactCard"|"voiceNote"|"files"|undefined} message
+         * @member {"text"|"album"|"contactCard"|"voiceNote"|"files"|"reaction"|"location"|undefined} message
          * @memberof clients.ChatContainer
          * @instance
          */
         Object.defineProperty(ChatContainer.prototype, "message", {
-            get: $util.oneOfGetter($oneOfFields = ["text", "album", "contactCard", "voiceNote", "files"]),
+            get: $util.oneOfGetter($oneOfFields = ["text", "album", "contactCard", "voiceNote", "files", "reaction", "location"]),
             set: $util.oneOfSetter($oneOfFields)
         });
 
@@ -2227,6 +2014,10 @@ export const clients = $root.clients = (() => {
                 $root.clients.VoiceNote.encode(message.voiceNote, writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
             if (message.files != null && Object.hasOwnProperty.call(message, "files"))
                 $root.clients.Files.encode(message.files, writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
+            if (message.reaction != null && Object.hasOwnProperty.call(message, "reaction"))
+                $root.clients.Reaction.encode(message.reaction, writer.uint32(/* id 7, wireType 2 =*/58).fork()).ldelim();
+            if (message.location != null && Object.hasOwnProperty.call(message, "location"))
+                $root.clients.Location.encode(message.location, writer.uint32(/* id 8, wireType 2 =*/66).fork()).ldelim();
             return writer;
         };
 
@@ -2278,6 +2069,12 @@ export const clients = $root.clients = (() => {
                     break;
                 case 6:
                     message.files = $root.clients.Files.decode(reader, reader.uint32());
+                    break;
+                case 7:
+                    message.reaction = $root.clients.Reaction.decode(reader, reader.uint32());
+                    break;
+                case 8:
+                    message.location = $root.clients.Location.decode(reader, reader.uint32());
                     break;
                 default:
                     reader.skipType(tag & 7);
@@ -2368,6 +2165,26 @@ export const clients = $root.clients = (() => {
                         return "files." + error;
                 }
             }
+            if (message.reaction != null && message.hasOwnProperty("reaction")) {
+                if (properties.message === 1)
+                    return "message: multiple values";
+                properties.message = 1;
+                {
+                    let error = $root.clients.Reaction.verify(message.reaction);
+                    if (error)
+                        return "reaction." + error;
+                }
+            }
+            if (message.location != null && message.hasOwnProperty("location")) {
+                if (properties.message === 1)
+                    return "message: multiple values";
+                properties.message = 1;
+                {
+                    let error = $root.clients.Location.verify(message.location);
+                    if (error)
+                        return "location." + error;
+                }
+            }
             return null;
         };
 
@@ -2413,6 +2230,16 @@ export const clients = $root.clients = (() => {
                     throw TypeError(".clients.ChatContainer.files: object expected");
                 message.files = $root.clients.Files.fromObject(object.files);
             }
+            if (object.reaction != null) {
+                if (typeof object.reaction !== "object")
+                    throw TypeError(".clients.ChatContainer.reaction: object expected");
+                message.reaction = $root.clients.Reaction.fromObject(object.reaction);
+            }
+            if (object.location != null) {
+                if (typeof object.location !== "object")
+                    throw TypeError(".clients.ChatContainer.location: object expected");
+                message.location = $root.clients.Location.fromObject(object.location);
+            }
             return message;
         };
 
@@ -2457,6 +2284,16 @@ export const clients = $root.clients = (() => {
                 object.files = $root.clients.Files.toObject(message.files, options);
                 if (options.oneofs)
                     object.message = "files";
+            }
+            if (message.reaction != null && message.hasOwnProperty("reaction")) {
+                object.reaction = $root.clients.Reaction.toObject(message.reaction, options);
+                if (options.oneofs)
+                    object.message = "reaction";
+            }
+            if (message.location != null && message.hasOwnProperty("location")) {
+                object.location = $root.clients.Location.toObject(message.location, options);
+                if (options.oneofs)
+                    object.message = "location";
             }
             return object;
         };
@@ -3415,6 +3252,7 @@ export const clients = $root.clients = (() => {
          * @property {clients.IText|null} [text] CommentContainer text
          * @property {clients.IAlbum|null} [album] CommentContainer album
          * @property {clients.IVoiceNote|null} [voiceNote] CommentContainer voiceNote
+         * @property {clients.IReaction|null} [reaction] CommentContainer reaction
          */
 
         /**
@@ -3464,17 +3302,25 @@ export const clients = $root.clients = (() => {
          */
         CommentContainer.prototype.voiceNote = null;
 
+        /**
+         * CommentContainer reaction.
+         * @member {clients.IReaction|null|undefined} reaction
+         * @memberof clients.CommentContainer
+         * @instance
+         */
+        CommentContainer.prototype.reaction = null;
+
         // OneOf field names bound to virtual getters and setters
         let $oneOfFields;
 
         /**
          * CommentContainer comment.
-         * @member {"text"|"album"|"voiceNote"|undefined} comment
+         * @member {"text"|"album"|"voiceNote"|"reaction"|undefined} comment
          * @memberof clients.CommentContainer
          * @instance
          */
         Object.defineProperty(CommentContainer.prototype, "comment", {
-            get: $util.oneOfGetter($oneOfFields = ["text", "album", "voiceNote"]),
+            get: $util.oneOfGetter($oneOfFields = ["text", "album", "voiceNote", "reaction"]),
             set: $util.oneOfSetter($oneOfFields)
         });
 
@@ -3510,6 +3356,8 @@ export const clients = $root.clients = (() => {
                 $root.clients.Album.encode(message.album, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
             if (message.voiceNote != null && Object.hasOwnProperty.call(message, "voiceNote"))
                 $root.clients.VoiceNote.encode(message.voiceNote, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+            if (message.reaction != null && Object.hasOwnProperty.call(message, "reaction"))
+                $root.clients.Reaction.encode(message.reaction, writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
             return writer;
         };
 
@@ -3555,6 +3403,9 @@ export const clients = $root.clients = (() => {
                     break;
                 case 4:
                     message.voiceNote = $root.clients.VoiceNote.decode(reader, reader.uint32());
+                    break;
+                case 5:
+                    message.reaction = $root.clients.Reaction.decode(reader, reader.uint32());
                     break;
                 default:
                     reader.skipType(tag & 7);
@@ -3625,6 +3476,16 @@ export const clients = $root.clients = (() => {
                         return "voiceNote." + error;
                 }
             }
+            if (message.reaction != null && message.hasOwnProperty("reaction")) {
+                if (properties.comment === 1)
+                    return "comment: multiple values";
+                properties.comment = 1;
+                {
+                    let error = $root.clients.Reaction.verify(message.reaction);
+                    if (error)
+                        return "reaction." + error;
+                }
+            }
             return null;
         };
 
@@ -3660,6 +3521,11 @@ export const clients = $root.clients = (() => {
                     throw TypeError(".clients.CommentContainer.voiceNote: object expected");
                 message.voiceNote = $root.clients.VoiceNote.fromObject(object.voiceNote);
             }
+            if (object.reaction != null) {
+                if (typeof object.reaction !== "object")
+                    throw TypeError(".clients.CommentContainer.reaction: object expected");
+                message.reaction = $root.clients.Reaction.fromObject(object.reaction);
+            }
             return message;
         };
 
@@ -3694,6 +3560,11 @@ export const clients = $root.clients = (() => {
                 object.voiceNote = $root.clients.VoiceNote.toObject(message.voiceNote, options);
                 if (options.oneofs)
                     object.comment = "voiceNote";
+            }
+            if (message.reaction != null && message.hasOwnProperty("reaction")) {
+                object.reaction = $root.clients.Reaction.toObject(message.reaction, options);
+                if (options.oneofs)
+                    object.comment = "reaction";
             }
             return object;
         };
@@ -4435,7 +4306,6 @@ export const clients = $root.clients = (() => {
          * @memberof clients
          * @interface IContactCard
          * @property {Array.<clients.IContact>|null} [contacts] ContactCard contacts
-         * @property {clients.IText|null} [text] ContactCard text
          */
 
         /**
@@ -4461,14 +4331,6 @@ export const clients = $root.clients = (() => {
          * @instance
          */
         ContactCard.prototype.contacts = $util.emptyArray;
-
-        /**
-         * ContactCard text.
-         * @member {clients.IText|null|undefined} text
-         * @memberof clients.ContactCard
-         * @instance
-         */
-        ContactCard.prototype.text = null;
 
         /**
          * Creates a new ContactCard instance using the specified properties.
@@ -4497,8 +4359,6 @@ export const clients = $root.clients = (() => {
             if (message.contacts != null && message.contacts.length)
                 for (let i = 0; i < message.contacts.length; ++i)
                     $root.clients.Contact.encode(message.contacts[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
-            if (message.text != null && Object.hasOwnProperty.call(message, "text"))
-                $root.clients.Text.encode(message.text, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
             return writer;
         };
 
@@ -4537,9 +4397,6 @@ export const clients = $root.clients = (() => {
                     if (!(message.contacts && message.contacts.length))
                         message.contacts = [];
                     message.contacts.push($root.clients.Contact.decode(reader, reader.uint32()));
-                    break;
-                case 2:
-                    message.text = $root.clients.Text.decode(reader, reader.uint32());
                     break;
                 default:
                     reader.skipType(tag & 7);
@@ -4585,11 +4442,6 @@ export const clients = $root.clients = (() => {
                         return "contacts." + error;
                 }
             }
-            if (message.text != null && message.hasOwnProperty("text")) {
-                let error = $root.clients.Text.verify(message.text);
-                if (error)
-                    return "text." + error;
-            }
             return null;
         };
 
@@ -4615,11 +4467,6 @@ export const clients = $root.clients = (() => {
                     message.contacts[i] = $root.clients.Contact.fromObject(object.contacts[i]);
                 }
             }
-            if (object.text != null) {
-                if (typeof object.text !== "object")
-                    throw TypeError(".clients.ContactCard.text: object expected");
-                message.text = $root.clients.Text.fromObject(object.text);
-            }
             return message;
         };
 
@@ -4638,15 +4485,11 @@ export const clients = $root.clients = (() => {
             let object = {};
             if (options.arrays || options.defaults)
                 object.contacts = [];
-            if (options.defaults)
-                object.text = null;
             if (message.contacts && message.contacts.length) {
                 object.contacts = [];
                 for (let j = 0; j < message.contacts.length; ++j)
                     object.contacts[j] = $root.clients.Contact.toObject(message.contacts[j], options);
             }
-            if (message.text != null && message.hasOwnProperty("text"))
-                object.text = $root.clients.Text.toObject(message.text, options);
             return object;
         };
 
@@ -4662,6 +4505,986 @@ export const clients = $root.clients = (() => {
         };
 
         return ContactCard;
+    })();
+
+    clients.Contact = (function() {
+
+        /**
+         * Properties of a Contact.
+         * @memberof clients
+         * @interface IContact
+         * @property {string|null} [name] Contact name
+         * @property {Uint8Array|null} [photo] Contact photo
+         * @property {Array.<clients.IContactPhone>|null} [numbers] Contact numbers
+         * @property {Array.<clients.IContactEmail>|null} [emails] Contact emails
+         * @property {Array.<clients.IContactAddress>|null} [addresses] Contact addresses
+         */
+
+        /**
+         * Constructs a new Contact.
+         * @memberof clients
+         * @classdesc Represents a Contact.
+         * @implements IContact
+         * @constructor
+         * @param {clients.IContact=} [properties] Properties to set
+         */
+        function Contact(properties) {
+            this.numbers = [];
+            this.emails = [];
+            this.addresses = [];
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * Contact name.
+         * @member {string} name
+         * @memberof clients.Contact
+         * @instance
+         */
+        Contact.prototype.name = "";
+
+        /**
+         * Contact photo.
+         * @member {Uint8Array} photo
+         * @memberof clients.Contact
+         * @instance
+         */
+        Contact.prototype.photo = $util.newBuffer([]);
+
+        /**
+         * Contact numbers.
+         * @member {Array.<clients.IContactPhone>} numbers
+         * @memberof clients.Contact
+         * @instance
+         */
+        Contact.prototype.numbers = $util.emptyArray;
+
+        /**
+         * Contact emails.
+         * @member {Array.<clients.IContactEmail>} emails
+         * @memberof clients.Contact
+         * @instance
+         */
+        Contact.prototype.emails = $util.emptyArray;
+
+        /**
+         * Contact addresses.
+         * @member {Array.<clients.IContactAddress>} addresses
+         * @memberof clients.Contact
+         * @instance
+         */
+        Contact.prototype.addresses = $util.emptyArray;
+
+        /**
+         * Creates a new Contact instance using the specified properties.
+         * @function create
+         * @memberof clients.Contact
+         * @static
+         * @param {clients.IContact=} [properties] Properties to set
+         * @returns {clients.Contact} Contact instance
+         */
+        Contact.create = function create(properties) {
+            return new Contact(properties);
+        };
+
+        /**
+         * Encodes the specified Contact message. Does not implicitly {@link clients.Contact.verify|verify} messages.
+         * @function encode
+         * @memberof clients.Contact
+         * @static
+         * @param {clients.IContact} message Contact message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Contact.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.name != null && Object.hasOwnProperty.call(message, "name"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.name);
+            if (message.photo != null && Object.hasOwnProperty.call(message, "photo"))
+                writer.uint32(/* id 2, wireType 2 =*/18).bytes(message.photo);
+            if (message.numbers != null && message.numbers.length)
+                for (let i = 0; i < message.numbers.length; ++i)
+                    $root.clients.ContactPhone.encode(message.numbers[i], writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+            if (message.emails != null && message.emails.length)
+                for (let i = 0; i < message.emails.length; ++i)
+                    $root.clients.ContactEmail.encode(message.emails[i], writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+            if (message.addresses != null && message.addresses.length)
+                for (let i = 0; i < message.addresses.length; ++i)
+                    $root.clients.ContactAddress.encode(message.addresses[i], writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
+            return writer;
+        };
+
+        /**
+         * Encodes the specified Contact message, length delimited. Does not implicitly {@link clients.Contact.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof clients.Contact
+         * @static
+         * @param {clients.IContact} message Contact message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Contact.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a Contact message from the specified reader or buffer.
+         * @function decode
+         * @memberof clients.Contact
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {clients.Contact} Contact
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Contact.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.clients.Contact();
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1:
+                    message.name = reader.string();
+                    break;
+                case 2:
+                    message.photo = reader.bytes();
+                    break;
+                case 3:
+                    if (!(message.numbers && message.numbers.length))
+                        message.numbers = [];
+                    message.numbers.push($root.clients.ContactPhone.decode(reader, reader.uint32()));
+                    break;
+                case 4:
+                    if (!(message.emails && message.emails.length))
+                        message.emails = [];
+                    message.emails.push($root.clients.ContactEmail.decode(reader, reader.uint32()));
+                    break;
+                case 5:
+                    if (!(message.addresses && message.addresses.length))
+                        message.addresses = [];
+                    message.addresses.push($root.clients.ContactAddress.decode(reader, reader.uint32()));
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a Contact message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof clients.Contact
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {clients.Contact} Contact
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Contact.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a Contact message.
+         * @function verify
+         * @memberof clients.Contact
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        Contact.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.name != null && message.hasOwnProperty("name"))
+                if (!$util.isString(message.name))
+                    return "name: string expected";
+            if (message.photo != null && message.hasOwnProperty("photo"))
+                if (!(message.photo && typeof message.photo.length === "number" || $util.isString(message.photo)))
+                    return "photo: buffer expected";
+            if (message.numbers != null && message.hasOwnProperty("numbers")) {
+                if (!Array.isArray(message.numbers))
+                    return "numbers: array expected";
+                for (let i = 0; i < message.numbers.length; ++i) {
+                    let error = $root.clients.ContactPhone.verify(message.numbers[i]);
+                    if (error)
+                        return "numbers." + error;
+                }
+            }
+            if (message.emails != null && message.hasOwnProperty("emails")) {
+                if (!Array.isArray(message.emails))
+                    return "emails: array expected";
+                for (let i = 0; i < message.emails.length; ++i) {
+                    let error = $root.clients.ContactEmail.verify(message.emails[i]);
+                    if (error)
+                        return "emails." + error;
+                }
+            }
+            if (message.addresses != null && message.hasOwnProperty("addresses")) {
+                if (!Array.isArray(message.addresses))
+                    return "addresses: array expected";
+                for (let i = 0; i < message.addresses.length; ++i) {
+                    let error = $root.clients.ContactAddress.verify(message.addresses[i]);
+                    if (error)
+                        return "addresses." + error;
+                }
+            }
+            return null;
+        };
+
+        /**
+         * Creates a Contact message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof clients.Contact
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {clients.Contact} Contact
+         */
+        Contact.fromObject = function fromObject(object) {
+            if (object instanceof $root.clients.Contact)
+                return object;
+            let message = new $root.clients.Contact();
+            if (object.name != null)
+                message.name = String(object.name);
+            if (object.photo != null)
+                if (typeof object.photo === "string")
+                    $util.base64.decode(object.photo, message.photo = $util.newBuffer($util.base64.length(object.photo)), 0);
+                else if (object.photo.length)
+                    message.photo = object.photo;
+            if (object.numbers) {
+                if (!Array.isArray(object.numbers))
+                    throw TypeError(".clients.Contact.numbers: array expected");
+                message.numbers = [];
+                for (let i = 0; i < object.numbers.length; ++i) {
+                    if (typeof object.numbers[i] !== "object")
+                        throw TypeError(".clients.Contact.numbers: object expected");
+                    message.numbers[i] = $root.clients.ContactPhone.fromObject(object.numbers[i]);
+                }
+            }
+            if (object.emails) {
+                if (!Array.isArray(object.emails))
+                    throw TypeError(".clients.Contact.emails: array expected");
+                message.emails = [];
+                for (let i = 0; i < object.emails.length; ++i) {
+                    if (typeof object.emails[i] !== "object")
+                        throw TypeError(".clients.Contact.emails: object expected");
+                    message.emails[i] = $root.clients.ContactEmail.fromObject(object.emails[i]);
+                }
+            }
+            if (object.addresses) {
+                if (!Array.isArray(object.addresses))
+                    throw TypeError(".clients.Contact.addresses: array expected");
+                message.addresses = [];
+                for (let i = 0; i < object.addresses.length; ++i) {
+                    if (typeof object.addresses[i] !== "object")
+                        throw TypeError(".clients.Contact.addresses: object expected");
+                    message.addresses[i] = $root.clients.ContactAddress.fromObject(object.addresses[i]);
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a Contact message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof clients.Contact
+         * @static
+         * @param {clients.Contact} message Contact
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        Contact.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            let object = {};
+            if (options.arrays || options.defaults) {
+                object.numbers = [];
+                object.emails = [];
+                object.addresses = [];
+            }
+            if (options.defaults) {
+                object.name = "";
+                if (options.bytes === String)
+                    object.photo = "";
+                else {
+                    object.photo = [];
+                    if (options.bytes !== Array)
+                        object.photo = $util.newBuffer(object.photo);
+                }
+            }
+            if (message.name != null && message.hasOwnProperty("name"))
+                object.name = message.name;
+            if (message.photo != null && message.hasOwnProperty("photo"))
+                object.photo = options.bytes === String ? $util.base64.encode(message.photo, 0, message.photo.length) : options.bytes === Array ? Array.prototype.slice.call(message.photo) : message.photo;
+            if (message.numbers && message.numbers.length) {
+                object.numbers = [];
+                for (let j = 0; j < message.numbers.length; ++j)
+                    object.numbers[j] = $root.clients.ContactPhone.toObject(message.numbers[j], options);
+            }
+            if (message.emails && message.emails.length) {
+                object.emails = [];
+                for (let j = 0; j < message.emails.length; ++j)
+                    object.emails[j] = $root.clients.ContactEmail.toObject(message.emails[j], options);
+            }
+            if (message.addresses && message.addresses.length) {
+                object.addresses = [];
+                for (let j = 0; j < message.addresses.length; ++j)
+                    object.addresses[j] = $root.clients.ContactAddress.toObject(message.addresses[j], options);
+            }
+            return object;
+        };
+
+        /**
+         * Converts this Contact to JSON.
+         * @function toJSON
+         * @memberof clients.Contact
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        Contact.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        return Contact;
+    })();
+
+    clients.ContactAddress = (function() {
+
+        /**
+         * Properties of a ContactAddress.
+         * @memberof clients
+         * @interface IContactAddress
+         * @property {string|null} [label] ContactAddress label
+         * @property {string|null} [address] ContactAddress address
+         */
+
+        /**
+         * Constructs a new ContactAddress.
+         * @memberof clients
+         * @classdesc Represents a ContactAddress.
+         * @implements IContactAddress
+         * @constructor
+         * @param {clients.IContactAddress=} [properties] Properties to set
+         */
+        function ContactAddress(properties) {
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * ContactAddress label.
+         * @member {string} label
+         * @memberof clients.ContactAddress
+         * @instance
+         */
+        ContactAddress.prototype.label = "";
+
+        /**
+         * ContactAddress address.
+         * @member {string} address
+         * @memberof clients.ContactAddress
+         * @instance
+         */
+        ContactAddress.prototype.address = "";
+
+        /**
+         * Creates a new ContactAddress instance using the specified properties.
+         * @function create
+         * @memberof clients.ContactAddress
+         * @static
+         * @param {clients.IContactAddress=} [properties] Properties to set
+         * @returns {clients.ContactAddress} ContactAddress instance
+         */
+        ContactAddress.create = function create(properties) {
+            return new ContactAddress(properties);
+        };
+
+        /**
+         * Encodes the specified ContactAddress message. Does not implicitly {@link clients.ContactAddress.verify|verify} messages.
+         * @function encode
+         * @memberof clients.ContactAddress
+         * @static
+         * @param {clients.IContactAddress} message ContactAddress message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        ContactAddress.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.label != null && Object.hasOwnProperty.call(message, "label"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.label);
+            if (message.address != null && Object.hasOwnProperty.call(message, "address"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.address);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified ContactAddress message, length delimited. Does not implicitly {@link clients.ContactAddress.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof clients.ContactAddress
+         * @static
+         * @param {clients.IContactAddress} message ContactAddress message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        ContactAddress.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a ContactAddress message from the specified reader or buffer.
+         * @function decode
+         * @memberof clients.ContactAddress
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {clients.ContactAddress} ContactAddress
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        ContactAddress.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.clients.ContactAddress();
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1:
+                    message.label = reader.string();
+                    break;
+                case 2:
+                    message.address = reader.string();
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a ContactAddress message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof clients.ContactAddress
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {clients.ContactAddress} ContactAddress
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        ContactAddress.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a ContactAddress message.
+         * @function verify
+         * @memberof clients.ContactAddress
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        ContactAddress.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.label != null && message.hasOwnProperty("label"))
+                if (!$util.isString(message.label))
+                    return "label: string expected";
+            if (message.address != null && message.hasOwnProperty("address"))
+                if (!$util.isString(message.address))
+                    return "address: string expected";
+            return null;
+        };
+
+        /**
+         * Creates a ContactAddress message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof clients.ContactAddress
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {clients.ContactAddress} ContactAddress
+         */
+        ContactAddress.fromObject = function fromObject(object) {
+            if (object instanceof $root.clients.ContactAddress)
+                return object;
+            let message = new $root.clients.ContactAddress();
+            if (object.label != null)
+                message.label = String(object.label);
+            if (object.address != null)
+                message.address = String(object.address);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a ContactAddress message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof clients.ContactAddress
+         * @static
+         * @param {clients.ContactAddress} message ContactAddress
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        ContactAddress.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            let object = {};
+            if (options.defaults) {
+                object.label = "";
+                object.address = "";
+            }
+            if (message.label != null && message.hasOwnProperty("label"))
+                object.label = message.label;
+            if (message.address != null && message.hasOwnProperty("address"))
+                object.address = message.address;
+            return object;
+        };
+
+        /**
+         * Converts this ContactAddress to JSON.
+         * @function toJSON
+         * @memberof clients.ContactAddress
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        ContactAddress.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        return ContactAddress;
+    })();
+
+    clients.ContactEmail = (function() {
+
+        /**
+         * Properties of a ContactEmail.
+         * @memberof clients
+         * @interface IContactEmail
+         * @property {string|null} [label] ContactEmail label
+         * @property {string|null} [address] ContactEmail address
+         */
+
+        /**
+         * Constructs a new ContactEmail.
+         * @memberof clients
+         * @classdesc Represents a ContactEmail.
+         * @implements IContactEmail
+         * @constructor
+         * @param {clients.IContactEmail=} [properties] Properties to set
+         */
+        function ContactEmail(properties) {
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * ContactEmail label.
+         * @member {string} label
+         * @memberof clients.ContactEmail
+         * @instance
+         */
+        ContactEmail.prototype.label = "";
+
+        /**
+         * ContactEmail address.
+         * @member {string} address
+         * @memberof clients.ContactEmail
+         * @instance
+         */
+        ContactEmail.prototype.address = "";
+
+        /**
+         * Creates a new ContactEmail instance using the specified properties.
+         * @function create
+         * @memberof clients.ContactEmail
+         * @static
+         * @param {clients.IContactEmail=} [properties] Properties to set
+         * @returns {clients.ContactEmail} ContactEmail instance
+         */
+        ContactEmail.create = function create(properties) {
+            return new ContactEmail(properties);
+        };
+
+        /**
+         * Encodes the specified ContactEmail message. Does not implicitly {@link clients.ContactEmail.verify|verify} messages.
+         * @function encode
+         * @memberof clients.ContactEmail
+         * @static
+         * @param {clients.IContactEmail} message ContactEmail message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        ContactEmail.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.label != null && Object.hasOwnProperty.call(message, "label"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.label);
+            if (message.address != null && Object.hasOwnProperty.call(message, "address"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.address);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified ContactEmail message, length delimited. Does not implicitly {@link clients.ContactEmail.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof clients.ContactEmail
+         * @static
+         * @param {clients.IContactEmail} message ContactEmail message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        ContactEmail.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a ContactEmail message from the specified reader or buffer.
+         * @function decode
+         * @memberof clients.ContactEmail
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {clients.ContactEmail} ContactEmail
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        ContactEmail.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.clients.ContactEmail();
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1:
+                    message.label = reader.string();
+                    break;
+                case 2:
+                    message.address = reader.string();
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a ContactEmail message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof clients.ContactEmail
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {clients.ContactEmail} ContactEmail
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        ContactEmail.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a ContactEmail message.
+         * @function verify
+         * @memberof clients.ContactEmail
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        ContactEmail.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.label != null && message.hasOwnProperty("label"))
+                if (!$util.isString(message.label))
+                    return "label: string expected";
+            if (message.address != null && message.hasOwnProperty("address"))
+                if (!$util.isString(message.address))
+                    return "address: string expected";
+            return null;
+        };
+
+        /**
+         * Creates a ContactEmail message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof clients.ContactEmail
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {clients.ContactEmail} ContactEmail
+         */
+        ContactEmail.fromObject = function fromObject(object) {
+            if (object instanceof $root.clients.ContactEmail)
+                return object;
+            let message = new $root.clients.ContactEmail();
+            if (object.label != null)
+                message.label = String(object.label);
+            if (object.address != null)
+                message.address = String(object.address);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a ContactEmail message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof clients.ContactEmail
+         * @static
+         * @param {clients.ContactEmail} message ContactEmail
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        ContactEmail.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            let object = {};
+            if (options.defaults) {
+                object.label = "";
+                object.address = "";
+            }
+            if (message.label != null && message.hasOwnProperty("label"))
+                object.label = message.label;
+            if (message.address != null && message.hasOwnProperty("address"))
+                object.address = message.address;
+            return object;
+        };
+
+        /**
+         * Converts this ContactEmail to JSON.
+         * @function toJSON
+         * @memberof clients.ContactEmail
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        ContactEmail.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        return ContactEmail;
+    })();
+
+    clients.ContactPhone = (function() {
+
+        /**
+         * Properties of a ContactPhone.
+         * @memberof clients
+         * @interface IContactPhone
+         * @property {string|null} [label] ContactPhone label
+         * @property {string|null} [number] ContactPhone number
+         */
+
+        /**
+         * Constructs a new ContactPhone.
+         * @memberof clients
+         * @classdesc Represents a ContactPhone.
+         * @implements IContactPhone
+         * @constructor
+         * @param {clients.IContactPhone=} [properties] Properties to set
+         */
+        function ContactPhone(properties) {
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * ContactPhone label.
+         * @member {string} label
+         * @memberof clients.ContactPhone
+         * @instance
+         */
+        ContactPhone.prototype.label = "";
+
+        /**
+         * ContactPhone number.
+         * @member {string} number
+         * @memberof clients.ContactPhone
+         * @instance
+         */
+        ContactPhone.prototype.number = "";
+
+        /**
+         * Creates a new ContactPhone instance using the specified properties.
+         * @function create
+         * @memberof clients.ContactPhone
+         * @static
+         * @param {clients.IContactPhone=} [properties] Properties to set
+         * @returns {clients.ContactPhone} ContactPhone instance
+         */
+        ContactPhone.create = function create(properties) {
+            return new ContactPhone(properties);
+        };
+
+        /**
+         * Encodes the specified ContactPhone message. Does not implicitly {@link clients.ContactPhone.verify|verify} messages.
+         * @function encode
+         * @memberof clients.ContactPhone
+         * @static
+         * @param {clients.IContactPhone} message ContactPhone message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        ContactPhone.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.label != null && Object.hasOwnProperty.call(message, "label"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.label);
+            if (message.number != null && Object.hasOwnProperty.call(message, "number"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.number);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified ContactPhone message, length delimited. Does not implicitly {@link clients.ContactPhone.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof clients.ContactPhone
+         * @static
+         * @param {clients.IContactPhone} message ContactPhone message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        ContactPhone.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a ContactPhone message from the specified reader or buffer.
+         * @function decode
+         * @memberof clients.ContactPhone
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {clients.ContactPhone} ContactPhone
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        ContactPhone.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.clients.ContactPhone();
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1:
+                    message.label = reader.string();
+                    break;
+                case 2:
+                    message.number = reader.string();
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a ContactPhone message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof clients.ContactPhone
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {clients.ContactPhone} ContactPhone
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        ContactPhone.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a ContactPhone message.
+         * @function verify
+         * @memberof clients.ContactPhone
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        ContactPhone.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.label != null && message.hasOwnProperty("label"))
+                if (!$util.isString(message.label))
+                    return "label: string expected";
+            if (message.number != null && message.hasOwnProperty("number"))
+                if (!$util.isString(message.number))
+                    return "number: string expected";
+            return null;
+        };
+
+        /**
+         * Creates a ContactPhone message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof clients.ContactPhone
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {clients.ContactPhone} ContactPhone
+         */
+        ContactPhone.fromObject = function fromObject(object) {
+            if (object instanceof $root.clients.ContactPhone)
+                return object;
+            let message = new $root.clients.ContactPhone();
+            if (object.label != null)
+                message.label = String(object.label);
+            if (object.number != null)
+                message.number = String(object.number);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a ContactPhone message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof clients.ContactPhone
+         * @static
+         * @param {clients.ContactPhone} message ContactPhone
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        ContactPhone.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            let object = {};
+            if (options.defaults) {
+                object.label = "";
+                object.number = "";
+            }
+            if (message.label != null && message.hasOwnProperty("label"))
+                object.label = message.label;
+            if (message.number != null && message.hasOwnProperty("number"))
+                object.number = message.number;
+            return object;
+        };
+
+        /**
+         * Converts this ContactPhone to JSON.
+         * @function toJSON
+         * @memberof clients.ContactPhone
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        ContactPhone.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        return ContactPhone;
     })();
 
     clients.Image = (function() {
@@ -5873,6 +6696,655 @@ export const clients = $root.clients = (() => {
         };
 
         return File;
+    })();
+
+    clients.Reaction = (function() {
+
+        /**
+         * Properties of a Reaction.
+         * @memberof clients
+         * @interface IReaction
+         * @property {string|null} [emoji] Reaction emoji
+         */
+
+        /**
+         * Constructs a new Reaction.
+         * @memberof clients
+         * @classdesc Represents a Reaction.
+         * @implements IReaction
+         * @constructor
+         * @param {clients.IReaction=} [properties] Properties to set
+         */
+        function Reaction(properties) {
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * Reaction emoji.
+         * @member {string} emoji
+         * @memberof clients.Reaction
+         * @instance
+         */
+        Reaction.prototype.emoji = "";
+
+        /**
+         * Creates a new Reaction instance using the specified properties.
+         * @function create
+         * @memberof clients.Reaction
+         * @static
+         * @param {clients.IReaction=} [properties] Properties to set
+         * @returns {clients.Reaction} Reaction instance
+         */
+        Reaction.create = function create(properties) {
+            return new Reaction(properties);
+        };
+
+        /**
+         * Encodes the specified Reaction message. Does not implicitly {@link clients.Reaction.verify|verify} messages.
+         * @function encode
+         * @memberof clients.Reaction
+         * @static
+         * @param {clients.IReaction} message Reaction message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Reaction.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.emoji != null && Object.hasOwnProperty.call(message, "emoji"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.emoji);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified Reaction message, length delimited. Does not implicitly {@link clients.Reaction.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof clients.Reaction
+         * @static
+         * @param {clients.IReaction} message Reaction message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Reaction.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a Reaction message from the specified reader or buffer.
+         * @function decode
+         * @memberof clients.Reaction
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {clients.Reaction} Reaction
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Reaction.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.clients.Reaction();
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1:
+                    message.emoji = reader.string();
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a Reaction message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof clients.Reaction
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {clients.Reaction} Reaction
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Reaction.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a Reaction message.
+         * @function verify
+         * @memberof clients.Reaction
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        Reaction.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.emoji != null && message.hasOwnProperty("emoji"))
+                if (!$util.isString(message.emoji))
+                    return "emoji: string expected";
+            return null;
+        };
+
+        /**
+         * Creates a Reaction message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof clients.Reaction
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {clients.Reaction} Reaction
+         */
+        Reaction.fromObject = function fromObject(object) {
+            if (object instanceof $root.clients.Reaction)
+                return object;
+            let message = new $root.clients.Reaction();
+            if (object.emoji != null)
+                message.emoji = String(object.emoji);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a Reaction message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof clients.Reaction
+         * @static
+         * @param {clients.Reaction} message Reaction
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        Reaction.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            let object = {};
+            if (options.defaults)
+                object.emoji = "";
+            if (message.emoji != null && message.hasOwnProperty("emoji"))
+                object.emoji = message.emoji;
+            return object;
+        };
+
+        /**
+         * Converts this Reaction to JSON.
+         * @function toJSON
+         * @memberof clients.Reaction
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        Reaction.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        return Reaction;
+    })();
+
+    clients.Location = (function() {
+
+        /**
+         * Properties of a Location.
+         * @memberof clients
+         * @interface ILocation
+         * @property {number|null} [latitude] Location latitude
+         * @property {number|null} [longitude] Location longitude
+         * @property {string|null} [name] Location name
+         * @property {clients.IAddress|null} [address] Location address
+         */
+
+        /**
+         * Constructs a new Location.
+         * @memberof clients
+         * @classdesc Represents a Location.
+         * @implements ILocation
+         * @constructor
+         * @param {clients.ILocation=} [properties] Properties to set
+         */
+        function Location(properties) {
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * Location latitude.
+         * @member {number} latitude
+         * @memberof clients.Location
+         * @instance
+         */
+        Location.prototype.latitude = 0;
+
+        /**
+         * Location longitude.
+         * @member {number} longitude
+         * @memberof clients.Location
+         * @instance
+         */
+        Location.prototype.longitude = 0;
+
+        /**
+         * Location name.
+         * @member {string} name
+         * @memberof clients.Location
+         * @instance
+         */
+        Location.prototype.name = "";
+
+        /**
+         * Location address.
+         * @member {clients.IAddress|null|undefined} address
+         * @memberof clients.Location
+         * @instance
+         */
+        Location.prototype.address = null;
+
+        /**
+         * Creates a new Location instance using the specified properties.
+         * @function create
+         * @memberof clients.Location
+         * @static
+         * @param {clients.ILocation=} [properties] Properties to set
+         * @returns {clients.Location} Location instance
+         */
+        Location.create = function create(properties) {
+            return new Location(properties);
+        };
+
+        /**
+         * Encodes the specified Location message. Does not implicitly {@link clients.Location.verify|verify} messages.
+         * @function encode
+         * @memberof clients.Location
+         * @static
+         * @param {clients.ILocation} message Location message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Location.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.latitude != null && Object.hasOwnProperty.call(message, "latitude"))
+                writer.uint32(/* id 1, wireType 1 =*/9).double(message.latitude);
+            if (message.longitude != null && Object.hasOwnProperty.call(message, "longitude"))
+                writer.uint32(/* id 2, wireType 1 =*/17).double(message.longitude);
+            if (message.name != null && Object.hasOwnProperty.call(message, "name"))
+                writer.uint32(/* id 3, wireType 2 =*/26).string(message.name);
+            if (message.address != null && Object.hasOwnProperty.call(message, "address"))
+                $root.clients.Address.encode(message.address, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+            return writer;
+        };
+
+        /**
+         * Encodes the specified Location message, length delimited. Does not implicitly {@link clients.Location.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof clients.Location
+         * @static
+         * @param {clients.ILocation} message Location message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Location.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a Location message from the specified reader or buffer.
+         * @function decode
+         * @memberof clients.Location
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {clients.Location} Location
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Location.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.clients.Location();
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1:
+                    message.latitude = reader.double();
+                    break;
+                case 2:
+                    message.longitude = reader.double();
+                    break;
+                case 3:
+                    message.name = reader.string();
+                    break;
+                case 4:
+                    message.address = $root.clients.Address.decode(reader, reader.uint32());
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a Location message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof clients.Location
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {clients.Location} Location
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Location.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a Location message.
+         * @function verify
+         * @memberof clients.Location
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        Location.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.latitude != null && message.hasOwnProperty("latitude"))
+                if (typeof message.latitude !== "number")
+                    return "latitude: number expected";
+            if (message.longitude != null && message.hasOwnProperty("longitude"))
+                if (typeof message.longitude !== "number")
+                    return "longitude: number expected";
+            if (message.name != null && message.hasOwnProperty("name"))
+                if (!$util.isString(message.name))
+                    return "name: string expected";
+            if (message.address != null && message.hasOwnProperty("address")) {
+                let error = $root.clients.Address.verify(message.address);
+                if (error)
+                    return "address." + error;
+            }
+            return null;
+        };
+
+        /**
+         * Creates a Location message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof clients.Location
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {clients.Location} Location
+         */
+        Location.fromObject = function fromObject(object) {
+            if (object instanceof $root.clients.Location)
+                return object;
+            let message = new $root.clients.Location();
+            if (object.latitude != null)
+                message.latitude = Number(object.latitude);
+            if (object.longitude != null)
+                message.longitude = Number(object.longitude);
+            if (object.name != null)
+                message.name = String(object.name);
+            if (object.address != null) {
+                if (typeof object.address !== "object")
+                    throw TypeError(".clients.Location.address: object expected");
+                message.address = $root.clients.Address.fromObject(object.address);
+            }
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a Location message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof clients.Location
+         * @static
+         * @param {clients.Location} message Location
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        Location.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            let object = {};
+            if (options.defaults) {
+                object.latitude = 0;
+                object.longitude = 0;
+                object.name = "";
+                object.address = null;
+            }
+            if (message.latitude != null && message.hasOwnProperty("latitude"))
+                object.latitude = options.json && !isFinite(message.latitude) ? String(message.latitude) : message.latitude;
+            if (message.longitude != null && message.hasOwnProperty("longitude"))
+                object.longitude = options.json && !isFinite(message.longitude) ? String(message.longitude) : message.longitude;
+            if (message.name != null && message.hasOwnProperty("name"))
+                object.name = message.name;
+            if (message.address != null && message.hasOwnProperty("address"))
+                object.address = $root.clients.Address.toObject(message.address, options);
+            return object;
+        };
+
+        /**
+         * Converts this Location to JSON.
+         * @function toJSON
+         * @memberof clients.Location
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        Location.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        return Location;
+    })();
+
+    clients.Address = (function() {
+
+        /**
+         * Properties of an Address.
+         * @memberof clients
+         * @interface IAddress
+         * @property {Array.<string>|null} [formattedAddressLines] Address formattedAddressLines
+         */
+
+        /**
+         * Constructs a new Address.
+         * @memberof clients
+         * @classdesc Represents an Address.
+         * @implements IAddress
+         * @constructor
+         * @param {clients.IAddress=} [properties] Properties to set
+         */
+        function Address(properties) {
+            this.formattedAddressLines = [];
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * Address formattedAddressLines.
+         * @member {Array.<string>} formattedAddressLines
+         * @memberof clients.Address
+         * @instance
+         */
+        Address.prototype.formattedAddressLines = $util.emptyArray;
+
+        /**
+         * Creates a new Address instance using the specified properties.
+         * @function create
+         * @memberof clients.Address
+         * @static
+         * @param {clients.IAddress=} [properties] Properties to set
+         * @returns {clients.Address} Address instance
+         */
+        Address.create = function create(properties) {
+            return new Address(properties);
+        };
+
+        /**
+         * Encodes the specified Address message. Does not implicitly {@link clients.Address.verify|verify} messages.
+         * @function encode
+         * @memberof clients.Address
+         * @static
+         * @param {clients.IAddress} message Address message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Address.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.formattedAddressLines != null && message.formattedAddressLines.length)
+                for (let i = 0; i < message.formattedAddressLines.length; ++i)
+                    writer.uint32(/* id 1, wireType 2 =*/10).string(message.formattedAddressLines[i]);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified Address message, length delimited. Does not implicitly {@link clients.Address.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof clients.Address
+         * @static
+         * @param {clients.IAddress} message Address message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Address.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes an Address message from the specified reader or buffer.
+         * @function decode
+         * @memberof clients.Address
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {clients.Address} Address
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Address.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.clients.Address();
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1:
+                    if (!(message.formattedAddressLines && message.formattedAddressLines.length))
+                        message.formattedAddressLines = [];
+                    message.formattedAddressLines.push(reader.string());
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes an Address message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof clients.Address
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {clients.Address} Address
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Address.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies an Address message.
+         * @function verify
+         * @memberof clients.Address
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        Address.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.formattedAddressLines != null && message.hasOwnProperty("formattedAddressLines")) {
+                if (!Array.isArray(message.formattedAddressLines))
+                    return "formattedAddressLines: array expected";
+                for (let i = 0; i < message.formattedAddressLines.length; ++i)
+                    if (!$util.isString(message.formattedAddressLines[i]))
+                        return "formattedAddressLines: string[] expected";
+            }
+            return null;
+        };
+
+        /**
+         * Creates an Address message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof clients.Address
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {clients.Address} Address
+         */
+        Address.fromObject = function fromObject(object) {
+            if (object instanceof $root.clients.Address)
+                return object;
+            let message = new $root.clients.Address();
+            if (object.formattedAddressLines) {
+                if (!Array.isArray(object.formattedAddressLines))
+                    throw TypeError(".clients.Address.formattedAddressLines: array expected");
+                message.formattedAddressLines = [];
+                for (let i = 0; i < object.formattedAddressLines.length; ++i)
+                    message.formattedAddressLines[i] = String(object.formattedAddressLines[i]);
+            }
+            return message;
+        };
+
+        /**
+         * Creates a plain object from an Address message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof clients.Address
+         * @static
+         * @param {clients.Address} message Address
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        Address.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            let object = {};
+            if (options.arrays || options.defaults)
+                object.formattedAddressLines = [];
+            if (message.formattedAddressLines && message.formattedAddressLines.length) {
+                object.formattedAddressLines = [];
+                for (let j = 0; j < message.formattedAddressLines.length; ++j)
+                    object.formattedAddressLines[j] = message.formattedAddressLines[j];
+            }
+            return object;
+        };
+
+        /**
+         * Converts this Address to JSON.
+         * @function toJSON
+         * @memberof clients.Address
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        Address.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        return Address;
     })();
 
     clients.AlbumMedia = (function() {

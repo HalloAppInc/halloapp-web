@@ -462,102 +462,6 @@ export namespace clients {
         public toJSON(): { [k: string]: any };
     }
 
-    /** Properties of a Contact. */
-    interface IContact {
-
-        /** Contact name */
-        name?: (string|null);
-
-        /** Contact phones */
-        phones?: (clients.IPhone[]|null);
-    }
-
-    /** Represents a Contact. */
-    class Contact implements IContact {
-
-        /**
-         * Constructs a new Contact.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: clients.IContact);
-
-        /** Contact name. */
-        public name: string;
-
-        /** Contact phones. */
-        public phones: clients.IPhone[];
-
-        /**
-         * Creates a new Contact instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns Contact instance
-         */
-        public static create(properties?: clients.IContact): clients.Contact;
-
-        /**
-         * Encodes the specified Contact message. Does not implicitly {@link clients.Contact.verify|verify} messages.
-         * @param message Contact message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: clients.IContact, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Encodes the specified Contact message, length delimited. Does not implicitly {@link clients.Contact.verify|verify} messages.
-         * @param message Contact message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: clients.IContact, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a Contact message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns Contact
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): clients.Contact;
-
-        /**
-         * Decodes a Contact message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns Contact
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): clients.Contact;
-
-        /**
-         * Verifies a Contact message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a Contact message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns Contact
-         */
-        public static fromObject(object: { [k: string]: any }): clients.Contact;
-
-        /**
-         * Creates a plain object from a Contact message. Also converts values to other types if specified.
-         * @param message Contact
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: clients.Contact, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this Contact to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-    }
-
     /** Properties of a SignedPreKey. */
     interface ISignedPreKey {
 
@@ -866,6 +770,12 @@ export namespace clients {
 
         /** ChatContainer files */
         files?: (clients.IFiles|null);
+
+        /** ChatContainer reaction */
+        reaction?: (clients.IReaction|null);
+
+        /** ChatContainer location */
+        location?: (clients.ILocation|null);
     }
 
     /** Represents a ChatContainer. */
@@ -895,8 +805,14 @@ export namespace clients {
         /** ChatContainer files. */
         public files?: (clients.IFiles|null);
 
+        /** ChatContainer reaction. */
+        public reaction?: (clients.IReaction|null);
+
+        /** ChatContainer location. */
+        public location?: (clients.ILocation|null);
+
         /** ChatContainer message. */
-        public message?: ("text"|"album"|"contactCard"|"voiceNote"|"files");
+        public message?: ("text"|"album"|"contactCard"|"voiceNote"|"files"|"reaction"|"location");
 
         /**
          * Creates a new ChatContainer instance using the specified properties.
@@ -1328,6 +1244,9 @@ export namespace clients {
 
         /** CommentContainer voiceNote */
         voiceNote?: (clients.IVoiceNote|null);
+
+        /** CommentContainer reaction */
+        reaction?: (clients.IReaction|null);
     }
 
     /** Represents a CommentContainer. */
@@ -1351,8 +1270,11 @@ export namespace clients {
         /** CommentContainer voiceNote. */
         public voiceNote?: (clients.IVoiceNote|null);
 
+        /** CommentContainer reaction. */
+        public reaction?: (clients.IReaction|null);
+
         /** CommentContainer comment. */
-        public comment?: ("text"|"album"|"voiceNote");
+        public comment?: ("text"|"album"|"voiceNote"|"reaction");
 
         /**
          * Creates a new CommentContainer instance using the specified properties.
@@ -1730,9 +1652,6 @@ export namespace clients {
 
         /** ContactCard contacts */
         contacts?: (clients.IContact[]|null);
-
-        /** ContactCard text */
-        text?: (clients.IText|null);
     }
 
     /** Represents a ContactCard. */
@@ -1746,9 +1665,6 @@ export namespace clients {
 
         /** ContactCard contacts. */
         public contacts: clients.IContact[];
-
-        /** ContactCard text. */
-        public text?: (clients.IText|null);
 
         /**
          * Creates a new ContactCard instance using the specified properties.
@@ -1816,6 +1732,408 @@ export namespace clients {
 
         /**
          * Converts this ContactCard to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+    }
+
+    /** Properties of a Contact. */
+    interface IContact {
+
+        /** Contact name */
+        name?: (string|null);
+
+        /** Contact photo */
+        photo?: (Uint8Array|null);
+
+        /** Contact numbers */
+        numbers?: (clients.IContactPhone[]|null);
+
+        /** Contact emails */
+        emails?: (clients.IContactEmail[]|null);
+
+        /** Contact addresses */
+        addresses?: (clients.IContactAddress[]|null);
+    }
+
+    /** Represents a Contact. */
+    class Contact implements IContact {
+
+        /**
+         * Constructs a new Contact.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: clients.IContact);
+
+        /** Contact name. */
+        public name: string;
+
+        /** Contact photo. */
+        public photo: Uint8Array;
+
+        /** Contact numbers. */
+        public numbers: clients.IContactPhone[];
+
+        /** Contact emails. */
+        public emails: clients.IContactEmail[];
+
+        /** Contact addresses. */
+        public addresses: clients.IContactAddress[];
+
+        /**
+         * Creates a new Contact instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns Contact instance
+         */
+        public static create(properties?: clients.IContact): clients.Contact;
+
+        /**
+         * Encodes the specified Contact message. Does not implicitly {@link clients.Contact.verify|verify} messages.
+         * @param message Contact message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: clients.IContact, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified Contact message, length delimited. Does not implicitly {@link clients.Contact.verify|verify} messages.
+         * @param message Contact message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: clients.IContact, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a Contact message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns Contact
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): clients.Contact;
+
+        /**
+         * Decodes a Contact message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns Contact
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): clients.Contact;
+
+        /**
+         * Verifies a Contact message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a Contact message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns Contact
+         */
+        public static fromObject(object: { [k: string]: any }): clients.Contact;
+
+        /**
+         * Creates a plain object from a Contact message. Also converts values to other types if specified.
+         * @param message Contact
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: clients.Contact, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this Contact to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+    }
+
+    /** Properties of a ContactAddress. */
+    interface IContactAddress {
+
+        /** ContactAddress label */
+        label?: (string|null);
+
+        /** ContactAddress address */
+        address?: (string|null);
+    }
+
+    /** Represents a ContactAddress. */
+    class ContactAddress implements IContactAddress {
+
+        /**
+         * Constructs a new ContactAddress.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: clients.IContactAddress);
+
+        /** ContactAddress label. */
+        public label: string;
+
+        /** ContactAddress address. */
+        public address: string;
+
+        /**
+         * Creates a new ContactAddress instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns ContactAddress instance
+         */
+        public static create(properties?: clients.IContactAddress): clients.ContactAddress;
+
+        /**
+         * Encodes the specified ContactAddress message. Does not implicitly {@link clients.ContactAddress.verify|verify} messages.
+         * @param message ContactAddress message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: clients.IContactAddress, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified ContactAddress message, length delimited. Does not implicitly {@link clients.ContactAddress.verify|verify} messages.
+         * @param message ContactAddress message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: clients.IContactAddress, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a ContactAddress message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns ContactAddress
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): clients.ContactAddress;
+
+        /**
+         * Decodes a ContactAddress message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns ContactAddress
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): clients.ContactAddress;
+
+        /**
+         * Verifies a ContactAddress message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a ContactAddress message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns ContactAddress
+         */
+        public static fromObject(object: { [k: string]: any }): clients.ContactAddress;
+
+        /**
+         * Creates a plain object from a ContactAddress message. Also converts values to other types if specified.
+         * @param message ContactAddress
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: clients.ContactAddress, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this ContactAddress to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+    }
+
+    /** Properties of a ContactEmail. */
+    interface IContactEmail {
+
+        /** ContactEmail label */
+        label?: (string|null);
+
+        /** ContactEmail address */
+        address?: (string|null);
+    }
+
+    /** Represents a ContactEmail. */
+    class ContactEmail implements IContactEmail {
+
+        /**
+         * Constructs a new ContactEmail.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: clients.IContactEmail);
+
+        /** ContactEmail label. */
+        public label: string;
+
+        /** ContactEmail address. */
+        public address: string;
+
+        /**
+         * Creates a new ContactEmail instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns ContactEmail instance
+         */
+        public static create(properties?: clients.IContactEmail): clients.ContactEmail;
+
+        /**
+         * Encodes the specified ContactEmail message. Does not implicitly {@link clients.ContactEmail.verify|verify} messages.
+         * @param message ContactEmail message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: clients.IContactEmail, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified ContactEmail message, length delimited. Does not implicitly {@link clients.ContactEmail.verify|verify} messages.
+         * @param message ContactEmail message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: clients.IContactEmail, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a ContactEmail message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns ContactEmail
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): clients.ContactEmail;
+
+        /**
+         * Decodes a ContactEmail message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns ContactEmail
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): clients.ContactEmail;
+
+        /**
+         * Verifies a ContactEmail message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a ContactEmail message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns ContactEmail
+         */
+        public static fromObject(object: { [k: string]: any }): clients.ContactEmail;
+
+        /**
+         * Creates a plain object from a ContactEmail message. Also converts values to other types if specified.
+         * @param message ContactEmail
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: clients.ContactEmail, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this ContactEmail to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+    }
+
+    /** Properties of a ContactPhone. */
+    interface IContactPhone {
+
+        /** ContactPhone label */
+        label?: (string|null);
+
+        /** ContactPhone number */
+        number?: (string|null);
+    }
+
+    /** Represents a ContactPhone. */
+    class ContactPhone implements IContactPhone {
+
+        /**
+         * Constructs a new ContactPhone.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: clients.IContactPhone);
+
+        /** ContactPhone label. */
+        public label: string;
+
+        /** ContactPhone number. */
+        public number: string;
+
+        /**
+         * Creates a new ContactPhone instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns ContactPhone instance
+         */
+        public static create(properties?: clients.IContactPhone): clients.ContactPhone;
+
+        /**
+         * Encodes the specified ContactPhone message. Does not implicitly {@link clients.ContactPhone.verify|verify} messages.
+         * @param message ContactPhone message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: clients.IContactPhone, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified ContactPhone message, length delimited. Does not implicitly {@link clients.ContactPhone.verify|verify} messages.
+         * @param message ContactPhone message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: clients.IContactPhone, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a ContactPhone message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns ContactPhone
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): clients.ContactPhone;
+
+        /**
+         * Decodes a ContactPhone message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns ContactPhone
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): clients.ContactPhone;
+
+        /**
+         * Verifies a ContactPhone message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a ContactPhone message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns ContactPhone
+         */
+        public static fromObject(object: { [k: string]: any }): clients.ContactPhone;
+
+        /**
+         * Creates a plain object from a ContactPhone message. Also converts values to other types if specified.
+         * @param message ContactPhone
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: clients.ContactPhone, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this ContactPhone to JSON.
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
@@ -2320,6 +2638,294 @@ export namespace clients {
 
         /**
          * Converts this File to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+    }
+
+    /** Properties of a Reaction. */
+    interface IReaction {
+
+        /** Reaction emoji */
+        emoji?: (string|null);
+    }
+
+    /** Represents a Reaction. */
+    class Reaction implements IReaction {
+
+        /**
+         * Constructs a new Reaction.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: clients.IReaction);
+
+        /** Reaction emoji. */
+        public emoji: string;
+
+        /**
+         * Creates a new Reaction instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns Reaction instance
+         */
+        public static create(properties?: clients.IReaction): clients.Reaction;
+
+        /**
+         * Encodes the specified Reaction message. Does not implicitly {@link clients.Reaction.verify|verify} messages.
+         * @param message Reaction message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: clients.IReaction, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified Reaction message, length delimited. Does not implicitly {@link clients.Reaction.verify|verify} messages.
+         * @param message Reaction message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: clients.IReaction, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a Reaction message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns Reaction
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): clients.Reaction;
+
+        /**
+         * Decodes a Reaction message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns Reaction
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): clients.Reaction;
+
+        /**
+         * Verifies a Reaction message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a Reaction message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns Reaction
+         */
+        public static fromObject(object: { [k: string]: any }): clients.Reaction;
+
+        /**
+         * Creates a plain object from a Reaction message. Also converts values to other types if specified.
+         * @param message Reaction
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: clients.Reaction, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this Reaction to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+    }
+
+    /** Properties of a Location. */
+    interface ILocation {
+
+        /** Location latitude */
+        latitude?: (number|null);
+
+        /** Location longitude */
+        longitude?: (number|null);
+
+        /** Location name */
+        name?: (string|null);
+
+        /** Location address */
+        address?: (clients.IAddress|null);
+    }
+
+    /** Represents a Location. */
+    class Location implements ILocation {
+
+        /**
+         * Constructs a new Location.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: clients.ILocation);
+
+        /** Location latitude. */
+        public latitude: number;
+
+        /** Location longitude. */
+        public longitude: number;
+
+        /** Location name. */
+        public name: string;
+
+        /** Location address. */
+        public address?: (clients.IAddress|null);
+
+        /**
+         * Creates a new Location instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns Location instance
+         */
+        public static create(properties?: clients.ILocation): clients.Location;
+
+        /**
+         * Encodes the specified Location message. Does not implicitly {@link clients.Location.verify|verify} messages.
+         * @param message Location message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: clients.ILocation, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified Location message, length delimited. Does not implicitly {@link clients.Location.verify|verify} messages.
+         * @param message Location message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: clients.ILocation, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a Location message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns Location
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): clients.Location;
+
+        /**
+         * Decodes a Location message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns Location
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): clients.Location;
+
+        /**
+         * Verifies a Location message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a Location message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns Location
+         */
+        public static fromObject(object: { [k: string]: any }): clients.Location;
+
+        /**
+         * Creates a plain object from a Location message. Also converts values to other types if specified.
+         * @param message Location
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: clients.Location, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this Location to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+    }
+
+    /** Properties of an Address. */
+    interface IAddress {
+
+        /** Address formattedAddressLines */
+        formattedAddressLines?: (string[]|null);
+    }
+
+    /** Represents an Address. */
+    class Address implements IAddress {
+
+        /**
+         * Constructs a new Address.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: clients.IAddress);
+
+        /** Address formattedAddressLines. */
+        public formattedAddressLines: string[];
+
+        /**
+         * Creates a new Address instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns Address instance
+         */
+        public static create(properties?: clients.IAddress): clients.Address;
+
+        /**
+         * Encodes the specified Address message. Does not implicitly {@link clients.Address.verify|verify} messages.
+         * @param message Address message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: clients.IAddress, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified Address message, length delimited. Does not implicitly {@link clients.Address.verify|verify} messages.
+         * @param message Address message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: clients.IAddress, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes an Address message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns Address
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): clients.Address;
+
+        /**
+         * Decodes an Address message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns Address
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): clients.Address;
+
+        /**
+         * Verifies an Address message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates an Address message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns Address
+         */
+        public static fromObject(object: { [k: string]: any }): clients.Address;
+
+        /**
+         * Creates a plain object from an Address message. Also converts values to other types if specified.
+         * @param message Address
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: clients.Address, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this Address to JSON.
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };

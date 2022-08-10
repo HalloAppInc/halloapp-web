@@ -118,6 +118,7 @@ message ContactList {
     int32 batch_index = 3;
     bool is_last = 4;
     repeated Contact contacts = 5;
+    bool has_permissions = 6;
 }
 
 message ContactHash {
@@ -179,6 +180,12 @@ message Comment {
     // Serialized EncryptedPayload (from client.proto).
     bytes enc_payload = 8;
     MediaCounters media_counters = 9;
+    enum CommentType {
+        COMMENT = 0;
+        COMMENT_REACTION = 1;
+        POST_REACTION = 2;
+    }
+    CommentType comment_type = 10;
 }
 
 
@@ -250,6 +257,7 @@ message GroupFeedItem {
 
     bytes audience_hash = 9;
     bool is_resent_history = 10;
+    int64 expiry_timestamp = 11;  // Set only for post items. `-1` if item should never expire.
 
     // Use >=16 for temporary elements since 1-15 encode smaller
     string sender_log_info = 16;
@@ -327,6 +335,7 @@ message GroupStanza {
         GET_MEMBER_IDENTITY_KEYS = 14;
         CHANGE_DESCRIPTION = 15;
         SHARE_HISTORY = 16;
+        CHANGE_EXPIRY = 17;
     }
     Action action = 1;
     string gid = 2;
@@ -342,6 +351,27 @@ message GroupStanza {
     string description = 10;
     // HistoryResend to be sent or received only on adding-members iq or share-history iq.
     HistoryResend history_resend = 11;
+    // Expiry timer information
+    ExpiryInfo expiry_info = 12;
+    enum GroupType {
+        FEED = 0;
+        CHAT = 1;
+    }
+    GroupType group_type = 13;
+}
+
+
+message ExpiryInfo {
+    enum ExpiryType {
+        EXPIRES_IN_SECONDS = 0;
+        NEVER = 1;
+        CUSTOM_DATE = 2;
+    }
+    ExpiryType expiry_type = 12;
+    // This is set when expiry_type is expires_in_sec.
+    int64 expires_in_seconds = 13;
+    // This is set when expiry_type is custom_date.
+    int64 expiry_timestamp = 14;
 }
 
 
@@ -353,6 +383,30 @@ message GroupChat {
     string sender_name = 5;
     int64 timestamp = 6;
     bytes payload = 7;
+}
+
+message GroupChatStanza {
+    string gid = 1;
+    string name = 2;
+    string avatar_id = 3;
+    string sender_phone = 4;
+    string sender_name = 5;
+    int64 timestamp = 6;
+    bytes payload = 7;
+    bytes enc_payload = 8;
+    repeated SenderStateBundle sender_state_bundles = 9;
+    SenderStateWithKeyInfo sender_state = 10;
+    bytes audience_hash = 11;
+    MediaCounters media_counters = 12;
+    enum ChatType {
+        CHAT = 0;
+        CHAT_REACTION = 1;
+    }
+    ChatType chat_type = 13;
+
+    // Use >=16 for temporary elements since 1-15 encode smaller
+    string sender_log_info = 16;
+    string sender_client_version = 17;
 }
 
 message GroupsStanza {
@@ -478,6 +532,11 @@ message ChatStanza {
     string sender_name = 6;
     string sender_phone = 7;
     MediaCounters media_counters = 8;
+    enum ChatType {
+        CHAT = 0;
+        CHAT_REACTION = 1;
+    }
+    ChatType chat_type = 9;
 
     // Use >=16 for temporary elements since 1-15 encode smaller
     string sender_log_info = 16;
@@ -664,10 +723,14 @@ message AnswerCall {
 
 message CallSdp {
     string call_id = 1;
-    oneof sdp {
-        WebRtcSessionDescription webrtc_offer = 2;
-        WebRtcSessionDescription webrtc_answer = 3;
+    enum SdpType {
+        UNKNOWN = 0;
+        OFFER = 1;
+        ANSWER = 2;
     }
+    SdpType sdp_type = 2;
+    WebRtcSessionDescription info = 3;
+    int64 timestamp_ms = 4;
 }
 
 message EndCall {
@@ -795,7 +858,10 @@ message WebClientInfo {
 message WebStanza {
     bytes static_key = 1;  // Used to identify the user. Must be set on every packet exchanged
                            // between mobile and web client.
-    bytes content = 2;  // Noise encrypted content or it is encoded and serialized NoiseMessage.
+    oneof payload {
+        bytes content = 2;  // Noise encrypted content
+        NoiseMessage noise_message = 3;
+    }
 }
 
 
@@ -904,7 +970,7 @@ message Msg {
         FeedItems feed_items = 12;
         ContactHash contact_hash = 13;
         GroupStanza group_stanza = 14;
-        GroupChat group_chat = 15;
+        GroupChat group_chat = 15 [deprecated = true]; // deprecated, use group_chat_stanza
         Name name = 16;
         ErrorStanza error_stanza = 17;
         GroupChatRetract groupchat_retract = 18;
@@ -938,6 +1004,8 @@ message Msg {
         WebStanza web_stanza = 48;
         ContentMissing content_missing = 49;
         ScreenshotReceipt screenshot_receipt = 50;
+        SavedReceipt saved_receipt = 51;
+        GroupChatStanza group_chat_stanza = 52;
     }
     int32 retry_count = 21;
     int32 rerequest_count = 25;
@@ -1075,6 +1143,7 @@ message PushToken {
         IOS_DEV = 2;
         IOS_APPCLIP = 3;
         IOS_VOIP = 4;
+        ANDROID_HUAWEI = 5;
     }
     TokenType token_type = 1;
     string token = 2;
@@ -1113,6 +1182,7 @@ message Rerequest {
         CHAT = 0;
         CALL = 1;
         GROUP_HISTORY = 2;
+        CHAT_REACTION = 3;
     }
     ContentType content_type = 7;
 }
@@ -1140,6 +1210,8 @@ message GroupFeedRerequest {
         POST = 1;
         COMMENT = 2;
         HISTORY_RESEND = 3;
+        POST_REACTION = 4;
+        COMMENT_REACTION = 5;
     }
     ContentType content_type = 4;
 }
@@ -1167,6 +1239,8 @@ message HomeFeedRerequest {
         UNKNOWN = 0;
         POST = 1;
         COMMENT = 2;
+        POST_REACTION = 3;
+        COMMENT_REACTION = 4;
     }
     ContentType content_type = 4;
 }
@@ -1193,6 +1267,12 @@ message PlayedReceipt {
 }
 
 message ScreenshotReceipt {
+    string id = 1;
+    string thread_id = 2;
+    int64 timestamp = 3;
+}
+
+message SavedReceipt {
     string id = 1;
     string thread_id = 2;
     int64 timestamp = 3;
