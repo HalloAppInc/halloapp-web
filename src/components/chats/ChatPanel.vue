@@ -536,6 +536,18 @@ async function openReply(id: number) {
     // get quote message
     props.replyQuoteIdx.value = id
     quoteMessage.value = await getQuoteMessageData(id)
+    // set focus on inputBox
+    const ele = document.getElementsByClassName('textarea')[0] as HTMLElement
+    ele.focus()
+    // move cursor to the end
+    let range = document.createRange()
+    range.selectNodeContents(ele)
+    range.collapse(false)
+    let selection = window.getSelection()
+    if (selection) {
+        selection.removeAllRanges()
+        selection.addRange(range)
+    }
 }
 
 async function getQuoteMessageData(id: number) {
@@ -688,7 +700,7 @@ function gotoQuoteMessage(quoteIdx: number) {
                             <div class='timestamp' :data-msg-timestamp='value.unixTimestamp'>
                                 {{ value.timestamp }}
                             </div>
-                            <div class='iconContainer'>
+                            <div class='iconContainer checkIcon'>
                                 <font-awesome-icon :icon="['fas', 'check-double']" size='xs' />
                             </div>
                         </div>
@@ -776,10 +788,8 @@ function gotoQuoteMessage(quoteIdx: number) {
         <div class='containerReplyWithRightMargin'>
             <Quote :quoteMessage='quoteMessage' />
         </div>
-        <div class='closeIconContainer'>
-            <div class='iconContainer closeIcon' @click="showReply = false">
-                <font-awesome-icon :icon="['fas', 'xmark']" size='lg' />
-            </div>
+        <div class='iconContainer closeIcon' @click="showReply = false">
+            <font-awesome-icon :icon="['fas', 'xmark']" size='lg' />
         </div>
     </div>
 
@@ -881,20 +891,13 @@ function gotoQuoteMessage(quoteIdx: number) {
 }
 
 @keyframes fade {
-    0% {
-        box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.08);
-    }
 
     10% {
-        box-shadow: 0px 0px 10px 5px rgba(148, 148, 148, 0.6);
+        filter: invert(25%);
     }
 
     90% {
-        box-shadow: 0px 0px 10px 5px rgba(148, 148, 148, 0.6);
-    }
-
-    100% {
-        box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.08);
+        filter: invert(25%);
     }
 }
 
@@ -997,6 +1000,9 @@ function gotoQuoteMessage(quoteIdx: number) {
 
 .iconContainer {
     padding: 0px 5px;
+}
+
+.checkIcon {
     color: #1E90FF;
 }
 
@@ -1195,6 +1201,7 @@ img:hover {
     display: flex;
     flex-direction: row;
     justify-content: center;
+    align-items: center;
 
     z-index: 1;
 }
@@ -1204,21 +1211,11 @@ img:hover {
     margin: 5px 0px;
 }
 
-
-.closeIconContainer {
-    position: absolute;
-    bottom: 30px;
-    right: 20px;
-
-    width: 50px;
-    border-radius: 100%;
-}
-
 .closeIcon {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    margin-left: 5px;
+    width: fit-content;
+    height: fit-content;
+    color: gray;
 }
 
 .closeIcon:hover {
