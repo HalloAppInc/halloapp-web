@@ -135,7 +135,7 @@ const messageNumber = computed(() => {
         </div>
 
         <div class='content' ref='content'>
-            <ChatPanel :message-list='messageList'>
+            <ChatPanel>
 
                 <template v-slot:subHeader>
                     <div class='subHeader'>

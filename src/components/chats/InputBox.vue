@@ -8,6 +8,7 @@ import { useColorStore } from '../../stores/colorStore'
 import { useMainStore } from '../../stores/mainStore'
 
 import hal from '../../common/halogger'
+import { on } from 'events'
 
 const { processText } = useHAText()
 
@@ -86,6 +87,14 @@ function init() {
                 showSendButton.value = false
             }
             inputArea.value.innerHTML = processText(mainStore.inputArea, contactNameList.value, false, 100, true).html
+            let range = document.createRange()
+            range.selectNodeContents(inputArea.value)
+            range.collapse(false)
+            let selection = window.getSelection()
+            if (selection) {
+                selection.removeAllRanges()
+                selection.addRange(range)
+            }
         }
     })
 }
@@ -244,8 +253,8 @@ function needUpdate(inputChar: string) {
     let numOfPairNewITag = newInputMessage.split('<i>').length - 1
     let numOfPairOldSTag = oldInputMessage.split('<s>').length - 1
     let numOfPairNewSTag = newInputMessage.split('<s>').length - 1
-    let numOfMentionOld = oldInputMessage.split('<span style="display: inline-block; text-decoration: none; color:#6495ED">@').length - 1
-    let numOfMentionNew = newInputMessage.split('<span style="display: inline-block; text-decoration: none; color:#6495ED">@').length - 1
+    let numOfMentionOld = oldInputMessage.split('<span style="display: inline-block; text-decoration: none; font-style: normal; font-weight: normal; color:#6495ED">@').length - 1
+    let numOfMentionNew = newInputMessage.split('<span style="display: inline-block; text-decoration: none; font-style: normal; font-weight: normal; color:#6495ED">@').length - 1
 
     // get element at cursor's position
     currentNode.value = null
@@ -544,15 +553,16 @@ function clearText() {
         </div>
     </div>
 
-    <div class='chatBoxTray' ref='chatBox'>
+    <div class='chatBoxTrayInputBox' ref='chatBox'>
 
         <div class='inputBoxContainer'>
             <div class='textarea' ref='inputArea' contenteditable='true' placeholder='Type a message...'
                 @focusout='closeContactsAndFocusOnInputBox' @keydown='analyzeKeyDown($event)'
                 @keyup='analyzeKeyUp($event)' @click='analyzeMouseMovement()'>
             </div>
+            <!-- X-mark -->
             <div class='iconContainer' v-show='showSendButton' @click='clearText()'>
-                <font-awesome-icon :icon="['fas', 'xmark']" size='lg' />
+                <font-awesome-icon :icon="['fas', 'xmark']" />
             </div>
         </div>
 
@@ -594,7 +604,7 @@ function clearText() {
     border-radius: 100px;
 }
 
-.chatBoxTray {
+.chatBoxTrayInputBox {
     width: 100%;
     display: flex;
     flex-direction: row;
@@ -718,8 +728,9 @@ function clearText() {
     width: 0px;
     height: 0px;
     position: relative;
-    right: 25px;
+    right: 28px;
     top: 10px;
+    font-size: 18px;
 
     color: gray;
 }

@@ -202,8 +202,10 @@ onUnmounted(() => {
 .chatBoxTray {
     display: flex;
     flex-direction: row;
+    align-items: center;
     width: 100%;
     background-color: v-bind(headerColor);
+    padding: 2px 5px 2px 5px;
 }
 
 .veriticalMenuContainer {
@@ -253,6 +255,7 @@ onUnmounted(() => {
     border-radius: 15px;
     display: none;
     padding: 5px 10px;
+    user-select: none;
 }
 
 .iconContainer:hover+.hoverTextContainer {
