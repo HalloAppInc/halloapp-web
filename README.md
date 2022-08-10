@@ -24,13 +24,15 @@ Since dev is hosted on localhost, fetching assets from HalloApp's production sit
 The proto files are built and gathered from the [Schemas repo](https://github.com/HalloAppInc/schemas).
 They will need to be re-generated for the web client whenever there are (needed) updates.
 
+Note: Need version 7.x of protobufjs and uses protobufjs-cli
+
 1. Go to /src/proto
 2. Delete the old server.d.ts and server.js
 3. Generate the javascript file clients.js<br>
-   ```../../node_modules/protobufjs/bin/pbjs -t static-module -w es6 -o server.js server.proto```
+   ```../../node_modules/protobufjs-cli/bin/pbjs -t static-module -w es6 -o server.js server.proto```
 4. Generate the typescript file server.d.ts<br>
-   ```../../node_modules/protobufjs/bin/pbts -o server.d.ts server.js```
+   ```../../node_modules/protobufjs-cli/bin/pbts -o server.d.ts server.js```
 
 Repeat (steps 1 to 4) for each proto file that's needed
-   
-Note: Do not update protobufjs to the latest version yet as they have some breaking changes
+
+Note2: During web.js generation there's a bug where protobufjs redeclared end2 in the same block, modify web.js and change end2 to end3 to continue
