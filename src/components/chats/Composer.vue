@@ -77,7 +77,7 @@ const iconColor = computed(() => {
 })
 
 // To test upload and download, set openTest = true
-const openTest = false
+const openTest = true
 
 // close composer when press esc
 document.addEventListener('keyup', (event) => {

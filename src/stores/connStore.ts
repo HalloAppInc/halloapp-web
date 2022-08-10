@@ -491,9 +491,9 @@ export const useConnStore = defineStore('conn', () => {
         enqueue(packet, false, callback)
     }
 
-    async function getMediaUrl(size: number, callback?: Function) {
+    async function getMediaUrl(size: number, isResumable: boolean, callback?: Function) {
         hal.log('connStore/getMediaUrl')
-        const packet = uploadMedia(size)
+        const packet = uploadMedia(size, isResumable)
         enqueue(packet, true, callback)
     }
 
