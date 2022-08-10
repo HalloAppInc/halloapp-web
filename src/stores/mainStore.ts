@@ -41,6 +41,9 @@ export const useMainStore = defineStore('main', {
         haveInitialHandshakeCompleted: false,
         mobilePublicKeyBase64: '', 
 
+        cipherStateSend: <any>{},
+        cipherStateReceive: <any>{},
+
         showSidebar: true,
         animateSidebar: false,
 
@@ -76,8 +79,19 @@ export const useMainStore = defineStore('main', {
             this.mobilePublicKeyBase64 = ''
             this.isPublicKeyAuthenticated = false
             this.haveInitialHandshakeCompleted = false
+
+            for (let prop in this.cipherStateReceive) {
+                delete this.cipherStateReceive[prop]
+            }
+
+            for (let prop in this.cipherStateSend) {
+                delete this.cipherStateSend[prop]
+            }            
+
             // todo: delete all saved data including from indexeddb
+    
             // todo: remove public key from server? (what if there's no connection)
+
             this.isLoggedIntoApp = false
             this.loginUserID = ''
             
