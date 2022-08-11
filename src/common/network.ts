@@ -77,25 +77,56 @@ export function network() {
     const createNoiseMessageIKB = (contentBuf: any) => {
         const contentBinArr = new Uint8Array(contentBuf)
 
-        const noiseMessage = web.NoiseMessage.create({
-            messageType: web.NoiseMessage.MessageType.IK_B,
+        const id = nanoid()
+        const publicKey = Base64.toUint8Array(mainStore.publicKeyBase64)        
+
+        const noiseMessage = server.NoiseMessage.create({
+            messageType: server.NoiseMessage.MessageType.IK_B,
             content: contentBinArr
         })
 
-        const webContainer = web.WebContainer.create({
+        const webStanza = server.WebStanza.create({
+            staticKey: publicKey,
             noiseMessage: noiseMessage
         })
 
-        hal.log('network/createNoiseMessageIKB/webContainer:\n' + JSON.stringify(webContainer) + '\n\n')
+        const msg = server.Msg.create({
+            id: id,
+            type: server.Msg.Type.NORMAL,
+            webStanza: webStanza
+        })        
 
-        const webContainerProto = web.WebContainer.encode(webContainer).finish()
-        const webContainerBuf = webContainerProto.buffer.slice(webContainerProto.byteOffset, webContainerProto.byteLength + webContainerProto.byteOffset)
-        const webContainerBinArr = new Uint8Array(webContainerBuf)
+        hal.log('network/createNoiseMessageIKB/webStanza:\n' + JSON.stringify(webStanza) + '\n\n')
 
-        const packetBuf = createWebStanza(webContainerBinArr)
+        const packet = server.Packet.create({ msg: msg })
+        const packetProto = server.Packet.encode(packet).finish()
+        const packetBuf = packetProto.buffer.slice(packetProto.byteOffset, packetProto.byteLength + packetProto.byteOffset)
 
         return packetBuf
     }
+
+    // const createNoiseMessageIKB = (contentBuf: any) => {
+    //     const contentBinArr = new Uint8Array(contentBuf)
+
+    //     const noiseMessage = web.NoiseMessage.create({
+    //         messageType: web.NoiseMessage.MessageType.IK_B,
+    //         content: contentBinArr
+    //     })
+
+    //     const webContainer = web.WebContainer.create({
+    //         noiseMessage: noiseMessage
+    //     })
+
+    //     hal.log('network/createNoiseMessageIKB/webContainer:\n' + JSON.stringify(webContainer) + '\n\n')
+
+    //     const webContainerProto = web.WebContainer.encode(webContainer).finish()
+    //     const webContainerBuf = webContainerProto.buffer.slice(webContainerProto.byteOffset, webContainerProto.byteLength + webContainerProto.byteOffset)
+    //     const webContainerBinArr = new Uint8Array(webContainerBuf)
+
+    //     const packetBuf = createWebStanza(webContainerBinArr)
+
+    //     return packetBuf
+    // }
     
     function removeKey(websocket: any) {
         let id = nanoid()

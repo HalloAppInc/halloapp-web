@@ -33,8 +33,11 @@ export const useConnStore = defineStore('conn', () => {
     let webSocket: WebSocket
     let noise: any
     let handshakeState: any
-    let cipherStateSend: { EncryptWithAd: (arg0: never[], arg1: string) => any }
-    let cipherStateReceive: { DecryptWithAd: (arg0: never[], arg1: any) => any }
+    // let cipherStateSend: { EncryptWithAd: (arg0: never[], arg1: string) => any }
+    // let cipherStateReceive: { DecryptWithAd: (arg0: never[], arg1: any) => any }
+
+    const paths = ['tony']
+    
 
     if (testAgainstLocalServer) {
         webSocketServer = 'wss://localhost:7071'
@@ -182,17 +185,22 @@ export const useConnStore = defineStore('conn', () => {
         const msg = packet?.msg
         const webStanza = msg?.webStanza
 
+        const ack = packet?.ack
+
         if (ping) {
 
             const pingBuf = createPing()
             webSocket.send(pingBuf)
 
+        } else if (ack) {
+
+            hal.log('connStore/handleInboundMsg/ack/id: ' + ack?.id)
+            /* todo: handle acks if needed */
+
         } else if (webStanza) {
             hal.log('connStore/handleInboundMsg/webStanza')
 
-            const webStanzaContentsBinArr = new Uint8Array(webStanza.content)
-            const webContainer = await decodeWebContainer(webStanzaContentsBinArr)
-            const noiseMessage = webContainer?.noiseMessage
+            let noiseMessage = webStanza?.noiseMessage
 
             if (noiseMessage) {
                 hal.log('connStore/handleInboundMsg/webStanza/noiseMessage')
@@ -207,7 +215,7 @@ export const useConnStore = defineStore('conn', () => {
                         initHandshake(noise)
                     }
 
-                    if (noiseMessage.messageType == web.NoiseMessage.MessageType.IK_A) {
+                    if (noiseMessage.messageType == server.NoiseMessage.MessageType.IK_A) {
                         hal.log('connStore/handleInboundMsg/webStanza/noiseMessage/IK_A')
                         handleNoiseHandshakeMsg(noiseMessage.content)
                     } 
@@ -217,16 +225,26 @@ export const useConnStore = defineStore('conn', () => {
                 }
                 else {
                     hal.log('connStore/handleInboundMsg/webStanza/noiseMessage/handshake completed previously')
+                    /* todo: handle scenario in which noiseMessage is received after handshake, most likely redo handshake with KK */
                 }
             } 
             
             else {
                 hal.log('connStore/handleInboundMsg/webStanza/not a noiseMessage')
                 if (mainStore.isPublicKeyAuthenticated && mainStore.haveInitialHandshakeCompleted) {
-                    const decrypted = cipherStateReceive.DecryptWithAd([], eventDataBinArr)
-                    hal.log('connStore/handleInboundMsg/webStanza/decrypted: ' + decrypted)
-                    const decoded = new TextDecoder().decode(decrypted)
-                    hal.log('connStore/handleInboundMsg/webStanza/decoded text(if so): ' + decoded)
+                    
+                    if (webStanza.content) {
+
+                        const webStanzaContentsBinArr = new Uint8Array(webStanza.content)
+
+                        const decrypted = mainStore.cipherStateReceive.DecryptWithAd([], webStanzaContentsBinArr)
+                        hal.log('connStore/handleInboundMsg/webStanza/decrypted: ' + decrypted)
+                        
+                        const webContainer = await decodeWebContainer(decrypted)
+
+                        hal.log('connStore/handleInboundMsg/webStanza/decoded: ' + webContainer)
+
+                    }
                 }                
             }
     
@@ -309,13 +327,20 @@ export const useConnStore = defineStore('conn', () => {
             const remotePublicKey = handshakeState.GetRemotePublicKey()
             const mobilePublicKeyBase64 = Base64.fromUint8Array(remotePublicKey)
             hal.prod('handleNoiseHandshakeMsg/action/split/mobilePublicKeyBase64: ' + mobilePublicKeyBase64)
-        
+    
             const split = handshakeState.Split()
-            cipherStateSend = split[0]
-            cipherStateReceive = split[1]
+            mainStore.cipherStateSend = split[0]
+            mainStore.cipherStateReceive = split[1]
     
             mainStore.isPublicKeyAuthenticated = true
             mainStore.haveInitialHandshakeCompleted = true
+
+            /* should try to permanently delete */
+            /* handshakeState.free() is in the noiseprotocol spec but was not done in the wasm implementation */
+            for (let prop in handshakeState) {
+                delete handshakeState[prop]
+            }
+            handshakeState = undefined
     
             hal.prod('handleNoiseHandshakeMsg/action/split/noise handshake successful, logging in')
             login()
@@ -344,7 +369,7 @@ export const useConnStore = defineStore('conn', () => {
         const hash      = 'SHA256'
         const protocolName = `Noise_${pattern}_${curve}_${cipher}_${hash}`
         handshakeState = noise.HandshakeState(protocolName, noise.constants.NOISE_ROLE_RESPONDER)
-        hal.log("initHandshake: ")
+        hal.log('connStore/initHandshake: ')
         hal.dir(handshakeState)
     
         // let cipherStateSend: { EncryptWithAd: (arg0: never[], arg1: string) => any }
@@ -528,6 +553,8 @@ export const useConnStore = defineStore('conn', () => {
         getMediaUrl,
 
         login,
-        logout        
+        logout,
+
+        paths
     }
 })

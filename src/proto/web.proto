@@ -5,20 +5,70 @@ package web;
 option java_package = "com.halloapp.proto.web";
 option java_multiple_files = true;
 
+import "server.proto";
+
 message WebContainer {
   oneof payload {
-    NoiseMessage noise_message = 1;
+    FeedRequest feed_request = 1;
+    FeedResponse feed_response = 2;
   }
 }
 
-message NoiseMessage {
-    enum MessageType {
-        IK_A = 0;
-        IK_B = 1;
+message ReceiptInfo {
+  enum Status {
+    DELIVERED = 0;
+    SEEN = 1;
+    PLAYED = 2;
+  }
+  Status status = 1;
+  int64 timestamp = 2;
+}
 
-        KK_A = 2;
-        KK_B = 3;
-    }
-    MessageType message_type = 1;
-    bytes content = 2;
+message UserDisplayInfo {
+  string contact_name = 1;
+  string avatar_id = 2;
+}
+
+message PostDisplayInfo {
+  enum Status {
+    UNKNOWN = 0;
+    SENDING = 1;
+    SENT = 2;
+    SEND_ERROR = 3;
+    RETRACTING = 4;
+    RETRACTED = 5;
+    INCOMING = 6;
+    REREQUESTING = 7;
+    UNSUPPORTED = 8;
+    EXPIRED = 9;
+  }
+  Status status = 1;
+  int32 unread_comments = 2;
+  bool is_seen = 3;
+  map <string, ReceiptInfo> user_receipts = 4;
+}
+
+enum FeedType {
+  HOME = 0;
+}
+
+message FeedRequest {
+  string id = 1;
+  FeedType type = 2;
+  string cursor = 3; // opaque to web client
+  int32 limit = 4;
+}
+
+message FeedResponse {
+  enum Error {
+    NONE = 0;
+    INVALID_CURSOR = 1;
+  }
+  string id = 1;
+  FeedType type = 2;
+  repeated server.FeedItem items = 3;
+  map <string, UserDisplayInfo> user_display_info = 4;
+  map <string, PostDisplayInfo> post_display_info = 5;
+  string next_cursor = 6;
+  Error error = 7;
 }

@@ -64,18 +64,11 @@
 
     async function init() {
         hal.log('app/init')
+        hal.log('app/init/haveInitialHandshakeCompleted: ' + mainStore.haveInitialHandshakeCompleted)
         connStore.clearMessagesInQueue()
 
         mainStore.isConnectedToServer = false // needs to be reset on refresh
-        connStore.connectToServerIfNeeded()
-
-        /* temporary: used for testing uploadMedia 
-        * temporary: timeout used to send uploadMedia after addKeuy
-        */
-        setTimeout(() => {
-            // connStore.getMediaUrl(1000)
-        }, 3000)
-        
+        connStore.connectToServerIfNeeded()        
     }
 
     function applyPlatformSpecifics() {
