@@ -2,6 +2,7 @@
 import { ref, computed, watch, ComputedRef } from 'vue'
 
 import { useColorStore } from '../../stores/colorStore'
+import { useMainStore } from '../../stores/mainStore'
 
 import { useHAMediaUpload } from '../../composables/haMediaUpload'
 import { useHAMediaResize } from '../../composables/haMediaResize'
@@ -11,6 +12,7 @@ import InputBox from './InputBox.vue'
 import hal from '../../common/halogger'
 
 const colorStore = useColorStore()
+const mainStore = useMainStore()
 
 const { notifyWhenChanged } = useHADatabase()
 const { saveMetaDataFromImage, saveMetaDataFromVideo, uploadAndDownLoad } = useHAMediaUpload()
@@ -75,9 +77,6 @@ const shadowColor = computed(() => {
 const iconColor = computed(() => {
     return colorStore.icon
 })
-
-// To test upload and download, set openTest = true
-const openTest = false
 
 // close composer when press esc
 document.addEventListener('keyup', (event) => {
@@ -189,7 +188,7 @@ function closeComposer() {
                 </div>
 
                 <!-- only for testing! -->
-                <div v-if='openTest' class='iconContainer'
+                <div v-if='mainStore.test' class='iconContainer'
                     @click='testUploadAndDownload(props.uploadFiles[selectMediaIdx])'>
                     <div class='iconShadow'>
                         <font-awesome-icon :icon="['fas', 'hammer']" size='xl' />
@@ -204,7 +203,7 @@ function closeComposer() {
                     <div v-if='mediaUrlList[selectMediaIdx].type == "image"' class='imgBigContainer'>
                         <img class='imgBig' :src='mediaUrlList[selectMediaIdx].url' />
                         <!-- only for testing! -->
-                        <img v-if='openTest' class='imgBig' ref='testImage' />
+                        <img v-if='mainStore.test' class='imgBig' ref='testImage' />
                     </div>
 
                     <div v-show='mediaUrlList[selectMediaIdx].type == "video"' class='videoContainer'>
@@ -213,7 +212,7 @@ function closeComposer() {
                             <source :src='props.uploadFiles[selectMediaIdx].url'>
                         </video>
                         <!-- only for testing! -->
-                        <video v-if='openTest' controls ref='testVideo' preload='metadata' playsinline controlslist=''>
+                        <video v-if='mainStore.test' controls ref='testVideo' preload='metadata' playsinline controlslist=''>
                         </video>
                     </div>
                 </div>
