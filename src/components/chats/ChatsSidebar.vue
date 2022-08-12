@@ -76,7 +76,7 @@ function loadAllChat(updateSelectIdx: boolean) {
                 let subtitle
                 let font
                 if (chat.text != null) {
-                    let text = JSON.parse(JSON.stringify(chat.text))
+                    let text = JSON.parse(JSON.stringify(chat.text)).replace(/\n/g, ' ')
                     // truncate text
                     if (text.length > 15) {
                         text = text.slice(0, 15) + '...'
@@ -251,7 +251,6 @@ function openChat(userID: string) {
     color: #3b4a54;
 
     display: flex;
-    width: 100%;
     flex-direction: column;
 
     user-select: none;

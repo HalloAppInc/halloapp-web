@@ -443,45 +443,50 @@ function openMenu(event: any, forInBound: boolean, idx: number, timestamp: strin
 
     // set floating menu position
     let bounds = event.target.getBoundingClientRect()
-    for (let key in bounds) {
-        if (key == 'right') {
-            floatMenuPositionX.value = window.outerWidth - bounds[key]
-            // if its for inbound msg, make it align right; for outbound msg align left
-            if (forInBound) {
-                nextTick(() => {
-                    if (menu.value) {
-                        floatMenuPositionX.value -= menu.value.clientWidth
-                    }
-                })
+    // X position
+    floatMenuPositionX.value = window.outerWidth - bounds['right']
+    // if its for inbound msg, make it align right; for outbound msg align left
+    if (forInBound) {
+        nextTick(() => {
+            if (menu.value) {
+                floatMenuPositionX.value -= menu.value.clientWidth
             }
+        })
+    }
+    // Y position
+    // clientHeight + scrollTop = scrollHeight
+    if (content.value) {
+        // if not overflow
+        if (content.value?.scrollHeight <= content.value?.clientHeight) {
+            // get floating menu's Y position
+            const eleList = document.getElementsByClassName('containerChat')
+            const ele = eleList[eleList.length - 1]
+            floatMenuPositionY.value = -1 * ( ele.getBoundingClientRect()['bottom'] - bounds['top']) + 20
         }
-        else if (key == 'top') {
-            // clientHeight + scrollTop = scrollHeight
-            if (content.value) {
-                floatMenuPositionY.value = -1 * (content.value?.scrollHeight - bounds[key] - content.value?.scrollTop) + 20
-                let bottomOffset = content.value?.clientHeight - bounds[key]
-                // visual offset, do not let part of menu hidden under input box
-                if (bottomOffset <= 80) {
-                    let msgBubble
-                    // get msg bubble's height
-                    if (event.target.nodeName == 'svg') {
-                        msgBubble = event.target.parentElement.parentElement.parentElement
-                        floatMenuPositionY.value -= msgBubble.clientHeight
-                    }
-                    else if (event.target.nodeName == 'path') {
-                        msgBubble = event.target.parentElement.parentElement.parentElement.parentElement
-                        floatMenuPositionY.value -= msgBubble.clientHeight
-                    }
-                    else if (event.target.nodeName == 'DIV' && event.target.className == 'togglerIconContainer') {
-                        msgBubble = event.target.parentElement.parentElement
-                        floatMenuPositionY.value -= msgBubble.clientHeight
-                    }
-                    
-                    // move 90px upwards if this message is not deleted
-                    if (!isForDeletedMessage.value) {
-                        floatMenuPositionY.value -= 90
-                    }
-                }
+        else {
+            floatMenuPositionY.value = -1 * (content.value?.scrollHeight - bounds['top'] - content.value?.scrollTop) + 20
+        }
+        let bottomOffset = content.value?.clientHeight - bounds['top']
+        // visual offset, do not let part of menu hidden under input box
+        if (bottomOffset <= 80) {
+            let msgBubble
+            // get msg bubble's height
+            if (event.target.nodeName == 'svg') {
+                msgBubble = event.target.parentElement.parentElement.parentElement
+                floatMenuPositionY.value -= msgBubble.clientHeight
+            }
+            else if (event.target.nodeName == 'path') {
+                msgBubble = event.target.parentElement.parentElement.parentElement.parentElement
+                floatMenuPositionY.value -= msgBubble.clientHeight
+            }
+            else if (event.target.nodeName == 'DIV' && event.target.className == 'togglerIconContainer') {
+                msgBubble = event.target.parentElement.parentElement
+                floatMenuPositionY.value -= msgBubble.clientHeight
+            }
+            
+            // move 90px upwards if this message is not deleted
+            if (!isForDeletedMessage.value) {
+                floatMenuPositionY.value -= 90
             }
         }
     }
@@ -1069,6 +1074,8 @@ function gotoQuoteMessage(quoteIdx: number) {
     display: none;
     justify-content: center;
     align-items: center;
+
+    cursor: pointer;
 }
 
 .menuTogglerInBound {
@@ -1082,6 +1089,8 @@ function gotoQuoteMessage(quoteIdx: number) {
 }
 
 .togglerIconContainer {
+    width: max-content;
+    height: max-content;
     color: #1E90FF;
 }
 
