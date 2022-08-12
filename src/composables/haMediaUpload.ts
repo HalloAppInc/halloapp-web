@@ -6,6 +6,8 @@ import hal from '../common/halogger'
 
 import { useHACrypto } from './haCrypto'
 import { useHAProtobuf } from './haProtobuf'
+import { useHADatabase } from './haDb'
+
 
 import MP4Box from 'mp4box'
 
@@ -17,6 +19,7 @@ export function useHAMediaUpload() {
     const connStore = useConnStore()
     const { encryptImageOrNonStreamVideo, decryptImageOrNonStreamVideo, encryptVideo, decryptVideo, decryptStream, keygen } = useHACrypto()
     const { createMedia, createChatContainer, decodeChatContainer, decodeMedia } = useHAProtobuf()
+    const { updateMessageAfterSendToAWS, updateMediaAfterSendToAWS } = useHADatabase()
 
     /* Get image's metadata and store in uploadFiles */
     function saveMetaDataFromImage(file: any, uploadFiles: any) {
@@ -204,12 +207,14 @@ export function useHAMediaUpload() {
         let mediaArray: clients.AlbumMedia[] = []
         let mediaIDArray: number[] = []
 
-        for (const media of message.media) {
-            let albumMedia = await sendEncryptedMediaAndCreateProtobuf(media, chunkSize) as clients.AlbumMedia
-            mediaArray.push(albumMedia)
-            /* const albumMediaBuf = clients.AlbumMedia.encode(albumMedia).finish().buffer as ArrayBuffer
-            const mediaID = await putMedia(albumMediaBuf)
-            mediaIDArray.push(mediaID) */
+        if (message.media) {
+            for (const media of message.media) {
+                let albumMedia = await sendEncryptedMediaAndCreateProtobuf(media, chunkSize) as clients.AlbumMedia
+                mediaArray.push(albumMedia)
+                /* const albumMediaBuf = clients.AlbumMedia.encode(albumMedia).finish().buffer as ArrayBuffer
+                const mediaID = await putMedia(albumMediaBuf)
+                mediaIDArray.push(mediaID) */
+            }
         }
 
         let chatContainerBuf = createChatContainer(message, mediaArray)
@@ -287,6 +292,7 @@ export function useHAMediaUpload() {
         hal.log('haMediaUpload/fetchAndDecrypt/download ' + mediaBolbUrlList)
     }
 
+    /* setup stream for receiving video */
     function setupStreamingMediaSource(mediaSource: any, downloadUrl: string,
         ciphertextHash: Uint8Array, decryptionKey: Uint8Array,
         blobSize: any, chunkSize: any) {
@@ -372,6 +378,7 @@ export function useHAMediaUpload() {
         }
     }
 
+    /* use stream to fetch video */
     async function fetchAndDecryptStream(downloadUrl: string, ciphertextHash: Uint8Array, 
         decryptionKey: Uint8Array, blobSize: number, 
         chunkSize: number, mp4box: any) {
@@ -383,40 +390,21 @@ export function useHAMediaUpload() {
         decryptStream(reader, ciphertextHash, decryptionKey, chunkSize, fullBinArr, mp4box)
     }
 
-    /* For test only: upload and download media (use protobuf) */
-    async function uploadAndDownLoad(file: any, list: any) {
-        const message = {
-            'media': [{
-                'type': file.type,
-                'file': file.file,
-                'url': file.url,
-                'preview': null,
-                'width': file.width,
-                'height': file.height
-            }],
-            'replyIdx': 11,
-            'replySenderId': 0,
-            'mentions': [],
-            'text': 'Hello'
-        }
+    /* ------------------------------ resumable version ------------------------------ */
 
-        // let chatContainerBuf = await encryptAndUpload(message, 64000)
-        // fetchAndDecrypt(chatContainerBuf, list)
-
-        let chatContainerBuf = await resumableUpload(message,64000)
-        resumableFetchAndDecrypt(chatContainerBuf, list)
-    }
-
-    async function resumableUpload(message: any, chunkSize: number) {
+    /* encrypt media inside message, send media to server and create protobuf chatContainer */
+    async function resumableEncryptAndUpload(message: any, chunkSize: number) {
         let mediaArray: clients.AlbumMedia[] = []
         let mediaIDArray: number[] = []
 
-        for (const media of message.media) {
-            let albumMedia = await resumableSendEncryptedMediaAndCreateProtobuf(media, chunkSize) as clients.AlbumMedia
-            mediaArray.push(albumMedia)
-            /* const albumMediaBuf = clients.AlbumMedia.encode(albumMedia).finish().buffer as ArrayBuffer
-            const mediaID = await putMedia(albumMediaBuf)
-            mediaIDArray.push(mediaID) */
+        if (message.media) {
+            for (const media of message.media) {
+                let albumMedia = await resumableSendEncryptedMediaAndCreateProtobuf(media, chunkSize) as clients.AlbumMedia
+                mediaArray.push(albumMedia)
+                /* const albumMediaBuf = clients.AlbumMedia.encode(albumMedia).finish().buffer as ArrayBuffer
+                const mediaID = await putMedia(albumMediaBuf)
+                mediaIDArray.push(mediaID) */
+            }
         }
 
         let chatContainerBuf = createChatContainer(message, mediaArray)
@@ -424,6 +412,7 @@ export function useHAMediaUpload() {
         return chatContainerBuf
     }
 
+    /* Send media to server and create protobuf AlbumMedia */
     function resumableSendEncryptedMediaAndCreateProtobuf(media: any, chunkSize: number) {
         return new Promise(resolve => {
             connStore.getMediaUrl(media.byteLength, true, async function (val: any) {
@@ -437,6 +426,7 @@ export function useHAMediaUpload() {
                     hal.log('haMediaUpload/resumableSendEncryptedMediaAndCreateProtobuf/Encrypt and create image')
                     const downloadUrl = await resumableSendMediaToAWS(encryptedBuffer, uploadUrl)
                     if (downloadUrl != null) {
+                        updateMediaAfterSendToAWS(media.id)
                         let albumMedia = createMedia(media, ciphertextHash, downloadUrl, encryptionKey)
                         resolve(albumMedia)
                     }
@@ -448,6 +438,7 @@ export function useHAMediaUpload() {
                         hal.log('haMediaUpload/resumableSendEncryptedMediaAndCreateProtobuf/Encrypt and create stream video')
                         const downloadUrl = await resumableSendMediaToAWS(encryptedBuffer, uploadUrl)
                         if (downloadUrl != null) {
+                            updateMediaAfterSendToAWS(media.id)
                             let albumMedia = createMedia(media, ciphertextHash, downloadUrl, encryptionKey, isStream, encryptedChunkSize, encryptedBufferSize)
                             resolve(albumMedia)
                         }
@@ -457,6 +448,7 @@ export function useHAMediaUpload() {
                         hal.log('haMediaUpload/resumableSendEncryptedMediaAndCreateProtobuf/Encrypt and create video')
                         const downloadUrl = await resumableSendMediaToAWS(encryptedBuffer, uploadUrl)
                         if (downloadUrl != null) {
+                            updateMediaAfterSendToAWS(media.id)
                             let albumMedia = createMedia(media, ciphertextHash, downloadUrl, encryptionKey, isStream)
                             resolve(albumMedia)
                         }
@@ -466,6 +458,7 @@ export function useHAMediaUpload() {
         })
     }
 
+    /* Send media to server through HTTP PUT */
     async function resumableSendMediaToAWS(file: any, uploadUrl: string) {
         if (!mainStore.isConnectedToServer) { return }
 
@@ -522,6 +515,7 @@ export function useHAMediaUpload() {
         return
     }
 
+    /* encrypt media inside message, send media to server and create protobuf chatContainer */
     async function resumableFetchAndDecrypt(binArray: Uint8Array, mediaBolbUrlList: string[]){
         const chatContainer = decodeChatContainer(binArray)
         if (chatContainer.album) {
@@ -531,10 +525,11 @@ export function useHAMediaUpload() {
                     mediaBolbUrlList.push(mediaBlobUrl)
                 }
             }
+            hal.log('haMediaUpload/resumableFetchAndDecrypt/download ' + mediaBolbUrlList)
         }
-        hal.log('haMediaUpload/resumableFetchAndDecrypt/download ' + mediaBolbUrlList)
     }
 
+    /* Download media from server and decrypt it */
     async function resumableDecryptDownloadedMediaAndDecode(media: clients.IAlbumMedia) {
         const { type, chunkSize, blobSize, downloadUrl, ciphertextHash, decryptionKey } = decodeMedia(media)
         if (type == 'image') {
@@ -590,6 +585,7 @@ export function useHAMediaUpload() {
         }
     }
 
+    /* Get media to server through HTTP GET */
     async function resumableGetMediaFromAWS(downloadUrl: string) {        
         let status = -1
         let recvBlob: any = {}
@@ -650,5 +646,31 @@ export function useHAMediaUpload() {
         return { status, recvBlob }
     }
 
-    return { saveMetaDataFromImage, saveMetaDataFromVideo, uploadAndDownLoad }
+    /* For test only: upload and download media (use protobuf) */
+    async function uploadAndDownLoad(file: any, list: any) {
+        const message = {
+            'media': [{
+                'type': file.type,
+                'file': file.file,
+                'url': file.url,
+                'width': file.width,
+                'height': file.height
+            }],
+            'replyIdx': 11,
+            'replySenderId': 0,
+            'mentions': [],
+            'text': '',
+        }
+
+        let chatContainerBuf = await encryptAndUpload(message, 64000)
+        fetchAndDecrypt(chatContainerBuf, list)
+    }
+
+    async function uploadAfterSendMessage(message: any, messageID: number) {
+        let chatContainerBuf = await resumableEncryptAndUpload(message, 64000)
+        await resumableFetchAndDecrypt(chatContainerBuf, [])
+        await updateMessageAfterSendToAWS(messageID)
+    }
+
+    return { saveMetaDataFromImage, saveMetaDataFromVideo, uploadAndDownLoad, uploadAfterSendMessage }
 }

@@ -7,7 +7,8 @@ export interface MessageList {
     quoteId?: number
     mediaID?: number[]
     timestamp?: string
-    text?: string
+    text?: string,
+    toOrFromAWS: boolean
 }
 
 export interface Media {
@@ -16,7 +17,8 @@ export interface Media {
     file: ArrayBuffer,
     preview?: ArrayBuffer,
     width: number,
-    height: number
+    height: number,
+    toOrFromAWS: boolean
 }
 
 export interface Mention {

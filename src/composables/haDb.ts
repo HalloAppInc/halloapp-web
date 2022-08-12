@@ -39,78 +39,91 @@ export function useHADatabase() {
             toUserID: contactList[0].userID,
             text: "Short text testing:~123~,_123_,*123*",
             timestamp: "1649204213",
+            toOrFromAWS: true,
         },
         {
             fromUserID: contactList[0].userID,
             toUserID: contactList[1].userID,
             text: "Long text testing: The item is sized according to its width and height properties, The item is sized according to its width and height properties, The item is sized according to its width and height properties",
             timestamp: "1649204213",
+            toOrFromAWS: true,
         },
         {
             fromUserID: contactList[1].userID,
             toUserID: contactList[0].userID,
             text: "Long text testing: The item is sized according to its width and height properties, The item is sized according to its width and height properties, The item is sized according to its width and height properties",
             timestamp: "1656853200",
+            toOrFromAWS: true,
         },
         {
             fromUserID: contactList[1].userID,
             toUserID: contactList[0].userID,
             text: "asdfasdfsadfasdflsadkfl;sdakf;lasdkf;asdkf;lasdkf;lsadkf;lsadkf;sadkf;lasdfksd;lfksd;lfdsf",
             timestamp: "1657026000",
+            toOrFromAWS: true,
         },
         {
             fromUserID: contactList[1].userID,
             toUserID: contactList[0].userID,
             text: "😍😍😍😍",
             timestamp: "1657026000",
+            toOrFromAWS: true,
         },
         {
             fromUserID: contactList[0].userID,
             toUserID: contactList[1].userID,
             text: "😍!",
             timestamp: "1657026000",
+            toOrFromAWS: true,
         },
         {
             fromUserID: contactList[1].userID,
             toUserID: contactList[0].userID,
             text: "😍☺️❤️",
             timestamp: "1657026000",
+            toOrFromAWS: true,
         },
         {
             fromUserID: contactList[2].userID,
             toUserID: contactList[0].userID,
             text: "?",
             timestamp: "1657026000",
+            toOrFromAWS: true,
         },
         {
             fromUserID: contactList[0].userID,
             toUserID: contactList[2].userID,
             text: "...Hi~",
             timestamp: "1657026000",
+            toOrFromAWS: true,
         },
         {
             fromUserID: contactList[3].userID,
             toUserID: contactList[0].userID,
             text: "How are you?",
             timestamp: "1657026000",
+            toOrFromAWS: true,
         },
         {
             fromUserID: contactList[0].userID,
             toUserID: contactList[3].userID,
             text: "yes",
             timestamp: "1657026000",
+            toOrFromAWS: true,
         },
         {
             fromUserID: contactList[4].userID,
             toUserID: contactList[0].userID,
             text: "This is a link",
             timestamp: "1657026000",
+            toOrFromAWS: true,
         },
         {
             fromUserID: contactList[0].userID,
             toUserID: contactList[4].userID,
             text: "This is a link",
             timestamp: "1657026000",
+            toOrFromAWS: true,
         }
     ]
 
@@ -298,10 +311,25 @@ export function useHADatabase() {
         return chatArray
     }
 
+    async function updateMessageAfterSendToAWS(messageID: number) {
+        await db.messageList.where('id').equals(messageID).modify({toOrFromAWS: true})
+        // hal.log('haDb/updateMessageAfterSendToAWS/set \'toOrFromAWS\' in messageList to true ')
+        
+        return
+    }
+
+    async function updateMediaAfterSendToAWS(MediaID: number) {
+        await db.media.where('id').equals(MediaID).modify({toOrFromAWS: true})
+        // hal.log('haDb/updateMediaAfterSendToAWS/set \'toOrFromAWS\' in messageList to true ')
+        
+        return
+    }
+
     return {
         getMessageByID, deleteMessageByID, cleanMessageContentByID, 
         clearAllMessages, loadMessageList, initMessageListAndMediaList, 
         notifyWhenChanged, putMessage, getMedia, 
         putMedia, getContacts, getAllChat,
-        getContactByName, getContactByUserID }
+        getContactByName, getContactByUserID, updateMessageAfterSendToAWS,
+        updateMediaAfterSendToAWS }
 }

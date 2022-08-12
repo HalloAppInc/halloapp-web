@@ -111,7 +111,7 @@ function loadAllChat(updateSelectIdx: boolean) {
                 setSelectIdx()
             }
 
-            hal.log('ChatSideBar/loadAllChat/chatList/', res)
+            // hal.log('ChatSideBar/loadAllChat/chatList/', res)
         })
     }, 15)
 }
@@ -121,7 +121,9 @@ loadAllChat(false)
 function listener(type: string) {
     hal.log('ChatSidebar/notifyWhenChanged/' + type)
     // if receive new messgae, load chat list and update selectIdx
-    loadAllChat(true)
+    if (type == 'create') {
+        loadAllChat(true)
+    }
 }
 
 notifyWhenChanged(listener)

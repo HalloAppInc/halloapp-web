@@ -159,7 +159,7 @@ nextTick(() => {
 function fetchContactList() {
     getContacts()
     .then(res => {
-        hal.log('ChatPanel/fetchContactList/load contactList ', res)
+        // hal.log('ChatPanel/fetchContactList/load contactList ', res)
         contactList.value = res
         let result = []
         for(const contact of contactList.value){
@@ -221,6 +221,7 @@ async function parseMessage() {
                         'width': media.width,
                         'height': media.height,
                         'url': URL.createObjectURL(file),
+                        'sendToAWS': media.toOrFromAWS
                     }
                     if(!media.preview) {
                         newMedia['previewUrl'] = newMedia.url
@@ -247,7 +248,8 @@ async function parseMessage() {
                 'display': true,
                 'media': newMediaList,
                 'quoteMessage': quoteMessage,
-                'quoteIdx': message.quoteId
+                'quoteIdx': message.quoteId,
+                'sendToAWS': message.toOrFromAWS,
             })
         }
         else {
@@ -700,7 +702,7 @@ function gotoQuoteMessage(quoteIdx: number) {
                             <div class='timestamp' :data-msg-timestamp='value.unixTimestamp'>
                                 {{ value.timestamp }}
                             </div>
-                            <div class='iconContainer checkIcon'>
+                            <div class='iconContainer' :class='value.sendToAWS ? "blueIcon" : "grayIcon"'>
                                 <font-awesome-icon :icon="['fas', 'check-double']" size='xs' />
                             </div>
                         </div>
@@ -1002,8 +1004,12 @@ function gotoQuoteMessage(quoteIdx: number) {
     padding: 0px 5px;
 }
 
-.checkIcon {
+.blueIcon {
     color: #1E90FF;
+}
+
+.grayIcon {
+    color: gray;
 }
 
 .timestampContainerBig {
