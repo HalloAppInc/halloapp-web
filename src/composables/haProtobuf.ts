@@ -85,10 +85,19 @@ export function useHAProtobuf() {
             'chatReplyMessageSenderId': message.replySenderId
         })
 
-        const chatContainer = clients.ChatContainer.create({
-            'context': context,
-            'album': album
-        })
+        let chatContainer: clients.IChatContainer
+        if (mediaArray.length == 0) {
+            chatContainer = clients.ChatContainer.create({
+                'context': context,
+                'text': text
+            })
+        }
+        else {
+            chatContainer = clients.ChatContainer.create({
+                'context': context,
+                'album': album
+            })
+        }
 
         const chatContainerBuf = clients.ChatContainer.encodeDelimited(chatContainer).finish()
 

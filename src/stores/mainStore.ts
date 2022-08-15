@@ -57,6 +57,8 @@ export const useMainStore = defineStore('main', {
         sounds: false,
         desktopAlerts: false,
 
+        test: false, // test for upload&download, reload database
+
         preferColorScheme: '',
 
         loginUserID: '',

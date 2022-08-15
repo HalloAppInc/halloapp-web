@@ -6,6 +6,8 @@ import hal from '../common/halogger'
 
 import { useHACrypto } from './haCrypto'
 import { useHAProtobuf } from './haProtobuf'
+import { useHADatabase } from './haDb'
+
 
 import MP4Box from 'mp4box'
 
@@ -17,6 +19,7 @@ export function useHAMediaUpload() {
     const connStore = useConnStore()
     const { encryptImageOrNonStreamVideo, decryptImageOrNonStreamVideo, encryptVideo, decryptVideo, decryptStream, keygen } = useHACrypto()
     const { createMedia, createChatContainer, decodeChatContainer, decodeMedia } = useHAProtobuf()
+    const { updateMessageAfterSendToAWS, updateMediaAfterSendToAWS } = useHADatabase()
 
     /* Get image's metadata and store in uploadFiles */
     function saveMetaDataFromImage(file: any, uploadFiles: any) {
@@ -164,7 +167,7 @@ export function useHAMediaUpload() {
     /* Send media to server and create protobuf AlbumMedia */
     async function sendEncryptedMediaAndCreateProtobuf(media: any, chunkSize: number) {
         return new Promise(resolve => {
-            connStore.getMediaUrl(media.file.byteLength, async function (val: any) {
+            connStore.getMediaUrl(media.file.byteLength, false, async function (val: any) {
                 let mediaBlob = new Blob([media.file])
                 const mediaBlobArray = await new Response(mediaBlob).arrayBuffer()
                 const mediaBlobBuffer = new Uint8Array(mediaBlobArray)
@@ -173,7 +176,6 @@ export function useHAMediaUpload() {
                 let encryptionKey = keygen()
                 if (media.type == 'image') {
                     let { encryptedBuffer, ciphertextHash } = await encryptImageOrNonStreamVideo(mediaBlobBuffer, encryptionKey)
-                    // isStream is true for video!
                     let albumMedia = createMedia(media, ciphertextHash, downloadUrl, encryptionKey)
                     hal.log('haMediaUpload/sendEncryptedMediaAndCreateProtobuf/Encrypt and create image')
                     await sendMediaToAWS(encryptedBuffer, uploadUrl)
@@ -205,12 +207,14 @@ export function useHAMediaUpload() {
         let mediaArray: clients.AlbumMedia[] = []
         let mediaIDArray: number[] = []
 
-        for (const media of message.media) {
-            let albumMedia = await sendEncryptedMediaAndCreateProtobuf(media, chunkSize) as clients.AlbumMedia
-            mediaArray.push(albumMedia)
-            /* const albumMediaBuf = clients.AlbumMedia.encode(albumMedia).finish().buffer as ArrayBuffer
-            const mediaID = await putMedia(albumMediaBuf)
-            mediaIDArray.push(mediaID) */
+        if (message.media) {
+            for (const media of message.media) {
+                let albumMedia = await sendEncryptedMediaAndCreateProtobuf(media, chunkSize) as clients.AlbumMedia
+                mediaArray.push(albumMedia)
+                /* const albumMediaBuf = clients.AlbumMedia.encode(albumMedia).finish().buffer as ArrayBuffer
+                const mediaID = await putMedia(albumMediaBuf)
+                mediaIDArray.push(mediaID) */
+            }
         }
 
         let chatContainerBuf = createChatContainer(message, mediaArray)
@@ -288,6 +292,7 @@ export function useHAMediaUpload() {
         hal.log('haMediaUpload/fetchAndDecrypt/download ' + mediaBolbUrlList)
     }
 
+    /* setup stream for receiving video */
     function setupStreamingMediaSource(mediaSource: any, downloadUrl: string,
         ciphertextHash: Uint8Array, decryptionKey: Uint8Array,
         blobSize: any, chunkSize: any) {
@@ -373,6 +378,7 @@ export function useHAMediaUpload() {
         }
     }
 
+    /* use stream to fetch video */
     async function fetchAndDecryptStream(downloadUrl: string, ciphertextHash: Uint8Array, 
         decryptionKey: Uint8Array, blobSize: number, 
         chunkSize: number, mp4box: any) {
@@ -384,6 +390,262 @@ export function useHAMediaUpload() {
         decryptStream(reader, ciphertextHash, decryptionKey, chunkSize, fullBinArr, mp4box)
     }
 
+    /* ------------------------------ resumable version ------------------------------ */
+
+    /* encrypt media inside message, send media to server and create protobuf chatContainer */
+    async function resumableEncryptAndUpload(message: any, chunkSize: number) {
+        let mediaArray: clients.AlbumMedia[] = []
+        let mediaIDArray: number[] = []
+
+        if (message.media) {
+            for (const media of message.media) {
+                let albumMedia = await resumableSendEncryptedMediaAndCreateProtobuf(media, chunkSize) as clients.AlbumMedia
+                mediaArray.push(albumMedia)
+                /* const albumMediaBuf = clients.AlbumMedia.encode(albumMedia).finish().buffer as ArrayBuffer
+                const mediaID = await putMedia(albumMediaBuf)
+                mediaIDArray.push(mediaID) */
+            }
+        }
+
+        let chatContainerBuf = createChatContainer(message, mediaArray)
+        
+        return chatContainerBuf
+    }
+
+    /* Send media to server and create protobuf AlbumMedia */
+    function resumableSendEncryptedMediaAndCreateProtobuf(media: any, chunkSize: number) {
+        return new Promise(resolve => {
+            connStore.getMediaUrl(media.byteLength, true, async function (val: any) {
+                let uploadUrl = val.iq?.uploadMedia?.url?.patch as string
+                let mediaBlob = new Blob([media.file])
+                const mediaBlobArray = await new Response(mediaBlob).arrayBuffer()
+                const mediaBlobBuffer = new Uint8Array(mediaBlobArray)
+                let encryptionKey = keygen()
+                if (media.type == 'image') {
+                    let { encryptedBuffer, ciphertextHash } = await encryptImageOrNonStreamVideo(mediaBlobBuffer, encryptionKey)  
+                    hal.log('haMediaUpload/resumableSendEncryptedMediaAndCreateProtobuf/Encrypt and create image')
+                    const downloadUrl = await resumableSendMediaToAWS(encryptedBuffer, uploadUrl)
+                    if (downloadUrl != null) {
+                        updateMediaAfterSendToAWS(media.id)
+                        let albumMedia = createMedia(media, ciphertextHash, downloadUrl, encryptionKey)
+                        resolve(albumMedia)
+                    }
+                }
+                else {
+                    const isStream = true
+                    if (isStream) {
+                        let { encryptedBuffer, ciphertextHash, encryptedChunkSize, encryptedBufferSize } = await encryptVideo(mediaBlobBuffer, encryptionKey, chunkSize)
+                        hal.log('haMediaUpload/resumableSendEncryptedMediaAndCreateProtobuf/Encrypt and create stream video')
+                        const downloadUrl = await resumableSendMediaToAWS(encryptedBuffer, uploadUrl)
+                        if (downloadUrl != null) {
+                            updateMediaAfterSendToAWS(media.id)
+                            let albumMedia = createMedia(media, ciphertextHash, downloadUrl, encryptionKey, isStream, encryptedChunkSize, encryptedBufferSize)
+                            resolve(albumMedia)
+                        }
+                    }
+                    else {
+                        let { encryptedBuffer, ciphertextHash } = await encryptImageOrNonStreamVideo(mediaBlobBuffer, encryptionKey)
+                        hal.log('haMediaUpload/resumableSendEncryptedMediaAndCreateProtobuf/Encrypt and create video')
+                        const downloadUrl = await resumableSendMediaToAWS(encryptedBuffer, uploadUrl)
+                        if (downloadUrl != null) {
+                            updateMediaAfterSendToAWS(media.id)
+                            let albumMedia = createMedia(media, ciphertextHash, downloadUrl, encryptionKey, isStream)
+                            resolve(albumMedia)
+                        }
+                    }
+                }
+            })
+        })
+    }
+
+    /* Send media to server through HTTP PUT */
+    async function resumableSendMediaToAWS(file: any, uploadUrl: string) {
+        if (!mainStore.isConnectedToServer) { return }
+
+        let patchStatus = -1
+        let offset: string = '0'
+        let remainRetryTimes = 3
+        
+        while (patchStatus != 204 && remainRetryTimes > 0) {
+            let size = file.byteLength
+            // only send offset-end part
+            let sendFilePart = file.slice(parseInt(offset))
+            let response = await fetch(mainStore.devCORSWorkaroundUrlPrefix + uploadUrl,
+            {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/offset+octet-stream',
+                    'Tus-Resumable': '1.0.0',
+                    'Upload-offset': offset,
+                    'Upload-Length': size.toString(),
+                },
+                body: sendFilePart
+            })
+            patchStatus = response.status
+    
+            // if upload failed, use HTTP head to resume
+            if (patchStatus != 204) {
+                let newResponse = await fetch(mainStore.devCORSWorkaroundUrlPrefix + uploadUrl,
+                    {
+                        method: 'HEAD',
+                        headers: {
+                            'Tus-Resumable': '1.0.0',
+                        },
+                    })
+                if (newResponse.status == 200) {
+                    offset = newResponse.headers.get('Upload-offset') as string
+                    remainRetryTimes--
+                }
+                else {
+                    hal.log('haMediaUpload/resumableSendMediaToAWS/HTTP HEAD: fail to resume, status =', response.status)
+                    return
+                }
+            }
+            // if successful, return download url
+            else {
+                hal.log('haMediaUpload/resumableSendMediaToAWS/HTTP PATCH: Upload successfully, status =', response.status)
+                return response.headers.get('Download-Location')
+            }
+        }
+
+        if (remainRetryTimes == 0 && patchStatus != 204) {
+            hal.log('haMediaUpload/resumableSendMediaToAWS/HTTP HEAD: fail to resume, status =', patchStatus)
+        }
+
+        return
+    }
+
+    /* encrypt media inside message, send media to server and create protobuf chatContainer */
+    async function resumableFetchAndDecrypt(binArray: Uint8Array, mediaBolbUrlList: string[]){
+        const chatContainer = decodeChatContainer(binArray)
+        if (chatContainer.album) {
+            for (const media of chatContainer.album.media!) {
+                let mediaBlobUrl = await resumableDecryptDownloadedMediaAndDecode(media)
+                if (mediaBlobUrl) {
+                    mediaBolbUrlList.push(mediaBlobUrl)
+                }
+            }
+            hal.log('haMediaUpload/resumableFetchAndDecrypt/download ' + mediaBolbUrlList)
+        }
+    }
+
+    /* Download media from server and decrypt it */
+    async function resumableDecryptDownloadedMediaAndDecode(media: clients.IAlbumMedia) {
+        const { type, chunkSize, blobSize, downloadUrl, ciphertextHash, decryptionKey } = decodeMedia(media)
+        if (type == 'image') {
+            const { status, recvBlob } = await resumableGetMediaFromAWS(downloadUrl)
+            if (status == 206) {
+                // convert from blob to ArrayBuffer
+                const recvEncryptedBuffer = await new File([recvBlob], '').arrayBuffer()
+                // decrypt the arrayBuffer
+                const decryptedBuffer = await decryptImageOrNonStreamVideo(recvEncryptedBuffer, ciphertextHash, decryptionKey)
+                const decryptedBlob = new Blob([decryptedBuffer])
+                hal.log('haMediaUpload/resumableDecryptDownloadedMediaAndDecode/Decrypt image')
+                const mediaBlobUrl = URL.createObjectURL(decryptedBlob)
+                return mediaBlobUrl
+            }
+        }
+        else {
+            const isStream = (chunkSize != -1)
+            if (isStream) {
+                // MediaSource is not supported on iOS yet
+                if ('MediaSource' in window) {
+                    hal.log('haCrypto/resumableDecryptDownloadedMediaAndDecode/Decrypt streaminng Video')
+                    const mediaSource = new MediaSource()
+                    const mediaSourceUrl = URL.createObjectURL(mediaSource)
+                    setupStreamingMediaSource(mediaSource, downloadUrl, ciphertextHash, decryptionKey, blobSize, chunkSize)
+                    return mediaSourceUrl
+                } else {
+                    const { status, recvBlob } = await resumableGetMediaFromAWS(downloadUrl)
+                    if (status == 206) {
+                        // convert from blob to ArrayBuffer
+                        const recvEncryptedBuffer = await new File([recvBlob], '').arrayBuffer()
+                        // decrypt the arrayBuffer
+                        const decryptedBuffer = await decryptVideo(recvEncryptedBuffer, ciphertextHash, decryptionKey, chunkSize)
+                        const decryptedBlob = new Blob([decryptedBuffer])
+                        hal.log('haCrypto/resumableDecryptDownloadedMediaAndDecode/Decrypt streaminng Video by entire blob')
+                        const mediaBlobUrl = URL.createObjectURL(decryptedBlob)
+                        return mediaBlobUrl
+                    }
+                }
+            }
+            else {
+                const { status, recvBlob } = await resumableGetMediaFromAWS(downloadUrl)
+                if (status == 206) {
+                    // convert from blob to ArrayBuffer
+                    const recvEncryptedBuffer = await new File([recvBlob], '').arrayBuffer()
+                    // decrypt the arrayBuffer
+                    const decryptedBuffer = await decryptImageOrNonStreamVideo(recvEncryptedBuffer, ciphertextHash, decryptionKey)
+                    const decryptedBlob = new Blob([decryptedBuffer])
+                    hal.log('haCrypto/resumableDecryptDownloadedMediaAndDecode/Decrypt Video')
+                    const mediaBlobUrl = URL.createObjectURL(decryptedBlob)
+                    return mediaBlobUrl
+                }
+            }
+        }
+    }
+
+    /* Get media to server through HTTP GET */
+    async function resumableGetMediaFromAWS(downloadUrl: string) {        
+        let status = -1
+        let recvBlob: any = {}
+
+        if (!mainStore.isConnectedToServer) { return { status, recvBlob } }        
+
+        let remainRetryTimes = 3
+        let response: any
+        let offset = '0'
+        let recvArray: Uint8Array = new Uint8Array()
+
+        while (status != 206 && remainRetryTimes > 0) {
+            response = await fetch(mainStore.devCORSWorkaroundUrlPrefix + downloadUrl,
+                {
+                    method: 'GET',
+                    headers: {
+                        'range': 'bytes=' + offset + '-',
+                    },
+                })
+            
+            status = response.status
+
+            if (status == 206) {
+                // get received blob
+                const newRecvBuffer = await response.arrayBuffer()
+                const newRecvArray = new Uint8Array(newRecvBuffer)
+                // concacenate
+                const concatenateArray = new Uint8Array(recvArray.byteLength + newRecvArray.byteLength)
+                concatenateArray.set(recvArray, 0)
+                concatenateArray.set(newRecvArray, recvArray.byteLength)
+                recvArray = concatenateArray
+
+                const size = recvArray.byteLength
+                const fileSize = response.headers.get('Content-Length')
+                // if size is not equal to its full size
+                if (size != fileSize) {
+                    remainRetryTimes -= 1
+                    // update offset
+                    offset = size.toString()
+                }
+                else {
+                    hal.log('haMediaUpload/resumableGetMediaFromAWS/HTTP GET: Download successfully, status =', status)
+                    recvBlob = new Blob([recvArray])
+                    return { status, recvBlob }
+                }
+            }
+            // if failed, download from wher 
+            else {
+                remainRetryTimes -= 1
+            }
+        }
+
+        // use up all the retry and still fail
+        if (remainRetryTimes == 0 && status != 206) {
+            hal.log('haMediaUpload/resumableGetMediaFromAWS/HTTP GET: Fail to download, status =', status)
+        }
+
+        return { status, recvBlob }
+    }
+
     /* For test only: upload and download media (use protobuf) */
     async function uploadAndDownLoad(file: any, list: any) {
         const message = {
@@ -391,20 +653,24 @@ export function useHAMediaUpload() {
                 'type': file.type,
                 'file': file.file,
                 'url': file.url,
-                'preview': null,
                 'width': file.width,
                 'height': file.height
             }],
             'replyIdx': 11,
             'replySenderId': 0,
             'mentions': [],
-            'text': 'Hello'
+            'text': '',
         }
 
         let chatContainerBuf = await encryptAndUpload(message, 64000)
-
         fetchAndDecrypt(chatContainerBuf, list)
     }
 
-    return { saveMetaDataFromImage, saveMetaDataFromVideo, uploadAndDownLoad }
+    async function uploadAfterSendMessage(message: any, messageID: number) {
+        let chatContainerBuf = await resumableEncryptAndUpload(message, 64000)
+        await resumableFetchAndDecrypt(chatContainerBuf, [])
+        await updateMessageAfterSendToAWS(messageID)
+    }
+
+    return { saveMetaDataFromImage, saveMetaDataFromVideo, uploadAndDownLoad, uploadAfterSendMessage }
 }

@@ -20,7 +20,7 @@ const quoteMedia = computed(() => {
         'width': res?.mediaItemWidth,
         'height': res?.mediaItemHeight 
     }
-    hal.log('Quote/compute quoteMedia/', result)
+    // hal.log('Quote/compute quoteMedia/', result)
     return result
 })
 

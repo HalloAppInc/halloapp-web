@@ -3,12 +3,12 @@ import { ref, computed, watch, nextTick } from 'vue'
 
 import { useHAText } from '../../composables/haText'
 import { useHADatabase } from '../../composables/haDb'
+import { useHAMediaUpload } from '../../composables/haMediaUpload'
 
 import { useColorStore } from '../../stores/colorStore'
 import { useMainStore } from '../../stores/mainStore'
 
 import hal from '../../common/halogger'
-import { on } from 'events'
 
 const { processText } = useHAText()
 
@@ -16,6 +16,7 @@ const colorStore = useColorStore()
 const mainStore = useMainStore()
 
 const { putMessage, putMedia, getContacts } = useHADatabase()
+const { uploadAfterSendMessage } = useHAMediaUpload()
 
 const props = defineProps(['uploadFiles', 'replyQuoteIdx', 'alwaysShowSendButton', 'init'])
 
@@ -104,7 +105,7 @@ init()
 function fetchContactList() {
     getContacts()
     .then(res => {
-        hal.log('InputBox/fetchContactList/load contactList ', res)
+        // hal.log('InputBox/fetchContactList/load contactList ', res)
         contactList.value = res
         let result = []
         for(const contact of contactList.value){
@@ -190,35 +191,50 @@ function analyzeKeyDown(event: any) {
 async function sendMessage() {
     if (inputArea.value?.innerText.trim().length !== 0 || props.uploadFiles != '') {  
         mainStore.inputArea = ''
-        const message: any = {
-            fromUserID: mainStore.loginUserID,
-            toUserID: mainStore.chatID,
-            text: inputArea.value?.innerText.trim(),
-            timestamp: (Date.now() / 1000 | 0).toString(),
+        const messageToAWS: any = {
+            'text': inputArea.value?.innerText.trim(),
+            'mention': [],
+        }
+        const messageInDB: any = {
+            'fromUserID': mainStore.loginUserID,
+            'toUserID': mainStore.chatID,
+            'text': inputArea.value?.innerText.trim(),
+            'timestamp': (Date.now() / 1000 | 0).toString(),
+            'toOrFromAWS': false,
         }
         if (props.replyQuoteIdx.value > -1) {
-            message['quoteId'] = props.replyQuoteIdx.value
+            messageInDB['quoteId'] = props.replyQuoteIdx.value
+            messageToAWS['replySenderId'] = mainStore.chatID
+            messageToAWS['replyIdx'] = props.replyQuoteIdx.value
         }
         if (props.uploadFiles) {
             const mediaIDArr: number[] = []
+            const mediaArr: any[] = []
             for(const media of props.uploadFiles) {
                 const file = await new Blob([media.file]).arrayBuffer()
                 const newMedia: any = {
                     'type': media.type,
                     'file': file,
                     'width': media.width,
-                    'height': media.height
+                    'height': media.height,
+                    'toOrFromAWS': false,
                 }
                 if (media.type == 'video') {
                     const preview = await new Blob([media.preview]).arrayBuffer()
                     newMedia['preview'] = preview
                 }
                 const id = await putMedia(newMedia)
+                // for upload and download
                 mediaIDArr.push(id)
+                newMedia['id'] = id
+                newMedia['url'] = media.url
+                mediaArr.push(newMedia)
             }
-            message['mediaID'] = mediaIDArr
+            messageInDB['mediaID'] = mediaIDArr
+            messageToAWS['media'] = mediaArr
         }
-        await putMessage(message)
+        const messageID = await putMessage(messageInDB)
+        uploadAfterSendMessage(messageToAWS, messageID)
 
         props.replyQuoteIdx.value = -1
         // hide send button

@@ -120,7 +120,7 @@ function openBackgroundColorSetting() {
 
             <!-- TODO: delete, only for test -->
             <!-- reload all message and contacts -->
-            <div class='iconContainer' @click='initMessageListAndMediaList(true)'
+            <div v-if='mainStore.test' class='iconContainer' @click='initMessageListAndMediaList(true)'
                 title="Reload database">
                 <div class='iconShadow' :class='{ showShadow: showChatSettings == true }'>
                     <font-awesome-icon :icon="['fas', 'hammer']" size='lg' />

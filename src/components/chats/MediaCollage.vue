@@ -1,20 +1,32 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 const props = defineProps(['mediaList'])
 
 const numberOfMedia = props.mediaList.length
 
-const firstMedia = ref(props.mediaList[0] ? props.mediaList[0] : null)
-const secondMedia = ref(props.mediaList[1] ? props.mediaList[1] : null)
-const thirdMedia = ref(props.mediaList[2] ? props.mediaList[2] : null)
-const fourthMedia = ref(props.mediaList[3] ? props.mediaList[3] : null)
+const firstMedia = computed(() => {
+    return props.mediaList[0] ? props.mediaList[0] : null
+})
+const secondMedia = computed(() => {
+    return props.mediaList[1] ? props.mediaList[1] : null
+})
+const thirdMedia = computed(() => {
+    return props.mediaList[2] ? props.mediaList[2] : null
+})
+const fourthMedia = computed(() => {
+    return props.mediaList[3] ? props.mediaList[3] : null
+})
 </script>
 
 <template>
 
     <div class='containerOneMedia' v-if='numberOfMedia == 1'>
 
-        <div class='imgBigContainer' @click="$emit('openMedia', mediaList, 0)">
+        <div class='loaderContainer' v-if='!firstMedia.sendToAWS'>
+            <div class='loader'></div>
+        </div>
+
+        <div class='imgBigContainer' :class='{ "blur": !firstMedia.sendToAWS }' @click="$emit('openMedia', mediaList, 0)">
             <img :src='firstMedia.previewUrl' :width='firstMedia.width' :height='firstMedia.hieght' />
             <div class='iconContainer' v-if='firstMedia.type == "video"'>
                 <font-awesome-icon :icon="['fas', 'play']" size='2x' />
@@ -227,5 +239,57 @@ img {
     transform: translate(-50%, 50%);
 
     color: gainsboro;
+}
+
+.blur {
+    filter: blur(5px);
+}
+
+.loaderContainer {
+    position: absolute;
+    z-index: 1;
+    left: 50%;
+    bottom: 50%;
+    width: fit-content;
+    height: fit-content;
+    transform: translate(-50%, 40%);
+
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.loader {
+    border: 10px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 10px solid gray;
+    width: 80px;
+    height: 80px;
+    -webkit-animation: spin 2s linear infinite;
+    /* Safari */
+    animation: spin 2s linear infinite;
+}
+
+/* Safari */
+@-webkit-keyframes spin {
+    0% {
+        -webkit-transform: rotate(0deg);
+    }
+
+    100% {
+        -webkit-transform: rotate(360deg);
+    }
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 </style>

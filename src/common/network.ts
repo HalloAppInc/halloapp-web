@@ -172,11 +172,13 @@ export function network() {
         hal.log('network/check ' + id)
     }
 
-    const uploadMedia = (size: number) => {
+    const uploadMedia = (size: number, isResumable: boolean) => {
         let id = nanoid()
 
+        const type = isResumable ? server.UploadMedia.Type.RESUMABLE : server.UploadMedia.Type.DIRECT
+
         let uploadMedia = server.UploadMedia.create({
-            type: server.UploadMedia.Type.DIRECT,
+            type: type,
             size: size,
         })
         let iq = server.Iq.create({
