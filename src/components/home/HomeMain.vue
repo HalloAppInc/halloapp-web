@@ -3,6 +3,7 @@
 import { ref, watch, watchEffect, computed } from 'vue'
 
 import { useMainStore } from '../../stores/mainStore'
+import { useConnStore } from '../../stores/connStore'
 
 import HomeHeader from './HomeHeader.vue'
 import Post from './Post.vue'
@@ -11,7 +12,15 @@ import hal from '../../common/halogger'
 
 import { db } from '../../db'
 
+import { useI18n } from 'vue-i18n'
+
+import { clients } from "../../proto/clients.js"
+import { useTimeformatter } from '../../composables/timeformatter'
+
 const mainStore = useMainStore()
+const connStore = useConnStore()
+
+const { formatTime, formatTimer } = useTimeformatter()
 
 const listBoxWidth = ref('100%')
 const showComments = ref(false)
@@ -20,6 +29,11 @@ const inViewPostID = ref('')
 
 const content = ref<HTMLElement | null>(null)
 let handleScrollTimer: any
+
+const { t, locale } = useI18n({
+    inheritLocale: true,
+    useScope: 'global'
+})
 
 const listData = [
     { 
@@ -80,22 +94,91 @@ const listData = [
     },          
 ]
 
-init()
+// init()
 
 async function init() {
 
 	const feedItems = await db.feed.where('id').above(0).sortBy('timestamp')
 
-    if (feedItems.length == 0) {
-        // console.log('HomeMain/init/no feed items')
-        /* todo: put in fake feed items */
+    if (!mainStore.haveFetchedInitialMainFeed) {
+        console.log('HomeMain/init/fetching initial main feed')
 
+        const cursor = mainStore.mainFeedCursor
+        connStore.getFeedItems(cursor, async function(webContainer: any) {
+
+            mainStore.haveFetchedInitialMainFeed = true
+
+            processFeedItems(webContainer)
+        })
 
     } else {
- 
+
+        const cursor = mainStore.mainFeedCursor
+        connStore.getFeedItems(cursor, async function(webContainer: any) {
+            processFeedItems(webContainer)
+        })
+
     }
 
 }
+
+
+async function processFeedItems(webContainer: any) {
+    const feedResponse = webContainer?.feedResponse
+    
+    if (!feedResponse) { return }
+
+    const items = feedResponse.items
+
+    for (let i = 0; i < items.length; i++) {
+        const postBinArr = items[i]
+        if (!postBinArr) { continue }
+
+        const postContainer = await decodeToPostContainer(postBinArr)
+        
+        processPostContainer(postContainer)
+
+    }
+
+}
+
+
+async function decodeToPostContainer(binArray: Uint8Array) {
+    let tryPostContainer = false
+    try {
+        const postContainerBlob = clients.PostContainerBlob.decode(binArray)
+
+        if (postContainerBlob && postContainerBlob.hasOwnProperty("postContainer")) {
+            const containerTimestamp = <number>postContainerBlob.timestamp
+            // if (containerTimestamp) {
+            //     postTimestamp.value = formatTime(containerTimestamp, locale.value)
+            // }
+            return postContainerBlob.postContainer
+        } else {
+            tryPostContainer = true
+        }
+    } catch (e) {
+        hal.log("homeMain/decodeProtobufToPostContainer/error " + e)
+        tryPostContainer = true
+    }
+
+    if (tryPostContainer) {
+        hal.log("homeMain/decodeProtobufToPostContainer/try fallback to PostContainer")
+        const err = clients.PostContainer.verify(binArray)
+        if (err) {
+            throw err
+        }
+        const message = clients.PostContainer.decode(binArray)
+        return message
+    }
+}
+
+async function processPostContainer(postContainer: any) {
+    hal.log('homeMain/processPostContainer')
+}
+
+
+
 
 watchEffect(() => {
     if (mainStore.scrollToTop == 'home') {

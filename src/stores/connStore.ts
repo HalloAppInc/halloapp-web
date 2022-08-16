@@ -19,7 +19,7 @@ export const useConnStore = defineStore('conn', () => {
     const testAgainstLocalServer = false /* used for testing, turn off for production releases */
 
     const mainStore = useMainStore()
-    let { createPing, addKey, removeKey, check, createNoiseMessageIKB, uploadMedia } = network()
+    let { createPing, addKey, removeKey, check, createNoiseMessageIKB, createWebStanzaPacket, encodeFeedRequestWebContainer, uploadMedia } = network()
 
     let webSocketServer = 'wss://ws-test.halloapp.net/ws'
 
@@ -35,9 +35,6 @@ export const useConnStore = defineStore('conn', () => {
     let handshakeState: any
     // let cipherStateSend: { EncryptWithAd: (arg0: never[], arg1: string) => any }
     // let cipherStateReceive: { DecryptWithAd: (arg0: never[], arg1: any) => any }
-
-    const paths = ['tony']
-    
 
     if (testAgainstLocalServer) {
         webSocketServer = 'wss://localhost:7071'
@@ -159,7 +156,7 @@ export const useConnStore = defineStore('conn', () => {
         const packet = await decodePacket(eventDataBinArr)
         
         /* verbose logging for now */
-        hal.log('connStore/handleInboundMsg:\n' + JSON.stringify(packet) + '\n\n')
+        hal.log('connStore/handleInboundMsg/packet:\n' + JSON.stringify(packet) + '\n\n')
 
         if (packet == undefined) {
             hal.log('connStore/handleInboundMsg/undefined packet')
@@ -178,8 +175,7 @@ export const useConnStore = defineStore('conn', () => {
         }
 
         const iq = packet.iq
-        const id = iq?.id
-
+    
         const ping = iq?.ping
     
         const msg = packet?.msg
@@ -200,7 +196,7 @@ export const useConnStore = defineStore('conn', () => {
         } else if (webStanza) {
             hal.log('connStore/handleInboundMsg/webStanza')
 
-            let noiseMessage = webStanza?.noiseMessage
+            const noiseMessage = webStanza?.noiseMessage
 
             if (noiseMessage) {
                 hal.log('connStore/handleInboundMsg/webStanza/noiseMessage')
@@ -233,6 +229,8 @@ export const useConnStore = defineStore('conn', () => {
                 hal.log('connStore/handleInboundMsg/webStanza/not a noiseMessage')
                 if (mainStore.isPublicKeyAuthenticated && mainStore.haveInitialHandshakeCompleted) {
                     
+                    const callback = findPacketInQueue(packet)
+
                     if (webStanza.content) {
 
                         const webStanzaContentsBinArr = new Uint8Array(webStanza.content)
@@ -244,34 +242,63 @@ export const useConnStore = defineStore('conn', () => {
 
                         hal.log('connStore/handleInboundMsg/webStanza/decoded: ' + webContainer)
 
+                        if (callback) {
+                            callback(webContainer)
+                        }
+
                     }
+
                 }                
             }
     
         } else {
     
-            let isFound = false
+            const callback = findPacketInQueue(packet)
 
-            for (let i = 0; i < mainStore.messageQueue.length; i++) {
-                if (mainStore.messageQueue[i].id == id) {
-                    hal.log('connStore/handleInboundMsg/found msg in queue:\n' + JSON.stringify(packet) + '\n\n')
-                    isFound = true
-                    const callback = mainStore.messageQueue[i].callback
-                    if (callback) {
-                        callback(packet)
-                    }
-                    // remove message
-                    mainStore.messageQueue.splice(i, 1)
-                    
-                    break
-                }
-            }
-
-            if (!isFound) {
-                hal.log('connStore/handleInboundMsg/unknown:\n    ' + JSON.stringify(packet))
+            if (callback) {
+                callback(packet)
             }
     
         }
+    }
+
+    function findPacketInQueue(packet: any) {
+
+        let cb = undefined
+
+        const iqID = packet.iq?.id
+        const msgID = packet.msg?.id
+
+        let isFound = false
+
+        for (let i = 0; i < mainStore.messageQueue.length; i++) {
+
+            if (iqID && mainStore.messageQueue[i].iqID == iqID) {
+                hal.log('connStore/findPacketInQueue/found iq in queue:\n' + JSON.stringify(packet.iq) + '\n\n')
+                isFound = true
+            }
+            else if (msgID && mainStore.messageQueue[i].msgID == msgID) {
+                hal.log('connStore/findPacketInQueue/found msg in queue:\n' + JSON.stringify(packet.msg) + '\n\n')
+                isFound = true              
+            }
+
+            if (isFound) {
+                const callback = mainStore.messageQueue[i].callback
+                if (callback) {
+                    cb = callback
+                }
+                // remove message
+                mainStore.messageQueue.splice(i, 1)
+                
+                break                       
+            }
+        }
+
+        if (!isFound) {
+            hal.log('connStore/findPacketInQueue/unknown packet:\n' + JSON.stringify(packet) + '\n\n')
+        }
+
+        return cb
     }
 
     /* currently only handle IK handshakes */
@@ -441,7 +468,8 @@ export const useConnStore = defineStore('conn', () => {
 
     async function enqueue(packet: any, needAuth?: boolean, callback?: any) {
         mainStore.messageQueue.push({ 
-            id: packet.iq?.id, 
+            iqID: packet.iq?.id, 
+            msgID: packet.msg?.id,
             packet: packet,
             needAuth: needAuth,
             callback: callback,            
@@ -480,8 +508,8 @@ export const useConnStore = defineStore('conn', () => {
 
             hal.log('connStore/sendMessagesInQueue/' + i.toString() + '/send:\n' + JSON.stringify(packet) + '\n\n')
  
-            const packetProto = server.Packet.encode(packet).finish()
-            const buf = packetProto.buffer.slice(packetProto.byteOffset, packetProto.byteLength + packetProto.byteOffset)
+            const encodedPacketBuf = server.Packet.encode(packet).finish()
+            const buf = encodedPacketBuf.buffer.slice(encodedPacketBuf.byteOffset, encodedPacketBuf.byteLength + encodedPacketBuf.byteOffset)
        
             webSocket.send(buf)
         }
@@ -522,6 +550,15 @@ export const useConnStore = defineStore('conn', () => {
         enqueue(packet, true, callback)
     }
 
+    async function getFeedItems(cursor: string, callback?: Function) {
+        const webContainerBinArr = encodeFeedRequestWebContainer(cursor)
+        const encryptedWebContainer = mainStore.cipherStateSend.EncryptWithAd([], webContainerBinArr)
+
+        const packet = createWebStanzaPacket(encryptedWebContainer)
+        
+        enqueue(packet, true, callback)            
+    }
+
     function login() {
         mainStore.loginMain()
     }
@@ -550,11 +587,12 @@ export const useConnStore = defineStore('conn', () => {
         addKeyToServer,
 
         clearMessagesInQueue,
+
+        getFeedItems,
+
         getMediaUrl,
 
         login,
-        logout,
-
-        paths
+        logout
     }
 })

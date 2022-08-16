@@ -31,14 +31,14 @@ export function network() {
     }
 
     const addKey = () => {
-        let id = nanoid()
+        const id = nanoid()
     
-        let publicKey = Base64.toUint8Array(mainStore.publicKeyBase64)
-        let webClientInfo = server.WebClientInfo.create({
+        const publicKey = Base64.toUint8Array(mainStore.publicKeyBase64)
+        const webClientInfo = server.WebClientInfo.create({
             action: server.WebClientInfo.Action.ADD_KEY,
             staticKey: publicKey
         })
-        let iq = server.Iq.create({
+        const iq = server.Iq.create({
             id: id,
             type: server.Iq.Type.SET,
             webClientInfo: webClientInfo
@@ -48,17 +48,15 @@ export function network() {
         return packet
     }
 
-    function createWebStanza(content: Uint8Array) {
+    function createWebStanzaPacket(content: Uint8Array) {
         const id = nanoid()
         const publicKey = Base64.toUint8Array(mainStore.publicKeyBase64)
 
-        // todo: clarify if the staticKey is web or mobile
         const webStanza = server.WebStanza.create({
-            staticKey: publicKey,
+            staticKey: publicKey, // web public key
             content: content
         })
 
-        // what about: toUid, fromUid, retryCount, rerequestCount
         const msg = server.Msg.create({
             id: id,
             type: server.Msg.Type.NORMAL,
@@ -66,12 +64,9 @@ export function network() {
         })
     
         const packet = server.Packet.create({ msg: msg })
-        const packetProto = server.Packet.encode(packet).finish()
-        const packetBuf = packetProto.buffer.slice(packetProto.byteOffset, packetProto.byteLength + packetProto.byteOffset)
+        hal.log('network/createWebStanzaPacket/packet:\n' + JSON.stringify(packet) + '\n\n')
 
-        hal.log('network/createWebStanza/packet:\n' + JSON.stringify(packet) + '\n\n')
-
-        return packetBuf       
+        return packet       
     }
 
     const createNoiseMessageIKB = (contentBuf: any) => {
@@ -128,6 +123,29 @@ export function network() {
     //     return packetBuf
     // }
     
+    const encodeFeedRequestWebContainer = (cursor: string) => {
+        const id = nanoid()
+
+        const feedRequest = web.FeedRequest.create({
+            id: id,
+            type: web.FeedType.HOME,
+            cursor: cursor,
+            limit: 10
+        })
+
+        const webContainer = web.WebContainer.create({
+            feedRequest: feedRequest
+        })
+
+        hal.log('network/encodeFeedRequestWebContainer:\n' + JSON.stringify(webContainer) + '\n\n')
+
+        const webContainerProto = web.WebContainer.encode(webContainer).finish()
+        const webContainerBuf = webContainerProto.buffer.slice(webContainerProto.byteOffset, webContainerProto.byteLength + webContainerProto.byteOffset)
+        const webContainerBinArr = new Uint8Array(webContainerBuf)
+
+        return webContainerBinArr
+    }
+
     function removeKey(websocket: any) {
         let id = nanoid()
     
@@ -164,7 +182,6 @@ export function network() {
             webClientInfo: webClientInfo
         })
 
-        // packet -> iq -> webClientInfo
         let message = server.Packet.create({ iq: iq })
         let buffer = server.Packet.encode(message).finish()
     
@@ -196,5 +213,12 @@ export function network() {
         // websocket.send(packetProto.buffer)
     }
 
-    return { createPing, addKey, removeKey, createNoiseMessageIKB, check, uploadMedia }
+    return { 
+        addKey, removeKey, createPing,
+        check,
+        createNoiseMessageIKB, 
+        createWebStanzaPacket, 
+        encodeFeedRequestWebContainer,
+        uploadMedia 
+    }
 }

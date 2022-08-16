@@ -51,6 +51,9 @@ export const useMainStore = defineStore('main', {
         groupsPageGroup: <any>{},
         settingsPage: '',
 
+        haveFetchedInitialMainFeed: false,
+        mainFeedCursor: '',
+
         mobileNavlessPanel: '',
         scrollToTop: '',
 
@@ -89,6 +92,9 @@ export const useMainStore = defineStore('main', {
             for (let prop in this.cipherStateSend) {
                 delete this.cipherStateSend[prop]
             }            
+
+            this.haveFetchedInitialMainFeed = false
+            this.mainFeedCursor = ''
 
             // todo: delete all saved data including from indexeddb
     
