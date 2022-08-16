@@ -228,33 +228,42 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.type = reader.int32();
-                    break;
-                case 2:
-                    message.width = reader.int32();
-                    break;
-                case 3:
-                    message.height = reader.int32();
-                    break;
-                case 4:
-                    message.encryptionKey = reader.bytes();
-                    break;
-                case 5:
-                    message.ciphertextHash = reader.bytes();
-                    break;
-                case 6:
-                    message.downloadUrl = reader.string();
-                    break;
-                case 7:
-                    message.blobVersion = reader.int32();
-                    break;
-                case 8:
-                    message.chunkSize = reader.int32();
-                    break;
-                case 9:
-                    message.blobSize = reader.int64();
-                    break;
+                case 1: {
+                        message.type = reader.int32();
+                        break;
+                    }
+                case 2: {
+                        message.width = reader.int32();
+                        break;
+                    }
+                case 3: {
+                        message.height = reader.int32();
+                        break;
+                    }
+                case 4: {
+                        message.encryptionKey = reader.bytes();
+                        break;
+                    }
+                case 5: {
+                        message.ciphertextHash = reader.bytes();
+                        break;
+                    }
+                case 6: {
+                        message.downloadUrl = reader.string();
+                        break;
+                    }
+                case 7: {
+                        message.blobVersion = reader.int32();
+                        break;
+                    }
+                case 8: {
+                        message.chunkSize = reader.int32();
+                        break;
+                    }
+                case 9: {
+                        message.blobSize = reader.int64();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -369,12 +378,12 @@ export const clients = $root.clients = (() => {
             if (object.encryptionKey != null)
                 if (typeof object.encryptionKey === "string")
                     $util.base64.decode(object.encryptionKey, message.encryptionKey = $util.newBuffer($util.base64.length(object.encryptionKey)), 0);
-                else if (object.encryptionKey.length)
+                else if (object.encryptionKey.length >= 0)
                     message.encryptionKey = object.encryptionKey;
             if (object.ciphertextHash != null)
                 if (typeof object.ciphertextHash === "string")
                     $util.base64.decode(object.ciphertextHash, message.ciphertextHash = $util.newBuffer($util.base64.length(object.ciphertextHash)), 0);
-                else if (object.ciphertextHash.length)
+                else if (object.ciphertextHash.length >= 0)
                     message.ciphertextHash = object.ciphertextHash;
             if (object.downloadUrl != null)
                 message.downloadUrl = String(object.downloadUrl);
@@ -475,6 +484,21 @@ export const clients = $root.clients = (() => {
          */
         Media.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for Media
+         * @function getTypeUrl
+         * @memberof clients.Media
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Media.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.Media";
         };
 
         return Media;
@@ -594,15 +618,18 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.encryptionKey = reader.bytes();
-                    break;
-                case 2:
-                    message.ciphertextHash = reader.bytes();
-                    break;
-                case 3:
-                    message.downloadUrl = reader.string();
-                    break;
+                case 1: {
+                        message.encryptionKey = reader.bytes();
+                        break;
+                    }
+                case 2: {
+                        message.ciphertextHash = reader.bytes();
+                        break;
+                    }
+                case 3: {
+                        message.downloadUrl = reader.string();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -665,12 +692,12 @@ export const clients = $root.clients = (() => {
             if (object.encryptionKey != null)
                 if (typeof object.encryptionKey === "string")
                     $util.base64.decode(object.encryptionKey, message.encryptionKey = $util.newBuffer($util.base64.length(object.encryptionKey)), 0);
-                else if (object.encryptionKey.length)
+                else if (object.encryptionKey.length >= 0)
                     message.encryptionKey = object.encryptionKey;
             if (object.ciphertextHash != null)
                 if (typeof object.ciphertextHash === "string")
                     $util.base64.decode(object.ciphertextHash, message.ciphertextHash = $util.newBuffer($util.base64.length(object.ciphertextHash)), 0);
-                else if (object.ciphertextHash.length)
+                else if (object.ciphertextHash.length >= 0)
                     message.ciphertextHash = object.ciphertextHash;
             if (object.downloadUrl != null)
                 message.downloadUrl = String(object.downloadUrl);
@@ -725,6 +752,21 @@ export const clients = $root.clients = (() => {
          */
         EncryptedResource.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for EncryptedResource
+         * @function getTypeUrl
+         * @memberof clients.EncryptedResource
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        EncryptedResource.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.EncryptedResource";
         };
 
         return EncryptedResource;
@@ -844,15 +886,18 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.index = reader.int32();
-                    break;
-                case 2:
-                    message.userId = reader.string();
-                    break;
-                case 3:
-                    message.name = reader.string();
-                    break;
+                case 1: {
+                        message.index = reader.int32();
+                        break;
+                    }
+                case 2: {
+                        message.userId = reader.string();
+                        break;
+                    }
+                case 3: {
+                        message.name = reader.string();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -957,6 +1002,21 @@ export const clients = $root.clients = (() => {
          */
         Mention.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for Mention
+         * @function getTypeUrl
+         * @memberof clients.Mention
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Mention.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.Mention";
         };
 
         return Mention;
@@ -1083,12 +1143,14 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.type = reader.int32();
-                    break;
-                case 2:
-                    message.number = reader.string();
-                    break;
+                case 1: {
+                        message.type = reader.int32();
+                        break;
+                    }
+                case 2: {
+                        message.number = reader.string();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -1210,6 +1272,21 @@ export const clients = $root.clients = (() => {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
+        /**
+         * Gets the default type url for Phone
+         * @function getTypeUrl
+         * @memberof clients.Phone
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Phone.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.Phone";
+        };
+
         return Phone;
     })();
 
@@ -1327,15 +1404,18 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.id = reader.int32();
-                    break;
-                case 2:
-                    message.publicKey = reader.bytes();
-                    break;
-                case 3:
-                    message.signature = reader.bytes();
-                    break;
+                case 1: {
+                        message.id = reader.int32();
+                        break;
+                    }
+                case 2: {
+                        message.publicKey = reader.bytes();
+                        break;
+                    }
+                case 3: {
+                        message.signature = reader.bytes();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -1400,12 +1480,12 @@ export const clients = $root.clients = (() => {
             if (object.publicKey != null)
                 if (typeof object.publicKey === "string")
                     $util.base64.decode(object.publicKey, message.publicKey = $util.newBuffer($util.base64.length(object.publicKey)), 0);
-                else if (object.publicKey.length)
+                else if (object.publicKey.length >= 0)
                     message.publicKey = object.publicKey;
             if (object.signature != null)
                 if (typeof object.signature === "string")
                     $util.base64.decode(object.signature, message.signature = $util.newBuffer($util.base64.length(object.signature)), 0);
-                else if (object.signature.length)
+                else if (object.signature.length >= 0)
                     message.signature = object.signature;
             return message;
         };
@@ -1458,6 +1538,21 @@ export const clients = $root.clients = (() => {
          */
         SignedPreKey.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for SignedPreKey
+         * @function getTypeUrl
+         * @memberof clients.SignedPreKey
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        SignedPreKey.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.SignedPreKey";
         };
 
         return SignedPreKey;
@@ -1566,12 +1661,14 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.id = reader.int32();
-                    break;
-                case 2:
-                    message.publicKey = reader.bytes();
-                    break;
+                case 1: {
+                        message.id = reader.int32();
+                        break;
+                    }
+                case 2: {
+                        message.publicKey = reader.bytes();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -1633,7 +1730,7 @@ export const clients = $root.clients = (() => {
             if (object.publicKey != null)
                 if (typeof object.publicKey === "string")
                     $util.base64.decode(object.publicKey, message.publicKey = $util.newBuffer($util.base64.length(object.publicKey)), 0);
-                else if (object.publicKey.length)
+                else if (object.publicKey.length >= 0)
                     message.publicKey = object.publicKey;
             return message;
         };
@@ -1677,6 +1774,21 @@ export const clients = $root.clients = (() => {
          */
         OneTimePreKey.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for OneTimePreKey
+         * @function getTypeUrl
+         * @memberof clients.OneTimePreKey
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        OneTimePreKey.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.OneTimePreKey";
         };
 
         return OneTimePreKey;
@@ -1774,9 +1886,10 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.theme = reader.int32();
-                    break;
+                case 1: {
+                        message.theme = reader.int32();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -1864,6 +1977,21 @@ export const clients = $root.clients = (() => {
          */
         Background.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for Background
+         * @function getTypeUrl
+         * @memberof clients.Background
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Background.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.Background";
         };
 
         return Background;
@@ -2052,30 +2180,38 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.context = $root.clients.ChatContext.decode(reader, reader.uint32());
-                    break;
-                case 2:
-                    message.text = $root.clients.Text.decode(reader, reader.uint32());
-                    break;
-                case 3:
-                    message.album = $root.clients.Album.decode(reader, reader.uint32());
-                    break;
-                case 4:
-                    message.contactCard = $root.clients.ContactCard.decode(reader, reader.uint32());
-                    break;
-                case 5:
-                    message.voiceNote = $root.clients.VoiceNote.decode(reader, reader.uint32());
-                    break;
-                case 6:
-                    message.files = $root.clients.Files.decode(reader, reader.uint32());
-                    break;
-                case 7:
-                    message.reaction = $root.clients.Reaction.decode(reader, reader.uint32());
-                    break;
-                case 8:
-                    message.location = $root.clients.Location.decode(reader, reader.uint32());
-                    break;
+                case 1: {
+                        message.context = $root.clients.ChatContext.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 2: {
+                        message.text = $root.clients.Text.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 3: {
+                        message.album = $root.clients.Album.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 4: {
+                        message.contactCard = $root.clients.ContactCard.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 5: {
+                        message.voiceNote = $root.clients.VoiceNote.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 6: {
+                        message.files = $root.clients.Files.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 7: {
+                        message.reaction = $root.clients.Reaction.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 8: {
+                        message.location = $root.clients.Location.decode(reader, reader.uint32());
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -2309,6 +2445,21 @@ export const clients = $root.clients = (() => {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
+        /**
+         * Gets the default type url for ChatContainer
+         * @function getTypeUrl
+         * @memberof clients.ChatContainer
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        ChatContainer.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.ChatContainer";
+        };
+
         return ChatContainer;
     })();
 
@@ -2448,21 +2599,26 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.feedPostId = reader.string();
-                    break;
-                case 2:
-                    message.feedPostMediaIndex = reader.int32();
-                    break;
-                case 3:
-                    message.chatReplyMessageId = reader.string();
-                    break;
-                case 4:
-                    message.chatReplyMessageMediaIndex = reader.int32();
-                    break;
-                case 5:
-                    message.chatReplyMessageSenderId = reader.string();
-                    break;
+                case 1: {
+                        message.feedPostId = reader.string();
+                        break;
+                    }
+                case 2: {
+                        message.feedPostMediaIndex = reader.int32();
+                        break;
+                    }
+                case 3: {
+                        message.chatReplyMessageId = reader.string();
+                        break;
+                    }
+                case 4: {
+                        message.chatReplyMessageMediaIndex = reader.int32();
+                        break;
+                    }
+                case 5: {
+                        message.chatReplyMessageSenderId = reader.string();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -2583,6 +2739,21 @@ export const clients = $root.clients = (() => {
          */
         ChatContext.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for ChatContext
+         * @function getTypeUrl
+         * @memberof clients.ChatContext
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        ChatContext.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.ChatContext";
         };
 
         return ChatContext;
@@ -2738,21 +2909,26 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.text = $root.clients.Text.decode(reader, reader.uint32());
-                    break;
-                case 2:
-                    message.album = $root.clients.Album.decode(reader, reader.uint32());
-                    break;
-                case 3:
-                    message.voiceNote = $root.clients.VoiceNote.decode(reader, reader.uint32());
-                    break;
-                case 4:
-                    message.moment = $root.clients.Moment.decode(reader, reader.uint32());
-                    break;
-                case 5:
-                    message.commentKey = reader.bytes();
-                    break;
+                case 1: {
+                        message.text = $root.clients.Text.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 2: {
+                        message.album = $root.clients.Album.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 3: {
+                        message.voiceNote = $root.clients.VoiceNote.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 4: {
+                        message.moment = $root.clients.Moment.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 5: {
+                        message.commentKey = reader.bytes();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -2868,7 +3044,7 @@ export const clients = $root.clients = (() => {
             if (object.commentKey != null)
                 if (typeof object.commentKey === "string")
                     $util.base64.decode(object.commentKey, message.commentKey = $util.newBuffer($util.base64.length(object.commentKey)), 0);
-                else if (object.commentKey.length)
+                else if (object.commentKey.length >= 0)
                     message.commentKey = object.commentKey;
             return message;
         };
@@ -2928,6 +3104,21 @@ export const clients = $root.clients = (() => {
          */
         PostContainer.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for PostContainer
+         * @function getTypeUrl
+         * @memberof clients.PostContainer
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        PostContainer.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.PostContainer";
         };
 
         return PostContainer;
@@ -3069,21 +3260,26 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.postContainer = $root.clients.PostContainer.decode(reader, reader.uint32());
-                    break;
-                case 2:
-                    message.uid = reader.int64();
-                    break;
-                case 3:
-                    message.postId = reader.string();
-                    break;
-                case 4:
-                    message.timestamp = reader.int64();
-                    break;
-                case 5:
-                    message.groupId = reader.string();
-                    break;
+                case 1: {
+                        message.postContainer = $root.clients.PostContainer.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 2: {
+                        message.uid = reader.int64();
+                        break;
+                    }
+                case 3: {
+                        message.postId = reader.string();
+                        break;
+                    }
+                case 4: {
+                        message.timestamp = reader.int64();
+                        break;
+                    }
+                case 5: {
+                        message.groupId = reader.string();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -3239,6 +3435,21 @@ export const clients = $root.clients = (() => {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
+        /**
+         * Gets the default type url for PostContainerBlob
+         * @function getTypeUrl
+         * @memberof clients.PostContainerBlob
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        PostContainerBlob.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.PostContainerBlob";
+        };
+
         return PostContainerBlob;
     })();
 
@@ -3392,21 +3603,26 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.context = $root.clients.CommentContext.decode(reader, reader.uint32());
-                    break;
-                case 2:
-                    message.text = $root.clients.Text.decode(reader, reader.uint32());
-                    break;
-                case 3:
-                    message.album = $root.clients.Album.decode(reader, reader.uint32());
-                    break;
-                case 4:
-                    message.voiceNote = $root.clients.VoiceNote.decode(reader, reader.uint32());
-                    break;
-                case 5:
-                    message.reaction = $root.clients.Reaction.decode(reader, reader.uint32());
-                    break;
+                case 1: {
+                        message.context = $root.clients.CommentContext.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 2: {
+                        message.text = $root.clients.Text.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 3: {
+                        message.album = $root.clients.Album.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 4: {
+                        message.voiceNote = $root.clients.VoiceNote.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 5: {
+                        message.reaction = $root.clients.Reaction.decode(reader, reader.uint32());
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -3580,6 +3796,21 @@ export const clients = $root.clients = (() => {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
+        /**
+         * Gets the default type url for CommentContainer
+         * @function getTypeUrl
+         * @memberof clients.CommentContainer
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        CommentContainer.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.CommentContainer";
+        };
+
         return CommentContainer;
     })();
 
@@ -3686,12 +3917,14 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.feedPostId = reader.string();
-                    break;
-                case 2:
-                    message.parentCommentId = reader.string();
-                    break;
+                case 1: {
+                        message.feedPostId = reader.string();
+                        break;
+                    }
+                case 2: {
+                        message.parentCommentId = reader.string();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -3788,6 +4021,21 @@ export const clients = $root.clients = (() => {
          */
         CommentContext.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for CommentContext
+         * @function getTypeUrl
+         * @memberof clients.CommentContext
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        CommentContext.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.CommentContext";
         };
 
         return CommentContext;
@@ -3907,15 +4155,18 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 4:
-                    message.postContainer = $root.clients.PostContainer.decode(reader, reader.uint32());
-                    break;
-                case 5:
-                    message.commentContainer = $root.clients.CommentContainer.decode(reader, reader.uint32());
-                    break;
-                case 6:
-                    message.chatContainer = $root.clients.ChatContainer.decode(reader, reader.uint32());
-                    break;
+                case 4: {
+                        message.postContainer = $root.clients.PostContainer.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 5: {
+                        message.commentContainer = $root.clients.CommentContainer.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 6: {
+                        message.chatContainer = $root.clients.ChatContainer.decode(reader, reader.uint32());
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -4037,6 +4288,21 @@ export const clients = $root.clients = (() => {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
+        /**
+         * Gets the default type url for Container
+         * @function getTypeUrl
+         * @memberof clients.Container
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Container.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.Container";
+        };
+
         return Container;
     })();
 
@@ -4156,17 +4422,20 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.text = reader.string();
-                    break;
-                case 2:
-                    if (!(message.mentions && message.mentions.length))
-                        message.mentions = [];
-                    message.mentions.push($root.clients.Mention.decode(reader, reader.uint32()));
-                    break;
-                case 3:
-                    message.link = $root.clients.Link.decode(reader, reader.uint32());
-                    break;
+                case 1: {
+                        message.text = reader.string();
+                        break;
+                    }
+                case 2: {
+                        if (!(message.mentions && message.mentions.length))
+                            message.mentions = [];
+                        message.mentions.push($root.clients.Mention.decode(reader, reader.uint32()));
+                        break;
+                    }
+                case 3: {
+                        message.link = $root.clients.Link.decode(reader, reader.uint32());
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -4296,6 +4565,21 @@ export const clients = $root.clients = (() => {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
+        /**
+         * Gets the default type url for Text
+         * @function getTypeUrl
+         * @memberof clients.Text
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Text.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.Text";
+        };
+
         return Text;
     })();
 
@@ -4393,11 +4677,12 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    if (!(message.contacts && message.contacts.length))
-                        message.contacts = [];
-                    message.contacts.push($root.clients.Contact.decode(reader, reader.uint32()));
-                    break;
+                case 1: {
+                        if (!(message.contacts && message.contacts.length))
+                            message.contacts = [];
+                        message.contacts.push($root.clients.Contact.decode(reader, reader.uint32()));
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -4502,6 +4787,21 @@ export const clients = $root.clients = (() => {
          */
         ContactCard.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for ContactCard
+         * @function getTypeUrl
+         * @memberof clients.ContactCard
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        ContactCard.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.ContactCard";
         };
 
         return ContactCard;
@@ -4649,27 +4949,32 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.name = reader.string();
-                    break;
-                case 2:
-                    message.photo = reader.bytes();
-                    break;
-                case 3:
-                    if (!(message.numbers && message.numbers.length))
-                        message.numbers = [];
-                    message.numbers.push($root.clients.ContactPhone.decode(reader, reader.uint32()));
-                    break;
-                case 4:
-                    if (!(message.emails && message.emails.length))
-                        message.emails = [];
-                    message.emails.push($root.clients.ContactEmail.decode(reader, reader.uint32()));
-                    break;
-                case 5:
-                    if (!(message.addresses && message.addresses.length))
-                        message.addresses = [];
-                    message.addresses.push($root.clients.ContactAddress.decode(reader, reader.uint32()));
-                    break;
+                case 1: {
+                        message.name = reader.string();
+                        break;
+                    }
+                case 2: {
+                        message.photo = reader.bytes();
+                        break;
+                    }
+                case 3: {
+                        if (!(message.numbers && message.numbers.length))
+                            message.numbers = [];
+                        message.numbers.push($root.clients.ContactPhone.decode(reader, reader.uint32()));
+                        break;
+                    }
+                case 4: {
+                        if (!(message.emails && message.emails.length))
+                            message.emails = [];
+                        message.emails.push($root.clients.ContactEmail.decode(reader, reader.uint32()));
+                        break;
+                    }
+                case 5: {
+                        if (!(message.addresses && message.addresses.length))
+                            message.addresses = [];
+                        message.addresses.push($root.clients.ContactAddress.decode(reader, reader.uint32()));
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -4758,7 +5063,7 @@ export const clients = $root.clients = (() => {
             if (object.photo != null)
                 if (typeof object.photo === "string")
                     $util.base64.decode(object.photo, message.photo = $util.newBuffer($util.base64.length(object.photo)), 0);
-                else if (object.photo.length)
+                else if (object.photo.length >= 0)
                     message.photo = object.photo;
             if (object.numbers) {
                 if (!Array.isArray(object.numbers))
@@ -4852,6 +5157,21 @@ export const clients = $root.clients = (() => {
          */
         Contact.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for Contact
+         * @function getTypeUrl
+         * @memberof clients.Contact
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Contact.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.Contact";
         };
 
         return Contact;
@@ -4960,12 +5280,14 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.label = reader.string();
-                    break;
-                case 2:
-                    message.address = reader.string();
-                    break;
+                case 1: {
+                        message.label = reader.string();
+                        break;
+                    }
+                case 2: {
+                        message.address = reader.string();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -5062,6 +5384,21 @@ export const clients = $root.clients = (() => {
          */
         ContactAddress.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for ContactAddress
+         * @function getTypeUrl
+         * @memberof clients.ContactAddress
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        ContactAddress.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.ContactAddress";
         };
 
         return ContactAddress;
@@ -5170,12 +5507,14 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.label = reader.string();
-                    break;
-                case 2:
-                    message.address = reader.string();
-                    break;
+                case 1: {
+                        message.label = reader.string();
+                        break;
+                    }
+                case 2: {
+                        message.address = reader.string();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -5272,6 +5611,21 @@ export const clients = $root.clients = (() => {
          */
         ContactEmail.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for ContactEmail
+         * @function getTypeUrl
+         * @memberof clients.ContactEmail
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        ContactEmail.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.ContactEmail";
         };
 
         return ContactEmail;
@@ -5380,12 +5734,14 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.label = reader.string();
-                    break;
-                case 2:
-                    message.number = reader.string();
-                    break;
+                case 1: {
+                        message.label = reader.string();
+                        break;
+                    }
+                case 2: {
+                        message.number = reader.string();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -5482,6 +5838,21 @@ export const clients = $root.clients = (() => {
          */
         ContactPhone.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for ContactPhone
+         * @function getTypeUrl
+         * @memberof clients.ContactPhone
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        ContactPhone.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.ContactPhone";
         };
 
         return ContactPhone;
@@ -5601,15 +5972,18 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.img = $root.clients.EncryptedResource.decode(reader, reader.uint32());
-                    break;
-                case 2:
-                    message.width = reader.int32();
-                    break;
-                case 3:
-                    message.height = reader.int32();
-                    break;
+                case 1: {
+                        message.img = $root.clients.EncryptedResource.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 2: {
+                        message.width = reader.int32();
+                        break;
+                    }
+                case 3: {
+                        message.height = reader.int32();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -5719,6 +6093,21 @@ export const clients = $root.clients = (() => {
          */
         Image.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for Image
+         * @function getTypeUrl
+         * @memberof clients.Image
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Image.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.Image";
         };
 
         return Image;
@@ -5838,15 +6227,18 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.blobVersion = reader.int32();
-                    break;
-                case 2:
-                    message.chunkSize = reader.int32();
-                    break;
-                case 3:
-                    message.blobSize = reader.int64();
-                    break;
+                case 1: {
+                        message.blobVersion = reader.int32();
+                        break;
+                    }
+                case 2: {
+                        message.chunkSize = reader.int32();
+                        break;
+                    }
+                case 3: {
+                        message.blobSize = reader.int64();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -5980,6 +6372,21 @@ export const clients = $root.clients = (() => {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
+        /**
+         * Gets the default type url for StreamingInfo
+         * @function getTypeUrl
+         * @memberof clients.StreamingInfo
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        StreamingInfo.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.StreamingInfo";
+        };
+
         return StreamingInfo;
     })();
 
@@ -6108,18 +6515,22 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.video = $root.clients.EncryptedResource.decode(reader, reader.uint32());
-                    break;
-                case 2:
-                    message.width = reader.int32();
-                    break;
-                case 3:
-                    message.height = reader.int32();
-                    break;
-                case 4:
-                    message.streamingInfo = $root.clients.StreamingInfo.decode(reader, reader.uint32());
-                    break;
+                case 1: {
+                        message.video = $root.clients.EncryptedResource.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 2: {
+                        message.width = reader.int32();
+                        break;
+                    }
+                case 3: {
+                        message.height = reader.int32();
+                        break;
+                    }
+                case 4: {
+                        message.streamingInfo = $root.clients.StreamingInfo.decode(reader, reader.uint32());
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -6244,6 +6655,21 @@ export const clients = $root.clients = (() => {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
+        /**
+         * Gets the default type url for Video
+         * @function getTypeUrl
+         * @memberof clients.Video
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Video.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.Video";
+        };
+
         return Video;
     })();
 
@@ -6352,14 +6778,16 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    if (!(message.files && message.files.length))
-                        message.files = [];
-                    message.files.push($root.clients.File.decode(reader, reader.uint32()));
-                    break;
-                case 2:
-                    message.text = $root.clients.Text.decode(reader, reader.uint32());
-                    break;
+                case 1: {
+                        if (!(message.files && message.files.length))
+                            message.files = [];
+                        message.files.push($root.clients.File.decode(reader, reader.uint32()));
+                        break;
+                    }
+                case 2: {
+                        message.text = $root.clients.Text.decode(reader, reader.uint32());
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -6480,6 +6908,21 @@ export const clients = $root.clients = (() => {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
+        /**
+         * Gets the default type url for Files
+         * @function getTypeUrl
+         * @memberof clients.Files
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Files.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.Files";
+        };
+
         return Files;
     })();
 
@@ -6586,12 +7029,14 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.data = $root.clients.EncryptedResource.decode(reader, reader.uint32());
-                    break;
-                case 2:
-                    message.filename = reader.string();
-                    break;
+                case 1: {
+                        message.data = $root.clients.EncryptedResource.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 2: {
+                        message.filename = reader.string();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -6695,6 +7140,21 @@ export const clients = $root.clients = (() => {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
+        /**
+         * Gets the default type url for File
+         * @function getTypeUrl
+         * @memberof clients.File
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        File.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.File";
+        };
+
         return File;
     })();
 
@@ -6790,9 +7250,10 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.emoji = reader.string();
-                    break;
+                case 1: {
+                        message.emoji = reader.string();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -6880,6 +7341,21 @@ export const clients = $root.clients = (() => {
          */
         Reaction.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for Reaction
+         * @function getTypeUrl
+         * @memberof clients.Reaction
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Reaction.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.Reaction";
         };
 
         return Reaction;
@@ -7010,18 +7486,22 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.latitude = reader.double();
-                    break;
-                case 2:
-                    message.longitude = reader.double();
-                    break;
-                case 3:
-                    message.name = reader.string();
-                    break;
-                case 4:
-                    message.address = $root.clients.Address.decode(reader, reader.uint32());
-                    break;
+                case 1: {
+                        message.latitude = reader.double();
+                        break;
+                    }
+                case 2: {
+                        message.longitude = reader.double();
+                        break;
+                    }
+                case 3: {
+                        message.name = reader.string();
+                        break;
+                    }
+                case 4: {
+                        message.address = $root.clients.Address.decode(reader, reader.uint32());
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -7141,6 +7621,21 @@ export const clients = $root.clients = (() => {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
+        /**
+         * Gets the default type url for Location
+         * @function getTypeUrl
+         * @memberof clients.Location
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Location.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.Location";
+        };
+
         return Location;
     })();
 
@@ -7238,11 +7733,12 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    if (!(message.formattedAddressLines && message.formattedAddressLines.length))
-                        message.formattedAddressLines = [];
-                    message.formattedAddressLines.push(reader.string());
-                    break;
+                case 1: {
+                        if (!(message.formattedAddressLines && message.formattedAddressLines.length))
+                            message.formattedAddressLines = [];
+                        message.formattedAddressLines.push(reader.string());
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -7342,6 +7838,21 @@ export const clients = $root.clients = (() => {
          */
         Address.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for Address
+         * @function getTypeUrl
+         * @memberof clients.Address
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Address.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.Address";
         };
 
         return Address;
@@ -7464,12 +7975,14 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.image = $root.clients.Image.decode(reader, reader.uint32());
-                    break;
-                case 2:
-                    message.video = $root.clients.Video.decode(reader, reader.uint32());
-                    break;
+                case 1: {
+                        message.image = $root.clients.Image.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 2: {
+                        message.video = $root.clients.Video.decode(reader, reader.uint32());
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -7587,6 +8100,21 @@ export const clients = $root.clients = (() => {
          */
         AlbumMedia.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for AlbumMedia
+         * @function getTypeUrl
+         * @memberof clients.AlbumMedia
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        AlbumMedia.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.AlbumMedia";
         };
 
         return AlbumMedia;
@@ -7708,17 +8236,20 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    if (!(message.media && message.media.length))
-                        message.media = [];
-                    message.media.push($root.clients.AlbumMedia.decode(reader, reader.uint32()));
-                    break;
-                case 2:
-                    message.text = $root.clients.Text.decode(reader, reader.uint32());
-                    break;
-                case 3:
-                    message.voiceNote = $root.clients.VoiceNote.decode(reader, reader.uint32());
-                    break;
+                case 1: {
+                        if (!(message.media && message.media.length))
+                            message.media = [];
+                        message.media.push($root.clients.AlbumMedia.decode(reader, reader.uint32()));
+                        break;
+                    }
+                case 2: {
+                        message.text = $root.clients.Text.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 3: {
+                        message.voiceNote = $root.clients.VoiceNote.decode(reader, reader.uint32());
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -7853,6 +8384,21 @@ export const clients = $root.clients = (() => {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
+        /**
+         * Gets the default type url for Album
+         * @function getTypeUrl
+         * @memberof clients.Album
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Album.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.Album";
+        };
+
         return Album;
     })();
 
@@ -7959,12 +8505,14 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.chainKey = reader.bytes();
-                    break;
-                case 2:
-                    message.publicSignatureKey = reader.bytes();
-                    break;
+                case 1: {
+                        message.chainKey = reader.bytes();
+                        break;
+                    }
+                case 2: {
+                        message.publicSignatureKey = reader.bytes();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -8024,12 +8572,12 @@ export const clients = $root.clients = (() => {
             if (object.chainKey != null)
                 if (typeof object.chainKey === "string")
                     $util.base64.decode(object.chainKey, message.chainKey = $util.newBuffer($util.base64.length(object.chainKey)), 0);
-                else if (object.chainKey.length)
+                else if (object.chainKey.length >= 0)
                     message.chainKey = object.chainKey;
             if (object.publicSignatureKey != null)
                 if (typeof object.publicSignatureKey === "string")
                     $util.base64.decode(object.publicSignatureKey, message.publicSignatureKey = $util.newBuffer($util.base64.length(object.publicSignatureKey)), 0);
-                else if (object.publicSignatureKey.length)
+                else if (object.publicSignatureKey.length >= 0)
                     message.publicSignatureKey = object.publicSignatureKey;
             return message;
         };
@@ -8079,6 +8627,21 @@ export const clients = $root.clients = (() => {
          */
         SenderKey.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for SenderKey
+         * @function getTypeUrl
+         * @memberof clients.SenderKey
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        SenderKey.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.SenderKey";
         };
 
         return SenderKey;
@@ -8187,12 +8750,14 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.senderKey = $root.clients.SenderKey.decode(reader, reader.uint32());
-                    break;
-                case 2:
-                    message.currentChainIndex = reader.int32();
-                    break;
+                case 1: {
+                        message.senderKey = $root.clients.SenderKey.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 2: {
+                        message.currentChainIndex = reader.int32();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -8294,6 +8859,21 @@ export const clients = $root.clients = (() => {
          */
         SenderState.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for SenderState
+         * @function getTypeUrl
+         * @memberof clients.SenderState
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        SenderState.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.SenderState";
         };
 
         return SenderState;
@@ -8427,15 +9007,18 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.senderStateEncryptedPayload = reader.bytes();
-                    break;
-                case 2:
-                    message.oneToOneEncryptedPayload = reader.bytes();
-                    break;
-                case 3:
-                    message.commentKeyEncryptedPayload = reader.bytes();
-                    break;
+                case 1: {
+                        message.senderStateEncryptedPayload = reader.bytes();
+                        break;
+                    }
+                case 2: {
+                        message.oneToOneEncryptedPayload = reader.bytes();
+                        break;
+                    }
+                case 3: {
+                        message.commentKeyEncryptedPayload = reader.bytes();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -8509,17 +9092,17 @@ export const clients = $root.clients = (() => {
             if (object.senderStateEncryptedPayload != null)
                 if (typeof object.senderStateEncryptedPayload === "string")
                     $util.base64.decode(object.senderStateEncryptedPayload, message.senderStateEncryptedPayload = $util.newBuffer($util.base64.length(object.senderStateEncryptedPayload)), 0);
-                else if (object.senderStateEncryptedPayload.length)
+                else if (object.senderStateEncryptedPayload.length >= 0)
                     message.senderStateEncryptedPayload = object.senderStateEncryptedPayload;
             if (object.oneToOneEncryptedPayload != null)
                 if (typeof object.oneToOneEncryptedPayload === "string")
                     $util.base64.decode(object.oneToOneEncryptedPayload, message.oneToOneEncryptedPayload = $util.newBuffer($util.base64.length(object.oneToOneEncryptedPayload)), 0);
-                else if (object.oneToOneEncryptedPayload.length)
+                else if (object.oneToOneEncryptedPayload.length >= 0)
                     message.oneToOneEncryptedPayload = object.oneToOneEncryptedPayload;
             if (object.commentKeyEncryptedPayload != null)
                 if (typeof object.commentKeyEncryptedPayload === "string")
                     $util.base64.decode(object.commentKeyEncryptedPayload, message.commentKeyEncryptedPayload = $util.newBuffer($util.base64.length(object.commentKeyEncryptedPayload)), 0);
-                else if (object.commentKeyEncryptedPayload.length)
+                else if (object.commentKeyEncryptedPayload.length >= 0)
                     message.commentKeyEncryptedPayload = object.commentKeyEncryptedPayload;
             return message;
         };
@@ -8564,6 +9147,21 @@ export const clients = $root.clients = (() => {
          */
         EncryptedPayload.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for EncryptedPayload
+         * @function getTypeUrl
+         * @memberof clients.EncryptedPayload
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        EncryptedPayload.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.EncryptedPayload";
         };
 
         return EncryptedPayload;
@@ -8661,9 +9259,10 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.image = $root.clients.Image.decode(reader, reader.uint32());
-                    break;
+                case 1: {
+                        message.image = $root.clients.Image.decode(reader, reader.uint32());
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -8756,6 +9355,21 @@ export const clients = $root.clients = (() => {
          */
         Moment.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for Moment
+         * @function getTypeUrl
+         * @memberof clients.Moment
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Moment.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.Moment";
         };
 
         return Moment;
@@ -8853,9 +9467,10 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.audio = $root.clients.EncryptedResource.decode(reader, reader.uint32());
-                    break;
+                case 1: {
+                        message.audio = $root.clients.EncryptedResource.decode(reader, reader.uint32());
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -8948,6 +9563,21 @@ export const clients = $root.clients = (() => {
          */
         VoiceNote.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for VoiceNote
+         * @function getTypeUrl
+         * @memberof clients.VoiceNote
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        VoiceNote.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.VoiceNote";
         };
 
         return VoiceNote;
@@ -9080,20 +9710,24 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.url = reader.string();
-                    break;
-                case 2:
-                    message.title = reader.string();
-                    break;
-                case 3:
-                    message.description = reader.string();
-                    break;
-                case 4:
-                    if (!(message.preview && message.preview.length))
-                        message.preview = [];
-                    message.preview.push($root.clients.Image.decode(reader, reader.uint32()));
-                    break;
+                case 1: {
+                        message.url = reader.string();
+                        break;
+                    }
+                case 2: {
+                        message.title = reader.string();
+                        break;
+                    }
+                case 3: {
+                        message.description = reader.string();
+                        break;
+                    }
+                case 4: {
+                        if (!(message.preview && message.preview.length))
+                            message.preview = [];
+                        message.preview.push($root.clients.Image.decode(reader, reader.uint32()));
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -9226,6 +9860,21 @@ export const clients = $root.clients = (() => {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
+        /**
+         * Gets the default type url for Link
+         * @function getTypeUrl
+         * @memberof clients.Link
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Link.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.Link";
+        };
+
         return Link;
     })();
 
@@ -9332,12 +9981,14 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.uid = reader.int64();
-                    break;
-                case 2:
-                    message.publicIdentityKey = reader.bytes();
-                    break;
+                case 1: {
+                        message.uid = reader.int64();
+                        break;
+                    }
+                case 2: {
+                        message.publicIdentityKey = reader.bytes();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -9406,7 +10057,7 @@ export const clients = $root.clients = (() => {
             if (object.publicIdentityKey != null)
                 if (typeof object.publicIdentityKey === "string")
                     $util.base64.decode(object.publicIdentityKey, message.publicIdentityKey = $util.newBuffer($util.base64.length(object.publicIdentityKey)), 0);
-                else if (object.publicIdentityKey.length)
+                else if (object.publicIdentityKey.length >= 0)
                     message.publicIdentityKey = object.publicIdentityKey;
             return message;
         };
@@ -9457,6 +10108,21 @@ export const clients = $root.clients = (() => {
          */
         MemberDetails.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for MemberDetails
+         * @function getTypeUrl
+         * @memberof clients.MemberDetails
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        MemberDetails.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.MemberDetails";
         };
 
         return MemberDetails;
@@ -9576,15 +10242,18 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.feedPostId = reader.string();
-                    break;
-                case 2:
-                    message.senderUid = reader.int64();
-                    break;
-                case 3:
-                    message.timestamp = reader.int64();
-                    break;
+                case 1: {
+                        message.feedPostId = reader.string();
+                        break;
+                    }
+                case 2: {
+                        message.senderUid = reader.int64();
+                        break;
+                    }
+                case 3: {
+                        message.timestamp = reader.int64();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -9717,6 +10386,21 @@ export const clients = $root.clients = (() => {
          */
         PostIdContext.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for PostIdContext
+         * @function getTypeUrl
+         * @memberof clients.PostIdContext
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        PostIdContext.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.PostIdContext";
         };
 
         return PostIdContext;
@@ -9858,21 +10542,26 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.commentId = reader.string();
-                    break;
-                case 2:
-                    message.feedPostId = reader.string();
-                    break;
-                case 3:
-                    message.parentCommentId = reader.string();
-                    break;
-                case 4:
-                    message.senderUid = reader.int64();
-                    break;
-                case 5:
-                    message.timestamp = reader.int64();
-                    break;
+                case 1: {
+                        message.commentId = reader.string();
+                        break;
+                    }
+                case 2: {
+                        message.feedPostId = reader.string();
+                        break;
+                    }
+                case 3: {
+                        message.parentCommentId = reader.string();
+                        break;
+                    }
+                case 4: {
+                        message.senderUid = reader.int64();
+                        break;
+                    }
+                case 5: {
+                        message.timestamp = reader.int64();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -10023,6 +10712,21 @@ export const clients = $root.clients = (() => {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
         };
 
+        /**
+         * Gets the default type url for CommentIdContext
+         * @function getTypeUrl
+         * @memberof clients.CommentIdContext
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        CommentIdContext.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.CommentIdContext";
+        };
+
         return CommentIdContext;
     })();
 
@@ -10154,15 +10858,18 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    message.postIdContext = $root.clients.PostIdContext.decode(reader, reader.uint32());
-                    break;
-                case 2:
-                    message.commentIdContext = $root.clients.CommentIdContext.decode(reader, reader.uint32());
-                    break;
-                case 3:
-                    message.contentHash = reader.bytes();
-                    break;
+                case 1: {
+                        message.postIdContext = $root.clients.PostIdContext.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 2: {
+                        message.commentIdContext = $root.clients.CommentIdContext.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 3: {
+                        message.contentHash = reader.bytes();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -10248,7 +10955,7 @@ export const clients = $root.clients = (() => {
             if (object.contentHash != null)
                 if (typeof object.contentHash === "string")
                     $util.base64.decode(object.contentHash, message.contentHash = $util.newBuffer($util.base64.length(object.contentHash)), 0);
-                else if (object.contentHash.length)
+                else if (object.contentHash.length >= 0)
                     message.contentHash = object.contentHash;
             return message;
         };
@@ -10298,6 +11005,21 @@ export const clients = $root.clients = (() => {
          */
         ContentDetails.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for ContentDetails
+         * @function getTypeUrl
+         * @memberof clients.ContentDetails
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        ContentDetails.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.ContentDetails";
         };
 
         return ContentDetails;
@@ -10410,16 +11132,18 @@ export const clients = $root.clients = (() => {
             while (reader.pos < end) {
                 let tag = reader.uint32();
                 switch (tag >>> 3) {
-                case 1:
-                    if (!(message.memberDetails && message.memberDetails.length))
-                        message.memberDetails = [];
-                    message.memberDetails.push($root.clients.MemberDetails.decode(reader, reader.uint32()));
-                    break;
-                case 2:
-                    if (!(message.contentDetails && message.contentDetails.length))
-                        message.contentDetails = [];
-                    message.contentDetails.push($root.clients.ContentDetails.decode(reader, reader.uint32()));
-                    break;
+                case 1: {
+                        if (!(message.memberDetails && message.memberDetails.length))
+                            message.memberDetails = [];
+                        message.memberDetails.push($root.clients.MemberDetails.decode(reader, reader.uint32()));
+                        break;
+                    }
+                case 2: {
+                        if (!(message.contentDetails && message.contentDetails.length))
+                            message.contentDetails = [];
+                        message.contentDetails.push($root.clients.ContentDetails.decode(reader, reader.uint32()));
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -10550,6 +11274,21 @@ export const clients = $root.clients = (() => {
          */
         GroupHistoryPayload.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for GroupHistoryPayload
+         * @function getTypeUrl
+         * @memberof clients.GroupHistoryPayload
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        GroupHistoryPayload.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/clients.GroupHistoryPayload";
         };
 
         return GroupHistoryPayload;

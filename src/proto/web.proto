@@ -20,32 +20,43 @@ message ReceiptInfo {
     SEEN = 1;
     PLAYED = 2;
   }
-  Status status = 1;
-  int64 timestamp = 2;
+  int64 uid = 1;
+  Status status = 2;
+  int64 timestamp = 3;
 }
 
 message UserDisplayInfo {
-  string contact_name = 1;
-  string avatar_id = 2;
+  int64 uid = 1;
+  string contact_name = 2;
+  string avatar_id = 3;
 }
 
 message PostDisplayInfo {
-  enum Status {
-    UNKNOWN = 0;
-    SENDING = 1;
-    SENT = 2;
-    SEND_ERROR = 3;
-    RETRACTING = 4;
-    RETRACTED = 5;
-    INCOMING = 6;
-    REREQUESTING = 7;
-    UNSUPPORTED = 8;
-    EXPIRED = 9;
+  enum SeenState {
+    UNSEEN = 0;
+    SEEN = 1;
+    SEEN_SENDING = 2;
   }
-  Status status = 1;
-  int32 unread_comments = 2;
-  bool is_seen = 3;
-  map <string, ReceiptInfo> user_receipts = 4;
+  enum TransferState {
+    UNKNOWN = 0;
+    RECEIVED = 1;
+    SENT = 2;
+    SENDING = 3;
+    SEND_ERROR = 4;
+    DECRYPTION_ERROR = 5;
+  }
+  enum RetractState {
+    UNRETRACTED = 0;
+    RETRACTING = 1;
+    RETRACTED = 2;
+  }
+  string id = 1;
+  TransferState transferState = 2;
+  SeenState seenState = 3;
+  RetractState retractState = 4;
+  bool is_unsupported = 5;
+  int32 unread_comments = 6;
+  repeated ReceiptInfo user_receipts = 7;
 }
 
 enum FeedType {
@@ -66,9 +77,15 @@ message FeedResponse {
   }
   string id = 1;
   FeedType type = 2;
-  repeated server.FeedItem items = 3;
-  map <string, UserDisplayInfo> user_display_info = 4;
-  map <string, PostDisplayInfo> post_display_info = 5;
+  repeated FeedItem items = 3;
+  repeated UserDisplayInfo user_display_info = 4;
+  repeated PostDisplayInfo post_display_info = 5;
   string next_cursor = 6;
   Error error = 7;
+}
+
+message FeedItem {
+  oneof content {
+    server.Post post = 1;
+  }
 }
