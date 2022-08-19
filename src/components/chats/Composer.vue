@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, ComputedRef } from 'vue'
+import { Ref, ref, computed, watch, ComputedRef } from 'vue'
 
 import { useColorStore } from '../../stores/colorStore'
 import { useMainStore } from '../../stores/mainStore'

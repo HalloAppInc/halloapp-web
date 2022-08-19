@@ -57,13 +57,14 @@ export interface PostMedia {
 
 export interface Feed {
     id?: number
+    postID: string
     userID?: string
     groupID?: string
     text?: string
     mentions?: [Mention]
     linkPreview?: LinkPreview
     media?: [PostMedia]
-    timestamp: number
+    timestamp?: number
     proto?: ArrayBuffer
 }
 
@@ -96,10 +97,10 @@ export class HADexie extends Dexie {
     
     constructor() {
         super('myDatabase')
-        this.version(3).stores({
+        this.version(4).stores({
             messageList: '++id, fromUserID, toUserID',
             media: '++id',
-            feed: '++id, userID, groupID, text, mentions, linkPreview, media, timestamp, proto',
+            feed: '++id, postID, userID, groupID, text, mentions, linkPreview, media, timestamp, proto',
             chat: '++id, proto',
             contact: '++id, userName, userID',
             avatar: '++id, userID, image'

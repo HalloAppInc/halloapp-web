@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import hal from '../common/halogger'
-
+import { db } from '../db'
 
 export const useMainStore = defineStore('main', {
     persist: {
@@ -96,7 +96,9 @@ export const useMainStore = defineStore('main', {
             this.haveFetchedInitialMainFeed = false
             this.mainFeedCursor = ''
 
-            // todo: delete all saved data including from indexeddb
+            // deletes the entire db and re-opens it
+            // todo: make sure all dbs including chat is also deleted, test to see if delete/re-open is fast enough
+            db.delete().then(() => db.open())
     
             // todo: remove public key from server? (what if there's no connection)
 

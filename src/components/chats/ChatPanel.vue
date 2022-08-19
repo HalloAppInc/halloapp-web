@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, nextTick, watch, onMounted, onUnmounted } from 'vue'
+import { Ref, ref, computed, nextTick, watch, onMounted, onUnmounted } from 'vue'
 
 import { useI18n } from 'vue-i18n'
 import GraphemeSplitter from 'grapheme-splitter'
@@ -65,7 +65,7 @@ const selectMediaList = ref()
 const selectMediaIdx = ref()
 const menuTimestamp = ref('')
 const quoteMessage = ref({})
-const NotificationQueue = ref(<string[]>[])
+const NotificationQueue: Ref<string[]> = ref([])
 
 // set floating time stamp's content
 const currentMsgTimestamp = ref()
@@ -184,7 +184,7 @@ async function parseMessage() {
             if (message.timestamp) {
                 result.push({
                     'type': 'timestamp',
-                    'timestamp': formatTimeDateOnlyChat(parseInt(message.timestamp), <string>locale.value),
+                    'timestamp': formatTimeDateOnlyChat(parseInt(message.timestamp), locale.value as string),
                 })
                 numOfTimestamp++
             }
@@ -197,13 +197,13 @@ async function parseMessage() {
                 result.push({
                     'type': 'timestamp',
                     'unixTimestamp': timestampStringNew,
-                    'timestamp': formatTimeDateOnlyChat(parseInt(timestampStringNew), <string>locale.value),
+                    'timestamp': formatTimeDateOnlyChat(parseInt(timestampStringNew), locale.value as string),
                 })
                 numOfTimestamp++
             }
         }
 
-        let time = formatTimeChat(parseInt(message.timestamp), <string>locale.value)
+        let time = formatTimeChat(parseInt(message.timestamp), locale.value as string)
         let type = (message.fromUserID == mainStore.loginUserID) ? 'outBound' : 'inBound'
         // not delete
         if ( message.text != undefined) {
@@ -385,7 +385,7 @@ function debouncedHandleScroll() {
         let timestampEl = closestElement?.getElementsByClassName('timestamp')[0] as HTMLDivElement
         if (timestampEl) {
             let unixTimestamp = timestampEl.getAttribute('data-msg-timestamp') as string
-            currentMsgTimestamp.value = formatTimeDateOnlyChat(parseInt(unixTimestamp), <string>locale.value)
+            currentMsgTimestamp.value = formatTimeDateOnlyChat(parseInt(unixTimestamp), locale.value as string)
         }
         if (!timestampEl) {
             // find the timestamp in static timestamp bubble
@@ -439,7 +439,7 @@ function openMenu(event: any, forInBound: boolean, idx: number, timestamp: strin
     }
     else {
         isForDeletedMessage.value = false
-        menuTimestamp.value = formatTimeFullChat(parseInt(timestamp), <string>locale.value)
+        menuTimestamp.value = formatTimeFullChat(parseInt(timestamp), locale.value as string)
         selectMessageIdx.value = idx
     }
 

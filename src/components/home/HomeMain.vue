@@ -1,6 +1,6 @@
 
 <script setup lang="ts">
-import { ref, watch, watchEffect, computed } from 'vue'
+import { Ref, ref, watch, watchEffect, computed } from 'vue'
 
 import { useMainStore } from '../../stores/mainStore'
 import { useConnStore } from '../../stores/connStore'
@@ -10,7 +10,8 @@ import Post from './Post.vue'
 import Comment from '../comment/CommentMain.vue'
 import hal from '../../common/halogger'
 
-import { db } from '../../db'
+import { Dexie, liveQuery } from "dexie"
+import { db, Feed, PostMedia, Mention } from '../../db'
 
 import { useI18n } from 'vue-i18n'
 
@@ -35,73 +36,46 @@ const { t, locale } = useI18n({
     useScope: 'global'
 })
 
-const listData = [
-    { 
-        userID: "xxx",
-        title: "Thou with no name",
-        subtitle: "this is a link",
-        timestamp: "now",
-        postID: "1"
-    },
-    { 
-        userID: "xxx",
-        title: "Tree",
-        subtitle: "apple",
-        timestamp: "now",
-        postID: "2"
-    },
-    { 
-        userID: "xxx",
-        title: "Bob",
-        subtitle: "this is a link",
-        timestamp: "now",
-        postID: "3"
-    },     
-    { 
-        userID: "xxx",
-        title: "Jessy",
-        subtitle: "this is a link",
-        timestamp: "now",
-        postID: "4"
-    },
-    { 
-        userID: "xxx",
-        title: "Nathan",
-        subtitle: "this is a link",
-        timestamp: "now",
-        postID: "5"
-    },
-    { 
-        userID: "xxx",
-        title: "Kai",
-        subtitle: "this is a link",
-        timestamp: "now",
-        postID: "6"
-    },
-    { 
-        userID: "xxx",
-        title: "Rebecca",
-        subtitle: "this is a link",
-        timestamp: "now",
-        postID: "7"
-    },     
-    { 
-        userID: "xxx",
-        title: "Dylan",
-        subtitle: "this is a link",
-        timestamp: "now",
-        postID: "8"
-    },          
-]
+const listData: Ref<Feed[]> = ref([])
 
-// init()
+const feedObservable = liveQuery (() => db.feed
+    .toArray()
+)
+
+// Subscribe
+const subscription = feedObservable.subscribe({
+    next: result => { 
+        // console.log('homeMain/feedObservable: ', JSON.stringify(result))
+        if (result) {
+            listData.value = result
+        }
+
+    },
+    error: error => console.error(error)
+})
+
+let firstFeed: Feed = { postID: '1' }
+insertPostIfNotExist(firstFeed)
+
+// setTimeout(setMention, 3000)
+
+// function setMention() {
+//     db.feed.where('postID').equals('1').modify( (x: Feed) => {
+//         const mention: Mention = {
+//             index: 5,
+//             userID: '2',
+//             name: 'Test5'
+//         }
+//         x.mentions = [mention]
+//     })
+// }
+
+init()
 
 async function init() {
 
-	const feedItems = await db.feed.where('id').above(0).sortBy('timestamp')
-
     if (!mainStore.haveFetchedInitialMainFeed) {
-        console.log('HomeMain/init/fetching initial main feed')
+        console.log('homeMain/init/fetch initial main feed')
 
         const cursor = mainStore.mainFeedCursor
         connStore.getFeedItems(cursor, async function(webContainer: any) {
@@ -131,54 +105,143 @@ async function processFeedItems(webContainer: any) {
     const items = feedResponse.items
 
     for (let i = 0; i < items.length; i++) {
-        const postBinArr = items[i]
-        if (!postBinArr) { continue }
-
-        const postContainer = await decodeToPostContainer(postBinArr)
-        
-        processPostContainer(postContainer)
-
+        const serverPost = items[i].post
+        if (!serverPost) { continue }
+        processPostContainer(serverPost)
     }
+
+}
+
+async function processPostContainer(serverPost: any) {
+    hal.log('homeMain/processPostContainer')
+
+    let postObject: Feed = { postID: serverPost.id }
+
+    const publisherUID = serverPost.publisherUID
+
+    const payloadBinArr = serverPost.payload
+    if (!payloadBinArr) { return }
+    const postContainer = await decodeToPostContainer(payloadBinArr)
+
+    if (!postContainer) { return }
+
+    if (publisherUID) {
+        postObject.userID = publisherUID
+        // todo: process publisher avatar
+    }
+
+    let isTextPost = false
+    let isTextPostTextOnly = false
+    let isAlbum = false
+    let isVoiceNote = false
+    let voiceNoteMedia: any
+
+    let postMentions: any
+
+
+    if (postContainer.album) {
+        isAlbum = true
+        // setMediaSizes(postContainer.album)
+    }
+
+    if (postContainer.text) {
+        isTextPost = true
+    }
+
+    if (postContainer.voiceNote) {
+        isVoiceNote = true
+        voiceNoteMedia = postContainer.voiceNote.audio
+    }
+
+    if (isAlbum) {
+        /* text */
+        if (postContainer.album?.text) {
+            if (postContainer.album.text.text) {
+                postObject.text = postContainer.album.text.text
+            }
+            postMentions = postContainer.album.text.mentions            
+        }
+
+        /* media */
+        if (postContainer.album?.media) {
+
+            for (const [index, mediaInfo] of postContainer.album.media.entries()) {
+                
+                if (mediaInfo.image) {
+                    const encryptedResourceInfo = mediaInfo.image.img
+                }
+
+                if (mediaInfo.video) {
+                    const media = mediaInfo.video.video
+                    const isStream = JSON.stringify(mediaInfo.video.streamingInfo) !== '{}'
+                    if (isStream) {
+                        const chunkSize = mediaInfo.video.streamingInfo?.chunkSize
+                  
+                    }
+                }                
+            }
+        }
+
+        /* voiceNote inside album */
+        if (postContainer.album?.voiceNote) {
+            isVoiceNote = true
+            voiceNoteMedia = postContainer.album.voiceNote.audio
+        }     
+    }
+
+    if (isTextPost) {
+        /* link preview */
+        // if (postContainer.text.link &&
+        //     postContainer.text.link.preview &&
+        //     postContainer.text.link.preview[0] &&
+        //     postContainer.text.link.preview[0].img
+        //     ) {
+        //         const previewImage = postContainer.text.link.preview[0]
+        //         const media = previewImage.img
+        // } else {
+        //     isTextPostTextOnly = true
+        // }
+
+        /* process text after checking if it's text only */
+        if (postContainer.text?.text) {
+            postObject.text = postContainer.text.text
+            postMentions = postContainer.text.mentions            
+        }        
+    }
+
+    insertPostIfNotExist(postObject)
+
+}
+
+async function insertPostIfNotExist(post: any) {
+
+    const postID = post.postID
+    const dbFeedsList = await db.feed.where('postID').equals(postID).toArray()
+    
+    if (dbFeedsList.length == 0) {
+        try {
+            const id = await db.feed.put(post)
+            hal.log('homeMain/processPostContainer/record/postObject: \n' + JSON.stringify(post) + '\n\n')
+        } catch (error) {
+            hal.log('Avatar/db/put/error ' + error)
+        }
+    } else {
+        // hal.log('homeMain/processPostContainer/exit/postObject already in db \n' + JSON.stringify(post) + '\n\n')
+    }
+
 
 }
 
 
 async function decodeToPostContainer(binArray: Uint8Array) {
-    let tryPostContainer = false
-    try {
-        const postContainerBlob = clients.PostContainerBlob.decode(binArray)
-
-        if (postContainerBlob && postContainerBlob.hasOwnProperty("postContainer")) {
-            const containerTimestamp = <number>postContainerBlob.timestamp
-            // if (containerTimestamp) {
-            //     postTimestamp.value = formatTime(containerTimestamp, locale.value)
-            // }
-            return postContainerBlob.postContainer
-        } else {
-            tryPostContainer = true
-        }
-    } catch (e) {
-        hal.log("homeMain/decodeProtobufToPostContainer/error " + e)
-        tryPostContainer = true
+    hal.log("homeMain/decodeToPostContainer")
+    const err = clients.PostContainer.verify(binArray)
+    if (err) {
+        throw err
     }
-
-    if (tryPostContainer) {
-        hal.log("homeMain/decodeProtobufToPostContainer/try fallback to PostContainer")
-        const err = clients.PostContainer.verify(binArray)
-        if (err) {
-            throw err
-        }
-        const message = clients.PostContainer.decode(binArray)
-        return message
-    }
+    const postContainer = clients.PostContainer.decode(binArray)
+    return postContainer
 }
-
-async function processPostContainer(postContainer: any) {
-    hal.log('homeMain/processPostContainer')
-}
-
-
-
 
 watchEffect(() => {
     if (mainStore.scrollToTop == 'home') {
@@ -262,7 +325,7 @@ function debouncedHandleScroll() {
             <!-- data-ha-postID is used only for detecting post while scrolling -->
             <Post
                 :postID="value.postID"
-                userID="value.userID" 
+                :userID="value.userID" 
                 @commentsClick="openCommentsIfNeeded(value.postID)" 
                 :data-ha-postID="value.postID"> 
             </Post>

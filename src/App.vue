@@ -72,7 +72,7 @@
     }
 
     function applyPlatformSpecifics() {
-        const userAgent = navigator.userAgent || navigator.vendor || (<any>window).opera
+        const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera
 
         if ('ontouchstart' in document.documentElement && userAgent.match(/Mobi/)) {
             mainStore.isMobile = true
@@ -80,7 +80,7 @@
             mainStore.isMobile = false
         }
 
-        if (/iPad|iPhone|iPod/.test(userAgent) && !(<any>window).MSStream) {
+        if (/iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream) {
             mainStore.isIOS = true
         }
         if (/android/i.test(userAgent)) {

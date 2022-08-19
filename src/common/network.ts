@@ -12,22 +12,16 @@ export function network() {
 
     const mainStore = useMainStore()
 
-    const createPing = () => {
-        let id = nanoid()
+    const createPingPacket = () => {
+        const id = nanoid()
     
-        let iq = server.Iq.create({
-            id: id,
+        const iq = server.Iq.create({
             type: server.Iq.Type.GET, // type does not matter for ping
             ping: server.Ping.create()
         })
 
         const packet = server.Packet.create({ iq: iq })
-        const packetProto = server.Packet.encode(packet).finish()
-        const buf = packetProto.buffer.slice(packetProto.byteOffset, packetProto.byteLength + packetProto.byteOffset)
-        
-        hal.log('network/createPing: ' + JSON.stringify(packet) + '\n\n')
-
-        return buf
+        return packet
     }
 
     const addKey = () => {
@@ -91,38 +85,15 @@ export function network() {
             webStanza: webStanza
         })        
 
-        hal.log('network/createNoiseMessageIKB/webStanza:\n' + JSON.stringify(webStanza) + '\n\n')
-
         const packet = server.Packet.create({ msg: msg })
         const packetProto = server.Packet.encode(packet).finish()
         const packetBuf = packetProto.buffer.slice(packetProto.byteOffset, packetProto.byteLength + packetProto.byteOffset)
 
+        hal.log('network/createNoiseMessageIKB/packet:\n' + JSON.stringify(packet) + '\n\n')
+
         return packetBuf
     }
 
-    // const createNoiseMessageIKB = (contentBuf: any) => {
-    //     const contentBinArr = new Uint8Array(contentBuf)
-
-    //     const noiseMessage = web.NoiseMessage.create({
-    //         messageType: web.NoiseMessage.MessageType.IK_B,
-    //         content: contentBinArr
-    //     })
-
-    //     const webContainer = web.WebContainer.create({
-    //         noiseMessage: noiseMessage
-    //     })
-
-    //     hal.log('network/createNoiseMessageIKB/webContainer:\n' + JSON.stringify(webContainer) + '\n\n')
-
-    //     const webContainerProto = web.WebContainer.encode(webContainer).finish()
-    //     const webContainerBuf = webContainerProto.buffer.slice(webContainerProto.byteOffset, webContainerProto.byteLength + webContainerProto.byteOffset)
-    //     const webContainerBinArr = new Uint8Array(webContainerBuf)
-
-    //     const packetBuf = createWebStanza(webContainerBinArr)
-
-    //     return packetBuf
-    // }
-    
     const encodeFeedRequestWebContainer = (cursor: string) => {
         const id = nanoid()
 
@@ -214,7 +185,7 @@ export function network() {
     }
 
     return { 
-        addKey, removeKey, createPing,
+        addKey, removeKey, createPingPacket,
         check,
         createNoiseMessageIKB, 
         createWebStanzaPacket, 
