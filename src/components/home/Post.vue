@@ -24,8 +24,8 @@ const { formatTime, formatTimer } = useTimeformatter()
 
 const props = defineProps(['postID'])
 
-let pushname = (<any>window).han
-let avatar = (<any>window).haa
+let pushname = (window as any).han
+let avatar = (window as any).haa
 
 let isAvailable = ref(true)
 
@@ -208,7 +208,7 @@ async function decodeProtobufToPostContainer(binArray: Uint8Array) {
         const postContainerBlob = clients.PostContainerBlob.decode(binArray)
 
         if (postContainerBlob && postContainerBlob.hasOwnProperty("postContainer")) {
-            const containerTimestamp = <number>postContainerBlob.timestamp
+            const containerTimestamp = postContainerBlob.timestamp as number
             if (containerTimestamp) {
                 postTimestamp.value = formatTime(containerTimestamp, locale.value)
             }

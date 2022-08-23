@@ -391,7 +391,7 @@ export const useConnStore = defineStore('conn', () => {
         }
     }
     
-    async function initHandshake(noise: any) {
+    function initHandshake(noise: any) {
     
         /* create public key */
         // let [first, second] = noise.CreateKeyPair(noise.constants.NOISE_DH_CURVE25519)
