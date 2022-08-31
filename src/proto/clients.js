@@ -354,6 +354,12 @@ export const clients = $root.clients = (() => {
                 return object;
             let message = new $root.clients.Media();
             switch (object.type) {
+            default:
+                if (typeof object.type === "number") {
+                    message.type = object.type;
+                    break;
+                }
+                break;
             case "MEDIA_TYPE_UNSPECIFIED":
             case 0:
                 message.type = 0;
@@ -388,6 +394,12 @@ export const clients = $root.clients = (() => {
             if (object.downloadUrl != null)
                 message.downloadUrl = String(object.downloadUrl);
             switch (object.blobVersion) {
+            default:
+                if (typeof object.blobVersion === "number") {
+                    message.blobVersion = object.blobVersion;
+                    break;
+                }
+                break;
             case "BLOB_VERSION_DEFAULT":
             case 0:
                 message.blobVersion = 0;
@@ -452,7 +464,7 @@ export const clients = $root.clients = (() => {
                     object.blobSize = options.longs === String ? "0" : 0;
             }
             if (message.type != null && message.hasOwnProperty("type"))
-                object.type = options.enums === String ? $root.clients.MediaType[message.type] : message.type;
+                object.type = options.enums === String ? $root.clients.MediaType[message.type] === undefined ? message.type : $root.clients.MediaType[message.type] : message.type;
             if (message.width != null && message.hasOwnProperty("width"))
                 object.width = message.width;
             if (message.height != null && message.hasOwnProperty("height"))
@@ -464,7 +476,7 @@ export const clients = $root.clients = (() => {
             if (message.downloadUrl != null && message.hasOwnProperty("downloadUrl"))
                 object.downloadUrl = message.downloadUrl;
             if (message.blobVersion != null && message.hasOwnProperty("blobVersion"))
-                object.blobVersion = options.enums === String ? $root.clients.BlobVersion[message.blobVersion] : message.blobVersion;
+                object.blobVersion = options.enums === String ? $root.clients.BlobVersion[message.blobVersion] === undefined ? message.blobVersion : $root.clients.BlobVersion[message.blobVersion] : message.blobVersion;
             if (message.chunkSize != null && message.hasOwnProperty("chunkSize"))
                 object.chunkSize = message.chunkSize;
             if (message.blobSize != null && message.hasOwnProperty("blobSize"))
@@ -1215,6 +1227,12 @@ export const clients = $root.clients = (() => {
                 return object;
             let message = new $root.clients.Phone();
             switch (object.type) {
+            default:
+                if (typeof object.type === "number") {
+                    message.type = object.type;
+                    break;
+                }
+                break;
             case "PHONE_TYPE_UNSPECIFIED":
             case 0:
                 message.type = 0;
@@ -1255,7 +1273,7 @@ export const clients = $root.clients = (() => {
                 object.number = "";
             }
             if (message.type != null && message.hasOwnProperty("type"))
-                object.type = options.enums === String ? $root.clients.PhoneType[message.type] : message.type;
+                object.type = options.enums === String ? $root.clients.PhoneType[message.type] === undefined ? message.type : $root.clients.PhoneType[message.type] : message.type;
             if (message.number != null && message.hasOwnProperty("number"))
                 object.number = message.number;
             return object;
@@ -6304,6 +6322,12 @@ export const clients = $root.clients = (() => {
                 return object;
             let message = new $root.clients.StreamingInfo();
             switch (object.blobVersion) {
+            default:
+                if (typeof object.blobVersion === "number") {
+                    message.blobVersion = object.blobVersion;
+                    break;
+                }
+                break;
             case "BLOB_VERSION_DEFAULT":
             case 0:
                 message.blobVersion = 0;
@@ -6350,7 +6374,7 @@ export const clients = $root.clients = (() => {
                     object.blobSize = options.longs === String ? "0" : 0;
             }
             if (message.blobVersion != null && message.hasOwnProperty("blobVersion"))
-                object.blobVersion = options.enums === String ? $root.clients.BlobVersion[message.blobVersion] : message.blobVersion;
+                object.blobVersion = options.enums === String ? $root.clients.BlobVersion[message.blobVersion] === undefined ? message.blobVersion : $root.clients.BlobVersion[message.blobVersion] : message.blobVersion;
             if (message.chunkSize != null && message.hasOwnProperty("chunkSize"))
                 object.chunkSize = message.chunkSize;
             if (message.blobSize != null && message.hasOwnProperty("blobSize"))

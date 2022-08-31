@@ -232,10 +232,15 @@ export function useHAMediaUpload() {
                 const recvEncryptedBuffer = await new File([recvBlob], '').arrayBuffer()
                 // decrypt the arrayBuffer
                 const decryptedBuffer = await decryptImageOrNonStreamVideo(recvEncryptedBuffer, ciphertextHash, decryptionKey)
-                const decryptedBlob = new Blob([decryptedBuffer])
-                hal.log('haMediaUpload/decryptDownloadedMediaAndDecode/Decrypt image')
-                const mediaBlobUrl = URL.createObjectURL(decryptedBlob)
-                return mediaBlobUrl
+
+                if (decryptedBuffer) {
+                    const decryptedBlob = new Blob([decryptedBuffer])
+                    hal.log('haMediaUpload/decryptDownloadedMediaAndDecode/Decrypt image')
+                    const mediaBlobUrl = URL.createObjectURL(decryptedBlob)
+                    return mediaBlobUrl
+                } else {
+                    return undefined
+                }
             }
         }
         else {
@@ -269,6 +274,7 @@ export function useHAMediaUpload() {
                     const recvEncryptedBuffer = await new File([recvBlob], '').arrayBuffer()
                     // decrypt the arrayBuffer
                     const decryptedBuffer = await decryptImageOrNonStreamVideo(recvEncryptedBuffer, ciphertextHash, decryptionKey)
+                    if (!decryptedBuffer) { return undefined } 
                     const decryptedBlob = new Blob([decryptedBuffer])
                     hal.log('haCrypto/decryptDownloadedMediaAndDecode/Decrypt Video')
                     const mediaBlobUrl = URL.createObjectURL(decryptedBlob)
@@ -539,6 +545,7 @@ export function useHAMediaUpload() {
                 const recvEncryptedBuffer = await new File([recvBlob], '').arrayBuffer()
                 // decrypt the arrayBuffer
                 const decryptedBuffer = await decryptImageOrNonStreamVideo(recvEncryptedBuffer, ciphertextHash, decryptionKey)
+                if (!decryptedBuffer) { return undefined }
                 const decryptedBlob = new Blob([decryptedBuffer])
                 hal.log('haMediaUpload/resumableDecryptDownloadedMediaAndDecode/Decrypt image')
                 const mediaBlobUrl = URL.createObjectURL(decryptedBlob)
@@ -576,6 +583,7 @@ export function useHAMediaUpload() {
                     const recvEncryptedBuffer = await new File([recvBlob], '').arrayBuffer()
                     // decrypt the arrayBuffer
                     const decryptedBuffer = await decryptImageOrNonStreamVideo(recvEncryptedBuffer, ciphertextHash, decryptionKey)
+                    if (!decryptedBuffer) return undefined
                     const decryptedBlob = new Blob([decryptedBuffer])
                     hal.log('haCrypto/resumableDecryptDownloadedMediaAndDecode/Decrypt Video')
                     const mediaBlobUrl = URL.createObjectURL(decryptedBlob)

@@ -94,7 +94,7 @@
                             {{ value.title }}
                         </div>
                         <div class="contentTimestamp">
-                            {{ formatTime(parseInt(value.timestamp), locale) }}
+                            {{ formatTime(parseInt(value.timestamp), locale as string) }}
                         </div>
                     </div>
                     <div class="contentBody">

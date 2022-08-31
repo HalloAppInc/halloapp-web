@@ -162,8 +162,16 @@ export function useHACrypto() {
         )
             .catch((error) => { hal.log("haCrypto/decryptBinArr/decrypt error: " + error) })
 
-        let decryptedCiphertextArray = new Uint8Array(decryptedCiphertext)
-        return decryptedCiphertextArray
+
+        if (decryptedCiphertext) {
+            let decryptedCiphertextArray = new Uint8Array(decryptedCiphertext)
+            return decryptedCiphertextArray
+        } else {
+            return undefined
+        }
+        
+        
+
     }
 
     function isUint8ArrayEqual(arr1: Uint8Array, arr2: Uint8Array) {
@@ -332,9 +340,13 @@ export function useHACrypto() {
                 const chunkInfo = videoInfo + ' ' + videoInfoCount
                 const decryptedBinArr = await decryptChunk(chunkWithMAC, decryptionKey, chunkInfo)
     
-                let buf: any = decryptedBinArr.buffer
-                buf.fileStart = fileStartOffset
-                mp4box.appendBuffer(buf)
+                if (decryptedBinArr) {
+                    let buf: any = decryptedBinArr.buffer
+                    buf.fileStart = fileStartOffset
+                    mp4box.appendBuffer(buf)
+                } else {
+                    hal.log('haCrypto/decryptStream/done/error')
+                }
     
                 break
             }
@@ -357,13 +369,18 @@ export function useHACrypto() {
                 const chunkInfo = videoInfo + ' ' + videoInfoCount
                 const decryptedBinArr = await decryptChunk(chunkWithMAC, decryptionKey, chunkInfo)
     
-                let buf: any = decryptedBinArr.buffer
-                buf.fileStart = fileStartOffset
-                mp4box.appendBuffer(buf)
+                if (decryptedBinArr) {
+                    let buf: any = decryptedBinArr.buffer
+                    buf.fileStart = fileStartOffset
+                    mp4box.appendBuffer(buf)
                 
-                chunkCounter++
-                videoInfoCount++
-                fileStartOffset += decryptedBinArr.length
+                    chunkCounter++
+                    videoInfoCount++
+                    fileStartOffset += decryptedBinArr.length
+                } else {
+                    hal.log('haCrypto/decryptStream/error')
+                    break
+                }
             }
         }
     }

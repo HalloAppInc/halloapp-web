@@ -139,6 +139,7 @@ async function decryptBlob(rawKey: any, IV: any, ciphertext: any) {
     )
     .catch( (error) => { hal.log("decryptBlob/decrypt error: " + error) })
 
+    if (!decryptedCiphertext) return undefined
     let decryptedCiphertextArray = new Uint8Array(decryptedCiphertext)
     return decryptedCiphertextArray
 }
@@ -173,7 +174,7 @@ async function decodeProtobufToPostContainer(binArray: Uint8Array) {
         if (postContainerBlob && postContainerBlob.hasOwnProperty("postContainer")) {
             const containerTimestamp = postContainerBlob.timestamp as number
             if (containerTimestamp) {
-                postTimestamp.value = formatTime(containerTimestamp, locale.value)
+                postTimestamp.value = formatTime(containerTimestamp, locale.value as string)
             }
             return postContainerBlob.postContainer
         } else {
@@ -288,7 +289,7 @@ async function fetchAndDecrypt(derivedKey: Uint8Array, url: any, ciphertextHash:
     }
 
     const decryptedBinaryArray = await decryptBlob(AESKey, IV, encryptedBinaryArray)
-
+    if (!decryptedBinaryArray) return undefined
     /* use blob instead of base64 string as converting to base64 is slow */
     return new Blob([decryptedBinaryArray])
 }
@@ -360,10 +361,13 @@ async function fetchAndDecryptStream(media: any, videoInfo: string, blobSize: an
             const chunkWithMAC = fullBinArr.slice(start, end)
             const chunkInfo = videoInfo + ' ' + videoInfoCount
             const decryptedBinArr = await decryptChunk(chunkWithMAC, encryptionKey, chunkInfo)
-
-            let buf: any = decryptedBinArr.buffer
-            buf.fileStart = fileStartOffset
-            mp4box.appendBuffer(buf)
+            if (decryptedBinArr) {
+                let buf: any = decryptedBinArr.buffer
+                buf.fileStart = fileStartOffset
+                mp4box.appendBuffer(buf)
+            } else {
+                hal.log('fetchAndDecryptStream/done/error')
+            }
 
             break
         }
@@ -387,13 +391,18 @@ async function fetchAndDecryptStream(media: any, videoInfo: string, blobSize: an
             const chunkInfo = videoInfo + ' ' + videoInfoCount
             const decryptedBinArr = await decryptChunk(chunkWithMAC, encryptionKey, chunkInfo)
 
-            let buf: any = decryptedBinArr.buffer
-            buf.fileStart = fileStartOffset
-            mp4box.appendBuffer(buf)
-            
-            chunkCounter++
-            videoInfoCount++
-            fileStartOffset += decryptedBinArr.length
+            if (decryptedBinArr) {
+                let buf: any = decryptedBinArr.buffer
+                buf.fileStart = fileStartOffset
+                mp4box.appendBuffer(buf)
+                
+                chunkCounter++
+                videoInfoCount++
+                fileStartOffset += decryptedBinArr.length
+            } else {
+                hal.log("fetchAndDecryptStream/chunk/" + chunkCounter + "/error")
+                break
+            }
         }
     }
 }
@@ -520,7 +529,7 @@ async function processPost(post: Feed) {
                 
                 if (mediaInfo.type == PostMediaType.Image) {
 
-                    let mediaBlob: Blob
+                    let mediaBlob: Blob | undefined
 
                     if (mediaInfo.blob) {
                         
@@ -528,19 +537,22 @@ async function processPost(post: Feed) {
                     } else {
                         
                         mediaBlob = await getMediaBlob(imageInfo, mediaInfo)
-
-                        modifyPost(props.post.postID, index, mediaBlob)
+                        if (mediaBlob) {
+                            modifyPost(props.post.postID, index, mediaBlob)
+                        }
 
                     }
 
-                    const object = URL.createObjectURL(mediaBlob)
-                    album.value.media[index].mediaBlob = object
-                    album.value.media[index].isReady = true
+                    if (mediaBlob) {
+                        const object = URL.createObjectURL(mediaBlob)
+                        album.value.media[index].mediaBlob = object
+                        album.value.media[index].isReady = true
+                    }
                 }
 
                 if (mediaInfo.type == PostMediaType.Video) {
 
-                    let mediaBlob: Blob
+                    let mediaBlob: Blob | undefined
 
                      if (mediaInfo.blob) {
                         mediaBlob = mediaInfo.blob
@@ -554,15 +566,17 @@ async function processPost(post: Feed) {
                         if (chunkSize) {
                             
                             // MediaSource is not supported on iOS yet
-                            // if ('MediaSource' in window) {
-                            //     hal.log('processPostContainer/video/stream/stream via mediaSource')
-                            //     const mediaSource = new MediaSource()
-                            //     const mediaSourceUrl = URL.createObjectURL(mediaSource)
-                            //     const blobSize = mediaInfo.blobSize
-                            //     setupStreamingMediaSource(mediaSource, mediaInfo, videoInfo, blobSize, chunkSize)
+                            if ('MediaSource' in window) {
+                                hal.log('processPostContainer/video/stream/stream via mediaSource')
+                                const mediaSource = new MediaSource()
+                                const mediaSourceUrl = URL.createObjectURL(mediaSource)
+                                const blobSize = mediaInfo.blobSize
+                                setupStreamingMediaSource(mediaSource, mediaInfo, videoInfo, blobSize, chunkSize)
 
-                            //     album.value.media[index].mediaBlob = mediaSourceUrl
-                            // } else {
+                                album.value.media[index].mediaBlob = mediaSourceUrl
+
+                                
+                            } else {
                                 
                                 mediaBlob = await getChunkedMediaBlob(mediaInfo, videoInfo, chunkSize)
                                 const mediaBlobUrl = URL.createObjectURL(mediaBlob)
@@ -570,16 +584,18 @@ async function processPost(post: Feed) {
 
                                 modifyPost(props.post.postID, index, mediaBlob)
 
-                            // }
+                            }
 
                             album.value.media[index].isReady = true                                               
                         } else {
                             mediaBlob = await getMediaBlob(videoInfo, mediaInfo)
-                            const mediaBlobUrl = URL.createObjectURL(mediaBlob)
-                            album.value.media[index].mediaBlob = mediaBlobUrl
-                            album.value.media[index].isReady = true    
-                            
-                            modifyPost(props.post.postID, index, mediaBlob)
+                            if (mediaBlob) {
+                                const mediaBlobUrl = URL.createObjectURL(mediaBlob)
+                                album.value.media[index].mediaBlob = mediaBlobUrl
+                                album.value.media[index].isReady = true    
+                                
+                                modifyPost(props.post.postID, index, mediaBlob)
+                            }
 
                         }
 
@@ -602,11 +618,13 @@ async function processPost(post: Feed) {
     /* voiceNote */
     if (isVoiceNote) {
         const mediaBlob = await getMediaBlob(voiceNoteInfo, voiceNoteMedia)
-        postVoiceNoteSrc.value = URL.createObjectURL(mediaBlob)
-        showVoiceNote.value = true
+        if (mediaBlob) {
+            postVoiceNoteSrc.value = URL.createObjectURL(mediaBlob)
+            showVoiceNote.value = true
 
-        if (!isAlbum.value) {
-            mediaBoxHeight.value = 0
+            if (!isAlbum.value) {
+                mediaBoxHeight.value = 0
+            }
         }
     }
 

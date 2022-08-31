@@ -1422,6 +1422,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.ClientMode();
             switch (object.mode) {
+            default:
+                if (typeof object.mode === "number") {
+                    message.mode = object.mode;
+                    break;
+                }
+                break;
             case "ACTIVE":
             case 0:
                 message.mode = 0;
@@ -1450,7 +1456,7 @@ export const server = $root.server = (() => {
             if (options.defaults)
                 object.mode = options.enums === String ? "ACTIVE" : 0;
             if (message.mode != null && message.hasOwnProperty("mode"))
-                object.mode = options.enums === String ? $root.server.ClientMode.Mode[message.mode] : message.mode;
+                object.mode = options.enums === String ? $root.server.ClientMode.Mode[message.mode] === undefined ? message.mode : $root.server.ClientMode.Mode[message.mode] : message.mode;
             return object;
         };
 
@@ -3033,6 +3039,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.Contact();
             switch (object.action) {
+            default:
+                if (typeof object.action === "number") {
+                    message.action = object.action;
+                    break;
+                }
+                break;
             case "ADD":
             case 0:
                 message.action = 0;
@@ -3102,7 +3114,7 @@ export const server = $root.server = (() => {
                     object.numPotentialFriends = options.longs === String ? "0" : 0;
             }
             if (message.action != null && message.hasOwnProperty("action"))
-                object.action = options.enums === String ? $root.server.Contact.Action[message.action] : message.action;
+                object.action = options.enums === String ? $root.server.Contact.Action[message.action] === undefined ? message.action : $root.server.Contact.Action[message.action] : message.action;
             if (message.raw != null && message.hasOwnProperty("raw"))
                 object.raw = message.raw;
             if (message.normalized != null && message.hasOwnProperty("normalized"))
@@ -3427,6 +3439,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.ContactList();
             switch (object.type) {
+            default:
+                if (typeof object.type === "number") {
+                    message.type = object.type;
+                    break;
+                }
+                break;
             case "FULL":
             case 0:
                 message.type = 0;
@@ -3500,7 +3518,7 @@ export const server = $root.server = (() => {
                 object.hasPermissions = false;
             }
             if (message.type != null && message.hasOwnProperty("type"))
-                object.type = options.enums === String ? $root.server.ContactList.Type[message.type] : message.type;
+                object.type = options.enums === String ? $root.server.ContactList.Type[message.type] === undefined ? message.type : $root.server.ContactList.Type[message.type] : message.type;
             if (message.syncId != null && message.hasOwnProperty("syncId"))
                 object.syncId = message.syncId;
             if (message.batchIndex != null && message.hasOwnProperty("batchIndex"))
@@ -4425,6 +4443,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.Audience();
             switch (object.type) {
+            default:
+                if (typeof object.type === "number") {
+                    message.type = object.type;
+                    break;
+                }
+                break;
             case "ALL":
             case 0:
                 message.type = 0;
@@ -4473,7 +4497,7 @@ export const server = $root.server = (() => {
             if (options.defaults)
                 object.type = options.enums === String ? "ALL" : 0;
             if (message.type != null && message.hasOwnProperty("type"))
-                object.type = options.enums === String ? $root.server.Audience.Type[message.type] : message.type;
+                object.type = options.enums === String ? $root.server.Audience.Type[message.type] === undefined ? message.type : $root.server.Audience.Type[message.type] : message.type;
             if (message.uids && message.uids.length) {
                 object.uids = [];
                 for (let j = 0; j < message.uids.length; ++j)
@@ -4911,6 +4935,12 @@ export const server = $root.server = (() => {
                 message.mediaCounters = $root.server.MediaCounters.fromObject(object.mediaCounters);
             }
             switch (object.tag) {
+            default:
+                if (typeof object.tag === "number") {
+                    message.tag = object.tag;
+                    break;
+                }
+                break;
             case "EMPTY":
             case 0:
                 message.tag = 0;
@@ -5007,7 +5037,7 @@ export const server = $root.server = (() => {
             if (message.mediaCounters != null && message.hasOwnProperty("mediaCounters"))
                 object.mediaCounters = $root.server.MediaCounters.toObject(message.mediaCounters, options);
             if (message.tag != null && message.hasOwnProperty("tag"))
-                object.tag = options.enums === String ? $root.server.Post.Tag[message.tag] : message.tag;
+                object.tag = options.enums === String ? $root.server.Post.Tag[message.tag] === undefined ? message.tag : $root.server.Post.Tag[message.tag] : message.tag;
             if (message.psaTag != null && message.hasOwnProperty("psaTag"))
                 object.psaTag = message.psaTag;
             if (message.momentUnlockUid != null && message.hasOwnProperty("momentUnlockUid"))
@@ -5422,6 +5452,12 @@ export const server = $root.server = (() => {
                 message.mediaCounters = $root.server.MediaCounters.fromObject(object.mediaCounters);
             }
             switch (object.commentType) {
+            default:
+                if (typeof object.commentType === "number") {
+                    message.commentType = object.commentType;
+                    break;
+                }
+                break;
             case "COMMENT":
             case 0:
                 message.commentType = 0;
@@ -5508,7 +5544,7 @@ export const server = $root.server = (() => {
             if (message.mediaCounters != null && message.hasOwnProperty("mediaCounters"))
                 object.mediaCounters = $root.server.MediaCounters.toObject(message.mediaCounters, options);
             if (message.commentType != null && message.hasOwnProperty("commentType"))
-                object.commentType = options.enums === String ? $root.server.Comment.CommentType[message.commentType] : message.commentType;
+                object.commentType = options.enums === String ? $root.server.Comment.CommentType[message.commentType] === undefined ? message.commentType : $root.server.Comment.CommentType[message.commentType] : message.commentType;
             return object;
         };
 
@@ -6174,6 +6210,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.FeedItem();
             switch (object.action) {
+            default:
+                if (typeof object.action === "number") {
+                    message.action = object.action;
+                    break;
+                }
+                break;
             case "PUBLISH":
             case 0:
                 message.action = 0;
@@ -6250,7 +6292,7 @@ export const server = $root.server = (() => {
                 object.senderClientVersion = "";
             }
             if (message.action != null && message.hasOwnProperty("action"))
-                object.action = options.enums === String ? $root.server.FeedItem.Action[message.action] : message.action;
+                object.action = options.enums === String ? $root.server.FeedItem.Action[message.action] === undefined ? message.action : $root.server.FeedItem.Action[message.action] : message.action;
             if (message.post != null && message.hasOwnProperty("post")) {
                 object.post = $root.server.Post.toObject(message.post, options);
                 if (options.oneofs)
@@ -7524,6 +7566,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.GroupFeedItem();
             switch (object.action) {
+            default:
+                if (typeof object.action === "number") {
+                    message.action = object.action;
+                    break;
+                }
+                break;
             case "PUBLISH":
             case 0:
                 message.action = 0;
@@ -7629,7 +7677,7 @@ export const server = $root.server = (() => {
                 object.senderClientVersion = "";
             }
             if (message.action != null && message.hasOwnProperty("action"))
-                object.action = options.enums === String ? $root.server.GroupFeedItem.Action[message.action] : message.action;
+                object.action = options.enums === String ? $root.server.GroupFeedItem.Action[message.action] === undefined ? message.action : $root.server.GroupFeedItem.Action[message.action] : message.action;
             if (message.gid != null && message.hasOwnProperty("gid"))
                 object.gid = message.gid;
             if (message.name != null && message.hasOwnProperty("name"))
@@ -8691,6 +8739,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.GroupMember();
             switch (object.action) {
+            default:
+                if (typeof object.action === "number") {
+                    message.action = object.action;
+                    break;
+                }
+                break;
             case "ADD":
             case 0:
                 message.action = 0;
@@ -8726,6 +8780,12 @@ export const server = $root.server = (() => {
                 else if (typeof object.uid === "object")
                     message.uid = new $util.LongBits(object.uid.low >>> 0, object.uid.high >>> 0).toNumber();
             switch (object.type) {
+            default:
+                if (typeof object.type === "number") {
+                    message.type = object.type;
+                    break;
+                }
+                break;
             case "MEMBER":
             case 0:
                 message.type = 0;
@@ -8785,14 +8845,14 @@ export const server = $root.server = (() => {
                 }
             }
             if (message.action != null && message.hasOwnProperty("action"))
-                object.action = options.enums === String ? $root.server.GroupMember.Action[message.action] : message.action;
+                object.action = options.enums === String ? $root.server.GroupMember.Action[message.action] === undefined ? message.action : $root.server.GroupMember.Action[message.action] : message.action;
             if (message.uid != null && message.hasOwnProperty("uid"))
                 if (typeof message.uid === "number")
                     object.uid = options.longs === String ? String(message.uid) : message.uid;
                 else
                     object.uid = options.longs === String ? $util.Long.prototype.toString.call(message.uid) : options.longs === Number ? new $util.LongBits(message.uid.low >>> 0, message.uid.high >>> 0).toNumber() : message.uid;
             if (message.type != null && message.hasOwnProperty("type"))
-                object.type = options.enums === String ? $root.server.GroupMember.Type[message.type] : message.type;
+                object.type = options.enums === String ? $root.server.GroupMember.Type[message.type] === undefined ? message.type : $root.server.GroupMember.Type[message.type] : message.type;
             if (message.name != null && message.hasOwnProperty("name"))
                 object.name = message.name;
             if (message.avatarId != null && message.hasOwnProperty("avatarId"))
@@ -9277,6 +9337,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.GroupStanza();
             switch (object.action) {
+            default:
+                if (typeof object.action === "number") {
+                    message.action = object.action;
+                    break;
+                }
+                break;
             case "SET":
             case 0:
                 message.action = 0;
@@ -9397,6 +9463,12 @@ export const server = $root.server = (() => {
                 message.expiryInfo = $root.server.ExpiryInfo.fromObject(object.expiryInfo);
             }
             switch (object.groupType) {
+            default:
+                if (typeof object.groupType === "number") {
+                    message.groupType = object.groupType;
+                    break;
+                }
+                break;
             case "FEED":
             case 0:
                 message.groupType = 0;
@@ -9449,7 +9521,7 @@ export const server = $root.server = (() => {
                 object.groupType = options.enums === String ? "FEED" : 0;
             }
             if (message.action != null && message.hasOwnProperty("action"))
-                object.action = options.enums === String ? $root.server.GroupStanza.Action[message.action] : message.action;
+                object.action = options.enums === String ? $root.server.GroupStanza.Action[message.action] === undefined ? message.action : $root.server.GroupStanza.Action[message.action] : message.action;
             if (message.gid != null && message.hasOwnProperty("gid"))
                 object.gid = message.gid;
             if (message.name != null && message.hasOwnProperty("name"))
@@ -9479,7 +9551,7 @@ export const server = $root.server = (() => {
             if (message.expiryInfo != null && message.hasOwnProperty("expiryInfo"))
                 object.expiryInfo = $root.server.ExpiryInfo.toObject(message.expiryInfo, options);
             if (message.groupType != null && message.hasOwnProperty("groupType"))
-                object.groupType = options.enums === String ? $root.server.GroupStanza.GroupType[message.groupType] : message.groupType;
+                object.groupType = options.enums === String ? $root.server.GroupStanza.GroupType[message.groupType] === undefined ? message.groupType : $root.server.GroupStanza.GroupType[message.groupType] : message.groupType;
             return object;
         };
 
@@ -9764,6 +9836,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.ExpiryInfo();
             switch (object.expiryType) {
+            default:
+                if (typeof object.expiryType === "number") {
+                    message.expiryType = object.expiryType;
+                    break;
+                }
+                break;
             case "EXPIRES_IN_SECONDS":
             case 0:
                 message.expiryType = 0;
@@ -9825,7 +9903,7 @@ export const server = $root.server = (() => {
                     object.expiryTimestamp = options.longs === String ? "0" : 0;
             }
             if (message.expiryType != null && message.hasOwnProperty("expiryType"))
-                object.expiryType = options.enums === String ? $root.server.ExpiryInfo.ExpiryType[message.expiryType] : message.expiryType;
+                object.expiryType = options.enums === String ? $root.server.ExpiryInfo.ExpiryType[message.expiryType] === undefined ? message.expiryType : $root.server.ExpiryInfo.ExpiryType[message.expiryType] : message.expiryType;
             if (message.expiresInSeconds != null && message.hasOwnProperty("expiresInSeconds"))
                 if (typeof message.expiresInSeconds === "number")
                     object.expiresInSeconds = options.longs === String ? String(message.expiresInSeconds) : message.expiresInSeconds;
@@ -10738,6 +10816,12 @@ export const server = $root.server = (() => {
                 message.mediaCounters = $root.server.MediaCounters.fromObject(object.mediaCounters);
             }
             switch (object.chatType) {
+            default:
+                if (typeof object.chatType === "number") {
+                    message.chatType = object.chatType;
+                    break;
+                }
+                break;
             case "CHAT":
             case 0:
                 message.chatType = 0;
@@ -10838,7 +10922,7 @@ export const server = $root.server = (() => {
             if (message.mediaCounters != null && message.hasOwnProperty("mediaCounters"))
                 object.mediaCounters = $root.server.MediaCounters.toObject(message.mediaCounters, options);
             if (message.chatType != null && message.hasOwnProperty("chatType"))
-                object.chatType = options.enums === String ? $root.server.GroupChatStanza.ChatType[message.chatType] : message.chatType;
+                object.chatType = options.enums === String ? $root.server.GroupChatStanza.ChatType[message.chatType] === undefined ? message.chatType : $root.server.GroupChatStanza.ChatType[message.chatType] : message.chatType;
             if (message.senderLogInfo != null && message.hasOwnProperty("senderLogInfo"))
                 object.senderLogInfo = message.senderLogInfo;
             if (message.senderClientVersion != null && message.hasOwnProperty("senderClientVersion"))
@@ -11071,6 +11155,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.GroupsStanza();
             switch (object.action) {
+            default:
+                if (typeof object.action === "number") {
+                    message.action = object.action;
+                    break;
+                }
+                break;
             case "GET":
             case 0:
                 message.action = 0;
@@ -11107,7 +11197,7 @@ export const server = $root.server = (() => {
             if (options.defaults)
                 object.action = options.enums === String ? "GET" : 0;
             if (message.action != null && message.hasOwnProperty("action"))
-                object.action = options.enums === String ? $root.server.GroupsStanza.Action[message.action] : message.action;
+                object.action = options.enums === String ? $root.server.GroupsStanza.Action[message.action] === undefined ? message.action : $root.server.GroupsStanza.Action[message.action] : message.action;
             if (message.groupStanzas && message.groupStanzas.length) {
                 object.groupStanzas = [];
                 for (let j = 0; j < message.groupStanzas.length; ++j)
@@ -11407,6 +11497,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.GroupInviteLink();
             switch (object.action) {
+            default:
+                if (typeof object.action === "number") {
+                    message.action = object.action;
+                    break;
+                }
+                break;
             case "UNKNOWN":
             case 0:
                 message.action = 0;
@@ -11466,7 +11562,7 @@ export const server = $root.server = (() => {
                 object.group = null;
             }
             if (message.action != null && message.hasOwnProperty("action"))
-                object.action = options.enums === String ? $root.server.GroupInviteLink.Action[message.action] : message.action;
+                object.action = options.enums === String ? $root.server.GroupInviteLink.Action[message.action] === undefined ? message.action : $root.server.GroupInviteLink.Action[message.action] : message.action;
             if (message.gid != null && message.hasOwnProperty("gid"))
                 object.gid = message.gid;
             if (message.link != null && message.hasOwnProperty("link"))
@@ -12151,6 +12247,12 @@ export const server = $root.server = (() => {
                 else if (typeof object.versionTtl === "object")
                     message.versionTtl = new $util.LongBits(object.versionTtl.low >>> 0, object.versionTtl.high >>> 0).toNumber();
             switch (object.result) {
+            default:
+                if (typeof object.result === "number") {
+                    message.result = object.result;
+                    break;
+                }
+                break;
             case "UNKNOWN":
             case 0:
                 message.result = 0;
@@ -12165,6 +12267,12 @@ export const server = $root.server = (() => {
                 break;
             }
             switch (object.reason) {
+            default:
+                if (typeof object.reason === "number") {
+                    message.reason = object.reason;
+                    break;
+                }
+                break;
             case "UNKNOWN_REASON":
             case 0:
                 message.reason = 0;
@@ -12240,9 +12348,9 @@ export const server = $root.server = (() => {
                 else
                     object.versionTtl = options.longs === String ? $util.Long.prototype.toString.call(message.versionTtl) : options.longs === Number ? new $util.LongBits(message.versionTtl.low >>> 0, message.versionTtl.high >>> 0).toNumber() : message.versionTtl;
             if (message.result != null && message.hasOwnProperty("result"))
-                object.result = options.enums === String ? $root.server.AuthResult.Result[message.result] : message.result;
+                object.result = options.enums === String ? $root.server.AuthResult.Result[message.result] === undefined ? message.result : $root.server.AuthResult.Result[message.result] : message.result;
             if (message.reason != null && message.hasOwnProperty("reason"))
-                object.reason = options.enums === String ? $root.server.AuthResult.Reason[message.reason] : message.reason;
+                object.reason = options.enums === String ? $root.server.AuthResult.Reason[message.reason] === undefined ? message.reason : $root.server.AuthResult.Reason[message.reason] : message.reason;
             return object;
         };
 
@@ -13553,6 +13661,12 @@ export const server = $root.server = (() => {
             if (object.downloadUrl != null)
                 message.downloadUrl = String(object.downloadUrl);
             switch (object.type) {
+            default:
+                if (typeof object.type === "number") {
+                    message.type = object.type;
+                    break;
+                }
+                break;
             case "DEFAULT":
             case 0:
                 message.type = 0;
@@ -13602,7 +13716,7 @@ export const server = $root.server = (() => {
             if (message.downloadUrl != null && message.hasOwnProperty("downloadUrl"))
                 object.downloadUrl = message.downloadUrl;
             if (message.type != null && message.hasOwnProperty("type"))
-                object.type = options.enums === String ? $root.server.UploadMedia.Type[message.type] : message.type;
+                object.type = options.enums === String ? $root.server.UploadMedia.Type[message.type] === undefined ? message.type : $root.server.UploadMedia.Type[message.type] : message.type;
             return object;
         };
 
@@ -14030,6 +14144,12 @@ export const server = $root.server = (() => {
                 message.mediaCounters = $root.server.MediaCounters.fromObject(object.mediaCounters);
             }
             switch (object.chatType) {
+            default:
+                if (typeof object.chatType === "number") {
+                    message.chatType = object.chatType;
+                    break;
+                }
+                break;
             case "CHAT":
             case 0:
                 message.chatType = 0;
@@ -14121,7 +14241,7 @@ export const server = $root.server = (() => {
             if (message.mediaCounters != null && message.hasOwnProperty("mediaCounters"))
                 object.mediaCounters = $root.server.MediaCounters.toObject(message.mediaCounters, options);
             if (message.chatType != null && message.hasOwnProperty("chatType"))
-                object.chatType = options.enums === String ? $root.server.ChatStanza.ChatType[message.chatType] : message.chatType;
+                object.chatType = options.enums === String ? $root.server.ChatStanza.ChatType[message.chatType] === undefined ? message.chatType : $root.server.ChatStanza.ChatType[message.chatType] : message.chatType;
             if (message.senderLogInfo != null && message.hasOwnProperty("senderLogInfo"))
                 object.senderLogInfo = message.senderLogInfo;
             if (message.senderClientVersion != null && message.hasOwnProperty("senderClientVersion"))
@@ -16363,6 +16483,12 @@ export const server = $root.server = (() => {
                 else if (typeof object.peerUid === "object")
                     message.peerUid = new $util.LongBits(object.peerUid.low >>> 0, object.peerUid.high >>> 0).toNumber();
             switch (object.callType) {
+            default:
+                if (typeof object.callType === "number") {
+                    message.callType = object.callType;
+                    break;
+                }
+                break;
             case "UNKNOWN_TYPE":
             case 0:
                 message.callType = 0;
@@ -16409,7 +16535,7 @@ export const server = $root.server = (() => {
                 else
                     object.peerUid = options.longs === String ? $util.Long.prototype.toString.call(message.peerUid) : options.longs === Number ? new $util.LongBits(message.peerUid.low >>> 0, message.peerUid.high >>> 0).toNumber() : message.peerUid;
             if (message.callType != null && message.hasOwnProperty("callType"))
-                object.callType = options.enums === String ? $root.server.CallType[message.callType] : message.callType;
+                object.callType = options.enums === String ? $root.server.CallType[message.callType] === undefined ? message.callType : $root.server.CallType[message.callType] : message.callType;
             return object;
         };
 
@@ -16692,6 +16818,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.GetCallServersResult();
             switch (object.result) {
+            default:
+                if (typeof object.result === "number") {
+                    message.result = object.result;
+                    break;
+                }
+                break;
             case "UNKNOWN":
             case 0:
                 message.result = 0;
@@ -16758,7 +16890,7 @@ export const server = $root.server = (() => {
                 object.callId = "";
             }
             if (message.result != null && message.hasOwnProperty("result"))
-                object.result = options.enums === String ? $root.server.GetCallServersResult.Result[message.result] : message.result;
+                object.result = options.enums === String ? $root.server.GetCallServersResult.Result[message.result] === undefined ? message.result : $root.server.GetCallServersResult.Result[message.result] : message.result;
             if (message.stunServers && message.stunServers.length) {
                 object.stunServers = [];
                 for (let j = 0; j < message.stunServers.length; ++j)
@@ -17309,6 +17441,12 @@ export const server = $root.server = (() => {
                 else if (typeof object.peerUid === "object")
                     message.peerUid = new $util.LongBits(object.peerUid.low >>> 0, object.peerUid.high >>> 0).toNumber();
             switch (object.callType) {
+            default:
+                if (typeof object.callType === "number") {
+                    message.callType = object.callType;
+                    break;
+                }
+                break;
             case "UNKNOWN_TYPE":
             case 0:
                 message.callType = 0;
@@ -17370,7 +17508,7 @@ export const server = $root.server = (() => {
                 else
                     object.peerUid = options.longs === String ? $util.Long.prototype.toString.call(message.peerUid) : options.longs === Number ? new $util.LongBits(message.peerUid.low >>> 0, message.peerUid.high >>> 0).toNumber() : message.peerUid;
             if (message.callType != null && message.hasOwnProperty("callType"))
-                object.callType = options.enums === String ? $root.server.CallType[message.callType] : message.callType;
+                object.callType = options.enums === String ? $root.server.CallType[message.callType] === undefined ? message.callType : $root.server.CallType[message.callType] : message.callType;
             if (message.webrtcOffer != null && message.hasOwnProperty("webrtcOffer"))
                 object.webrtcOffer = $root.server.WebRtcSessionDescription.toObject(message.webrtcOffer, options);
             if (message.rerequestCount != null && message.hasOwnProperty("rerequestCount"))
@@ -17639,6 +17777,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.StartCallResult();
             switch (object.result) {
+            default:
+                if (typeof object.result === "number") {
+                    message.result = object.result;
+                    break;
+                }
+                break;
             case "UNKNOWN":
             case 0:
                 message.result = 0;
@@ -17710,7 +17854,7 @@ export const server = $root.server = (() => {
                     object.timestampMs = options.longs === String ? "0" : 0;
             }
             if (message.result != null && message.hasOwnProperty("result"))
-                object.result = options.enums === String ? $root.server.StartCallResult.Result[message.result] : message.result;
+                object.result = options.enums === String ? $root.server.StartCallResult.Result[message.result] === undefined ? message.result : $root.server.StartCallResult.Result[message.result] : message.result;
             if (message.stunServers && message.stunServers.length) {
                 object.stunServers = [];
                 for (let j = 0; j < message.stunServers.length; ++j)
@@ -18332,6 +18476,12 @@ export const server = $root.server = (() => {
             if (object.callId != null)
                 message.callId = String(object.callId);
             switch (object.callType) {
+            default:
+                if (typeof object.callType === "number") {
+                    message.callType = object.callType;
+                    break;
+                }
+                break;
             case "UNKNOWN_TYPE":
             case 0:
                 message.callType = 0;
@@ -18418,7 +18568,7 @@ export const server = $root.server = (() => {
             if (message.callId != null && message.hasOwnProperty("callId"))
                 object.callId = message.callId;
             if (message.callType != null && message.hasOwnProperty("callType"))
-                object.callType = options.enums === String ? $root.server.CallType[message.callType] : message.callType;
+                object.callType = options.enums === String ? $root.server.CallType[message.callType] === undefined ? message.callType : $root.server.CallType[message.callType] : message.callType;
             if (message.stunServers && message.stunServers.length) {
                 object.stunServers = [];
                 for (let j = 0; j < message.stunServers.length; ++j)
@@ -18798,6 +18948,12 @@ export const server = $root.server = (() => {
             if (object.callId != null)
                 message.callId = String(object.callId);
             switch (object.callType) {
+            default:
+                if (typeof object.callType === "number") {
+                    message.callType = object.callType;
+                    break;
+                }
+                break;
             case "UNKNOWN_TYPE":
             case 0:
                 message.callType = 0;
@@ -18904,7 +19060,7 @@ export const server = $root.server = (() => {
             if (message.callId != null && message.hasOwnProperty("callId"))
                 object.callId = message.callId;
             if (message.callType != null && message.hasOwnProperty("callType"))
-                object.callType = options.enums === String ? $root.server.CallType[message.callType] : message.callType;
+                object.callType = options.enums === String ? $root.server.CallType[message.callType] === undefined ? message.callType : $root.server.CallType[message.callType] : message.callType;
             if (message.webrtcOffer != null && message.hasOwnProperty("webrtcOffer"))
                 object.webrtcOffer = $root.server.WebRtcSessionDescription.toObject(message.webrtcOffer, options);
             if (message.stunServers && message.stunServers.length) {
@@ -20285,6 +20441,12 @@ export const server = $root.server = (() => {
             if (object.callId != null)
                 message.callId = String(object.callId);
             switch (object.sdpType) {
+            default:
+                if (typeof object.sdpType === "number") {
+                    message.sdpType = object.sdpType;
+                    break;
+                }
+                break;
             case "UNKNOWN":
             case 0:
                 message.sdpType = 0;
@@ -20341,7 +20503,7 @@ export const server = $root.server = (() => {
             if (message.callId != null && message.hasOwnProperty("callId"))
                 object.callId = message.callId;
             if (message.sdpType != null && message.hasOwnProperty("sdpType"))
-                object.sdpType = options.enums === String ? $root.server.CallSdp.SdpType[message.sdpType] : message.sdpType;
+                object.sdpType = options.enums === String ? $root.server.CallSdp.SdpType[message.sdpType] === undefined ? message.sdpType : $root.server.CallSdp.SdpType[message.sdpType] : message.sdpType;
             if (message.info != null && message.hasOwnProperty("info"))
                 object.info = $root.server.WebRtcSessionDescription.toObject(message.info, options);
             if (message.timestampMs != null && message.hasOwnProperty("timestampMs"))
@@ -20599,6 +20761,12 @@ export const server = $root.server = (() => {
             if (object.callId != null)
                 message.callId = String(object.callId);
             switch (object.reason) {
+            default:
+                if (typeof object.reason === "number") {
+                    message.reason = object.reason;
+                    break;
+                }
+                break;
             case "UNKNOWN":
             case 0:
                 message.reason = 0;
@@ -20681,7 +20849,7 @@ export const server = $root.server = (() => {
             if (message.callId != null && message.hasOwnProperty("callId"))
                 object.callId = message.callId;
             if (message.reason != null && message.hasOwnProperty("reason"))
-                object.reason = options.enums === String ? $root.server.EndCall.Reason[message.reason] : message.reason;
+                object.reason = options.enums === String ? $root.server.EndCall.Reason[message.reason] === undefined ? message.reason : $root.server.EndCall.Reason[message.reason] : message.reason;
             if (message.timestampMs != null && message.hasOwnProperty("timestampMs"))
                 if (typeof message.timestampMs === "number")
                     object.timestampMs = options.longs === String ? String(message.timestampMs) : message.timestampMs;
@@ -21736,6 +21904,12 @@ export const server = $root.server = (() => {
             if (object.callId != null)
                 message.callId = String(object.callId);
             switch (object.mediaType) {
+            default:
+                if (typeof object.mediaType === "number") {
+                    message.mediaType = object.mediaType;
+                    break;
+                }
+                break;
             case "AUDIO":
             case 0:
                 message.mediaType = 0;
@@ -21785,7 +21959,7 @@ export const server = $root.server = (() => {
             if (message.callId != null && message.hasOwnProperty("callId"))
                 object.callId = message.callId;
             if (message.mediaType != null && message.hasOwnProperty("mediaType"))
-                object.mediaType = options.enums === String ? $root.server.MuteCall.MediaType[message.mediaType] : message.mediaType;
+                object.mediaType = options.enums === String ? $root.server.MuteCall.MediaType[message.mediaType] === undefined ? message.mediaType : $root.server.MuteCall.MediaType[message.mediaType] : message.mediaType;
             if (message.muted != null && message.hasOwnProperty("muted"))
                 object.muted = message.muted;
             if (message.timestampMs != null && message.hasOwnProperty("timestampMs"))
@@ -22264,6 +22438,12 @@ export const server = $root.server = (() => {
             if (object.audioJitterBufferFastAccelerate != null)
                 message.audioJitterBufferFastAccelerate = Boolean(object.audioJitterBufferFastAccelerate);
             switch (object.iceTransportPolicy) {
+            default:
+                if (typeof object.iceTransportPolicy === "number") {
+                    message.iceTransportPolicy = object.iceTransportPolicy;
+                    break;
+                }
+                break;
             case "ALL":
             case 0:
                 message.iceTransportPolicy = 0;
@@ -22335,7 +22515,7 @@ export const server = $root.server = (() => {
             if (message.audioJitterBufferFastAccelerate != null && message.hasOwnProperty("audioJitterBufferFastAccelerate"))
                 object.audioJitterBufferFastAccelerate = message.audioJitterBufferFastAccelerate;
             if (message.iceTransportPolicy != null && message.hasOwnProperty("iceTransportPolicy"))
-                object.iceTransportPolicy = options.enums === String ? $root.server.CallConfig.IceTransportPolicy[message.iceTransportPolicy] : message.iceTransportPolicy;
+                object.iceTransportPolicy = options.enums === String ? $root.server.CallConfig.IceTransportPolicy[message.iceTransportPolicy] === undefined ? message.iceTransportPolicy : $root.server.CallConfig.IceTransportPolicy[message.iceTransportPolicy] : message.iceTransportPolicy;
             if (message.iceRestartDelayMs != null && message.hasOwnProperty("iceRestartDelayMs"))
                 object.iceRestartDelayMs = message.iceRestartDelayMs;
             if (message.pruneTurnPorts != null && message.hasOwnProperty("pruneTurnPorts"))
@@ -22918,6 +23098,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.ExternalSharePost();
             switch (object.action) {
+            default:
+                if (typeof object.action === "number") {
+                    message.action = object.action;
+                    break;
+                }
+                break;
             case "STORE":
             case 0:
                 message.action = 0;
@@ -22986,7 +23172,7 @@ export const server = $root.server = (() => {
                 object.ogTagInfo = null;
             }
             if (message.action != null && message.hasOwnProperty("action"))
-                object.action = options.enums === String ? $root.server.ExternalSharePost.Action[message.action] : message.action;
+                object.action = options.enums === String ? $root.server.ExternalSharePost.Action[message.action] === undefined ? message.action : $root.server.ExternalSharePost.Action[message.action] : message.action;
             if (message.blobId != null && message.hasOwnProperty("blobId"))
                 object.blobId = message.blobId;
             if (message.blob != null && message.hasOwnProperty("blob"))
@@ -23571,6 +23757,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.WebClientInfo();
             switch (object.action) {
+            default:
+                if (typeof object.action === "number") {
+                    message.action = object.action;
+                    break;
+                }
+                break;
             case "UNKNOWN_ACTION":
             case 0:
                 message.action = 0;
@@ -23598,6 +23790,12 @@ export const server = $root.server = (() => {
                 else if (object.staticKey.length >= 0)
                     message.staticKey = object.staticKey;
             switch (object.result) {
+            default:
+                if (typeof object.result === "number") {
+                    message.result = object.result;
+                    break;
+                }
+                break;
             case "UNKNOWN":
             case 0:
                 message.result = 0;
@@ -23643,11 +23841,11 @@ export const server = $root.server = (() => {
                 object.result = options.enums === String ? "UNKNOWN" : 0;
             }
             if (message.action != null && message.hasOwnProperty("action"))
-                object.action = options.enums === String ? $root.server.WebClientInfo.Action[message.action] : message.action;
+                object.action = options.enums === String ? $root.server.WebClientInfo.Action[message.action] === undefined ? message.action : $root.server.WebClientInfo.Action[message.action] : message.action;
             if (message.staticKey != null && message.hasOwnProperty("staticKey"))
                 object.staticKey = options.bytes === String ? $util.base64.encode(message.staticKey, 0, message.staticKey.length) : options.bytes === Array ? Array.prototype.slice.call(message.staticKey) : message.staticKey;
             if (message.result != null && message.hasOwnProperty("result"))
-                object.result = options.enums === String ? $root.server.WebClientInfo.Result[message.result] : message.result;
+                object.result = options.enums === String ? $root.server.WebClientInfo.Result[message.result] === undefined ? message.result : $root.server.WebClientInfo.Result[message.result] : message.result;
             return object;
         };
 
@@ -24210,6 +24408,12 @@ export const server = $root.server = (() => {
             if (object.contentId != null)
                 message.contentId = String(object.contentId);
             switch (object.contentType) {
+            default:
+                if (typeof object.contentType === "number") {
+                    message.contentType = object.contentType;
+                    break;
+                }
+                break;
             case "UNKNOWN":
             case 0:
                 message.contentType = 0;
@@ -24273,7 +24477,7 @@ export const server = $root.server = (() => {
             if (message.contentId != null && message.hasOwnProperty("contentId"))
                 object.contentId = message.contentId;
             if (message.contentType != null && message.hasOwnProperty("contentType"))
-                object.contentType = options.enums === String ? $root.server.ContentMissing.ContentType[message.contentType] : message.contentType;
+                object.contentType = options.enums === String ? $root.server.ContentMissing.ContentType[message.contentType] === undefined ? message.contentType : $root.server.ContentMissing.ContentType[message.contentType] : message.contentType;
             if (message.senderClientVersion != null && message.hasOwnProperty("senderClientVersion"))
                 object.senderClientVersion = message.senderClientVersion;
             return object;
@@ -25526,6 +25730,12 @@ export const server = $root.server = (() => {
             if (object.id != null)
                 message.id = String(object.id);
             switch (object.type) {
+            default:
+                if (typeof object.type === "number") {
+                    message.type = object.type;
+                    break;
+                }
+                break;
             case "GET":
             case 0:
                 message.type = 0;
@@ -25766,7 +25976,7 @@ export const server = $root.server = (() => {
             if (message.id != null && message.hasOwnProperty("id"))
                 object.id = message.id;
             if (message.type != null && message.hasOwnProperty("type"))
-                object.type = options.enums === String ? $root.server.Iq.Type[message.type] : message.type;
+                object.type = options.enums === String ? $root.server.Iq.Type[message.type] === undefined ? message.type : $root.server.Iq.Type[message.type] : message.type;
             if (message.uploadMedia != null && message.hasOwnProperty("uploadMedia")) {
                 object.uploadMedia = $root.server.UploadMedia.toObject(message.uploadMedia, options);
                 if (options.oneofs)
@@ -27431,6 +27641,12 @@ export const server = $root.server = (() => {
             if (object.id != null)
                 message.id = String(object.id);
             switch (object.type) {
+            default:
+                if (typeof object.type === "number") {
+                    message.type = object.type;
+                    break;
+                }
+                break;
             case "NORMAL":
             case 0:
                 message.type = 0;
@@ -27743,7 +27959,7 @@ export const server = $root.server = (() => {
             if (message.id != null && message.hasOwnProperty("id"))
                 object.id = message.id;
             if (message.type != null && message.hasOwnProperty("type"))
-                object.type = options.enums === String ? $root.server.Msg.Type[message.type] : message.type;
+                object.type = options.enums === String ? $root.server.Msg.Type[message.type] === undefined ? message.type : $root.server.Msg.Type[message.type] : message.type;
             if (message.toUid != null && message.hasOwnProperty("toUid"))
                 if (typeof message.toUid === "number")
                     object.toUid = options.longs === String ? String(message.toUid) : message.toUid;
@@ -28291,6 +28507,12 @@ export const server = $root.server = (() => {
             if (object.id != null)
                 message.id = String(object.id);
             switch (object.type) {
+            default:
+                if (typeof object.type === "number") {
+                    message.type = object.type;
+                    break;
+                }
+                break;
             case "AVAILABLE":
             case 0:
                 message.type = 0;
@@ -28387,7 +28609,7 @@ export const server = $root.server = (() => {
             if (message.id != null && message.hasOwnProperty("id"))
                 object.id = message.id;
             if (message.type != null && message.hasOwnProperty("type"))
-                object.type = options.enums === String ? $root.server.Presence.Type[message.type] : message.type;
+                object.type = options.enums === String ? $root.server.Presence.Type[message.type] === undefined ? message.type : $root.server.Presence.Type[message.type] : message.type;
             if (message.uid != null && message.hasOwnProperty("uid"))
                 if (typeof message.uid === "number")
                     object.uid = options.longs === String ? String(message.uid) : message.uid;
@@ -28672,6 +28894,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.ChatState();
             switch (object.type) {
+            default:
+                if (typeof object.type === "number") {
+                    message.type = object.type;
+                    break;
+                }
+                break;
             case "AVAILABLE":
             case 0:
                 message.type = 0;
@@ -28684,6 +28912,12 @@ export const server = $root.server = (() => {
             if (object.threadId != null)
                 message.threadId = String(object.threadId);
             switch (object.threadType) {
+            default:
+                if (typeof object.threadType === "number") {
+                    message.threadType = object.threadType;
+                    break;
+                }
+                break;
             case "CHAT":
             case 0:
                 message.threadType = 0;
@@ -28729,11 +28963,11 @@ export const server = $root.server = (() => {
                     object.fromUid = options.longs === String ? "0" : 0;
             }
             if (message.type != null && message.hasOwnProperty("type"))
-                object.type = options.enums === String ? $root.server.ChatState.Type[message.type] : message.type;
+                object.type = options.enums === String ? $root.server.ChatState.Type[message.type] === undefined ? message.type : $root.server.ChatState.Type[message.type] : message.type;
             if (message.threadId != null && message.hasOwnProperty("threadId"))
                 object.threadId = message.threadId;
             if (message.threadType != null && message.hasOwnProperty("threadType"))
-                object.threadType = options.enums === String ? $root.server.ChatState.ThreadType[message.threadType] : message.threadType;
+                object.threadType = options.enums === String ? $root.server.ChatState.ThreadType[message.threadType] === undefined ? message.threadType : $root.server.ChatState.ThreadType[message.threadType] : message.threadType;
             if (message.fromUid != null && message.hasOwnProperty("fromUid"))
                 if (typeof message.fromUid === "number")
                     object.fromUid = options.longs === String ? String(message.fromUid) : message.fromUid;
@@ -29818,6 +30052,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.UidElement();
             switch (object.action) {
+            default:
+                if (typeof object.action === "number") {
+                    message.action = object.action;
+                    break;
+                }
+                break;
             case "ADD":
             case 0:
                 message.action = 0;
@@ -29861,7 +30101,7 @@ export const server = $root.server = (() => {
                     object.uid = options.longs === String ? "0" : 0;
             }
             if (message.action != null && message.hasOwnProperty("action"))
-                object.action = options.enums === String ? $root.server.UidElement.Action[message.action] : message.action;
+                object.action = options.enums === String ? $root.server.UidElement.Action[message.action] === undefined ? message.action : $root.server.UidElement.Action[message.action] : message.action;
             if (message.uid != null && message.hasOwnProperty("uid"))
                 if (typeof message.uid === "number")
                     object.uid = options.longs === String ? String(message.uid) : message.uid;
@@ -30086,6 +30326,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.PhoneElement();
             switch (object.action) {
+            default:
+                if (typeof object.action === "number") {
+                    message.action = object.action;
+                    break;
+                }
+                break;
             case "ADD":
             case 0:
                 message.action = 0;
@@ -30118,7 +30364,7 @@ export const server = $root.server = (() => {
                 object.phone = "";
             }
             if (message.action != null && message.hasOwnProperty("action"))
-                object.action = options.enums === String ? $root.server.PhoneElement.Action[message.action] : message.action;
+                object.action = options.enums === String ? $root.server.PhoneElement.Action[message.action] === undefined ? message.action : $root.server.PhoneElement.Action[message.action] : message.action;
             if (message.phone != null && message.hasOwnProperty("phone"))
                 object.phone = message.phone;
             return object;
@@ -30417,6 +30663,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.PrivacyList();
             switch (object.type) {
+            default:
+                if (typeof object.type === "number") {
+                    message.type = object.type;
+                    break;
+                }
+                break;
             case "ALL":
             case 0:
                 message.type = 0;
@@ -30497,7 +30749,7 @@ export const server = $root.server = (() => {
                 object.usingPhones = false;
             }
             if (message.type != null && message.hasOwnProperty("type"))
-                object.type = options.enums === String ? $root.server.PrivacyList.Type[message.type] : message.type;
+                object.type = options.enums === String ? $root.server.PrivacyList.Type[message.type] === undefined ? message.type : $root.server.PrivacyList.Type[message.type] : message.type;
             if (message.uidElements && message.uidElements.length) {
                 object.uidElements = [];
                 for (let j = 0; j < message.uidElements.length; ++j)
@@ -30749,6 +31001,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.PrivacyLists();
             switch (object.activeType) {
+            default:
+                if (typeof object.activeType === "number") {
+                    message.activeType = object.activeType;
+                    break;
+                }
+                break;
             case "ALL":
             case 0:
                 message.activeType = 0;
@@ -30797,7 +31055,7 @@ export const server = $root.server = (() => {
             if (options.defaults)
                 object.activeType = options.enums === String ? "ALL" : 0;
             if (message.activeType != null && message.hasOwnProperty("activeType"))
-                object.activeType = options.enums === String ? $root.server.PrivacyLists.Type[message.activeType] : message.activeType;
+                object.activeType = options.enums === String ? $root.server.PrivacyLists.Type[message.activeType] === undefined ? message.activeType : $root.server.PrivacyLists.Type[message.activeType] : message.activeType;
             if (message.lists && message.lists.length) {
                 object.lists = [];
                 for (let j = 0; j < message.lists.length; ++j)
@@ -31030,6 +31288,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.PushToken();
             switch (object.tokenType) {
+            default:
+                if (typeof object.tokenType === "number") {
+                    message.tokenType = object.tokenType;
+                    break;
+                }
+                break;
             case "ANDROID":
             case 0:
                 message.tokenType = 0;
@@ -31078,7 +31342,7 @@ export const server = $root.server = (() => {
                 object.token = "";
             }
             if (message.tokenType != null && message.hasOwnProperty("tokenType"))
-                object.tokenType = options.enums === String ? $root.server.PushToken.TokenType[message.tokenType] : message.tokenType;
+                object.tokenType = options.enums === String ? $root.server.PushToken.TokenType[message.tokenType] === undefined ? message.tokenType : $root.server.PushToken.TokenType[message.tokenType] : message.tokenType;
             if (message.token != null && message.hasOwnProperty("token"))
                 object.token = message.token;
             return object;
@@ -31540,6 +31804,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.PushPref();
             switch (object.name) {
+            default:
+                if (typeof object.name === "number") {
+                    message.name = object.name;
+                    break;
+                }
+                break;
             case "POST":
             case 0:
                 message.name = 0;
@@ -31572,7 +31842,7 @@ export const server = $root.server = (() => {
                 object.value = false;
             }
             if (message.name != null && message.hasOwnProperty("name"))
-                object.name = options.enums === String ? $root.server.PushPref.Name[message.name] : message.name;
+                object.name = options.enums === String ? $root.server.PushPref.Name[message.name] === undefined ? message.name : $root.server.PushPref.Name[message.name] : message.name;
             if (message.value != null && message.hasOwnProperty("value"))
                 object.value = message.value;
             return object;
@@ -32145,6 +32415,12 @@ export const server = $root.server = (() => {
                 else if (object.messageEphemeralKey.length >= 0)
                     message.messageEphemeralKey = object.messageEphemeralKey;
             switch (object.contentType) {
+            default:
+                if (typeof object.contentType === "number") {
+                    message.contentType = object.contentType;
+                    break;
+                }
+                break;
             case "CHAT":
             case 0:
                 message.contentType = 0;
@@ -32232,7 +32508,7 @@ export const server = $root.server = (() => {
             if (message.messageEphemeralKey != null && message.hasOwnProperty("messageEphemeralKey"))
                 object.messageEphemeralKey = options.bytes === String ? $util.base64.encode(message.messageEphemeralKey, 0, message.messageEphemeralKey.length) : options.bytes === Array ? Array.prototype.slice.call(message.messageEphemeralKey) : message.messageEphemeralKey;
             if (message.contentType != null && message.hasOwnProperty("contentType"))
-                object.contentType = options.enums === String ? $root.server.Rerequest.ContentType[message.contentType] : message.contentType;
+                object.contentType = options.enums === String ? $root.server.Rerequest.ContentType[message.contentType] === undefined ? message.contentType : $root.server.Rerequest.ContentType[message.contentType] : message.contentType;
             return object;
         };
 
@@ -32505,6 +32781,12 @@ export const server = $root.server = (() => {
             if (object.id != null)
                 message.id = String(object.id);
             switch (object.rerequestType) {
+            default:
+                if (typeof object.rerequestType === "number") {
+                    message.rerequestType = object.rerequestType;
+                    break;
+                }
+                break;
             case "PAYLOAD":
             case 0:
                 message.rerequestType = 0;
@@ -32515,6 +32797,12 @@ export const server = $root.server = (() => {
                 break;
             }
             switch (object.contentType) {
+            default:
+                if (typeof object.contentType === "number") {
+                    message.contentType = object.contentType;
+                    break;
+                }
+                break;
             case "UNKNOWN":
             case 0:
                 message.contentType = 0;
@@ -32567,9 +32855,9 @@ export const server = $root.server = (() => {
             if (message.id != null && message.hasOwnProperty("id"))
                 object.id = message.id;
             if (message.rerequestType != null && message.hasOwnProperty("rerequestType"))
-                object.rerequestType = options.enums === String ? $root.server.GroupFeedRerequest.RerequestType[message.rerequestType] : message.rerequestType;
+                object.rerequestType = options.enums === String ? $root.server.GroupFeedRerequest.RerequestType[message.rerequestType] === undefined ? message.rerequestType : $root.server.GroupFeedRerequest.RerequestType[message.rerequestType] : message.rerequestType;
             if (message.contentType != null && message.hasOwnProperty("contentType"))
-                object.contentType = options.enums === String ? $root.server.GroupFeedRerequest.ContentType[message.contentType] : message.contentType;
+                object.contentType = options.enums === String ? $root.server.GroupFeedRerequest.ContentType[message.contentType] === undefined ? message.contentType : $root.server.GroupFeedRerequest.ContentType[message.contentType] : message.contentType;
             return object;
         };
 
@@ -32840,6 +33128,12 @@ export const server = $root.server = (() => {
             if (object.id != null)
                 message.id = String(object.id);
             switch (object.rerequestType) {
+            default:
+                if (typeof object.rerequestType === "number") {
+                    message.rerequestType = object.rerequestType;
+                    break;
+                }
+                break;
             case "UNKNOWN_TYPE":
             case 0:
                 message.rerequestType = 0;
@@ -32854,6 +33148,12 @@ export const server = $root.server = (() => {
                 break;
             }
             switch (object.contentType) {
+            default:
+                if (typeof object.contentType === "number") {
+                    message.contentType = object.contentType;
+                    break;
+                }
+                break;
             case "UNKNOWN":
             case 0:
                 message.contentType = 0;
@@ -32899,9 +33199,9 @@ export const server = $root.server = (() => {
             if (message.id != null && message.hasOwnProperty("id"))
                 object.id = message.id;
             if (message.rerequestType != null && message.hasOwnProperty("rerequestType"))
-                object.rerequestType = options.enums === String ? $root.server.HomeFeedRerequest.RerequestType[message.rerequestType] : message.rerequestType;
+                object.rerequestType = options.enums === String ? $root.server.HomeFeedRerequest.RerequestType[message.rerequestType] === undefined ? message.rerequestType : $root.server.HomeFeedRerequest.RerequestType[message.rerequestType] : message.rerequestType;
             if (message.contentType != null && message.hasOwnProperty("contentType"))
-                object.contentType = options.enums === String ? $root.server.HomeFeedRerequest.ContentType[message.contentType] : message.contentType;
+                object.contentType = options.enums === String ? $root.server.HomeFeedRerequest.ContentType[message.contentType] === undefined ? message.contentType : $root.server.HomeFeedRerequest.ContentType[message.contentType] : message.contentType;
             return object;
         };
 
@@ -35470,6 +35770,12 @@ export const server = $root.server = (() => {
                 else if (typeof object.uid === "object")
                     message.uid = new $util.LongBits(object.uid.low >>> 0, object.uid.high >>> 0).toNumber();
             switch (object.action) {
+            default:
+                if (typeof object.action === "number") {
+                    message.action = object.action;
+                    break;
+                }
+                break;
             case "NORMAL":
             case 0:
                 message.action = 0;
@@ -35564,7 +35870,7 @@ export const server = $root.server = (() => {
                 else
                     object.uid = options.longs === String ? $util.Long.prototype.toString.call(message.uid) : options.longs === Number ? new $util.LongBits(message.uid.low >>> 0, message.uid.high >>> 0).toNumber() : message.uid;
             if (message.action != null && message.hasOwnProperty("action"))
-                object.action = options.enums === String ? $root.server.WhisperKeys.Action[message.action] : message.action;
+                object.action = options.enums === String ? $root.server.WhisperKeys.Action[message.action] === undefined ? message.action : $root.server.WhisperKeys.Action[message.action] : message.action;
             if (message.identityKey != null && message.hasOwnProperty("identityKey"))
                 object.identityKey = options.bytes === String ? $util.base64.encode(message.identityKey, 0, message.identityKey.length) : options.bytes === Array ? Array.prototype.slice.call(message.identityKey) : message.identityKey;
             if (message.signedKey != null && message.hasOwnProperty("signedKey"))
@@ -36506,6 +36812,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.NoiseMessage();
             switch (object.messageType) {
+            default:
+                if (typeof object.messageType === "number") {
+                    message.messageType = object.messageType;
+                    break;
+                }
+                break;
             case "XX_A":
             case 0:
                 message.messageType = 0;
@@ -36567,7 +36879,7 @@ export const server = $root.server = (() => {
                 }
             }
             if (message.messageType != null && message.hasOwnProperty("messageType"))
-                object.messageType = options.enums === String ? $root.server.NoiseMessage.MessageType[message.messageType] : message.messageType;
+                object.messageType = options.enums === String ? $root.server.NoiseMessage.MessageType[message.messageType] === undefined ? message.messageType : $root.server.NoiseMessage.MessageType[message.messageType] : message.messageType;
             if (message.content != null && message.hasOwnProperty("content"))
                 object.content = options.bytes === String ? $util.base64.encode(message.content, 0, message.content.length) : options.bytes === Array ? Array.prototype.slice.call(message.content) : message.content;
             return object;
@@ -36818,6 +37130,12 @@ export const server = $root.server = (() => {
             if (object.phone != null)
                 message.phone = String(object.phone);
             switch (object.reason) {
+            default:
+                if (typeof object.reason === "number") {
+                    message.reason = object.reason;
+                    break;
+                }
+                break;
             case "UNKNOWN_DELETE_REASON":
             case 0:
                 message.reason = 0;
@@ -36849,7 +37167,7 @@ export const server = $root.server = (() => {
             if (message.phone != null && message.hasOwnProperty("phone"))
                 object.phone = message.phone;
             if (message.reason != null && message.hasOwnProperty("reason"))
-                object.reason = options.enums === String ? $root.server.DeleteAccount.Reason[message.reason] : message.reason;
+                object.reason = options.enums === String ? $root.server.DeleteAccount.Reason[message.reason] === undefined ? message.reason : $root.server.DeleteAccount.Reason[message.reason] : message.reason;
             if (message.feedback != null && message.hasOwnProperty("feedback"))
                 object.feedback = message.feedback;
             return object;
@@ -37116,6 +37434,12 @@ export const server = $root.server = (() => {
                 else if (typeof object.dataReadyTs === "object")
                     message.dataReadyTs = new $util.LongBits(object.dataReadyTs.low >>> 0, object.dataReadyTs.high >>> 0).toNumber();
             switch (object.status) {
+            default:
+                if (typeof object.status === "number") {
+                    message.status = object.status;
+                    break;
+                }
+                break;
             case "UNKNOWN":
             case 0:
                 message.status = 0;
@@ -37180,7 +37504,7 @@ export const server = $root.server = (() => {
                 else
                     object.dataReadyTs = options.longs === String ? $util.Long.prototype.toString.call(message.dataReadyTs) : options.longs === Number ? new $util.LongBits(message.dataReadyTs.low >>> 0, message.dataReadyTs.high >>> 0).toNumber() : message.dataReadyTs;
             if (message.status != null && message.hasOwnProperty("status"))
-                object.status = options.enums === String ? $root.server.ExportData.Status[message.status] : message.status;
+                object.status = options.enums === String ? $root.server.ExportData.Status[message.status] === undefined ? message.status : $root.server.ExportData.Status[message.status] : message.status;
             if (message.dataUrl != null && message.hasOwnProperty("dataUrl"))
                 object.dataUrl = message.dataUrl;
             if (message.availableUntilTs != null && message.hasOwnProperty("availableUntilTs"))
@@ -39720,6 +40044,12 @@ export const server = $root.server = (() => {
             if (object.phone != null)
                 message.phone = String(object.phone);
             switch (object.method) {
+            default:
+                if (typeof object.method === "number") {
+                    message.method = object.method;
+                    break;
+                }
+                break;
             case "SMS":
             case 0:
                 message.method = 0;
@@ -39781,7 +40111,7 @@ export const server = $root.server = (() => {
             if (message.phone != null && message.hasOwnProperty("phone"))
                 object.phone = message.phone;
             if (message.method != null && message.hasOwnProperty("method"))
-                object.method = options.enums === String ? $root.server.OtpRequest.Method[message.method] : message.method;
+                object.method = options.enums === String ? $root.server.OtpRequest.Method[message.method] === undefined ? message.method : $root.server.OtpRequest.Method[message.method] : message.method;
             if (message.langId != null && message.hasOwnProperty("langId"))
                 object.langId = message.langId;
             if (message.groupInviteToken != null && message.hasOwnProperty("groupInviteToken"))
@@ -40075,6 +40405,12 @@ export const server = $root.server = (() => {
             if (object.phone != null)
                 message.phone = String(object.phone);
             switch (object.result) {
+            default:
+                if (typeof object.result === "number") {
+                    message.result = object.result;
+                    break;
+                }
+                break;
             case "UNKNOWN_RESULT":
             case 0:
                 message.result = 0;
@@ -40089,6 +40425,12 @@ export const server = $root.server = (() => {
                 break;
             }
             switch (object.reason) {
+            default:
+                if (typeof object.reason === "number") {
+                    message.reason = object.reason;
+                    break;
+                }
+                break;
             case "UNKNOWN_REASON":
             case 0:
                 message.reason = 0;
@@ -40196,9 +40538,9 @@ export const server = $root.server = (() => {
             if (message.phone != null && message.hasOwnProperty("phone"))
                 object.phone = message.phone;
             if (message.result != null && message.hasOwnProperty("result"))
-                object.result = options.enums === String ? $root.server.OtpResponse.Result[message.result] : message.result;
+                object.result = options.enums === String ? $root.server.OtpResponse.Result[message.result] === undefined ? message.result : $root.server.OtpResponse.Result[message.result] : message.result;
             if (message.reason != null && message.hasOwnProperty("reason"))
-                object.reason = options.enums === String ? $root.server.OtpResponse.Reason[message.reason] : message.reason;
+                object.reason = options.enums === String ? $root.server.OtpResponse.Reason[message.reason] === undefined ? message.reason : $root.server.OtpResponse.Reason[message.reason] : message.reason;
             if (message.retryAfterSecs != null && message.hasOwnProperty("retryAfterSecs"))
                 if (typeof message.retryAfterSecs === "number")
                     object.retryAfterSecs = options.longs === String ? String(message.retryAfterSecs) : message.retryAfterSecs;
@@ -41104,6 +41446,12 @@ export const server = $root.server = (() => {
             if (object.name != null)
                 message.name = String(object.name);
             switch (object.result) {
+            default:
+                if (typeof object.result === "number") {
+                    message.result = object.result;
+                    break;
+                }
+                break;
             case "UNKNOWN_RESULT":
             case 0:
                 message.result = 0;
@@ -41118,6 +41466,12 @@ export const server = $root.server = (() => {
                 break;
             }
             switch (object.reason) {
+            default:
+                if (typeof object.reason === "number") {
+                    message.reason = object.reason;
+                    break;
+                }
+                break;
             case "UNKNOWN_REASON":
             case 0:
                 message.reason = 0;
@@ -41271,9 +41625,9 @@ export const server = $root.server = (() => {
             if (message.name != null && message.hasOwnProperty("name"))
                 object.name = message.name;
             if (message.result != null && message.hasOwnProperty("result"))
-                object.result = options.enums === String ? $root.server.VerifyOtpResponse.Result[message.result] : message.result;
+                object.result = options.enums === String ? $root.server.VerifyOtpResponse.Result[message.result] === undefined ? message.result : $root.server.VerifyOtpResponse.Result[message.result] : message.result;
             if (message.reason != null && message.hasOwnProperty("reason"))
-                object.reason = options.enums === String ? $root.server.VerifyOtpResponse.Reason[message.reason] : message.reason;
+                object.reason = options.enums === String ? $root.server.VerifyOtpResponse.Reason[message.reason] === undefined ? message.reason : $root.server.VerifyOtpResponse.Reason[message.reason] : message.reason;
             if (message.groupInviteResult != null && message.hasOwnProperty("groupInviteResult"))
                 object.groupInviteResult = message.groupInviteResult;
             return object;
@@ -41581,6 +41935,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.ClientOtpRequest();
             switch (object.method) {
+            default:
+                if (typeof object.method === "number") {
+                    message.method = object.method;
+                    break;
+                }
+                break;
             case "SMS":
             case 0:
                 message.method = 0;
@@ -41616,7 +41976,7 @@ export const server = $root.server = (() => {
                 object.content = "";
             }
             if (message.method != null && message.hasOwnProperty("method"))
-                object.method = options.enums === String ? $root.server.ClientOtpRequest.Method[message.method] : message.method;
+                object.method = options.enums === String ? $root.server.ClientOtpRequest.Method[message.method] === undefined ? message.method : $root.server.ClientOtpRequest.Method[message.method] : message.method;
             if (message.phone != null && message.hasOwnProperty("phone"))
                 object.phone = message.phone;
             if (message.content != null && message.hasOwnProperty("content"))
@@ -41849,6 +42209,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.ClientOtpResponse();
             switch (object.result) {
+            default:
+                if (typeof object.result === "number") {
+                    message.result = object.result;
+                    break;
+                }
+                break;
             case "UNKNOWN_RESULT":
             case 0:
                 message.result = 0;
@@ -41863,6 +42229,12 @@ export const server = $root.server = (() => {
                 break;
             }
             switch (object.reason) {
+            default:
+                if (typeof object.reason === "number") {
+                    message.reason = object.reason;
+                    break;
+                }
+                break;
             case "UNKNOWN_REASON":
             case 0:
                 message.reason = 0;
@@ -41905,9 +42277,9 @@ export const server = $root.server = (() => {
                 object.reason = options.enums === String ? "UNKNOWN_REASON" : 0;
             }
             if (message.result != null && message.hasOwnProperty("result"))
-                object.result = options.enums === String ? $root.server.ClientOtpResponse.Result[message.result] : message.result;
+                object.result = options.enums === String ? $root.server.ClientOtpResponse.Result[message.result] === undefined ? message.result : $root.server.ClientOtpResponse.Result[message.result] : message.result;
             if (message.reason != null && message.hasOwnProperty("reason"))
-                object.reason = options.enums === String ? $root.server.ClientOtpResponse.Reason[message.reason] : message.reason;
+                object.reason = options.enums === String ? $root.server.ClientOtpResponse.Reason[message.reason] === undefined ? message.reason : $root.server.ClientOtpResponse.Reason[message.reason] : message.reason;
             return object;
         };
 
@@ -42131,6 +42503,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.WakeUp();
             switch (object.alertType) {
+            default:
+                if (typeof object.alertType === "number") {
+                    message.alertType = object.alertType;
+                    break;
+                }
+                break;
             case "ALERT":
             case 0:
                 message.alertType = 0;
@@ -42159,7 +42537,7 @@ export const server = $root.server = (() => {
             if (options.defaults)
                 object.alertType = options.enums === String ? "ALERT" : 0;
             if (message.alertType != null && message.hasOwnProperty("alertType"))
-                object.alertType = options.enums === String ? $root.server.WakeUp.AlertType[message.alertType] : message.alertType;
+                object.alertType = options.enums === String ? $root.server.WakeUp.AlertType[message.alertType] === undefined ? message.alertType : $root.server.WakeUp.AlertType[message.alertType] : message.alertType;
             return object;
         };
 
@@ -42362,6 +42740,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.MarketingAlert();
             switch (object.type) {
+            default:
+                if (typeof object.type === "number") {
+                    message.type = object.type;
+                    break;
+                }
+                break;
             case "UNKNOWN":
             case 0:
                 message.type = 0;
@@ -42394,7 +42778,7 @@ export const server = $root.server = (() => {
             if (options.defaults)
                 object.type = options.enums === String ? "UNKNOWN" : 0;
             if (message.type != null && message.hasOwnProperty("type"))
-                object.type = options.enums === String ? $root.server.MarketingAlert.Type[message.type] : message.type;
+                object.type = options.enums === String ? $root.server.MarketingAlert.Type[message.type] === undefined ? message.type : $root.server.MarketingAlert.Type[message.type] : message.type;
             return object;
         };
 
@@ -42993,6 +43377,12 @@ export const server = $root.server = (() => {
                 else if (typeof object.uid === "object")
                     message.uid = new $util.LongBits(object.uid.low >>> 0, object.uid.high >>> 0).toNumber(true);
             switch (object.platform) {
+            default:
+                if (typeof object.platform === "number") {
+                    message.platform = object.platform;
+                    break;
+                }
+                break;
             case "UNKNOWN":
             case 0:
                 message.platform = 0;
@@ -43116,7 +43506,7 @@ export const server = $root.server = (() => {
                 else
                     object.uid = options.longs === String ? $util.Long.prototype.toString.call(message.uid) : options.longs === Number ? new $util.LongBits(message.uid.low >>> 0, message.uid.high >>> 0).toNumber(true) : message.uid;
             if (message.platform != null && message.hasOwnProperty("platform"))
-                object.platform = options.enums === String ? $root.server.Platform[message.platform] : message.platform;
+                object.platform = options.enums === String ? $root.server.Platform[message.platform] === undefined ? message.platform : $root.server.Platform[message.platform] : message.platform;
             if (message.version != null && message.hasOwnProperty("version"))
                 object.version = message.version;
             if (message.timestampMs != null && message.hasOwnProperty("timestampMs"))
@@ -43641,6 +44031,12 @@ export const server = $root.server = (() => {
                 else if (typeof object.index === "object")
                     message.index = new $util.LongBits(object.index.low >>> 0, object.index.high >>> 0).toNumber(true);
             switch (object.type) {
+            default:
+                if (typeof object.type === "number") {
+                    message.type = object.type;
+                    break;
+                }
+                break;
             case "POST":
             case 0:
                 message.type = 0;
@@ -43655,6 +44051,12 @@ export const server = $root.server = (() => {
                 break;
             }
             switch (object.mediaType) {
+            default:
+                if (typeof object.mediaType === "number") {
+                    message.mediaType = object.mediaType;
+                    break;
+                }
+                break;
             case "PHOTO":
             case 0:
                 message.mediaType = 0;
@@ -43696,6 +44098,12 @@ export const server = $root.server = (() => {
                 else if (typeof object.progressBytes === "object")
                     message.progressBytes = new $util.LongBits(object.progressBytes.low >>> 0, object.progressBytes.high >>> 0).toNumber(true);
             switch (object.cdn) {
+            default:
+                if (typeof object.cdn === "number") {
+                    message.cdn = object.cdn;
+                    break;
+                }
+                break;
             case "UNKNOWN_CDN":
             case 0:
                 message.cdn = 0;
@@ -43710,6 +44118,12 @@ export const server = $root.server = (() => {
             if (object.cdnId != null)
                 message.cdnId = String(object.cdnId);
             switch (object.cdnCache) {
+            default:
+                if (typeof object.cdnCache === "number") {
+                    message.cdnCache = object.cdnCache;
+                    break;
+                }
+                break;
             case "UNKNOWN_CACHE":
             case 0:
                 message.cdnCache = 0;
@@ -43732,6 +44146,12 @@ export const server = $root.server = (() => {
                 break;
             }
             switch (object.status) {
+            default:
+                if (typeof object.status === "number") {
+                    message.status = object.status;
+                    break;
+                }
+                break;
             case "OK":
             case 0:
                 message.status = 0;
@@ -43809,9 +44229,9 @@ export const server = $root.server = (() => {
                 else
                     object.index = options.longs === String ? $util.Long.prototype.toString.call(message.index) : options.longs === Number ? new $util.LongBits(message.index.low >>> 0, message.index.high >>> 0).toNumber(true) : message.index;
             if (message.type != null && message.hasOwnProperty("type"))
-                object.type = options.enums === String ? $root.server.MediaObjectDownload.Type[message.type] : message.type;
+                object.type = options.enums === String ? $root.server.MediaObjectDownload.Type[message.type] === undefined ? message.type : $root.server.MediaObjectDownload.Type[message.type] : message.type;
             if (message.mediaType != null && message.hasOwnProperty("mediaType"))
-                object.mediaType = options.enums === String ? $root.server.MediaObjectDownload.MediaType[message.mediaType] : message.mediaType;
+                object.mediaType = options.enums === String ? $root.server.MediaObjectDownload.MediaType[message.mediaType] === undefined ? message.mediaType : $root.server.MediaObjectDownload.MediaType[message.mediaType] : message.mediaType;
             if (message.durationMs != null && message.hasOwnProperty("durationMs"))
                 if (typeof message.durationMs === "number")
                     object.durationMs = options.longs === String ? String(message.durationMs) : message.durationMs;
@@ -43828,15 +44248,15 @@ export const server = $root.server = (() => {
                 else
                     object.progressBytes = options.longs === String ? $util.Long.prototype.toString.call(message.progressBytes) : options.longs === Number ? new $util.LongBits(message.progressBytes.low >>> 0, message.progressBytes.high >>> 0).toNumber(true) : message.progressBytes;
             if (message.cdn != null && message.hasOwnProperty("cdn"))
-                object.cdn = options.enums === String ? $root.server.MediaObjectDownload.Cdn[message.cdn] : message.cdn;
+                object.cdn = options.enums === String ? $root.server.MediaObjectDownload.Cdn[message.cdn] === undefined ? message.cdn : $root.server.MediaObjectDownload.Cdn[message.cdn] : message.cdn;
             if (message.cdnPop != null && message.hasOwnProperty("cdnPop"))
                 object.cdnPop = message.cdnPop;
             if (message.cdnId != null && message.hasOwnProperty("cdnId"))
                 object.cdnId = message.cdnId;
             if (message.cdnCache != null && message.hasOwnProperty("cdnCache"))
-                object.cdnCache = options.enums === String ? $root.server.MediaObjectDownload.CdnCache[message.cdnCache] : message.cdnCache;
+                object.cdnCache = options.enums === String ? $root.server.MediaObjectDownload.CdnCache[message.cdnCache] === undefined ? message.cdnCache : $root.server.MediaObjectDownload.CdnCache[message.cdnCache] : message.cdnCache;
             if (message.status != null && message.hasOwnProperty("status"))
-                object.status = options.enums === String ? $root.server.MediaObjectDownload.Status[message.status] : message.status;
+                object.status = options.enums === String ? $root.server.MediaObjectDownload.Status[message.status] === undefined ? message.status : $root.server.MediaObjectDownload.Status[message.status] : message.status;
             if (message.retryCount != null && message.hasOwnProperty("retryCount"))
                 if (typeof message.retryCount === "number")
                     object.retryCount = options.longs === String ? String(message.retryCount) : message.retryCount;
@@ -44243,6 +44663,12 @@ export const server = $root.server = (() => {
             if (object.id != null)
                 message.id = String(object.id);
             switch (object.type) {
+            default:
+                if (typeof object.type === "number") {
+                    message.type = object.type;
+                    break;
+                }
+                break;
             case "POST":
             case 0:
                 message.type = 0;
@@ -44265,6 +44691,12 @@ export const server = $root.server = (() => {
             if (object.totalSize != null)
                 message.totalSize = object.totalSize >>> 0;
             switch (object.status) {
+            default:
+                if (typeof object.status === "number") {
+                    message.status = object.status;
+                    break;
+                }
+                break;
             case "OK":
             case 0:
                 message.status = 0;
@@ -44305,7 +44737,7 @@ export const server = $root.server = (() => {
             if (message.id != null && message.hasOwnProperty("id"))
                 object.id = message.id;
             if (message.type != null && message.hasOwnProperty("type"))
-                object.type = options.enums === String ? $root.server.MediaUpload.Type[message.type] : message.type;
+                object.type = options.enums === String ? $root.server.MediaUpload.Type[message.type] === undefined ? message.type : $root.server.MediaUpload.Type[message.type] : message.type;
             if (message.durationMs != null && message.hasOwnProperty("durationMs"))
                 object.durationMs = message.durationMs;
             if (message.numPhotos != null && message.hasOwnProperty("numPhotos"))
@@ -44315,7 +44747,7 @@ export const server = $root.server = (() => {
             if (message.totalSize != null && message.hasOwnProperty("totalSize"))
                 object.totalSize = message.totalSize;
             if (message.status != null && message.hasOwnProperty("status"))
-                object.status = options.enums === String ? $root.server.MediaUpload.Status[message.status] : message.status;
+                object.status = options.enums === String ? $root.server.MediaUpload.Status[message.status] === undefined ? message.status : $root.server.MediaUpload.Status[message.status] : message.status;
             if (message.retryCount != null && message.hasOwnProperty("retryCount"))
                 object.retryCount = message.retryCount;
             return object;
@@ -44669,6 +45101,12 @@ export const server = $root.server = (() => {
             if (object.id != null)
                 message.id = String(object.id);
             switch (object.type) {
+            default:
+                if (typeof object.type === "number") {
+                    message.type = object.type;
+                    break;
+                }
+                break;
             case "POST":
             case 0:
                 message.type = 0;
@@ -44691,6 +45129,12 @@ export const server = $root.server = (() => {
             if (object.totalSize != null)
                 message.totalSize = object.totalSize >>> 0;
             switch (object.status) {
+            default:
+                if (typeof object.status === "number") {
+                    message.status = object.status;
+                    break;
+                }
+                break;
             case "OK":
             case 0:
                 message.status = 0;
@@ -44731,7 +45175,7 @@ export const server = $root.server = (() => {
             if (message.id != null && message.hasOwnProperty("id"))
                 object.id = message.id;
             if (message.type != null && message.hasOwnProperty("type"))
-                object.type = options.enums === String ? $root.server.MediaDownload.Type[message.type] : message.type;
+                object.type = options.enums === String ? $root.server.MediaDownload.Type[message.type] === undefined ? message.type : $root.server.MediaDownload.Type[message.type] : message.type;
             if (message.durationMs != null && message.hasOwnProperty("durationMs"))
                 object.durationMs = message.durationMs;
             if (message.numPhotos != null && message.hasOwnProperty("numPhotos"))
@@ -44741,7 +45185,7 @@ export const server = $root.server = (() => {
             if (message.totalSize != null && message.hasOwnProperty("totalSize"))
                 object.totalSize = message.totalSize;
             if (message.status != null && message.hasOwnProperty("status"))
-                object.status = options.enums === String ? $root.server.MediaDownload.Status[message.status] : message.status;
+                object.status = options.enums === String ? $root.server.MediaDownload.Status[message.status] === undefined ? message.status : $root.server.MediaDownload.Status[message.status] : message.status;
             if (message.retryCount != null && message.hasOwnProperty("retryCount"))
                 object.retryCount = message.retryCount;
             return object;
@@ -45648,6 +46092,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.DecryptionReport();
             switch (object.result) {
+            default:
+                if (typeof object.result === "number") {
+                    message.result = object.result;
+                    break;
+                }
+                break;
             case "OK":
             case 0:
                 message.result = 0;
@@ -45664,6 +46114,12 @@ export const server = $root.server = (() => {
             if (object.originalVersion != null)
                 message.originalVersion = String(object.originalVersion);
             switch (object.senderPlatform) {
+            default:
+                if (typeof object.senderPlatform === "number") {
+                    message.senderPlatform = object.senderPlatform;
+                    break;
+                }
+                break;
             case "UNKNOWN":
             case 0:
                 message.senderPlatform = 0;
@@ -45686,6 +46142,12 @@ export const server = $root.server = (() => {
             if (object.isSilent != null)
                 message.isSilent = Boolean(object.isSilent);
             switch (object.contentType) {
+            default:
+                if (typeof object.contentType === "number") {
+                    message.contentType = object.contentType;
+                    break;
+                }
+                break;
             case "CHAT":
             case 0:
                 message.contentType = 0;
@@ -45724,7 +46186,7 @@ export const server = $root.server = (() => {
                 object.contentType = options.enums === String ? "CHAT" : 0;
             }
             if (message.result != null && message.hasOwnProperty("result"))
-                object.result = options.enums === String ? $root.server.DecryptionReport.Status[message.result] : message.result;
+                object.result = options.enums === String ? $root.server.DecryptionReport.Status[message.result] === undefined ? message.result : $root.server.DecryptionReport.Status[message.result] : message.result;
             if (message.reason != null && message.hasOwnProperty("reason"))
                 object.reason = message.reason;
             if (message.msgId != null && message.hasOwnProperty("msgId"))
@@ -45732,7 +46194,7 @@ export const server = $root.server = (() => {
             if (message.originalVersion != null && message.hasOwnProperty("originalVersion"))
                 object.originalVersion = message.originalVersion;
             if (message.senderPlatform != null && message.hasOwnProperty("senderPlatform"))
-                object.senderPlatform = options.enums === String ? $root.server.Platform[message.senderPlatform] : message.senderPlatform;
+                object.senderPlatform = options.enums === String ? $root.server.Platform[message.senderPlatform] === undefined ? message.senderPlatform : $root.server.Platform[message.senderPlatform] : message.senderPlatform;
             if (message.senderVersion != null && message.hasOwnProperty("senderVersion"))
                 object.senderVersion = message.senderVersion;
             if (message.rerequestCount != null && message.hasOwnProperty("rerequestCount"))
@@ -45742,7 +46204,7 @@ export const server = $root.server = (() => {
             if (message.isSilent != null && message.hasOwnProperty("isSilent"))
                 object.isSilent = message.isSilent;
             if (message.contentType != null && message.hasOwnProperty("contentType"))
-                object.contentType = options.enums === String ? $root.server.DecryptionReport.ContentType[message.contentType] : message.contentType;
+                object.contentType = options.enums === String ? $root.server.DecryptionReport.ContentType[message.contentType] === undefined ? message.contentType : $root.server.DecryptionReport.ContentType[message.contentType] : message.contentType;
             return object;
         };
 
@@ -46157,6 +46619,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.GroupDecryptionReport();
             switch (object.result) {
+            default:
+                if (typeof object.result === "number") {
+                    message.result = object.result;
+                    break;
+                }
+                break;
             case "UNKNOWN_STATUS":
             case 0:
                 message.result = 0;
@@ -46177,6 +46645,12 @@ export const server = $root.server = (() => {
             if (object.gid != null)
                 message.gid = String(object.gid);
             switch (object.itemType) {
+            default:
+                if (typeof object.itemType === "number") {
+                    message.itemType = object.itemType;
+                    break;
+                }
+                break;
             case "UNKNOWN_TYPE":
             case 0:
                 message.itemType = 0;
@@ -46201,6 +46675,12 @@ export const server = $root.server = (() => {
             if (object.timeTakenS != null)
                 message.timeTakenS = object.timeTakenS >>> 0;
             switch (object.senderPlatform) {
+            default:
+                if (typeof object.senderPlatform === "number") {
+                    message.senderPlatform = object.senderPlatform;
+                    break;
+                }
+                break;
             case "UNKNOWN":
             case 0:
                 message.senderPlatform = 0;
@@ -46217,6 +46697,12 @@ export const server = $root.server = (() => {
             if (object.senderVersion != null)
                 message.senderVersion = String(object.senderVersion);
             switch (object.schedule) {
+            default:
+                if (typeof object.schedule === "number") {
+                    message.schedule = object.schedule;
+                    break;
+                }
+                break;
             case "DAILY":
             case 0:
                 message.schedule = 0;
@@ -46256,7 +46742,7 @@ export const server = $root.server = (() => {
                 object.schedule = options.enums === String ? "DAILY" : 0;
             }
             if (message.result != null && message.hasOwnProperty("result"))
-                object.result = options.enums === String ? $root.server.GroupDecryptionReport.Status[message.result] : message.result;
+                object.result = options.enums === String ? $root.server.GroupDecryptionReport.Status[message.result] === undefined ? message.result : $root.server.GroupDecryptionReport.Status[message.result] : message.result;
             if (message.reason != null && message.hasOwnProperty("reason"))
                 object.reason = message.reason;
             if (message.contentId != null && message.hasOwnProperty("contentId"))
@@ -46264,7 +46750,7 @@ export const server = $root.server = (() => {
             if (message.gid != null && message.hasOwnProperty("gid"))
                 object.gid = message.gid;
             if (message.itemType != null && message.hasOwnProperty("itemType"))
-                object.itemType = options.enums === String ? $root.server.GroupDecryptionReport.ItemType[message.itemType] : message.itemType;
+                object.itemType = options.enums === String ? $root.server.GroupDecryptionReport.ItemType[message.itemType] === undefined ? message.itemType : $root.server.GroupDecryptionReport.ItemType[message.itemType] : message.itemType;
             if (message.originalVersion != null && message.hasOwnProperty("originalVersion"))
                 object.originalVersion = message.originalVersion;
             if (message.rerequestCount != null && message.hasOwnProperty("rerequestCount"))
@@ -46272,11 +46758,11 @@ export const server = $root.server = (() => {
             if (message.timeTakenS != null && message.hasOwnProperty("timeTakenS"))
                 object.timeTakenS = message.timeTakenS;
             if (message.senderPlatform != null && message.hasOwnProperty("senderPlatform"))
-                object.senderPlatform = options.enums === String ? $root.server.Platform[message.senderPlatform] : message.senderPlatform;
+                object.senderPlatform = options.enums === String ? $root.server.Platform[message.senderPlatform] === undefined ? message.senderPlatform : $root.server.Platform[message.senderPlatform] : message.senderPlatform;
             if (message.senderVersion != null && message.hasOwnProperty("senderVersion"))
                 object.senderVersion = message.senderVersion;
             if (message.schedule != null && message.hasOwnProperty("schedule"))
-                object.schedule = options.enums === String ? $root.server.GroupDecryptionReport.Schedule[message.schedule] : message.schedule;
+                object.schedule = options.enums === String ? $root.server.GroupDecryptionReport.Schedule[message.schedule] === undefined ? message.schedule : $root.server.GroupDecryptionReport.Schedule[message.schedule] : message.schedule;
             return object;
         };
 
@@ -46716,6 +47202,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.HomeDecryptionReport();
             switch (object.result) {
+            default:
+                if (typeof object.result === "number") {
+                    message.result = object.result;
+                    break;
+                }
+                break;
             case "UNKNOWN_STATUS":
             case 0:
                 message.result = 0;
@@ -46734,6 +47226,12 @@ export const server = $root.server = (() => {
             if (object.contentId != null)
                 message.contentId = String(object.contentId);
             switch (object.audienceType) {
+            default:
+                if (typeof object.audienceType === "number") {
+                    message.audienceType = object.audienceType;
+                    break;
+                }
+                break;
             case "UNKNOWN_AUDIENCE_TYPE":
             case 0:
                 message.audienceType = 0;
@@ -46748,6 +47246,12 @@ export const server = $root.server = (() => {
                 break;
             }
             switch (object.itemType) {
+            default:
+                if (typeof object.itemType === "number") {
+                    message.itemType = object.itemType;
+                    break;
+                }
+                break;
             case "UNKNOWN_TYPE":
             case 0:
                 message.itemType = 0;
@@ -46768,6 +47272,12 @@ export const server = $root.server = (() => {
             if (object.timeTakenS != null)
                 message.timeTakenS = object.timeTakenS >>> 0;
             switch (object.senderPlatform) {
+            default:
+                if (typeof object.senderPlatform === "number") {
+                    message.senderPlatform = object.senderPlatform;
+                    break;
+                }
+                break;
             case "UNKNOWN":
             case 0:
                 message.senderPlatform = 0;
@@ -46784,6 +47294,12 @@ export const server = $root.server = (() => {
             if (object.senderVersion != null)
                 message.senderVersion = String(object.senderVersion);
             switch (object.schedule) {
+            default:
+                if (typeof object.schedule === "number") {
+                    message.schedule = object.schedule;
+                    break;
+                }
+                break;
             case "DAILY":
             case 0:
                 message.schedule = 0;
@@ -46823,15 +47339,15 @@ export const server = $root.server = (() => {
                 object.schedule = options.enums === String ? "DAILY" : 0;
             }
             if (message.result != null && message.hasOwnProperty("result"))
-                object.result = options.enums === String ? $root.server.HomeDecryptionReport.Status[message.result] : message.result;
+                object.result = options.enums === String ? $root.server.HomeDecryptionReport.Status[message.result] === undefined ? message.result : $root.server.HomeDecryptionReport.Status[message.result] : message.result;
             if (message.reason != null && message.hasOwnProperty("reason"))
                 object.reason = message.reason;
             if (message.contentId != null && message.hasOwnProperty("contentId"))
                 object.contentId = message.contentId;
             if (message.audienceType != null && message.hasOwnProperty("audienceType"))
-                object.audienceType = options.enums === String ? $root.server.HomeDecryptionReport.AudienceType[message.audienceType] : message.audienceType;
+                object.audienceType = options.enums === String ? $root.server.HomeDecryptionReport.AudienceType[message.audienceType] === undefined ? message.audienceType : $root.server.HomeDecryptionReport.AudienceType[message.audienceType] : message.audienceType;
             if (message.itemType != null && message.hasOwnProperty("itemType"))
-                object.itemType = options.enums === String ? $root.server.HomeDecryptionReport.ItemType[message.itemType] : message.itemType;
+                object.itemType = options.enums === String ? $root.server.HomeDecryptionReport.ItemType[message.itemType] === undefined ? message.itemType : $root.server.HomeDecryptionReport.ItemType[message.itemType] : message.itemType;
             if (message.originalVersion != null && message.hasOwnProperty("originalVersion"))
                 object.originalVersion = message.originalVersion;
             if (message.rerequestCount != null && message.hasOwnProperty("rerequestCount"))
@@ -46839,11 +47355,11 @@ export const server = $root.server = (() => {
             if (message.timeTakenS != null && message.hasOwnProperty("timeTakenS"))
                 object.timeTakenS = message.timeTakenS;
             if (message.senderPlatform != null && message.hasOwnProperty("senderPlatform"))
-                object.senderPlatform = options.enums === String ? $root.server.Platform[message.senderPlatform] : message.senderPlatform;
+                object.senderPlatform = options.enums === String ? $root.server.Platform[message.senderPlatform] === undefined ? message.senderPlatform : $root.server.Platform[message.senderPlatform] : message.senderPlatform;
             if (message.senderVersion != null && message.hasOwnProperty("senderVersion"))
                 object.senderVersion = message.senderVersion;
             if (message.schedule != null && message.hasOwnProperty("schedule"))
-                object.schedule = options.enums === String ? $root.server.HomeDecryptionReport.Schedule[message.schedule] : message.schedule;
+                object.schedule = options.enums === String ? $root.server.HomeDecryptionReport.Schedule[message.schedule] === undefined ? message.schedule : $root.server.HomeDecryptionReport.Schedule[message.schedule] : message.schedule;
             return object;
         };
 
@@ -47213,6 +47729,12 @@ export const server = $root.server = (() => {
             if (object.timeTakenS != null)
                 message.timeTakenS = object.timeTakenS >>> 0;
             switch (object.schedule) {
+            default:
+                if (typeof object.schedule === "number") {
+                    message.schedule = object.schedule;
+                    break;
+                }
+                break;
             case "DAILY":
             case 0:
                 message.schedule = 0;
@@ -47260,7 +47782,7 @@ export const server = $root.server = (() => {
             if (message.timeTakenS != null && message.hasOwnProperty("timeTakenS"))
                 object.timeTakenS = message.timeTakenS;
             if (message.schedule != null && message.hasOwnProperty("schedule"))
-                object.schedule = options.enums === String ? $root.server.GroupHistoryReport.Schedule[message.schedule] : message.schedule;
+                object.schedule = options.enums === String ? $root.server.GroupHistoryReport.Schedule[message.schedule] === undefined ? message.schedule : $root.server.GroupHistoryReport.Schedule[message.schedule] : message.schedule;
             return object;
         };
 
@@ -47485,6 +48007,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.Permissions();
             switch (object.type) {
+            default:
+                if (typeof object.type === "number") {
+                    message.type = object.type;
+                    break;
+                }
+                break;
             case "CONTACTS":
             case 0:
                 message.type = 0;
@@ -47495,6 +48023,12 @@ export const server = $root.server = (() => {
                 break;
             }
             switch (object.status) {
+            default:
+                if (typeof object.status === "number") {
+                    message.status = object.status;
+                    break;
+                }
+                break;
             case "ALLOWED":
             case 0:
                 message.status = 0;
@@ -47525,9 +48059,9 @@ export const server = $root.server = (() => {
                 object.status = options.enums === String ? "ALLOWED" : 0;
             }
             if (message.type != null && message.hasOwnProperty("type"))
-                object.type = options.enums === String ? $root.server.Permissions.Type[message.type] : message.type;
+                object.type = options.enums === String ? $root.server.Permissions.Type[message.type] === undefined ? message.type : $root.server.Permissions.Type[message.type] : message.type;
             if (message.status != null && message.hasOwnProperty("status"))
-                object.status = options.enums === String ? $root.server.Permissions.Status[message.status] : message.status;
+                object.status = options.enums === String ? $root.server.Permissions.Status[message.status] === undefined ? message.status : $root.server.Permissions.Status[message.status] : message.status;
             return object;
         };
 
@@ -48003,6 +48537,12 @@ export const server = $root.server = (() => {
                 else if (typeof object.peerUid === "object")
                     message.peerUid = new $util.LongBits(object.peerUid.low >>> 0, object.peerUid.high >>> 0).toNumber(true);
             switch (object.type) {
+            default:
+                if (typeof object.type === "number") {
+                    message.type = object.type;
+                    break;
+                }
+                break;
             case "UNKNOWN_TYPE":
             case 0:
                 message.type = 0;
@@ -48017,6 +48557,12 @@ export const server = $root.server = (() => {
                 break;
             }
             switch (object.direction) {
+            default:
+                if (typeof object.direction === "number") {
+                    message.direction = object.direction;
+                    break;
+                }
+                break;
             case "UNKNOWN_DIRECTION":
             case 0:
                 message.direction = 0;
@@ -48048,6 +48594,12 @@ export const server = $root.server = (() => {
             if (object.localEndCall != null)
                 message.localEndCall = Boolean(object.localEndCall);
             switch (object.networkType) {
+            default:
+                if (typeof object.networkType === "number") {
+                    message.networkType = object.networkType;
+                    break;
+                }
+                break;
             case "UNKNOWN_NETWORK":
             case 0:
                 message.networkType = 0;
@@ -48131,9 +48683,9 @@ export const server = $root.server = (() => {
                 else
                     object.peerUid = options.longs === String ? $util.Long.prototype.toString.call(message.peerUid) : options.longs === Number ? new $util.LongBits(message.peerUid.low >>> 0, message.peerUid.high >>> 0).toNumber(true) : message.peerUid;
             if (message.type != null && message.hasOwnProperty("type"))
-                object.type = options.enums === String ? $root.server.Call.CallType[message.type] : message.type;
+                object.type = options.enums === String ? $root.server.Call.CallType[message.type] === undefined ? message.type : $root.server.Call.CallType[message.type] : message.type;
             if (message.direction != null && message.hasOwnProperty("direction"))
-                object.direction = options.enums === String ? $root.server.Call.CallDirection[message.direction] : message.direction;
+                object.direction = options.enums === String ? $root.server.Call.CallDirection[message.direction] === undefined ? message.direction : $root.server.Call.CallDirection[message.direction] : message.direction;
             if (message.answered != null && message.hasOwnProperty("answered"))
                 object.answered = message.answered;
             if (message.connected != null && message.hasOwnProperty("connected"))
@@ -48148,7 +48700,7 @@ export const server = $root.server = (() => {
             if (message.localEndCall != null && message.hasOwnProperty("localEndCall"))
                 object.localEndCall = message.localEndCall;
             if (message.networkType != null && message.hasOwnProperty("networkType"))
-                object.networkType = options.enums === String ? $root.server.Call.NetworkType[message.networkType] : message.networkType;
+                object.networkType = options.enums === String ? $root.server.Call.NetworkType[message.networkType] === undefined ? message.networkType : $root.server.Call.NetworkType[message.networkType] : message.networkType;
             if (message.isKrispActive != null && message.hasOwnProperty("isKrispActive"))
                 object.isKrispActive = message.isKrispActive;
             if (message.iceTimeTakenMs != null && message.hasOwnProperty("iceTimeTakenMs"))
@@ -50086,6 +50638,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.CandidatePairStats();
             switch (object.local) {
+            default:
+                if (typeof object.local === "number") {
+                    message.local = object.local;
+                    break;
+                }
+                break;
             case "PRFLX":
             case 0:
                 message.local = 0;
@@ -50106,6 +50664,12 @@ export const server = $root.server = (() => {
             if (object.localIP != null)
                 message.localIP = String(object.localIP);
             switch (object.remote) {
+            default:
+                if (typeof object.remote === "number") {
+                    message.remote = object.remote;
+                    break;
+                }
+                break;
             case "PRFLX":
             case 0:
                 message.remote = 0;
@@ -50170,6 +50734,12 @@ export const server = $root.server = (() => {
             if (object.availableIncomingBitrate != null)
                 message.availableIncomingBitrate = Number(object.availableIncomingBitrate);
             switch (object.state) {
+            default:
+                if (typeof object.state === "number") {
+                    message.state = object.state;
+                    break;
+                }
+                break;
             case "FROZEN":
             case 0:
                 message.state = 0;
@@ -50239,11 +50809,11 @@ export const server = $root.server = (() => {
                 object.state = options.enums === String ? "FROZEN" : 0;
             }
             if (message.local != null && message.hasOwnProperty("local"))
-                object.local = options.enums === String ? $root.server.CandidatePairStats.CandidateType[message.local] : message.local;
+                object.local = options.enums === String ? $root.server.CandidatePairStats.CandidateType[message.local] === undefined ? message.local : $root.server.CandidatePairStats.CandidateType[message.local] : message.local;
             if (message.localIP != null && message.hasOwnProperty("localIP"))
                 object.localIP = message.localIP;
             if (message.remote != null && message.hasOwnProperty("remote"))
-                object.remote = options.enums === String ? $root.server.CandidatePairStats.CandidateType[message.remote] : message.remote;
+                object.remote = options.enums === String ? $root.server.CandidatePairStats.CandidateType[message.remote] === undefined ? message.remote : $root.server.CandidatePairStats.CandidateType[message.remote] : message.remote;
             if (message.remoteIP != null && message.hasOwnProperty("remoteIP"))
                 object.remoteIP = message.remoteIP;
             if (message.packetsSent != null && message.hasOwnProperty("packetsSent"))
@@ -50275,7 +50845,7 @@ export const server = $root.server = (() => {
             if (message.availableIncomingBitrate != null && message.hasOwnProperty("availableIncomingBitrate"))
                 object.availableIncomingBitrate = options.json && !isFinite(message.availableIncomingBitrate) ? String(message.availableIncomingBitrate) : message.availableIncomingBitrate;
             if (message.state != null && message.hasOwnProperty("state"))
-                object.state = options.enums === String ? $root.server.CandidatePairStats.CandidatePairState[message.state] : message.state;
+                object.state = options.enums === String ? $root.server.CandidatePairStats.CandidatePairState[message.state] === undefined ? message.state : $root.server.CandidatePairStats.CandidatePairState[message.state] : message.state;
             return object;
         };
 
@@ -50504,6 +51074,12 @@ export const server = $root.server = (() => {
                 return object;
             let message = new $root.server.FabAction();
             switch (object.type) {
+            default:
+                if (typeof object.type === "number") {
+                    message.type = object.type;
+                    break;
+                }
+                break;
             case "UNKNOWN_TYPE":
             case 0:
                 message.type = 0;
@@ -50544,7 +51120,7 @@ export const server = $root.server = (() => {
             if (options.defaults)
                 object.type = options.enums === String ? "UNKNOWN_TYPE" : 0;
             if (message.type != null && message.hasOwnProperty("type"))
-                object.type = options.enums === String ? $root.server.FabAction.FabActionType[message.type] : message.type;
+                object.type = options.enums === String ? $root.server.FabAction.FabActionType[message.type] === undefined ? message.type : $root.server.FabAction.FabActionType[message.type] : message.type;
             return object;
         };
 

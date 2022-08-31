@@ -32,7 +32,7 @@ function setLanguage(language: string) {
 }
 
 // get language settings from locale
-const language = setLanguage(locale.value)
+const language = setLanguage(locale.value as string)
 const helpLink = ref('https://www.halloapp.com/' + language + 'help/')
 const termsLink = ref('https://www.halloapp.com/' + language + 'terms/')
 const privacyPolicyLink = ref('https://www.halloapp.com/' + language + 'privacy/')
@@ -59,15 +59,15 @@ const headerColor = computed(() => {
 })
 
 function gotoHelp() {
-    (<any>window).open(helpLink.value)
+    (window as any).open(helpLink.value)
 }
 
 function gotoTerms() {
-    (<any>window).open(termsLink.value)
+    (window as any).open(termsLink.value)
 }
 
 function gotoPrivacyPolicy() {
-    (<any>window).open(privacyPolicyLink.value)
+    (window as any).open(privacyPolicyLink.value)
 }
 
 </script>

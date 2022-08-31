@@ -153,7 +153,7 @@ const messageNumber = computed(() => {
                                 Test test test
                             </div>
                             <div class='timestamp'>
-                                {{ formatTime(1657026000, locale) }}
+                                {{ formatTime(1657026000, locale as string) }}
                             </div>
                         </div>
                     </div>
