@@ -74,11 +74,11 @@
 
 <template>
 
-    <Feed ref="feedRef" :postsList="postsList" @commentsClick="commentsClick()">
+    <!-- <Feed ref="feedRef" :postsList="postsList" @commentsClick="commentsClick()">
         <template v-slot:header>
             <GroupFeedHeader @toggleSidebar="toggleSidebar()"></GroupFeedHeader>
         </template>
-    </Feed>
+    </Feed> -->
 
 </template>
 

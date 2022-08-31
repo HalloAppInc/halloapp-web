@@ -140,7 +140,7 @@ const messageNumber = computed(() => {
                 <template v-slot:subHeader>
                     <div class='subHeader'>
                         <div>
-                            <Avatar :userID="'TonyTemp'" :width="'30px'"></Avatar>
+                            <Avatar :userID="111" :width="30"></Avatar>
                         </div>
                         <div class='subHeaderBody'>
                             <div>

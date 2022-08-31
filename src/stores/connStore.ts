@@ -14,12 +14,22 @@ import { web } from '../proto/web.js'
 
 import createNoise from "noise-c.wasm"
 
+import { useHAFeed } from '../composables/haFeed'
+
+import { useHAAvatar } from '../composables/haAvatar'
+
+
+
 export const useConnStore = defineStore('conn', () => {
 
     const testAgainstLocalServer = false /* used for testing, turn off for production releases */
 
     const mainStore = useMainStore()
     let { createPingPacket, addKey, removeKey, check, createNoiseMessageIKB, createWebStanzaPacket, encodeFeedRequestWebContainer, uploadMedia } = network()
+
+
+    const { processWebContainer } = useHAFeed()
+    const { getAvatar } = useHAAvatar()
 
     // todo: should switch automatically to prod/test servers
     let webSocketServer = 'wss://ws-test.halloapp.net/ws'
@@ -155,50 +165,40 @@ export const useConnStore = defineStore('conn', () => {
         const eventDataBinArr = new Uint8Array(event.data)
         const packet = await decodePacket(eventDataBinArr)
 
-        if (packet == undefined) {
-            hal.log('connStore/handleInboundMsg/undefined packet')
-
-            if (testAgainstLocalServer) {
-                if (noise == undefined) {
-                    noise = await initNoise()
-                }            
-                if (handshakeState == undefined) {
-                    initHandshake(noise)
-                }
-                handleNoiseHandshakeMsg(eventDataBinArr)
-            }
-
-            return
-        }
+        const ack = packet?.ack
 
         const iq = packet.iq
-    
         const ping = iq?.ping
     
         const msg = packet?.msg
         const webStanza = msg?.webStanza
 
-        const ack = packet?.ack
-
         if (ping) {
             hal.log('connStore/handleInboundMsg/ping: ' + JSON.stringify(packet) + '\n')
-        } else {
-            hal.log('connStore/handleInboundMsg/packet:\n' + JSON.stringify(packet) + '\n\n')
+        } 
+        else {
+            hal.log('connStore/handleInboundMsg/packet: ')
+            hal.dir(packet)
         }
 
         if (ping) {
-
             const packet = createPingPacket()
             const packetProto = server.Packet.encode(packet).finish()
             const buf = packetProto.buffer.slice(packetProto.byteOffset, packetProto.byteLength + packetProto.byteOffset)
             hal.log('connStore/handleInboundMsg/ping/send: ' + JSON.stringify(packet))
             webSocket.send(buf)
-
-        } else if (ack) {
+        } 
+        
+        else if (ack || iq) {
 
             const callback = findPacketInSendQueue(packet)
+            if (callback) { 
+                callback(packet) 
+            }            
 
-        } else if (webStanza) {
+        } 
+
+        else if (webStanza) {
             hal.log('connStore/handleInboundMsg/webStanza')
 
             const noiseMessage = webStanza?.noiseMessage
@@ -231,83 +231,77 @@ export const useConnStore = defineStore('conn', () => {
             } 
             
             else {
-                hal.log('connStore/handleInboundMsg/webStanza/not a noiseMessage')
                 if (mainStore.isPublicKeyAuthenticated && mainStore.haveInitialHandshakeCompleted) {
                     
-                    const callback = findPacketInSendQueue(packet)
+                    // temporary to get user's own userID
+                    if (msg) {
+                        if (mainStore.userID == 0) {
+                            mainStore.userID = msg.toUid
+                        }
+                    }
 
                     if (webStanza.content) {
 
                         const webStanzaContentsBinArr = new Uint8Array(webStanza.content)
-
                         const decrypted = mainStore.cipherStateReceive.DecryptWithAd([], webStanzaContentsBinArr)
-                        hal.log('connStore/handleInboundMsg/webStanza/decrypted: ' + decrypted)
-                        
                         const webContainer = await decodeWebContainer(decrypted)
 
-                        hal.log('connStore/handleInboundMsg/webStanza/decoded: ' + webContainer)
-
-                        if (callback) {
-                            callback(webContainer)
-                        }
-
+                        hal.log('connStore/handleInboundMsg/webStanza/decoded/webContainer:')
+                        hal.dir(webContainer)
+                        processWebContainer(webContainer)
                     }
 
-                }                
+                }
             }
     
-        } else {
-    
-            const callback = findPacketInSendQueue(packet)
-
-            if (callback) {
-                callback(packet)
-            }
-    
-        }
+        } 
+        
     }
-
 
     function findPacketInSendQueue(packet: any) {
         hal.log('connStore/findPacketInSendQueue')
 
         let cb = undefined
 
-        const iqID = packet.iq?.id
-        const msgID = packet.msg?.id
-        const ackID = packet.ack?.id
+        const ack = packet.ack
+        const ackID = ack?.id
+        const iq = packet.iq
+        const iqID = iq?.id
+        const msg = packet.msg
+        const webStanza = msg?.webStanza
+        const noiseMessage = webStanza?.noiseMessage
 
         let isFound = false
 
         for (let i = 0; i < mainStore.messageQueue.length; i++) {
 
-            if (iqID && mainStore.messageQueue[i].iqID == iqID) {
-                hal.log('connStore/findPacketInSendQueue/found, removing iq in queue:\n' + JSON.stringify(packet.iq) + '\n\n')
+            /* only outbound messages get ack'ed, not iq */
+            if (ack && mainStore.messageQueue[i].msgID == ackID) {
+                hal.log('connStore/findPacketInSendQueue/found, removing msg in queue: ' + ackID)
+                isFound = true              
+            }      
+            else if (iq && mainStore.messageQueue[i].iqID == iqID) {
+                hal.log('connStore/findPacketInSendQueue/found, removing iq in queue: ' + iqID)
                 isFound = true
             }
-            else if (msgID && mainStore.messageQueue[i].msgID == msgID) {
-                hal.log('connStore/findPacketInSendQueue/found, removing msg in queue:\n' + JSON.stringify(packet.msg) + '\n\n')
-                isFound = true              
-            }
-            else if (ackID && mainStore.messageQueue[i].msgID == ackID) {
-                hal.log('connStore/findPacketInSendQueue/found, removing ack\'ed msg in queue:\n' + JSON.stringify(packet.ack) + '\n\n')
-                isFound = true              
-            }            
-
+            // else if (msgID && mainStore.messageQueue[i].msgID == msgID) {
+            //     hal.log('connStore/findPacketInSendQueue/found, removing msg in queue:\n' + JSON.stringify(packet.msg) + '\n\n')
+            //     isFound = true              
+            // }
+      
             if (isFound) {
                 const callback = mainStore.messageQueue[i].callback
                 if (callback) {
                     cb = callback
                 }
-                // remove message
-                mainStore.messageQueue.splice(i, 1)
-                
+                mainStore.messageQueue.splice(i, 1) // remove message
                 break                       
             }
         }
 
-        if (!isFound) {
-            hal.log('connStore/findPacketInSendQueue/unknown packet (if noiseMessage, can ignore for now):\n' + JSON.stringify(packet) + '\n\n')
+        /* don't log msg as there's no way to correlate mobile msg responses with web msg requests */
+        if (iq && !isFound) {
+            hal.log('connStore/findPacketInSendQueue/can\'t find iq:\n' + JSON.stringify(packet) + '\n\n')
         }
 
         return cb
@@ -409,7 +403,7 @@ export const useConnStore = defineStore('conn', () => {
         const protocolName = `Noise_${pattern}_${curve}_${cipher}_${hash}`
         handshakeState = noise.HandshakeState(protocolName, noise.constants.NOISE_ROLE_RESPONDER)
         hal.log('connStore/initHandshake: ')
-        hal.dir(handshakeState)
+        // hal.dir(handshakeState)
     
         // let cipherStateSend: { EncryptWithAd: (arg0: never[], arg1: string) => any }
         // let cipherStateReceive: { DecryptWithAd: (arg0: never[], arg1: any) => any }
@@ -484,7 +478,7 @@ export const useConnStore = defineStore('conn', () => {
             msgID: packet.msg?.id,
             packet: packet,
             needAuth: needAuth,
-            callback: callback,            
+            callback: callback        
         })
         sendReadyMessagesInQueue()
     }
@@ -570,7 +564,7 @@ export const useConnStore = defineStore('conn', () => {
             return
         }
 
-        if (mainStore.cipherStateSend.hasOwnProperty('EncryptWithAd')) {
+        if (typeof mainStore.cipherStateSend.EncryptWithAd != 'function') {
             hal.log('homeMain/getFeedItems/exit/EncryptWithAd not in cipherStateSend: ' + JSON.stringify(mainStore.cipherStateSend))
             return
         }

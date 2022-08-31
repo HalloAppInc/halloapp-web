@@ -27,8 +27,8 @@ export const useMainStore = defineStore('main', {
         publicKeyBase64: '',
 
         messageQueue: <any>[],
-        pushnames: {},
-        pushnumbers: {},
+        pushnames: <any>{},
+        pushnumbers: <any>{},
 
         isLoggedIntoApp: false,
         isConnectedToServer: false,
@@ -43,6 +43,8 @@ export const useMainStore = defineStore('main', {
 
         cipherStateSend: <any>{},
         cipherStateReceive: <any>{},
+
+        userID: 0,
 
         showSidebar: true,
         animateSidebar: false,
@@ -92,6 +94,8 @@ export const useMainStore = defineStore('main', {
             for (let prop in this.cipherStateSend) {
                 delete this.cipherStateSend[prop]
             }            
+
+            this.userID = 0
 
             this.haveFetchedInitialMainFeed = false
             this.mainFeedCursor = ''

@@ -34,7 +34,7 @@ export interface LinkPreview {
     url: string
 }
 
-enum PostMediaType {
+export enum PostMediaType {
     Unknown = 0,
     Image = 1,
     Video = 2
@@ -42,30 +42,32 @@ enum PostMediaType {
 
 export interface PostMedia {
     id?: number
-    order: number
-    blob: Blob
-    blobSize: number
-    chunkSize: number
+    postID?: string
     type: PostMediaType
+    order: number
     width: number
     height: number
-    key: string
-    sha256: string
-    putURL?: string
-    getURL?: string
+
+    key: Uint8Array
+    hash: Uint8Array
+    downloadURL: string
+    uploadURL?: string
+
+    blobVersion?: number
+    blob?: Blob
+    blobSize?: number | Long
+    chunkSize?: number
 }
 
 export interface Feed {
     id?: number
     postID: string
-    userID?: string
+    userID: number
     groupID?: string
     text?: string
-    mentions?: [Mention]
+    mentions?: Mention[]
     linkPreview?: LinkPreview
-    media?: [PostMedia]
-    timestamp?: number
-    proto?: ArrayBuffer
+    timestamp: number
 }
 
 export interface Chat {
@@ -80,10 +82,9 @@ export interface Contact {
 }
 
 export interface Avatar {
-    id?: number
-    userID: string
+    userID: number
     avatarID?: string
-    image?: ArrayBuffer
+    image?: Blob
 }
 
 export class HADexie extends Dexie {
@@ -92,18 +93,20 @@ export class HADexie extends Dexie {
     media!: Table<Media>
     feed!: Table<Feed>
     chat!: Table<Chat>
+    postMedia!: Table<PostMedia>
     contact!: Table<Contact>
     avatar!: Table<Avatar>
     
     constructor() {
         super('myDatabase')
-        this.version(4).stores({
+        this.version(5).stores({
             messageList: '++id, fromUserID, toUserID',
             media: '++id',
-            feed: '++id, postID, userID, groupID, text, mentions, linkPreview, media, timestamp, proto',
+            feed: '++id, postID, userID, groupID, text, timestamp',
             chat: '++id, proto',
+            postMedia: '++id, postID, order',
             contact: '++id, userName, userID',
-            avatar: '++id, userID, image'
+            avatar: 'userID'
         })
     }
     

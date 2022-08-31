@@ -9,6 +9,8 @@ import { useColorStore } from '../../stores/colorStore'
 
 import Popup from '../chats/Popup.vue'
 
+import Avatar from '../media/Avatar.vue'
+
 const mainStore = useMainStore()
 const connStore = useConnStore()
 const colorStore = useColorStore()
@@ -65,7 +67,7 @@ function changePreferColorScheme(mode: string) {
                     <div class="container">
                         <div class="profileContent">
                             <div class="avatarContainer">
-                                <div class="avatar"></div>
+                                <Avatar :userID="mainStore.userID" :width="80"></Avatar>
                             </div>
                             <div class="headerContent">
                                 <div class="contentTitle">

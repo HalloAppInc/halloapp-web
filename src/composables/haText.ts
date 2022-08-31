@@ -3,14 +3,26 @@ import GraphemeSplitter from 'grapheme-splitter'
 import halogger from '../common/halogger'
 
 export function useHAText() {
-    
-    // format input message
-    function populateTextWithMentions(text: any, contactList: any) {
+
+    function strReplaceAt (text: string, index: number, replacement: string) {
+        return text.substring(0, index) + replacement + text.substring(index + 1)
+    }
+
+    function populateTextWithMentions(text: string, mentions: any) {
         let result = text
 
-        if (contactList) {
-            for (var i = 0; i < contactList.length; i++) {
-                result = result.replaceAll('@' + contactList[i], '[[am]]' + '@' + contactList[i] + '[[/am]]')
+        // if (contactList) {
+        //     console.log("populateTextWithMentions 1")
+        //     for (var i = 0; i < contactList.length; i++) {
+        //         console.log("populateTextWithMentions: " + i)
+        //         result = result.replaceAll('@' + contactList[i], '[[am]]' + '@' + contactList[i] + '[[/am]]')
+        //     }
+        // }
+
+        if (mentions) {
+            for (var i = mentions.length - 1; i >= 0; i--) {
+                const mention = mentions[i]
+                result = strReplaceAt(result, mention.index, '[[am]]' + '@' + mention.name + '[[/am]]')
             }
         }
 

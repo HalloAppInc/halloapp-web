@@ -101,7 +101,7 @@ export function network() {
             id: id,
             type: web.FeedType.HOME,
             cursor: cursor,
-            limit: 10
+            limit: 30
         })
 
         const webContainer = web.WebContainer.create({

@@ -7,7 +7,15 @@ import { useMainStore } from '../../stores/mainStore'
 import { db } from '../../db'
 import { useI18n } from 'vue-i18n'
 
+import { useHAAvatar } from '../../composables/haAvatar'
+
+import { Dexie, liveQuery } from "dexie"
+
 const mainStore = useMainStore()
+
+
+const { getAvatar } = useHAAvatar()
+
 
 const { t } = useI18n({
     inheritLocale: true,
@@ -16,7 +24,7 @@ const { t } = useI18n({
 
 const props = defineProps({
     userID: {
-        type: String,
+        type: Number,
         required: true
     },
     avatarID: {
@@ -24,58 +32,59 @@ const props = defineProps({
         required: false
     },
     width: {
-        type: String,
+        type: Number,
         required: true
     },    
 })
 
-const avatarWidth = props.width
-const avatarHeight = props.width
+
+const feedObservable = liveQuery (() => db.avatar.where('userID').equals(props.userID)
+    .toArray()
+)
+
+const subscription = feedObservable.subscribe({
+    next: result => { 
+        // console.log('avatar/observable: ', JSON.stringify(result))
+        if (result && result.length > 0) {
+            if (result[0].image) {
+
+                if (result[0].image.size > 0) {
+ 
+                    const avatarImgBlobUrl = URL.createObjectURL(result[0].image)
+                    avatarImageUrl.value = avatarImgBlobUrl 
+                }
+
+            }
+        }
+
+    },
+    error: error => console.error(error)
+})
+
+
+const avatarWidth = props.width.toString() + 'px'
+const avatarHeight = props.width.toString() + 'px'
 
 let localAvatarID: string = ''
 let avatarPath: string = ''
 
-if (props.userID == 'TonyTemp') {
+if (props.userID == 111) {
     localAvatarID = 'Hvhqsmhx-uKSX2oAEYpKe5xK'
     avatarPath = 'Hvhqsmhx-uKSX2oAEYpKe5xK'
 }
 
-let avatarDefaultImageUrl = ref(mainStore.devCORSWorkaroundUrlPrefix + "https://web.halloapp.com/assets/avatar.svg")
-let avatarImageUrl = ref(mainStore.devCORSWorkaroundUrlPrefix + "https://avatar-cdn.halloapp.net/" + avatarPath)
+const avatarImageUrl = ref(mainStore.devCORSWorkaroundUrlPrefix + "https://web.halloapp.com/assets/avatar.svg")
+// const avatarImageUrl = ref(mainStore.devCORSWorkaroundUrlPrefix + "https://avatar-cdn.halloapp.net/" + avatarPath)
 
-if (!avatarPath || avatarPath == '') {
-    avatarImageUrl = avatarDefaultImageUrl
-}
+init()
 
-getAvatar()
+async function init() {
+    const avatarImgBlob = await getAvatar(props.userID)
 
-async function getAvatar() {
-	const avatarArr = await db.avatar.where('userID').equals(avatarPath).toArray()
-    let avatarImgBlob: Blob
-
-    if (avatarArr.length > 0 && avatarArr[0].image) {
-        avatarImgBlob = new Blob( [ avatarArr[0].image ], { type: 'image/jpeg' } )
-    } else {
-        hal.log('Avatar/db/not found: ' + avatarPath)
-
-        const request = new Request(avatarImageUrl.value)
-        const response = await fetch(request)
-        avatarImgBlob = await response.blob()
-
-        const avatarImgBuf = await avatarImgBlob.arrayBuffer()
-        try {
-            const id = await db.avatar.put({
-                userID: props.userID,
-                avatarID: localAvatarID,
-                image: avatarImgBuf,
-            })
-        } catch (error) {
-            hal.log('Avatar/db/put/error ' + error)
-        }
+    if (avatarImgBlob) {
+        const avatarImgBlobUrl = URL.createObjectURL(avatarImgBlob)
+        avatarImageUrl.value = avatarImgBlobUrl 
     }
-
-    const avatarImgBlobUrl = URL.createObjectURL(avatarImgBlob)
-    avatarImageUrl.value = avatarImgBlobUrl 
 }
 
 </script>

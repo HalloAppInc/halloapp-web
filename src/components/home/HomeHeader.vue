@@ -50,7 +50,7 @@ const backgroundColor = computed(() => {
         <div class='container'>
             
             <div class="avatarContainer">
-                <Avatar :userID="'TonyTemp'" :width="'30px'"></Avatar>
+                <Avatar :userID="mainStore.userID" :width="30"></Avatar>
             </div>
 
             <div class="titleContainer">

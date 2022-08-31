@@ -20,7 +20,7 @@ const { setPreviewMediaSizes } = useHAMediaResize()
 
 const props = defineProps(['showComposer', 'uploadFiles', 'replyQuoteIdx'])
 
-const attachMediaList = ref(<any>[])
+const attachMediaList: Ref<any[]> = ref([])
 
 const testImage = ref()
 const testVideo = ref()

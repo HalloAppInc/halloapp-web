@@ -2,7 +2,7 @@
 import { ref, toRef } from "vue"
 
 import hal from "../../common/halogger"
-
+import { db, Feed, PostMedia, PostMediaType, Mention } from '../../db'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n({
@@ -15,7 +15,7 @@ enum MediaType {
     Video
 }
 interface Media {
-    type?: MediaType;
+    type?: PostMediaType;
     mediaBlob?: any;
     width: number;
     height: number;
@@ -79,7 +79,7 @@ let dragStartY = 0
 const selectedMedia = ref(0)
 
 function videoLoaded(event: Event, index: number) {
-    hal.log('MediaCarousel/videoLoaded index: ' + index)
+    // hal.log('MediaCarousel/videoLoaded index: ' + index)
     const vid = (event.target as HTMLVideoElement)
     vid.currentTime += 0.001
 }
@@ -290,11 +290,11 @@ function touchEnd(event: Event) {
                 <div class="loader"></div>
             </div>
             
-            <img v-else-if="item.type == MediaType.Image" class="postImage" :src="item.mediaBlob" :width="item.width" :height="item.height" 
+            <img v-else-if="item.type == PostMediaType.Image" class="postImage" :src="item.mediaBlob" :width="item.width" :height="item.height" 
                 :style="'margin-left: ' + item.margin + 'px; margin-right: ' + item.margin + 'px;'" 
                 alt="Post Image">
 
-            <video v-else-if="item.type == MediaType.Video" class="postVideo" 
+            <video v-else-if="item.type == PostMediaType.Video" class="postVideo" 
                 :width="item.width" :height="item.height"
                 :style="'margin-left: ' + item.margin + 'px; margin-right: ' + item.margin + 'px;'" 
                 preload="metadata" @loadedmetadata="videoLoaded($event, parseInt(index))" playsinline controls controlsList="">

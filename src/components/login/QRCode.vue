@@ -140,7 +140,7 @@ function deleteQRCodeAndWait() {
     </div>
 
     <div v-if='showQRCode'>
-        <div class="fakeAuthButton" @click="fakeAuth">
+        <div v-if="mainStore.isDebug" class="fakeAuthButton" @click="fakeAuth">
             Fake Phone Auth
         </div>
         <div class="countdown">

@@ -43,9 +43,9 @@ const iconColor = computed(() => {
                 </div>
             </div>
            
-            <div class="avatarContainer">
-                <Avatar :userID="'TonyTemp'" :width="'30px'"></Avatar>
-            </div>           
+            <!-- <div class="avatarContainer">
+                <Avatar :userID="111" :width="30"></Avatar>
+            </div>            -->
 
             <div class='titleContainer'>
                 {{ mainStore.groupsPageGroup.title }}

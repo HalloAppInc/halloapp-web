@@ -116,6 +116,7 @@
             <div v-for="value in props.postsList" class="container">
                 <!-- data-ha-postID is used only for detecting post while scrolling -->
                 <Post
+                    :post="value"
                     :postID="value.postID"
                     userID="value.userID" 
                     @commentsClick="openCommentsIfNeeded(value.postID)" 

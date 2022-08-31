@@ -18,13 +18,34 @@ import { useMainStore } from '../../stores/mainStore'
 import { useHAText } from '../../composables/haText'
 import { useTimeformatter } from '../../composables/timeformatter'
 
+import { db, Feed, PostMedia, PostMediaType, Mention } from '../../db'
+
+import { useHAFeed } from '../../composables/haFeed'
+
 const mainStore = useMainStore()
 const { processText } = useHAText()
 const { formatTime, formatTimer } = useTimeformatter()
 
-const props = defineProps(['postID'])
+const { getPostMedia, modifyPost } = useHAFeed()
 
-let pushname = (window as any).han
+interface Props {
+    post: Feed,
+    postID: string
+}
+const props = defineProps<Props>()
+
+
+// const props = defineProps({
+//     post: {
+//         type: Object,
+//         required: true
+//     },
+//     postID: {
+//         type: String,
+//         required: true
+//     }
+// })
+
 let avatar = (window as any).haa
 
 let isAvailable = ref(true)
@@ -51,7 +72,7 @@ const avatarImageUrlPrefix = ref(mainStore.devCORSWorkaroundUrlPrefix + "https:/
 const avatarImageUrl = ref(mainStore.devCORSWorkaroundUrlPrefix + "https://web.halloapp.com/assets/avatar.svg")
 
 const postTimestamp = ref("")
-let postText: string
+let postText: string | undefined
 let postMentions: any
 
 const isTextPost = ref(false)
@@ -72,7 +93,7 @@ enum MediaType {
     Video
 }
 interface Media {
-    type?: MediaType;
+    type?: PostMediaType;
     mediaBlob?: any;
     width: number;
     height: number;
@@ -93,65 +114,7 @@ setPostSize()
 init()
 
 async function init() {  
-    let base64Key
-    let base64Blob
-
-    // if (isDebug) {
-        /* hardcoded tests */
-        
-        /* pushname and avatar */
-        // avatar = "Hvhqsmhx-uKSX2oAEYpKe5xK"
-        pushname = "Test User"
-
-        /* preview link with no img (containerBlob) */
-        base64Key = "ni-rEmBOXV4bUpuX1NGh"
-        base64Blob = "c8lxbGwFwYBOomnApInTTqiIX8rB7DGR9p6WSeDMFBQFK4qs4YUj8E5E7TVd28tbqgP6_jRWqEm19sat-99mMA2u-_tHJxHG5N9QuklFJ47vEePHV70OwcSZj8LcNRVwbbVLXFLmwsWR3X3kIgsU87P-x1BNxTOJOGMtIB8kcXXthGGGfVJXlWd7H0LqCPsvmV7t1a5v6WEA7ww0ymuqwJ4OyqW7DksxOaISfhPOw2ryo78KMc6-bY9cZU7g9zdYAozdcle65pZcDh4RdQyAdzstQhK67HbuLVLRwkfa6tq2Sx-zzWKQjy8j6_G7h5lKNRhIkKzVDFDS1MMuH_qqqVc16rMvy5PgZ0HVEwrGUV5wXj-8LQ570bmOGxGg68wDH-feQW44ONo7QTx-hCj-oW99y8KJ55vD93n19oH76aV8sSYIJ59dY3L3zLG3b3Xb3hCieXnVrbJP-aBR1ozxRA0kk5MzcuzcKcB1DtuIKnjdyWse4YE8O81J-dyYyj_x3BugFj_6zcH3uzEtfvUnt5Myikn33qihk6k1sD-GMV0"
-
-        /* old container text only */
-        // base64Key = "06kaXk7TsDYQz0cYgIvO"
-        // base64Blob = "uIGPNSl9ynuliYIqq8yRzsBygO6RDrdC6952_KusY9brjOod4uNcBOU5tyOSqM7FAiQonU7nAtDH0F_yjklQfTtUwMfAhGHER5BHepuzwWDxyNSGVMlcKvFFmI7wQGit"
-
-        /* long text that's more than 3 lines */
-        // base64Key = "WTBSeqmjvaylUdmbqvUZ"
-        // base64Blob = "0bSaIW38tvqjOzgJwtuNo9BEPdFv_eXNZb9ExZlSXJJAwWBosgKNvoLcC-CXX1CDyQbbdV0Gwo3jbHSrBIBdxiyD5Kocb-g57c7HxoumIZRs87kNlUJkwaIKTg09vlmSaWkumWewG_eXFdwalRjpdVgZ-7UufSPZzSJfhGWVrQTp7A7MUou97dZsBQ8W6oUlIx-JxhWXodKJrcnkRVBqrnh_PJ-hdccn3oJxyHFR-ky3O3C7u070h1O422V8EYBHlLccQuY48nuQjPkUBIX8oF236llZnkjA7ZSlbbai2USxsZ9qYxGjLvMgniECvOPga7ro2Y3G2S1Hcpmcx0-37roPQl2de6yFIX1xYqihXMF-sfbY2j4TpwDbvzo_1ESGC4wxmON1nEqTkx2GXPy0w2QwEbPCsd1W-5oDcpblO_027JTe9kz0TaBmGuB4SEipBM5Mcu4ka2_9ZwcyLMg25-n1EjRWmhmzWw6LphsKLTT10xdVqC8iQ-ZMNjtmawCcEQyspM2B6vSb8k3mLwNuS5bwQh-TZC74H0zGT6HdG7s-5HnRYfxn29Q23ljUawjFJuKaITA3XJPn03XAgbdRZW_4S-yw2TsVIJ6Y1abL7SnfxwKZggpRoXet6w5UR2UycXj8ef8YTwjrFz_bjlBkSUbPYSLr9nLGvDArDptNcQzt70OZxhsOoZ8sktYJL1rfa_6TpR5-hS27vrsi8-XQQkh3D-kSzjcKbvlq42UeokU81Tck6boQd8CYCroFXhxgAZNQeVD_uLUt77DzcTIEAdL6T_99sNu5_Q6OxtrQsN9jjyHfD1nE_gMdc6LtK3Qgk7KEaoyrEIQqB-MTMTUUzfNAK-Mz7fFqhHcBrceo85n6ufxNEoMxzNqpRFodtAgAvc5c-VZ8JlXiiVf8gyK1h_OR4mBeywy2gHq0vjrbuGI4D80NvIFegGyzgiJHI9MHTqbg3LCdRX6-r8O2XN86GfbsVzlr35QZ1_giRjeC6vZuaabQWPZI_flo09L_tNss"
-
-        /* album one video */
-        // base64Key = "D0KdllVMJtpygwW6C0U7"
-        // base64Blob = "tRtKsV0ASfYfdrSKm_zN4uvsSaZTaMn731vUxuW_Aa98AQSEvQdWmvVwdvpQtcrfLdB60jFZWXVDufUgZh7iZYmc5FLf2OqaXNVLWZlL99AwY4EHL-r3wEMpaYB9_FmRIinW8lSYnwXbOsu04xSEPaSddm9hMOJIQ73W_OiodMlO19zn6XUYlODifg_jnKAKtoVrasTQGXoOB3OIKYhJXFqIc1ELMo5giRJncvWsUYUV_QLJ37qFD20rMck926kTk--4ggFX_e9XwDV7AGCcN99cLSiD0UOHU8B_2x3U7gz-fzI4-rVMC8Tg38GkieQ5urR9us1TV8RIbIbGboZP7g"
-
-        /* album streaming video */
-        // base64Key = "Lwemc3kAhtoUnx6YYg0t"
-        // base64Blob = "dERdeyV1nCUjzrxUMEso4S70AjbvG3MqAIvG6i1qj9Sx8tIEIjpA9ERlUlsiX-hSqgtfSQQY7vFsBp61EAre4gzDrH8QytT3A9-O20f6YG8cFLY__uO1t8LEw8YSwPriYhmLLcx3T2vtKclFPqiP1h8WXV5xnMw2krOY_wK0sUqpiQmIO0KG1DvYoGAx_2zwbHYedbZR3KZ6JGl6RprvWygBds8ulFyleu27R5Fyf_suPzBG-KKKBH8Jg0azg8hOAgvI6SbiIVRgdSnEg2GJIFe5_I4rJ6k37T4KC6CGOvEynRMKRx_De4Ysr4HOBDQwviAMeMMOMEHNwNOGjI2pMQ"
-
-        /* album video HDR */
-        // base64Key = "_YuLwY6EXrQ-hugnvcCR"
-        // base64Blob = "nXq-WmvjeH6YKE6GR9kVfxWrfZX6-XgL11Isr7hi_dL3YopD0j6FsNakniKEXLhi9Tz3xuCNFBaWcu7YvGHnVLHpYxvg6eb0ejT2cNxo6-dh8ZGKby7eG6knroY26Tcy6kLRpiypC8eA0WEvHWXpz2XV6lBUPL0nP6yijS5Mgq03guHloBbsql_18DfvLc1Pm5IXqLTB8ZQvl0HjUHbIdJT8qjec461O5EoOBPFUjOOoBVWbvBOCsRCnG9TuSFjYfdohVTDwYdFiOz5F-g-rflp3rx8QeQHYp6Sjtnt7LLcdHAXmU7Siz7vnAPYFCw_st1oo77FypBZ9PzpOG2qook54PJ5cjMYaUbeQ7Xuaq1w"
-    // }
-
-    if (!base64Key || !base64Blob) {
-        return
-    }
-
-    const key = Base64.toUint8Array(base64Key)
-    const blobArrayWithMAC = Base64.toUint8Array(base64Blob)
-
-    const derivedKeyObj = await getDerivedKey(key, externalShareInfo)
-    const derivedKey = derivedKeyObj.key
-
-    const IV = derivedKey.slice(0, 16)
-    const AESKey = derivedKey.slice(16, 48)
-    const SHA256Key = derivedKey.slice(48, 80)
-
-    const attachedMAC = blobArrayWithMAC.slice(-32)
-    const blobArray = blobArrayWithMAC.slice(0, -32)
-
-    const isHMACMatch = await verifyHMAC(SHA256Key, blobArray, attachedMAC)
-    if (!isHMACMatch) {
-        hal.log("init/mismatch HMAC")
-    }
-
-    const decryptedCiphertextArray = await decryptBlob(AESKey, IV, blobArray)
-    decodeAndProcessPostContainer(decryptedCiphertextArray)
+    processPost(props.post)
 }
 
 async function getDerivedKey(secret: any, info: any) {
@@ -232,12 +195,6 @@ async function decodeProtobufToPostContainer(binArray: Uint8Array) {
     }
 }
 
-async function decodeAndProcessPostContainer(binArray: Uint8Array) {
-    const postContainer = await decodeProtobufToPostContainer(binArray)
-    // hal.log("decodeAndProcessPostContainer/decoded: ", postContainer)
-    processPostContainer(postContainer)
-}
-
 function isUint8ArrayEqual(arr1: Uint8Array, arr2: Uint8Array) {
     if (arr1.length != arr2.length) {
         return false
@@ -262,9 +219,9 @@ function combineBinaryArrays(arrays: any) {
 }
 
 async function getChunkedMediaBlob(media: any, info: string, chunkSize: number) {
-    const ciphertextHash = media.ciphertextHash
-    const encryptionKey = media.encryptionKey
-    const downloadUrl = media.downloadUrl
+    const ciphertextHash = media.hash
+    const encryptionKey = media.key
+    const downloadUrl = media.downloadURL
 
     /* download blob */
     const response = await fetch(mainStore.devCORSWorkaroundUrlPrefix + downloadUrl)
@@ -293,9 +250,9 @@ async function getChunkedMediaBlob(media: any, info: string, chunkSize: number) 
 }
 
 async function getMediaBlob(info: any, media: any) {
-    const ciphertextHash = media.ciphertextHash
-    const encryptionKey = media.encryptionKey
-    const downloadUrl = media.downloadUrl
+    const ciphertextHash = media.hash
+    const encryptionKey = media.key
+    const downloadUrl = media.downloadURL
 
     const derivedKeyObj = await getDerivedKey(encryptionKey, info)
     const derivedKey = derivedKeyObj.key
@@ -318,7 +275,8 @@ async function fetchAndDecrypt(derivedKey: Uint8Array, url: any, ciphertextHash:
 
     const isCorrectHash = isUint8ArrayEqual(new Uint8Array(hash), ciphertextHash)
     if (!isCorrectHash) {
-        hal.log("fetchAndDecrypt/hash does not match")
+        hal.log("fetchAndDecrypt/hash does not match: " + ciphertextHash)
+        hal.log("fetchAndDecrypt/hash does not match 2: " + new Uint8Array(hash))
     }
 
     const attachedMAC = encryptedArrayWithMAC.slice(-32)
@@ -335,7 +293,7 @@ async function fetchAndDecrypt(derivedKey: Uint8Array, url: any, ciphertextHash:
     return new Blob([decryptedBinaryArray])
 }
 
-function processPostText(text: any, mentions: any, truncateText: boolean = true, isTextPostTextOnly: boolean) {
+function processPostText(text: string, mentions: any, truncateText: boolean = true, isTextPostTextOnly: boolean) {
 
     // rough estimate of 330 chars for 12 lines and 110 for 3 lines
     const maxCharsWhenTruncatedForTextOnlyPost: number = 330
@@ -370,10 +328,10 @@ async function decryptChunk(chunkWithMAC: any, encryptionKey: any, chunkInfo: an
     return decryptedBinArr
 }
 
-async function fetchAndDecryptStream(media: any, videoInfo: string, blobSize: number, chunkSize: number, mp4box: any) {
-    const ciphertextHash = media.ciphertextHash
-    const encryptionKey = media.encryptionKey
-    const downloadUrl = media.downloadUrl
+async function fetchAndDecryptStream(media: any, videoInfo: string, blobSize: any, chunkSize: number, mp4box: any) {
+    const ciphertextHash = media.hash
+    const encryptionKey = media.key
+    const downloadUrl = media.downloadURL
 
     const response: any = await fetch(mainStore.devCORSWorkaroundUrlPrefix + downloadUrl)
     const reader = response.body.getReader()
@@ -440,7 +398,7 @@ async function fetchAndDecryptStream(media: any, videoInfo: string, blobSize: nu
     }
 }
 
-function setupStreamingMediaSource(mediaSource: any, media: any, videoInfo: any, blobSize: any, chunkSize: any) {
+function setupStreamingMediaSource(mediaSource: any, media: any, videoInfo: any, blobSize: any, chunkSize: number) {
     let tracks: any = {}
     let mp4box = MP4Box.createFile()
 	
@@ -523,7 +481,7 @@ function setupStreamingMediaSource(mediaSource: any, media: any, videoInfo: any,
 	}
 }
 
-async function processPostContainer(postContainer: any) {
+async function processPost(post: Feed) {
 
     if (avatar && avatar != "" && avatar != "{{ avatar }}") { // {{ avatar }} is when it's in debug mode
         avatarImageUrl.value = avatarImageUrlPrefix.value + avatar
@@ -532,79 +490,113 @@ async function processPostContainer(postContainer: any) {
     let isVoiceNote = false
     let voiceNoteMedia: any
 
-    if (postContainer.album) {
+    const postMedia = await getPostMedia(post.postID)
+
+    if (postMedia) {
         isAlbum.value = true
-        setMediaSizes(postContainer.album)
+        setMediaSizes(postMedia)
     }
 
-    if (postContainer.text) {
+    if (post.text) {
         isTextPost.value = true
-    }
-
-    if (postContainer.voiceNote) {
-        isVoiceNote = true
-        voiceNoteMedia = postContainer.voiceNote.audio
-    }
-
-    if (isAlbum.value) {
-        /* text */
-        if (postContainer.album.text) {
-            postText = postContainer.album.text.text
-            postMentions = postContainer.album.text.mentions            
+        postText = post.text
+        postMentions = post.mentions
+        if (postText) {
             bodyContent.value = processPostText(postText, postMentions, true, false)
         }
+    }
 
+    // if (postContainer.voiceNote) {
+    //     isVoiceNote = true
+    //     voiceNoteMedia = postContainer.voiceNote.audio
+    // }
+
+    if (isAlbum.value) {
+   
         /* media */
-        if (postContainer.album.media) {
+        if (postMedia) {
 
-            for (const [index, mediaInfo] of postContainer.album.media.entries()) {
+            for (const [index, mediaInfo] of postMedia.entries()) {
                 
-                if (mediaInfo.image) {
-                    const media = mediaInfo.image.img
-                    const mediaBlob = await getMediaBlob(imageInfo, media)
+                if (mediaInfo.type == PostMediaType.Image) {
+
+                    let mediaBlob: Blob
+
+                    if (mediaInfo.blob) {
+                        
+                        mediaBlob = mediaInfo.blob
+                    } else {
+                        
+                        mediaBlob = await getMediaBlob(imageInfo, mediaInfo)
+
+                        modifyPost(props.post.postID, index, mediaBlob)
+
+                    }
+
                     const object = URL.createObjectURL(mediaBlob)
                     album.value.media[index].mediaBlob = object
                     album.value.media[index].isReady = true
                 }
 
-                if (mediaInfo.video) {
-                    const media = mediaInfo.video.video
-                    const isStream = JSON.stringify(mediaInfo.video.streamingInfo) !== '{}'
-                    if (isStream) {
-                        const chunkSize = mediaInfo.video.streamingInfo.chunkSize
+                if (mediaInfo.type == PostMediaType.Video) {
 
-                        // MediaSource is not supported on iOS yet
-                        if ('MediaSource' in window) {
-                            hal.log('processPostContainer/video/stream/stream via mediaSource')
-                            const mediaSource = new MediaSource()
-                            const mediaSourceUrl = URL.createObjectURL(mediaSource)
-                            const blobSize = mediaInfo.video.streamingInfo.blobSize
-                            setupStreamingMediaSource(mediaSource, media, videoInfo, blobSize, chunkSize)
+                    let mediaBlob: Blob
 
-                            album.value.media[index].mediaBlob = mediaSourceUrl
+                     if (mediaInfo.blob) {
+                        mediaBlob = mediaInfo.blob
+
+                        const object = URL.createObjectURL(mediaBlob)
+                        album.value.media[index].mediaBlob = object
+                        album.value.media[index].isReady = true
+
+                    } else {
+                        const chunkSize = mediaInfo.chunkSize
+                        if (chunkSize) {
+                            
+                            // MediaSource is not supported on iOS yet
+                            // if ('MediaSource' in window) {
+                            //     hal.log('processPostContainer/video/stream/stream via mediaSource')
+                            //     const mediaSource = new MediaSource()
+                            //     const mediaSourceUrl = URL.createObjectURL(mediaSource)
+                            //     const blobSize = mediaInfo.blobSize
+                            //     setupStreamingMediaSource(mediaSource, mediaInfo, videoInfo, blobSize, chunkSize)
+
+                            //     album.value.media[index].mediaBlob = mediaSourceUrl
+                            // } else {
+                                
+                                mediaBlob = await getChunkedMediaBlob(mediaInfo, videoInfo, chunkSize)
+                                const mediaBlobUrl = URL.createObjectURL(mediaBlob)
+                                album.value.media[index].mediaBlob = mediaBlobUrl
+
+                                modifyPost(props.post.postID, index, mediaBlob)
+
+                            // }
+
+                            album.value.media[index].isReady = true                                               
                         } else {
-                            hal.log('processPostContainer/video/stream/get entire blob')
-                            const mediaBlob = await getChunkedMediaBlob(media, videoInfo, chunkSize)
+                            mediaBlob = await getMediaBlob(videoInfo, mediaInfo)
                             const mediaBlobUrl = URL.createObjectURL(mediaBlob)
                             album.value.media[index].mediaBlob = mediaBlobUrl
+                            album.value.media[index].isReady = true    
+                            
+                            modifyPost(props.post.postID, index, mediaBlob)
+
                         }
 
-                        album.value.media[index].isReady = true                                               
-                    } else {
-                        const mediaBlob = await getMediaBlob(videoInfo, media)
-                        const mediaBlobUrl = URL.createObjectURL(mediaBlob)
-                        album.value.media[index].mediaBlob = mediaBlobUrl
-                        album.value.media[index].isReady = true                               
                     }
+
+
+
+
                 }                
             }
         }
 
         /* voiceNote inside album */
-        if (postContainer.album.voiceNote) {
-            isVoiceNote = true
-            voiceNoteMedia = postContainer.album.voiceNote.audio
-        }     
+        // if (postContainer.album.voiceNote) {
+        //     isVoiceNote = true
+        //     voiceNoteMedia = postContainer.album.voiceNote.audio
+        // }     
     }
 
     /* voiceNote */
@@ -620,31 +612,31 @@ async function processPostContainer(postContainer: any) {
 
     if (isTextPost.value) {
         /* link preview */
-        if (postContainer.text.link &&
-            postContainer.text.link.preview &&
-            postContainer.text.link.preview[0] &&
-            postContainer.text.link.preview[0].img
-            ) {
-                const previewImage = postContainer.text.link.preview[0]
-                const media = previewImage.img
-                const mediaBlob = await getMediaBlob(imageInfo, media)
-                previewImageSrc.value = URL.createObjectURL(mediaBlob)
-                showPreviewImage.value = true
+        // if (postContainer.text.link &&
+        //     postContainer.text.link.preview &&
+        //     postContainer.text.link.preview[0] &&
+        //     postContainer.text.link.preview[0].img
+        //     ) {
+        //         const previewImage = postContainer.text.link.preview[0]
+        //         const media = previewImage.img
+        //         const mediaBlob = await getMediaBlob(imageInfo, media)
+        //         previewImageSrc.value = URL.createObjectURL(mediaBlob)
+        //         showPreviewImage.value = true
 
-                mediaBoxWidth.value = postWidth.value - 30
-                mediaBoxHeight.value = 250
-        } else {
-            isTextPostTextOnly.value = true
-            mediaBoxWidth.value = postWidth.value - 30
-            mediaBoxHeight.value = 0
-        }
+        //         mediaBoxWidth.value = postWidth.value - 30
+        //         mediaBoxHeight.value = 250
+        // } else {
+        //     isTextPostTextOnly.value = true
+        //     mediaBoxWidth.value = postWidth.value - 30
+        //     mediaBoxHeight.value = 0
+        // }
 
         /* process text after checking if it's text only */
-        if (postContainer.text.text) {
-            postText = postContainer.text.text
-            postMentions = postContainer.text.mentions            
-            bodyContent.value = processPostText(postText, postMentions, true, isTextPostTextOnly.value)
-        }        
+        // if (postContainer.text.text) {
+        //     postText = props.post.text
+        //     postMentions = postContainer.text.mentions            
+        //     bodyContent.value = processPostText(postText, postMentions, true, isTextPostTextOnly.value)
+        // }        
     }
 
 }
@@ -672,8 +664,8 @@ function setPostSize() {
     }
 }
 
-function setMediaSizes(postAlbum: any) {
-    if (!postAlbum.media) { return }
+function setMediaSizes(mediaList: any) {
+    if (!mediaList) { return }
 
     const defaultRatio = 0.75 // 3/4 width/height portrait ratio
 
@@ -685,17 +677,17 @@ function setMediaSizes(postAlbum: any) {
 
     let tallestMediaItemHeight = 0
 
-    for (const media of postAlbum.media) {
-        const type = media.image ? MediaType.Image : MediaType.Video
-        let mediaItem: any
-        if (type == MediaType.Image) {
-            mediaItem = media.image
-        } else if (type == MediaType.Video) {
-            mediaItem = media.video
-        }
+    for (const media of mediaList) {
+        // const type = media.type ? PostMediaType.Image : PostMediaType.Video
+        let mediaItem = media
+        // if (type == PostMediaType.Image) {
+        //     mediaItem = media
+        // } else if (type == PostMediaType.Video) {
+        //     mediaItem = media
+        // }
 
-        let mediaItemWidth = mediaItem.width
-        let mediaItemHeight = mediaItem.height
+        let mediaItemWidth = media.width
+        let mediaItemHeight = media.height
 
         if (mediaItemHeight > maxBoxHeight) {
             const mediaItemRatio = mediaItem.width/mediaItem.height
@@ -711,7 +703,7 @@ function setMediaSizes(postAlbum: any) {
         /* add margins so carousel have some spacing between slides */
         let mediaItemMargin = postWidth.value - mediaItemWidth
 
-        const obj: Media = { type: type, width: mediaItemWidth, height: mediaItemHeight, margin: mediaItemMargin, isReady: false }
+        const obj: Media = { type: media.type, width: mediaItemWidth, height: mediaItemHeight, margin: mediaItemMargin, isReady: false }
         album.value.media.push(obj)
 
         if (mediaItemHeight > tallestMediaItemHeight) {
@@ -726,7 +718,9 @@ function setMediaSizes(postAlbum: any) {
 }
 
 function expandText() {
-    bodyContent.value = processPostText(postText, postMentions, false, isTextPostTextOnly.value)   
+    if (postText) {
+        bodyContent.value = processPostText(postText, postMentions, false, isTextPostTextOnly.value)
+    } 
 }
 
 </script>
@@ -739,11 +733,10 @@ function expandText() {
 
             <!-- postHeader row -->
             <div id="postHeader">
-                <!-- <img id="avatarImage" crossorigin="" :src="avatarImageUrl" alt="Avatar"> -->
-                <Avatar :userID="'TonyTemp'" :width="'45px'"></Avatar>
+                <Avatar :userID="props.post.userID" :width="45"></Avatar>
                 <div id="nameBox">
                     <div id="name">
-                        {{ pushname }} - {{ props.postID }}
+                        {{ mainStore.pushnames[props.post.userID] }}
                     </div>
                     <div id="time">
                         {{ postTimestamp }}
