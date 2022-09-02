@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, toRef } from "vue"
+import { Ref, ref, toRef } from "vue"
 
 import hal from "../../common/halogger"
+import { liveQuery } from "dexie"
 import { db, Feed, PostMedia, PostMediaType, Mention } from '../../db'
 import { useI18n } from 'vue-i18n'
 
@@ -9,6 +10,23 @@ const { t } = useI18n({
     inheritLocale: true,
     useScope: 'global'
 })
+
+// const listData: Ref<PostMedia[]> = ref([])
+
+// const feedObservable = liveQuery (() => db.postMedia.where('postID').equals(props.postID).toArray())
+
+// // Subscribe
+// const subscription = feedObservable.subscribe({
+//     next: result => { 
+//         // console.log('homeMain/feedObservable: ', JSON.stringify(result))
+//         if (result) {
+//             listData.value = result
+//         }
+
+//     },
+//     error: error => console.error(error)
+// })
+
 
 enum MediaType {
     Image,
@@ -32,6 +50,10 @@ const props = defineProps({
     },
     isSafari: {
         type: Boolean,
+        required: true
+    },
+    postID: {
+        type: String,
         required: true
     },    
     isAlbum: {
@@ -286,7 +308,11 @@ function touchEnd(event: Event) {
 
         <div v-for="(item, index) in props.album" class="mediaBox">
 
-            <div v-if="!item.isReady" class="mediaLoaderBox">
+            <div v-if='item.errorMsg' class='mediaLoaderBox'>
+                <div class="mediaErrorMsg">{{ item.errorMsg }}</div>
+            </div>
+
+            <div v-else-if="!item.isReady" class="mediaLoaderBox">
                 <div class="loader"></div>
             </div>
             
@@ -460,6 +486,13 @@ function touchEnd(event: Event) {
     flex-direction: horizontal;
     justify-content: center;
     align-items: center;
+}
+.mediaErrorMsg {
+    text-align: center;
+    padding-left: 50px;
+    padding-right: 50px;
+    font-size: 12px;
+    color: gray;
 }
 .loader {
     border: 3px solid #f3f3f3;

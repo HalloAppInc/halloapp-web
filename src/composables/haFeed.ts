@@ -5,11 +5,13 @@ import { Dexie, liveQuery } from "dexie"
 import { db, Feed, PostMedia, PostMediaType, Mention } from '../db'
 
 import { useMainStore } from '../stores/mainStore.js'
+import { useConnStore } from '../stores/connStore.js'
 import { useHAAvatar } from './haAvatar'
 
 export function useHAFeed() {
 
     const mainStore = useMainStore()
+    const connStore = useConnStore()
 
     const { getAvatar } = useHAAvatar()
 
@@ -32,6 +34,17 @@ export function useHAFeed() {
         for (let i = 0; i < items.length; i++) {
             const serverPost = items[i].post
             if (!serverPost) { continue }
+
+            const postID = serverPost.id
+    
+            if (mainStore.mainFeedHeadCursor == postID) {
+                if (items[0].post.timestamp > mainStore.mainFeedHeadCursorTimestamp) {
+                    mainStore.mainFeedHeadCursor = items[0].post.id
+                    mainStore.mainFeedHeadCursorTimestamp = items[0].post.timestamp
+                }
+                break
+            }
+
             processServerPost(serverPost)
         }
 
@@ -39,6 +52,25 @@ export function useHAFeed() {
             const info = userInfo[j]
             if (!info) { continue }
             processUserDisplayInfo(info)
+        }
+
+        if (mainStore.mainFeedHeadCursor == '') {
+            if (items.length > 0) {
+                mainStore.mainFeedHeadCursor = items[0].post.id
+                mainStore.mainFeedHeadCursorTimestamp = items[0].post.timestamp
+            }
+        }
+
+        if (feedResponse.nextCursor) {
+            mainStore.mainFeedTrailingCursor = feedResponse.nextCursor
+
+            const numDBItems = await db.feed.count()
+
+            /* if there's less than 50 feed items, fill it */
+            if (numDBItems < 50) {
+                connStore.requestFeedItems(mainStore.mainFeedTrailingCursor, 20, function() {})
+            }
+
         }
     }
     
@@ -69,8 +101,8 @@ export function useHAFeed() {
         if (!payloadBinArr) { return }
         const postContainer = await decodeToPostContainer(payloadBinArr)
     
-        // hal.log('haFeed/processServerPost/postContainer: ' + JSON.stringify(postContainer, null, 4))
-        // console.dir(postContainer)
+        hal.log('haFeed/processServerPost/postContainer:')
+        console.dir(postContainer)
     
         if (!postContainer) { return }
     
@@ -91,9 +123,6 @@ export function useHAFeed() {
         if (postContainer.album) {
             isAlbum = true
             // setMediaSizes(postContainer.album)
-
-
-
         }
     
         if (postContainer.text) {
@@ -290,6 +319,16 @@ export function useHAFeed() {
         return        
     }
     
+    async function setPostMediaIsCodecH265(postID: string, order: number, isCodecH265: boolean) {
+        await db.postMedia.where('postID').equals(postID).and((postMedia) => {
+            return postMedia.order == order
+        }).modify({
+            isCodecH265: isCodecH265
+        })
+        
+        return        
+    }
+
     async function decodeToPostContainer(binArray: Uint8Array) {
         const err = clients.Container.verify(binArray)
         if (err) {
@@ -300,5 +339,5 @@ export function useHAFeed() {
         return postContainer
     }
 
-    return { processWebContainer, getPostMedia, modifyPost }
+    return { processWebContainer, getPostMedia, modifyPost, setPostMediaIsCodecH265 }
 }

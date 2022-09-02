@@ -180,7 +180,9 @@ export function useHAText() {
         let closingTagsQueue = [] // could be holding [[/b]], [[/s]], [[/i]], or [[/a]]
 
         for (let i = 0; i < graphemes.length; i++) {
-            if (charCount >= maxCharacters) { break }
+            if (charCount >= maxCharacters) { 
+                break 
+            }
 
             /* if matching closing tags are found, pop them off the queue */
             if ((i + 5) < graphemes.length) {

@@ -57,6 +57,8 @@ export interface PostMedia {
     blob?: Blob
     blobSize?: number | Long
     chunkSize?: number
+
+    isCodecH265?: boolean // pertains to video only
 }
 
 export interface Feed {

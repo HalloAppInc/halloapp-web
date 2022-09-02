@@ -18,21 +18,33 @@ import { useMainStore } from '../../stores/mainStore'
 import { useHAText } from '../../composables/haText'
 import { useTimeformatter } from '../../composables/timeformatter'
 
+import { liveQuery } from "dexie"
 import { db, Feed, PostMedia, PostMediaType, Mention } from '../../db'
 
 import { useHAFeed } from '../../composables/haFeed'
+import { track } from "@vue/reactivity"
 
 const mainStore = useMainStore()
 const { processText } = useHAText()
 const { formatTime, formatTimer } = useTimeformatter()
 
-const { getPostMedia, modifyPost } = useHAFeed()
+const { getPostMedia, modifyPost, setPostMediaIsCodecH265 } = useHAFeed()
 
 interface Props {
     post: Feed,
     postID: string
 }
 const props = defineProps<Props>()
+
+const feedObservable = liveQuery (() => db.postMedia.where('postID').equals(props.postID).toArray())
+
+const subscription = feedObservable.subscribe({
+    next: result => { 
+        /* improve: might be too heavy, maybe just reprocess the media */
+        processPost(props.post)
+    },
+    error: error => console.error(error)
+})
 
 
 // const props = defineProps({
@@ -101,6 +113,7 @@ interface Media {
     lengthMins?: String;
     lengthSeconds?: String;
     isReady: boolean;
+    errorMsg?: String;
 }
 const album = ref({media: [] as Media[]})
 
@@ -344,6 +357,8 @@ async function fetchAndDecryptStream(media: any, videoInfo: string, blobSize: an
     let videoInfoCount  = 0 // info for decryption, starts at 0
     let fileStartOffset = 0 // mp4box file offset, starts at 0
 
+    let saveToDB = []
+
     while (true) {
         const { value, done } = await reader.read()
         if (done) {
@@ -362,9 +377,24 @@ async function fetchAndDecryptStream(media: any, videoInfo: string, blobSize: an
             const chunkInfo = videoInfo + ' ' + videoInfoCount
             const decryptedBinArr = await decryptChunk(chunkWithMAC, encryptionKey, chunkInfo)
             if (decryptedBinArr) {
-                let buf: any = decryptedBinArr.buffer
+
+                let buf: any = decryptedBinArr.buffer.slice(decryptedBinArr.byteOffset, decryptedBinArr.byteLength + decryptedBinArr.byteOffset)
+
+                let buf2: any = decryptedBinArr.buffer.slice(decryptedBinArr.byteOffset, decryptedBinArr.byteLength + decryptedBinArr.byteOffset)
+                saveToDB.push(decryptedBinArr)
+
+                // let buf: any = decryptedBinArr.buffer
+
                 buf.fileStart = fileStartOffset
                 mp4box.appendBuffer(buf)
+
+                const combine = combineBinaryArrays(saveToDB)
+                const bb = new Blob([combine], {type: "video/mp4"})
+                modifyPost(media.postID, media.order, bb)
+
+                console.log("---> saving")
+
+
             } else {
                 hal.log('fetchAndDecryptStream/done/error')
             }
@@ -392,7 +422,14 @@ async function fetchAndDecryptStream(media: any, videoInfo: string, blobSize: an
             const decryptedBinArr = await decryptChunk(chunkWithMAC, encryptionKey, chunkInfo)
 
             if (decryptedBinArr) {
-                let buf: any = decryptedBinArr.buffer
+
+                let buf: any = decryptedBinArr.buffer.slice(decryptedBinArr.byteOffset, decryptedBinArr.byteLength + decryptedBinArr.byteOffset)
+                let buf2: any = decryptedBinArr.buffer.slice(decryptedBinArr.byteOffset, decryptedBinArr.byteLength + decryptedBinArr.byteOffset)
+
+                saveToDB.push(decryptedBinArr)
+
+                // let buf: any = decryptedBinArr.buffer
+
                 buf.fileStart = fileStartOffset
                 mp4box.appendBuffer(buf)
                 
@@ -427,6 +464,15 @@ function setupStreamingMediaSource(mediaSource: any, media: any, videoInfo: any,
 
 		info.tracks.forEach(function(track: any) {
 			const mime = 'video/mp4; codecs="' + track.codec + '"'
+
+            if (!mainStore.isMobile && !mainStore.isSafari) {
+                const codecType = track.codec
+                if (codecType.substring(0, 4) == 'hvc1') {
+                    hal.prod('setupStreamingMediaSource/video/streaming/can not play h265 video: ' + track.codec)
+                    setPostMediaIsCodecH265(media.postID, media.order, true)
+                }
+            }
+
 			if (MediaSource.isTypeSupported(mime)) {
 				let mediaSourceBuffer = mediaSource.addSourceBuffer(mime)
 				let trackEntry = {
@@ -457,7 +503,7 @@ function setupStreamingMediaSource(mediaSource: any, media: any, videoInfo: any,
 		appendBuffer(track, buffer, nextSample === track.meta.nb_samples)
 	}
 
-	function appendBuffer (track: any, buffer: any, ended: any) {
+	function appendBuffer(track: any, buffer: any, ended: any) {
 		track.segBuffers.push({
 			buffer: buffer,
 			ended: ended || false
@@ -486,15 +532,13 @@ function setupStreamingMediaSource(mediaSource: any, media: any, videoInfo: any,
 			return track.ended && !track.mediaSourceBuffer.updating
 		})
 
-		if (ended) { mediaSource.endOfStream() }
+		if (ended) {
+            mediaSource.endOfStream() 
+        }
 	}
 }
 
 async function processPost(post: Feed) {
-
-    if (avatar && avatar != "" && avatar != "{{ avatar }}") { // {{ avatar }} is when it's in debug mode
-        avatarImageUrl.value = avatarImageUrlPrefix.value + avatar
-    }
 
     let isVoiceNote = false
     let voiceNoteMedia: any
@@ -527,6 +571,10 @@ async function processPost(post: Feed) {
 
             for (const [index, mediaInfo] of postMedia.entries()) {
                 
+                if (mediaInfo.isCodecH265) {
+                    album.value.media[index].errorMsg = t('post.noH265VideoSupportText')
+                }
+
                 if (mediaInfo.type == PostMediaType.Image) {
 
                     let mediaBlob: Blob | undefined
@@ -630,8 +678,8 @@ async function processPost(post: Feed) {
 
     if (isTextPost.value) {
         /* link preview */
-        // if (postContainer.text.link &&
-        //     postContainer.text.link.preview &&
+        // if (post.text.link &&
+        //     post.text.link.preview &&
         //     postContainer.text.link.preview[0] &&
         //     postContainer.text.link.preview[0].img
         //     ) {
@@ -695,7 +743,8 @@ function setMediaSizes(mediaList: any) {
 
     let tallestMediaItemHeight = 0
 
-    for (const media of mediaList) {
+    for (const [idx, media] of mediaList.entries()) {
+    // for (const media of mediaList) {
         // const type = media.type ? PostMediaType.Image : PostMediaType.Video
         let mediaItem = media
         // if (type == PostMediaType.Image) {
@@ -722,7 +771,8 @@ function setMediaSizes(mediaList: any) {
         let mediaItemMargin = postWidth.value - mediaItemWidth
 
         const obj: Media = { type: media.type, width: mediaItemWidth, height: mediaItemHeight, margin: mediaItemMargin, isReady: false }
-        album.value.media.push(obj)
+        // album.value.media.push(obj)
+        album.value.media[idx] = obj
 
         if (mediaItemHeight > tallestMediaItemHeight) {
             tallestMediaItemHeight = mediaItemHeight
@@ -765,6 +815,7 @@ function expandText() {
             <MediaCarousel  
                 :isMobile="mainStore.isMobile"
                 :isSafari="mainStore.isSafari"
+                :postID="post.postID"
                 :isAlbum="isAlbum"
                 :album="album.media"
                 :showPreviewImage="showPreviewImage"

@@ -54,7 +54,9 @@ export const useMainStore = defineStore('main', {
         settingsPage: '',
 
         haveFetchedInitialMainFeed: false,
-        mainFeedCursor: '',
+        mainFeedHeadCursor: '',
+        mainFeedHeadCursorTimestamp: 0,
+        mainFeedTrailingCursor: '',
 
         mobileNavlessPanel: '',
         scrollToTop: '',
@@ -98,7 +100,9 @@ export const useMainStore = defineStore('main', {
             this.userID = 0
 
             this.haveFetchedInitialMainFeed = false
-            this.mainFeedCursor = ''
+            this.mainFeedHeadCursor = ''
+            this.mainFeedHeadCursorTimestamp = 0
+            this.mainFeedTrailingCursor = ''
 
             // deletes the entire db and re-opens it
             // todo: make sure all dbs including chat is also deleted, test to see if delete/re-open is fast enough

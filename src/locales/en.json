@@ -17,6 +17,8 @@
         "more": "more",
         "comment": "Comment",
         "replyPrivately": "Reply Privately",
+
+        "noH265VideoSupportText": "Playback of HEVC (H.265) video is not supported on this os/browser",
         "noAudioSupportText": "Your browser does not support the audio tag."
     },    
     "mediaCarousel": {

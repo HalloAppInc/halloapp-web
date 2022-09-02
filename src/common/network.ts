@@ -94,14 +94,14 @@ export function network() {
         return packetBuf
     }
 
-    const encodeFeedRequestWebContainer = (cursor: string) => {
+    const encodeFeedRequestWebContainer = (cursor: string, limit: number) => {
         const id = nanoid()
 
         const feedRequest = web.FeedRequest.create({
             id: id,
             type: web.FeedType.HOME,
             cursor: cursor,
-            limit: 30
+            limit: limit
         })
 
         const webContainer = web.WebContainer.create({

@@ -39,6 +39,7 @@ const { t, locale } = useI18n({
 const listData: Ref<Feed[]> = ref([])
 
 const feedObservable = liveQuery (() => db.feed
+    .orderBy('timestamp')
     .toArray()
 )
 
@@ -57,9 +58,13 @@ const subscription = feedObservable.subscribe({
 init()
 
 async function init() {
-    const cursor = mainStore.mainFeedCursor
+    const cursor = ''
     console.log('homeMain/init')
-    connStore.getFeedItems(cursor, function() {})
+    connStore.requestFeedItems(cursor, 5, function() {})
+
+    // setTimeout(function() {
+    //     connStore.requestFeedItems(mainStore.mainFeedTrailingCursor, 1, function() {})
+    // },5000)
 }
 
 watchEffect(() => {

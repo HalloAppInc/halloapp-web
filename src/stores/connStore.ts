@@ -556,20 +556,20 @@ export const useConnStore = defineStore('conn', () => {
         enqueue(packet, true, callback)
     }
 
-    async function getFeedItems(cursor: string, callback?: Function) {
-        console.log('connStore/getFeedItems/cursor: ' + cursor)
+    async function requestFeedItems(cursor: string, limit: number, callback?: Function) {
+        console.log('connStore/requestFeedItems/cursor: ' + cursor)
         
         if (Object.keys(mainStore.cipherStateSend).length === 0) {
-            hal.log('homeMain/getFeedItems/exit/empty cipherStateSend')
+            hal.log('homeMain/requestFeedItems/exit/empty cipherStateSend')
             return
         }
 
         if (typeof mainStore.cipherStateSend.EncryptWithAd != 'function') {
-            hal.log('homeMain/getFeedItems/exit/EncryptWithAd not in cipherStateSend: ' + JSON.stringify(mainStore.cipherStateSend))
+            hal.log('homeMain/requestFeedItems/exit/EncryptWithAd not in cipherStateSend: ' + JSON.stringify(mainStore.cipherStateSend))
             return
         }
 
-        const webContainerBinArr = encodeFeedRequestWebContainer(cursor)        
+        const webContainerBinArr = encodeFeedRequestWebContainer(cursor, limit)        
         const encryptedWebContainer = mainStore.cipherStateSend.EncryptWithAd([], webContainerBinArr)
 
         const packet = createWebStanzaPacket(encryptedWebContainer)
@@ -606,7 +606,7 @@ export const useConnStore = defineStore('conn', () => {
 
         clearMessagesInQueue,
 
-        getFeedItems,
+        requestFeedItems,
 
         getMediaUrl,
 
