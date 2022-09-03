@@ -860,6 +860,302 @@ export const web = $root.web = (() => {
         return UserDisplayInfo;
     })();
 
+    web.GroupDisplayInfo = (function() {
+
+        /**
+         * Properties of a GroupDisplayInfo.
+         * @memberof web
+         * @interface IGroupDisplayInfo
+         * @property {string|null} [id] GroupDisplayInfo id
+         * @property {string|null} [name] GroupDisplayInfo name
+         * @property {string|null} [avatarId] GroupDisplayInfo avatarId
+         * @property {string|null} [description] GroupDisplayInfo description
+         * @property {string|null} [background] GroupDisplayInfo background
+         */
+
+        /**
+         * Constructs a new GroupDisplayInfo.
+         * @memberof web
+         * @classdesc Represents a GroupDisplayInfo.
+         * @implements IGroupDisplayInfo
+         * @constructor
+         * @param {web.IGroupDisplayInfo=} [properties] Properties to set
+         */
+        function GroupDisplayInfo(properties) {
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * GroupDisplayInfo id.
+         * @member {string} id
+         * @memberof web.GroupDisplayInfo
+         * @instance
+         */
+        GroupDisplayInfo.prototype.id = "";
+
+        /**
+         * GroupDisplayInfo name.
+         * @member {string} name
+         * @memberof web.GroupDisplayInfo
+         * @instance
+         */
+        GroupDisplayInfo.prototype.name = "";
+
+        /**
+         * GroupDisplayInfo avatarId.
+         * @member {string} avatarId
+         * @memberof web.GroupDisplayInfo
+         * @instance
+         */
+        GroupDisplayInfo.prototype.avatarId = "";
+
+        /**
+         * GroupDisplayInfo description.
+         * @member {string} description
+         * @memberof web.GroupDisplayInfo
+         * @instance
+         */
+        GroupDisplayInfo.prototype.description = "";
+
+        /**
+         * GroupDisplayInfo background.
+         * @member {string} background
+         * @memberof web.GroupDisplayInfo
+         * @instance
+         */
+        GroupDisplayInfo.prototype.background = "";
+
+        /**
+         * Creates a new GroupDisplayInfo instance using the specified properties.
+         * @function create
+         * @memberof web.GroupDisplayInfo
+         * @static
+         * @param {web.IGroupDisplayInfo=} [properties] Properties to set
+         * @returns {web.GroupDisplayInfo} GroupDisplayInfo instance
+         */
+        GroupDisplayInfo.create = function create(properties) {
+            return new GroupDisplayInfo(properties);
+        };
+
+        /**
+         * Encodes the specified GroupDisplayInfo message. Does not implicitly {@link web.GroupDisplayInfo.verify|verify} messages.
+         * @function encode
+         * @memberof web.GroupDisplayInfo
+         * @static
+         * @param {web.IGroupDisplayInfo} message GroupDisplayInfo message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        GroupDisplayInfo.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.id);
+            if (message.name != null && Object.hasOwnProperty.call(message, "name"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.name);
+            if (message.avatarId != null && Object.hasOwnProperty.call(message, "avatarId"))
+                writer.uint32(/* id 3, wireType 2 =*/26).string(message.avatarId);
+            if (message.description != null && Object.hasOwnProperty.call(message, "description"))
+                writer.uint32(/* id 4, wireType 2 =*/34).string(message.description);
+            if (message.background != null && Object.hasOwnProperty.call(message, "background"))
+                writer.uint32(/* id 5, wireType 2 =*/42).string(message.background);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified GroupDisplayInfo message, length delimited. Does not implicitly {@link web.GroupDisplayInfo.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof web.GroupDisplayInfo
+         * @static
+         * @param {web.IGroupDisplayInfo} message GroupDisplayInfo message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        GroupDisplayInfo.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a GroupDisplayInfo message from the specified reader or buffer.
+         * @function decode
+         * @memberof web.GroupDisplayInfo
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {web.GroupDisplayInfo} GroupDisplayInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        GroupDisplayInfo.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.web.GroupDisplayInfo();
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1: {
+                        message.id = reader.string();
+                        break;
+                    }
+                case 2: {
+                        message.name = reader.string();
+                        break;
+                    }
+                case 3: {
+                        message.avatarId = reader.string();
+                        break;
+                    }
+                case 4: {
+                        message.description = reader.string();
+                        break;
+                    }
+                case 5: {
+                        message.background = reader.string();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a GroupDisplayInfo message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof web.GroupDisplayInfo
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {web.GroupDisplayInfo} GroupDisplayInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        GroupDisplayInfo.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a GroupDisplayInfo message.
+         * @function verify
+         * @memberof web.GroupDisplayInfo
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        GroupDisplayInfo.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.id != null && message.hasOwnProperty("id"))
+                if (!$util.isString(message.id))
+                    return "id: string expected";
+            if (message.name != null && message.hasOwnProperty("name"))
+                if (!$util.isString(message.name))
+                    return "name: string expected";
+            if (message.avatarId != null && message.hasOwnProperty("avatarId"))
+                if (!$util.isString(message.avatarId))
+                    return "avatarId: string expected";
+            if (message.description != null && message.hasOwnProperty("description"))
+                if (!$util.isString(message.description))
+                    return "description: string expected";
+            if (message.background != null && message.hasOwnProperty("background"))
+                if (!$util.isString(message.background))
+                    return "background: string expected";
+            return null;
+        };
+
+        /**
+         * Creates a GroupDisplayInfo message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof web.GroupDisplayInfo
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {web.GroupDisplayInfo} GroupDisplayInfo
+         */
+        GroupDisplayInfo.fromObject = function fromObject(object) {
+            if (object instanceof $root.web.GroupDisplayInfo)
+                return object;
+            let message = new $root.web.GroupDisplayInfo();
+            if (object.id != null)
+                message.id = String(object.id);
+            if (object.name != null)
+                message.name = String(object.name);
+            if (object.avatarId != null)
+                message.avatarId = String(object.avatarId);
+            if (object.description != null)
+                message.description = String(object.description);
+            if (object.background != null)
+                message.background = String(object.background);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a GroupDisplayInfo message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof web.GroupDisplayInfo
+         * @static
+         * @param {web.GroupDisplayInfo} message GroupDisplayInfo
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        GroupDisplayInfo.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            let object = {};
+            if (options.defaults) {
+                object.id = "";
+                object.name = "";
+                object.avatarId = "";
+                object.description = "";
+                object.background = "";
+            }
+            if (message.id != null && message.hasOwnProperty("id"))
+                object.id = message.id;
+            if (message.name != null && message.hasOwnProperty("name"))
+                object.name = message.name;
+            if (message.avatarId != null && message.hasOwnProperty("avatarId"))
+                object.avatarId = message.avatarId;
+            if (message.description != null && message.hasOwnProperty("description"))
+                object.description = message.description;
+            if (message.background != null && message.hasOwnProperty("background"))
+                object.background = message.background;
+            return object;
+        };
+
+        /**
+         * Converts this GroupDisplayInfo to JSON.
+         * @function toJSON
+         * @memberof web.GroupDisplayInfo
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        GroupDisplayInfo.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for GroupDisplayInfo
+         * @function getTypeUrl
+         * @memberof web.GroupDisplayInfo
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        GroupDisplayInfo.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/web.GroupDisplayInfo";
+        };
+
+        return GroupDisplayInfo;
+    })();
+
     web.PostDisplayInfo = (function() {
 
         /**
@@ -1370,10 +1666,14 @@ export const web = $root.web = (() => {
      * @name web.FeedType
      * @enum {number}
      * @property {number} HOME=0 HOME value
+     * @property {number} GROUP=1 GROUP value
+     * @property {number} POST_COMMENTS=2 POST_COMMENTS value
      */
     web.FeedType = (function() {
         const valuesById = {}, values = Object.create(valuesById);
         values[valuesById[0] = "HOME"] = 0;
+        values[valuesById[1] = "GROUP"] = 1;
+        values[valuesById[2] = "POST_COMMENTS"] = 2;
         return values;
     })();
 
@@ -1387,6 +1687,7 @@ export const web = $root.web = (() => {
          * @property {web.FeedType|null} [type] FeedRequest type
          * @property {string|null} [cursor] FeedRequest cursor
          * @property {number|null} [limit] FeedRequest limit
+         * @property {string|null} [contentId] FeedRequest contentId
          */
 
         /**
@@ -1437,6 +1738,14 @@ export const web = $root.web = (() => {
         FeedRequest.prototype.limit = 0;
 
         /**
+         * FeedRequest contentId.
+         * @member {string} contentId
+         * @memberof web.FeedRequest
+         * @instance
+         */
+        FeedRequest.prototype.contentId = "";
+
+        /**
          * Creates a new FeedRequest instance using the specified properties.
          * @function create
          * @memberof web.FeedRequest
@@ -1468,6 +1777,8 @@ export const web = $root.web = (() => {
                 writer.uint32(/* id 3, wireType 2 =*/26).string(message.cursor);
             if (message.limit != null && Object.hasOwnProperty.call(message, "limit"))
                 writer.uint32(/* id 4, wireType 0 =*/32).int32(message.limit);
+            if (message.contentId != null && Object.hasOwnProperty.call(message, "contentId"))
+                writer.uint32(/* id 5, wireType 2 =*/42).string(message.contentId);
             return writer;
         };
 
@@ -1518,6 +1829,10 @@ export const web = $root.web = (() => {
                         message.limit = reader.int32();
                         break;
                     }
+                case 5: {
+                        message.contentId = reader.string();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -1561,6 +1876,8 @@ export const web = $root.web = (() => {
                 default:
                     return "type: enum value expected";
                 case 0:
+                case 1:
+                case 2:
                     break;
                 }
             if (message.cursor != null && message.hasOwnProperty("cursor"))
@@ -1569,6 +1886,9 @@ export const web = $root.web = (() => {
             if (message.limit != null && message.hasOwnProperty("limit"))
                 if (!$util.isInteger(message.limit))
                     return "limit: integer expected";
+            if (message.contentId != null && message.hasOwnProperty("contentId"))
+                if (!$util.isString(message.contentId))
+                    return "contentId: string expected";
             return null;
         };
 
@@ -1597,11 +1917,21 @@ export const web = $root.web = (() => {
             case 0:
                 message.type = 0;
                 break;
+            case "GROUP":
+            case 1:
+                message.type = 1;
+                break;
+            case "POST_COMMENTS":
+            case 2:
+                message.type = 2;
+                break;
             }
             if (object.cursor != null)
                 message.cursor = String(object.cursor);
             if (object.limit != null)
                 message.limit = object.limit | 0;
+            if (object.contentId != null)
+                message.contentId = String(object.contentId);
             return message;
         };
 
@@ -1623,6 +1953,7 @@ export const web = $root.web = (() => {
                 object.type = options.enums === String ? "HOME" : 0;
                 object.cursor = "";
                 object.limit = 0;
+                object.contentId = "";
             }
             if (message.id != null && message.hasOwnProperty("id"))
                 object.id = message.id;
@@ -1632,6 +1963,8 @@ export const web = $root.web = (() => {
                 object.cursor = message.cursor;
             if (message.limit != null && message.hasOwnProperty("limit"))
                 object.limit = message.limit;
+            if (message.contentId != null && message.hasOwnProperty("contentId"))
+                object.contentId = message.contentId;
             return object;
         };
 
@@ -1677,6 +2010,7 @@ export const web = $root.web = (() => {
          * @property {Array.<web.IPostDisplayInfo>|null} [postDisplayInfo] FeedResponse postDisplayInfo
          * @property {string|null} [nextCursor] FeedResponse nextCursor
          * @property {web.FeedResponse.Error|null} [error] FeedResponse error
+         * @property {Array.<web.IGroupDisplayInfo>|null} [groupDisplayInfo] FeedResponse groupDisplayInfo
          */
 
         /**
@@ -1691,6 +2025,7 @@ export const web = $root.web = (() => {
             this.items = [];
             this.userDisplayInfo = [];
             this.postDisplayInfo = [];
+            this.groupDisplayInfo = [];
             if (properties)
                 for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                     if (properties[keys[i]] != null)
@@ -1754,6 +2089,14 @@ export const web = $root.web = (() => {
         FeedResponse.prototype.error = 0;
 
         /**
+         * FeedResponse groupDisplayInfo.
+         * @member {Array.<web.IGroupDisplayInfo>} groupDisplayInfo
+         * @memberof web.FeedResponse
+         * @instance
+         */
+        FeedResponse.prototype.groupDisplayInfo = $util.emptyArray;
+
+        /**
          * Creates a new FeedResponse instance using the specified properties.
          * @function create
          * @memberof web.FeedResponse
@@ -1794,6 +2137,9 @@ export const web = $root.web = (() => {
                 writer.uint32(/* id 6, wireType 2 =*/50).string(message.nextCursor);
             if (message.error != null && Object.hasOwnProperty.call(message, "error"))
                 writer.uint32(/* id 7, wireType 0 =*/56).int32(message.error);
+            if (message.groupDisplayInfo != null && message.groupDisplayInfo.length)
+                for (let i = 0; i < message.groupDisplayInfo.length; ++i)
+                    $root.web.GroupDisplayInfo.encode(message.groupDisplayInfo[i], writer.uint32(/* id 8, wireType 2 =*/66).fork()).ldelim();
             return writer;
         };
 
@@ -1862,6 +2208,12 @@ export const web = $root.web = (() => {
                         message.error = reader.int32();
                         break;
                     }
+                case 8: {
+                        if (!(message.groupDisplayInfo && message.groupDisplayInfo.length))
+                            message.groupDisplayInfo = [];
+                        message.groupDisplayInfo.push($root.web.GroupDisplayInfo.decode(reader, reader.uint32()));
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -1905,6 +2257,8 @@ export const web = $root.web = (() => {
                 default:
                     return "type: enum value expected";
                 case 0:
+                case 1:
+                case 2:
                     break;
                 }
             if (message.items != null && message.hasOwnProperty("items")) {
@@ -1945,6 +2299,15 @@ export const web = $root.web = (() => {
                 case 1:
                     break;
                 }
+            if (message.groupDisplayInfo != null && message.hasOwnProperty("groupDisplayInfo")) {
+                if (!Array.isArray(message.groupDisplayInfo))
+                    return "groupDisplayInfo: array expected";
+                for (let i = 0; i < message.groupDisplayInfo.length; ++i) {
+                    let error = $root.web.GroupDisplayInfo.verify(message.groupDisplayInfo[i]);
+                    if (error)
+                        return "groupDisplayInfo." + error;
+                }
+            }
             return null;
         };
 
@@ -1972,6 +2335,14 @@ export const web = $root.web = (() => {
             case "HOME":
             case 0:
                 message.type = 0;
+                break;
+            case "GROUP":
+            case 1:
+                message.type = 1;
+                break;
+            case "POST_COMMENTS":
+            case 2:
+                message.type = 2;
                 break;
             }
             if (object.items) {
@@ -2022,6 +2393,16 @@ export const web = $root.web = (() => {
                 message.error = 1;
                 break;
             }
+            if (object.groupDisplayInfo) {
+                if (!Array.isArray(object.groupDisplayInfo))
+                    throw TypeError(".web.FeedResponse.groupDisplayInfo: array expected");
+                message.groupDisplayInfo = [];
+                for (let i = 0; i < object.groupDisplayInfo.length; ++i) {
+                    if (typeof object.groupDisplayInfo[i] !== "object")
+                        throw TypeError(".web.FeedResponse.groupDisplayInfo: object expected");
+                    message.groupDisplayInfo[i] = $root.web.GroupDisplayInfo.fromObject(object.groupDisplayInfo[i]);
+                }
+            }
             return message;
         };
 
@@ -2042,6 +2423,7 @@ export const web = $root.web = (() => {
                 object.items = [];
                 object.userDisplayInfo = [];
                 object.postDisplayInfo = [];
+                object.groupDisplayInfo = [];
             }
             if (options.defaults) {
                 object.id = "";
@@ -2072,6 +2454,11 @@ export const web = $root.web = (() => {
                 object.nextCursor = message.nextCursor;
             if (message.error != null && message.hasOwnProperty("error"))
                 object.error = options.enums === String ? $root.web.FeedResponse.Error[message.error] === undefined ? message.error : $root.web.FeedResponse.Error[message.error] : message.error;
+            if (message.groupDisplayInfo && message.groupDisplayInfo.length) {
+                object.groupDisplayInfo = [];
+                for (let j = 0; j < message.groupDisplayInfo.length; ++j)
+                    object.groupDisplayInfo[j] = $root.web.GroupDisplayInfo.toObject(message.groupDisplayInfo[j], options);
+            }
             return object;
         };
 
@@ -2125,6 +2512,8 @@ export const web = $root.web = (() => {
          * @memberof web
          * @interface IFeedItem
          * @property {server.IPost|null} [post] FeedItem post
+         * @property {server.IComment|null} [comment] FeedItem comment
+         * @property {string|null} [groupId] FeedItem groupId
          */
 
         /**
@@ -2150,17 +2539,33 @@ export const web = $root.web = (() => {
          */
         FeedItem.prototype.post = null;
 
+        /**
+         * FeedItem comment.
+         * @member {server.IComment|null|undefined} comment
+         * @memberof web.FeedItem
+         * @instance
+         */
+        FeedItem.prototype.comment = null;
+
+        /**
+         * FeedItem groupId.
+         * @member {string} groupId
+         * @memberof web.FeedItem
+         * @instance
+         */
+        FeedItem.prototype.groupId = "";
+
         // OneOf field names bound to virtual getters and setters
         let $oneOfFields;
 
         /**
          * FeedItem content.
-         * @member {"post"|undefined} content
+         * @member {"post"|"comment"|undefined} content
          * @memberof web.FeedItem
          * @instance
          */
         Object.defineProperty(FeedItem.prototype, "content", {
-            get: $util.oneOfGetter($oneOfFields = ["post"]),
+            get: $util.oneOfGetter($oneOfFields = ["post", "comment"]),
             set: $util.oneOfSetter($oneOfFields)
         });
 
@@ -2190,6 +2595,10 @@ export const web = $root.web = (() => {
                 writer = $Writer.create();
             if (message.post != null && Object.hasOwnProperty.call(message, "post"))
                 $root.server.Post.encode(message.post, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+            if (message.comment != null && Object.hasOwnProperty.call(message, "comment"))
+                $root.server.Comment.encode(message.comment, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+            if (message.groupId != null && Object.hasOwnProperty.call(message, "groupId"))
+                writer.uint32(/* id 3, wireType 2 =*/26).string(message.groupId);
             return writer;
         };
 
@@ -2226,6 +2635,14 @@ export const web = $root.web = (() => {
                 switch (tag >>> 3) {
                 case 1: {
                         message.post = $root.server.Post.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 2: {
+                        message.comment = $root.server.Comment.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 3: {
+                        message.groupId = reader.string();
                         break;
                     }
                 default:
@@ -2272,6 +2689,19 @@ export const web = $root.web = (() => {
                         return "post." + error;
                 }
             }
+            if (message.comment != null && message.hasOwnProperty("comment")) {
+                if (properties.content === 1)
+                    return "content: multiple values";
+                properties.content = 1;
+                {
+                    let error = $root.server.Comment.verify(message.comment);
+                    if (error)
+                        return "comment." + error;
+                }
+            }
+            if (message.groupId != null && message.hasOwnProperty("groupId"))
+                if (!$util.isString(message.groupId))
+                    return "groupId: string expected";
             return null;
         };
 
@@ -2292,6 +2722,13 @@ export const web = $root.web = (() => {
                     throw TypeError(".web.FeedItem.post: object expected");
                 message.post = $root.server.Post.fromObject(object.post);
             }
+            if (object.comment != null) {
+                if (typeof object.comment !== "object")
+                    throw TypeError(".web.FeedItem.comment: object expected");
+                message.comment = $root.server.Comment.fromObject(object.comment);
+            }
+            if (object.groupId != null)
+                message.groupId = String(object.groupId);
             return message;
         };
 
@@ -2308,11 +2745,20 @@ export const web = $root.web = (() => {
             if (!options)
                 options = {};
             let object = {};
+            if (options.defaults)
+                object.groupId = "";
             if (message.post != null && message.hasOwnProperty("post")) {
                 object.post = $root.server.Post.toObject(message.post, options);
                 if (options.oneofs)
                     object.content = "post";
             }
+            if (message.comment != null && message.hasOwnProperty("comment")) {
+                object.comment = $root.server.Comment.toObject(message.comment, options);
+                if (options.oneofs)
+                    object.content = "comment";
+            }
+            if (message.groupId != null && message.hasOwnProperty("groupId"))
+                object.groupId = message.groupId;
             return object;
         };
 
@@ -5130,6 +5576,8 @@ export const server = $root.server = (() => {
          * @property {string|null} [avatarId] Contact avatarId
          * @property {string|null} [name] Contact name
          * @property {number|Long|null} [numPotentialFriends] Contact numPotentialFriends
+         * @property {number|Long|null} [numPotentialCloseFriends] Contact numPotentialCloseFriends
+         * @property {number|Long|null} [invitationRank] Contact invitationRank
          */
 
         /**
@@ -5204,6 +5652,22 @@ export const server = $root.server = (() => {
         Contact.prototype.numPotentialFriends = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
 
         /**
+         * Contact numPotentialCloseFriends.
+         * @member {number|Long} numPotentialCloseFriends
+         * @memberof server.Contact
+         * @instance
+         */
+        Contact.prototype.numPotentialCloseFriends = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+
+        /**
+         * Contact invitationRank.
+         * @member {number|Long} invitationRank
+         * @memberof server.Contact
+         * @instance
+         */
+        Contact.prototype.invitationRank = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+
+        /**
          * Creates a new Contact instance using the specified properties.
          * @function create
          * @memberof server.Contact
@@ -5241,6 +5705,10 @@ export const server = $root.server = (() => {
                 writer.uint32(/* id 7, wireType 2 =*/58).string(message.name);
             if (message.numPotentialFriends != null && Object.hasOwnProperty.call(message, "numPotentialFriends"))
                 writer.uint32(/* id 8, wireType 0 =*/64).int64(message.numPotentialFriends);
+            if (message.numPotentialCloseFriends != null && Object.hasOwnProperty.call(message, "numPotentialCloseFriends"))
+                writer.uint32(/* id 9, wireType 0 =*/72).int64(message.numPotentialCloseFriends);
+            if (message.invitationRank != null && Object.hasOwnProperty.call(message, "invitationRank"))
+                writer.uint32(/* id 10, wireType 0 =*/80).int64(message.invitationRank);
             return writer;
         };
 
@@ -5301,6 +5769,14 @@ export const server = $root.server = (() => {
                     }
                 case 8: {
                         message.numPotentialFriends = reader.int64();
+                        break;
+                    }
+                case 9: {
+                        message.numPotentialCloseFriends = reader.int64();
+                        break;
+                    }
+                case 10: {
+                        message.invitationRank = reader.int64();
                         break;
                     }
                 default:
@@ -5364,6 +5840,12 @@ export const server = $root.server = (() => {
             if (message.numPotentialFriends != null && message.hasOwnProperty("numPotentialFriends"))
                 if (!$util.isInteger(message.numPotentialFriends) && !(message.numPotentialFriends && $util.isInteger(message.numPotentialFriends.low) && $util.isInteger(message.numPotentialFriends.high)))
                     return "numPotentialFriends: integer|Long expected";
+            if (message.numPotentialCloseFriends != null && message.hasOwnProperty("numPotentialCloseFriends"))
+                if (!$util.isInteger(message.numPotentialCloseFriends) && !(message.numPotentialCloseFriends && $util.isInteger(message.numPotentialCloseFriends.low) && $util.isInteger(message.numPotentialCloseFriends.high)))
+                    return "numPotentialCloseFriends: integer|Long expected";
+            if (message.invitationRank != null && message.hasOwnProperty("invitationRank"))
+                if (!$util.isInteger(message.invitationRank) && !(message.invitationRank && $util.isInteger(message.invitationRank.low) && $util.isInteger(message.invitationRank.high)))
+                    return "invitationRank: integer|Long expected";
             return null;
         };
 
@@ -5421,6 +5903,24 @@ export const server = $root.server = (() => {
                     message.numPotentialFriends = object.numPotentialFriends;
                 else if (typeof object.numPotentialFriends === "object")
                     message.numPotentialFriends = new $util.LongBits(object.numPotentialFriends.low >>> 0, object.numPotentialFriends.high >>> 0).toNumber();
+            if (object.numPotentialCloseFriends != null)
+                if ($util.Long)
+                    (message.numPotentialCloseFriends = $util.Long.fromValue(object.numPotentialCloseFriends)).unsigned = false;
+                else if (typeof object.numPotentialCloseFriends === "string")
+                    message.numPotentialCloseFriends = parseInt(object.numPotentialCloseFriends, 10);
+                else if (typeof object.numPotentialCloseFriends === "number")
+                    message.numPotentialCloseFriends = object.numPotentialCloseFriends;
+                else if (typeof object.numPotentialCloseFriends === "object")
+                    message.numPotentialCloseFriends = new $util.LongBits(object.numPotentialCloseFriends.low >>> 0, object.numPotentialCloseFriends.high >>> 0).toNumber();
+            if (object.invitationRank != null)
+                if ($util.Long)
+                    (message.invitationRank = $util.Long.fromValue(object.invitationRank)).unsigned = false;
+                else if (typeof object.invitationRank === "string")
+                    message.invitationRank = parseInt(object.invitationRank, 10);
+                else if (typeof object.invitationRank === "number")
+                    message.invitationRank = object.invitationRank;
+                else if (typeof object.invitationRank === "object")
+                    message.invitationRank = new $util.LongBits(object.invitationRank.low >>> 0, object.invitationRank.high >>> 0).toNumber();
             return message;
         };
 
@@ -5453,6 +5953,16 @@ export const server = $root.server = (() => {
                     object.numPotentialFriends = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
                 } else
                     object.numPotentialFriends = options.longs === String ? "0" : 0;
+                if ($util.Long) {
+                    let long = new $util.Long(0, 0, false);
+                    object.numPotentialCloseFriends = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.numPotentialCloseFriends = options.longs === String ? "0" : 0;
+                if ($util.Long) {
+                    let long = new $util.Long(0, 0, false);
+                    object.invitationRank = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.invitationRank = options.longs === String ? "0" : 0;
             }
             if (message.action != null && message.hasOwnProperty("action"))
                 object.action = options.enums === String ? $root.server.Contact.Action[message.action] === undefined ? message.action : $root.server.Contact.Action[message.action] : message.action;
@@ -5474,6 +5984,16 @@ export const server = $root.server = (() => {
                     object.numPotentialFriends = options.longs === String ? String(message.numPotentialFriends) : message.numPotentialFriends;
                 else
                     object.numPotentialFriends = options.longs === String ? $util.Long.prototype.toString.call(message.numPotentialFriends) : options.longs === Number ? new $util.LongBits(message.numPotentialFriends.low >>> 0, message.numPotentialFriends.high >>> 0).toNumber() : message.numPotentialFriends;
+            if (message.numPotentialCloseFriends != null && message.hasOwnProperty("numPotentialCloseFriends"))
+                if (typeof message.numPotentialCloseFriends === "number")
+                    object.numPotentialCloseFriends = options.longs === String ? String(message.numPotentialCloseFriends) : message.numPotentialCloseFriends;
+                else
+                    object.numPotentialCloseFriends = options.longs === String ? $util.Long.prototype.toString.call(message.numPotentialCloseFriends) : options.longs === Number ? new $util.LongBits(message.numPotentialCloseFriends.low >>> 0, message.numPotentialCloseFriends.high >>> 0).toNumber() : message.numPotentialCloseFriends;
+            if (message.invitationRank != null && message.hasOwnProperty("invitationRank"))
+                if (typeof message.invitationRank === "number")
+                    object.invitationRank = options.longs === String ? String(message.invitationRank) : message.invitationRank;
+                else
+                    object.invitationRank = options.longs === String ? $util.Long.prototype.toString.call(message.invitationRank) : options.longs === Number ? new $util.LongBits(message.invitationRank.low >>> 0, message.invitationRank.high >>> 0).toNumber() : message.invitationRank;
             return object;
         };
 
@@ -6912,6 +7432,7 @@ export const server = $root.server = (() => {
          * @property {server.Post.Tag|null} [tag] Post tag
          * @property {string|null} [psaTag] Post psaTag
          * @property {number|Long|null} [momentUnlockUid] Post momentUnlockUid
+         * @property {boolean|null} [showPostShareScreen] Post showPostShareScreen
          */
 
         /**
@@ -7018,6 +7539,14 @@ export const server = $root.server = (() => {
         Post.prototype.momentUnlockUid = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
 
         /**
+         * Post showPostShareScreen.
+         * @member {boolean} showPostShareScreen
+         * @memberof server.Post
+         * @instance
+         */
+        Post.prototype.showPostShareScreen = false;
+
+        /**
          * Creates a new Post instance using the specified properties.
          * @function create
          * @memberof server.Post
@@ -7063,6 +7592,8 @@ export const server = $root.server = (() => {
                 writer.uint32(/* id 10, wireType 2 =*/82).string(message.psaTag);
             if (message.momentUnlockUid != null && Object.hasOwnProperty.call(message, "momentUnlockUid"))
                 writer.uint32(/* id 11, wireType 0 =*/88).int64(message.momentUnlockUid);
+            if (message.showPostShareScreen != null && Object.hasOwnProperty.call(message, "showPostShareScreen"))
+                writer.uint32(/* id 12, wireType 0 =*/96).bool(message.showPostShareScreen);
             return writer;
         };
 
@@ -7139,6 +7670,10 @@ export const server = $root.server = (() => {
                     }
                 case 11: {
                         message.momentUnlockUid = reader.int64();
+                        break;
+                    }
+                case 12: {
+                        message.showPostShareScreen = reader.bool();
                         break;
                     }
                 default:
@@ -7218,6 +7753,9 @@ export const server = $root.server = (() => {
             if (message.momentUnlockUid != null && message.hasOwnProperty("momentUnlockUid"))
                 if (!$util.isInteger(message.momentUnlockUid) && !(message.momentUnlockUid && $util.isInteger(message.momentUnlockUid.low) && $util.isInteger(message.momentUnlockUid.high)))
                     return "momentUnlockUid: integer|Long expected";
+            if (message.showPostShareScreen != null && message.hasOwnProperty("showPostShareScreen"))
+                if (typeof message.showPostShareScreen !== "boolean")
+                    return "showPostShareScreen: boolean expected";
             return null;
         };
 
@@ -7302,6 +7840,8 @@ export const server = $root.server = (() => {
                     message.momentUnlockUid = object.momentUnlockUid;
                 else if (typeof object.momentUnlockUid === "object")
                     message.momentUnlockUid = new $util.LongBits(object.momentUnlockUid.low >>> 0, object.momentUnlockUid.high >>> 0).toNumber();
+            if (object.showPostShareScreen != null)
+                message.showPostShareScreen = Boolean(object.showPostShareScreen);
             return message;
         };
 
@@ -7354,6 +7894,7 @@ export const server = $root.server = (() => {
                     object.momentUnlockUid = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
                 } else
                     object.momentUnlockUid = options.longs === String ? "0" : 0;
+                object.showPostShareScreen = false;
             }
             if (message.id != null && message.hasOwnProperty("id"))
                 object.id = message.id;
@@ -7386,6 +7927,8 @@ export const server = $root.server = (() => {
                     object.momentUnlockUid = options.longs === String ? String(message.momentUnlockUid) : message.momentUnlockUid;
                 else
                     object.momentUnlockUid = options.longs === String ? $util.Long.prototype.toString.call(message.momentUnlockUid) : options.longs === Number ? new $util.LongBits(message.momentUnlockUid.low >>> 0, message.momentUnlockUid.high >>> 0).toNumber() : message.momentUnlockUid;
+            if (message.showPostShareScreen != null && message.hasOwnProperty("showPostShareScreen"))
+                object.showPostShareScreen = message.showPostShareScreen;
             return object;
         };
 
@@ -39132,6 +39675,8 @@ export const server = $root.server = (() => {
                 case 4:
                 case 5:
                 case 6:
+                case 7:
+                case 8:
                     break;
                 }
             if (message.content != null && message.hasOwnProperty("content"))
@@ -39186,6 +39731,14 @@ export const server = $root.server = (() => {
             case "XX_FALLBACK_B":
             case 6:
                 message.messageType = 6;
+                break;
+            case "KK_A":
+            case 7:
+                message.messageType = 7;
+                break;
+            case "KK_B":
+            case 8:
+                message.messageType = 8;
                 break;
             }
             if (object.content != null)
@@ -39263,6 +39816,8 @@ export const server = $root.server = (() => {
          * @property {number} IK_B=4 IK_B value
          * @property {number} XX_FALLBACK_A=5 XX_FALLBACK_A value
          * @property {number} XX_FALLBACK_B=6 XX_FALLBACK_B value
+         * @property {number} KK_A=7 KK_A value
+         * @property {number} KK_B=8 KK_B value
          */
         NoiseMessage.MessageType = (function() {
             const valuesById = {}, values = Object.create(valuesById);
@@ -39273,6 +39828,8 @@ export const server = $root.server = (() => {
             values[valuesById[4] = "IK_B"] = 4;
             values[valuesById[5] = "XX_FALLBACK_A"] = 5;
             values[valuesById[6] = "XX_FALLBACK_B"] = 6;
+            values[valuesById[7] = "KK_A"] = 7;
+            values[valuesById[8] = "KK_B"] = 8;
             return values;
         })();
 
@@ -48415,6 +48972,7 @@ export const server = $root.server = (() => {
                     return "contentType: enum value expected";
                 case 0:
                 case 1:
+                case 2:
                     break;
                 }
             return null;
@@ -48496,6 +49054,10 @@ export const server = $root.server = (() => {
             case "GROUP_HISTORY":
             case 1:
                 message.contentType = 1;
+                break;
+            case "CHAT_REACTION":
+            case 2:
+                message.contentType = 2;
                 break;
             }
             return message;
@@ -48595,11 +49157,13 @@ export const server = $root.server = (() => {
          * @enum {number}
          * @property {number} CHAT=0 CHAT value
          * @property {number} GROUP_HISTORY=1 GROUP_HISTORY value
+         * @property {number} CHAT_REACTION=2 CHAT_REACTION value
          */
         DecryptionReport.ContentType = (function() {
             const valuesById = {}, values = Object.create(valuesById);
             values[valuesById[0] = "CHAT"] = 0;
             values[valuesById[1] = "GROUP_HISTORY"] = 1;
+            values[valuesById[2] = "CHAT_REACTION"] = 2;
             return values;
         })();
 
@@ -48913,6 +49477,8 @@ export const server = $root.server = (() => {
                 case 1:
                 case 2:
                 case 3:
+                case 4:
+                case 5:
                     break;
                 }
             if (message.originalVersion != null && message.hasOwnProperty("originalVersion"))
@@ -49007,6 +49573,14 @@ export const server = $root.server = (() => {
             case "HISTORY_RESEND":
             case 3:
                 message.itemType = 3;
+                break;
+            case "POST_REACTION":
+            case 4:
+                message.itemType = 4;
+                break;
+            case "COMMENT_REACTION":
+            case 5:
+                message.itemType = 5;
                 break;
             }
             if (object.originalVersion != null)
@@ -49157,6 +49731,8 @@ export const server = $root.server = (() => {
          * @property {number} POST=1 POST value
          * @property {number} COMMENT=2 COMMENT value
          * @property {number} HISTORY_RESEND=3 HISTORY_RESEND value
+         * @property {number} POST_REACTION=4 POST_REACTION value
+         * @property {number} COMMENT_REACTION=5 COMMENT_REACTION value
          */
         GroupDecryptionReport.ItemType = (function() {
             const valuesById = {}, values = Object.create(valuesById);
@@ -49164,6 +49740,8 @@ export const server = $root.server = (() => {
             values[valuesById[1] = "POST"] = 1;
             values[valuesById[2] = "COMMENT"] = 2;
             values[valuesById[3] = "HISTORY_RESEND"] = 3;
+            values[valuesById[4] = "POST_REACTION"] = 4;
+            values[valuesById[5] = "COMMENT_REACTION"] = 5;
             return values;
         })();
 
@@ -49496,6 +50074,8 @@ export const server = $root.server = (() => {
                 case 0:
                 case 1:
                 case 2:
+                case 4:
+                case 5:
                     break;
                 }
             if (message.originalVersion != null && message.hasOwnProperty("originalVersion"))
@@ -49604,6 +50184,14 @@ export const server = $root.server = (() => {
             case "COMMENT":
             case 2:
                 message.itemType = 2;
+                break;
+            case "POST_REACTION":
+            case 4:
+                message.itemType = 4;
+                break;
+            case "COMMENT_REACTION":
+            case 5:
+                message.itemType = 5;
                 break;
             }
             if (object.originalVersion != null)
@@ -49769,12 +50357,16 @@ export const server = $root.server = (() => {
          * @property {number} UNKNOWN_TYPE=0 UNKNOWN_TYPE value
          * @property {number} POST=1 POST value
          * @property {number} COMMENT=2 COMMENT value
+         * @property {number} POST_REACTION=4 POST_REACTION value
+         * @property {number} COMMENT_REACTION=5 COMMENT_REACTION value
          */
         HomeDecryptionReport.ItemType = (function() {
             const valuesById = {}, values = Object.create(valuesById);
             values[valuesById[0] = "UNKNOWN_TYPE"] = 0;
             values[valuesById[1] = "POST"] = 1;
             values[valuesById[2] = "COMMENT"] = 2;
+            values[valuesById[4] = "POST_REACTION"] = 4;
+            values[valuesById[5] = "COMMENT_REACTION"] = 5;
             return values;
         })();
 

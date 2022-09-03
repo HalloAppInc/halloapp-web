@@ -1179,6 +1179,12 @@ export namespace server {
 
         /** Contact numPotentialFriends */
         numPotentialFriends?: (number|Long|null);
+
+        /** Contact numPotentialCloseFriends */
+        numPotentialCloseFriends?: (number|Long|null);
+
+        /** Contact invitationRank */
+        invitationRank?: (number|Long|null);
     }
 
     /** Represents a Contact. */
@@ -1210,6 +1216,12 @@ export namespace server {
 
         /** Contact numPotentialFriends. */
         public numPotentialFriends: (number|Long);
+
+        /** Contact numPotentialCloseFriends. */
+        public numPotentialCloseFriends: (number|Long);
+
+        /** Contact invitationRank. */
+        public invitationRank: (number|Long);
 
         /**
          * Creates a new Contact instance using the specified properties.
@@ -1890,6 +1902,9 @@ export namespace server {
 
         /** Post momentUnlockUid */
         momentUnlockUid?: (number|Long|null);
+
+        /** Post showPostShareScreen */
+        showPostShareScreen?: (boolean|null);
     }
 
     /** Represents a Post. */
@@ -1933,6 +1948,9 @@ export namespace server {
 
         /** Post momentUnlockUid. */
         public momentUnlockUid: (number|Long);
+
+        /** Post showPostShareScreen. */
+        public showPostShareScreen: boolean;
 
         /**
          * Creates a new Post instance using the specified properties.
@@ -13331,7 +13349,9 @@ export namespace server {
             IK_A = 3,
             IK_B = 4,
             XX_FALLBACK_A = 5,
-            XX_FALLBACK_B = 6
+            XX_FALLBACK_B = 6,
+            KK_A = 7,
+            KK_B = 8
         }
     }
 
@@ -16684,7 +16704,8 @@ export namespace server {
         /** ContentType enum. */
         enum ContentType {
             CHAT = 0,
-            GROUP_HISTORY = 1
+            GROUP_HISTORY = 1,
+            CHAT_REACTION = 2
         }
     }
 
@@ -16859,7 +16880,9 @@ export namespace server {
             UNKNOWN_TYPE = 0,
             POST = 1,
             COMMENT = 2,
-            HISTORY_RESEND = 3
+            HISTORY_RESEND = 3,
+            POST_REACTION = 4,
+            COMMENT_REACTION = 5
         }
 
         /** Schedule enum. */
@@ -17046,7 +17069,9 @@ export namespace server {
         enum ItemType {
             UNKNOWN_TYPE = 0,
             POST = 1,
-            COMMENT = 2
+            COMMENT = 2,
+            POST_REACTION = 4,
+            COMMENT_REACTION = 5
         }
 
         /** Schedule enum. */

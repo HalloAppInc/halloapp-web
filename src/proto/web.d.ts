@@ -336,6 +336,127 @@ export namespace web {
         public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
+    /** Properties of a GroupDisplayInfo. */
+    interface IGroupDisplayInfo {
+
+        /** GroupDisplayInfo id */
+        id?: (string|null);
+
+        /** GroupDisplayInfo name */
+        name?: (string|null);
+
+        /** GroupDisplayInfo avatarId */
+        avatarId?: (string|null);
+
+        /** GroupDisplayInfo description */
+        description?: (string|null);
+
+        /** GroupDisplayInfo background */
+        background?: (string|null);
+    }
+
+    /** Represents a GroupDisplayInfo. */
+    class GroupDisplayInfo implements IGroupDisplayInfo {
+
+        /**
+         * Constructs a new GroupDisplayInfo.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: web.IGroupDisplayInfo);
+
+        /** GroupDisplayInfo id. */
+        public id: string;
+
+        /** GroupDisplayInfo name. */
+        public name: string;
+
+        /** GroupDisplayInfo avatarId. */
+        public avatarId: string;
+
+        /** GroupDisplayInfo description. */
+        public description: string;
+
+        /** GroupDisplayInfo background. */
+        public background: string;
+
+        /**
+         * Creates a new GroupDisplayInfo instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns GroupDisplayInfo instance
+         */
+        public static create(properties?: web.IGroupDisplayInfo): web.GroupDisplayInfo;
+
+        /**
+         * Encodes the specified GroupDisplayInfo message. Does not implicitly {@link web.GroupDisplayInfo.verify|verify} messages.
+         * @param message GroupDisplayInfo message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: web.IGroupDisplayInfo, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified GroupDisplayInfo message, length delimited. Does not implicitly {@link web.GroupDisplayInfo.verify|verify} messages.
+         * @param message GroupDisplayInfo message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: web.IGroupDisplayInfo, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a GroupDisplayInfo message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns GroupDisplayInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): web.GroupDisplayInfo;
+
+        /**
+         * Decodes a GroupDisplayInfo message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns GroupDisplayInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): web.GroupDisplayInfo;
+
+        /**
+         * Verifies a GroupDisplayInfo message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a GroupDisplayInfo message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns GroupDisplayInfo
+         */
+        public static fromObject(object: { [k: string]: any }): web.GroupDisplayInfo;
+
+        /**
+         * Creates a plain object from a GroupDisplayInfo message. Also converts values to other types if specified.
+         * @param message GroupDisplayInfo
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: web.GroupDisplayInfo, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this GroupDisplayInfo to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for GroupDisplayInfo
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
     /** Properties of a PostDisplayInfo. */
     interface IPostDisplayInfo {
 
@@ -498,7 +619,9 @@ export namespace web {
 
     /** FeedType enum. */
     enum FeedType {
-        HOME = 0
+        HOME = 0,
+        GROUP = 1,
+        POST_COMMENTS = 2
     }
 
     /** Properties of a FeedRequest. */
@@ -515,6 +638,9 @@ export namespace web {
 
         /** FeedRequest limit */
         limit?: (number|null);
+
+        /** FeedRequest contentId */
+        contentId?: (string|null);
     }
 
     /** Represents a FeedRequest. */
@@ -537,6 +663,9 @@ export namespace web {
 
         /** FeedRequest limit. */
         public limit: number;
+
+        /** FeedRequest contentId. */
+        public contentId: string;
 
         /**
          * Creates a new FeedRequest instance using the specified properties.
@@ -639,6 +768,9 @@ export namespace web {
 
         /** FeedResponse error */
         error?: (web.FeedResponse.Error|null);
+
+        /** FeedResponse groupDisplayInfo */
+        groupDisplayInfo?: (web.IGroupDisplayInfo[]|null);
     }
 
     /** Represents a FeedResponse. */
@@ -670,6 +802,9 @@ export namespace web {
 
         /** FeedResponse error. */
         public error: web.FeedResponse.Error;
+
+        /** FeedResponse groupDisplayInfo. */
+        public groupDisplayInfo: web.IGroupDisplayInfo[];
 
         /**
          * Creates a new FeedResponse instance using the specified properties.
@@ -763,6 +898,12 @@ export namespace web {
 
         /** FeedItem post */
         post?: (server.IPost|null);
+
+        /** FeedItem comment */
+        comment?: (server.IComment|null);
+
+        /** FeedItem groupId */
+        groupId?: (string|null);
     }
 
     /** Represents a FeedItem. */
@@ -777,8 +918,14 @@ export namespace web {
         /** FeedItem post. */
         public post?: (server.IPost|null);
 
+        /** FeedItem comment. */
+        public comment?: (server.IComment|null);
+
+        /** FeedItem groupId. */
+        public groupId: string;
+
         /** FeedItem content. */
-        public content?: "post";
+        public content?: ("post"|"comment");
 
         /**
          * Creates a new FeedItem instance using the specified properties.
@@ -2039,6 +2186,12 @@ export namespace server {
 
         /** Contact numPotentialFriends */
         numPotentialFriends?: (number|Long|null);
+
+        /** Contact numPotentialCloseFriends */
+        numPotentialCloseFriends?: (number|Long|null);
+
+        /** Contact invitationRank */
+        invitationRank?: (number|Long|null);
     }
 
     /** Represents a Contact. */
@@ -2070,6 +2223,12 @@ export namespace server {
 
         /** Contact numPotentialFriends. */
         public numPotentialFriends: (number|Long);
+
+        /** Contact numPotentialCloseFriends. */
+        public numPotentialCloseFriends: (number|Long);
+
+        /** Contact invitationRank. */
+        public invitationRank: (number|Long);
 
         /**
          * Creates a new Contact instance using the specified properties.
@@ -2750,6 +2909,9 @@ export namespace server {
 
         /** Post momentUnlockUid */
         momentUnlockUid?: (number|Long|null);
+
+        /** Post showPostShareScreen */
+        showPostShareScreen?: (boolean|null);
     }
 
     /** Represents a Post. */
@@ -2793,6 +2955,9 @@ export namespace server {
 
         /** Post momentUnlockUid. */
         public momentUnlockUid: (number|Long);
+
+        /** Post showPostShareScreen. */
+        public showPostShareScreen: boolean;
 
         /**
          * Creates a new Post instance using the specified properties.
@@ -14191,7 +14356,9 @@ export namespace server {
             IK_A = 3,
             IK_B = 4,
             XX_FALLBACK_A = 5,
-            XX_FALLBACK_B = 6
+            XX_FALLBACK_B = 6,
+            KK_A = 7,
+            KK_B = 8
         }
     }
 
@@ -17544,7 +17711,8 @@ export namespace server {
         /** ContentType enum. */
         enum ContentType {
             CHAT = 0,
-            GROUP_HISTORY = 1
+            GROUP_HISTORY = 1,
+            CHAT_REACTION = 2
         }
     }
 
@@ -17719,7 +17887,9 @@ export namespace server {
             UNKNOWN_TYPE = 0,
             POST = 1,
             COMMENT = 2,
-            HISTORY_RESEND = 3
+            HISTORY_RESEND = 3,
+            POST_REACTION = 4,
+            COMMENT_REACTION = 5
         }
 
         /** Schedule enum. */
@@ -17906,7 +18076,9 @@ export namespace server {
         enum ItemType {
             UNKNOWN_TYPE = 0,
             POST = 1,
-            COMMENT = 2
+            COMMENT = 2,
+            POST_REACTION = 4,
+            COMMENT_REACTION = 5
         }
 
         /** Schedule enum. */

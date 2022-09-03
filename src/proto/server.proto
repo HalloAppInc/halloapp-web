@@ -100,6 +100,8 @@ message Contact {
     string avatar_id = 5;
     string name = 7;
     int64 num_potential_friends = 8;
+    int64 num_potential_close_friends = 9;
+    int64 invitation_rank = 10;
     reserved 6; // can be used after Jan 31st.
 }
 
@@ -167,6 +169,10 @@ message Post {
     Tag tag = 9;
     string psa_tag = 10;
     int64 moment_unlock_uid = 11;
+
+    // If set to true, the client will try and show ui design to
+    // share the recently composed post externally.
+    bool show_post_share_screen = 12;
 }
 
 message Comment {
@@ -1358,6 +1364,9 @@ message NoiseMessage {
 
         XX_FALLBACK_A = 5;  // (-> e ...) <- e, ee, s, es
         XX_FALLBACK_B = 6;  // -> s, se
+
+        KK_A = 7; // (-> s, <- s ...) -> e, es, ss
+        KK_B = 8; // <- e, ee, se
     }
     MessageType message_type = 1;
 

@@ -31,6 +31,14 @@ message UserDisplayInfo {
   string avatar_id = 3;
 }
 
+message GroupDisplayInfo {
+  string id = 1;
+  string name = 2;
+  string avatar_id = 3;
+  string description = 4;
+  string background = 5;
+}
+
 message PostDisplayInfo {
   enum SeenState {
     UNSEEN = 0;
@@ -61,6 +69,8 @@ message PostDisplayInfo {
 
 enum FeedType {
   HOME = 0;
+  GROUP = 1;
+  POST_COMMENTS = 2;
 }
 
 message FeedRequest {
@@ -68,6 +78,7 @@ message FeedRequest {
   FeedType type = 2;
   string cursor = 3; // opaque to web client
   int32 limit = 4;
+  string content_id = 5; // may be group id or post id depending on feed type
 }
 
 message FeedResponse {
@@ -82,10 +93,13 @@ message FeedResponse {
   repeated PostDisplayInfo post_display_info = 5;
   string next_cursor = 6;
   Error error = 7;
+  repeated GroupDisplayInfo group_display_info = 8;
 }
 
 message FeedItem {
   oneof content {
     server.Post post = 1;
+    server.Comment comment = 2;
   }
+  string group_id = 3;
 }
