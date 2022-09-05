@@ -1,64 +1,64 @@
 <script setup lang="ts">
-import { computed, ref, watch, nextTick } from 'vue'
+    import { computed, ref, watch, nextTick } from 'vue'
 
-import { useI18n } from 'vue-i18n'
+    import { useI18n } from 'vue-i18n'
 
-import MainMenu from './Main.vue'
-import HelpMenu from './Help.vue'
-import NotificationsMenu from './Notifications.vue'
-import PrivacyMenu from './Privacy.vue'
-import SecurityMenu from './Security.vue'
+    import MainMenu from './Main.vue'
+    import HelpMenu from './Help.vue'
+    import NotificationsMenu from './Notifications.vue'
+    import PrivacyMenu from './Privacy.vue'
+    import SecurityMenu from './Security.vue'
 
-import { useColorStore } from '../../stores/colorStore'
-import { useMainStore } from '../../stores/mainStore'
+    import { useColorStore } from '../../stores/colorStore'
+    import { useMainStore } from '../../stores/mainStore'
 
-const colorStore = useColorStore()
-const mainStore = useMainStore()
+    const mainStore = useMainStore()
+    const colorStore = useColorStore()
 
-const { t } = useI18n({
-    inheritLocale: true,
-    useScope: 'global'
-})
+    const { t } = useI18n({
+        inheritLocale: true,
+        useScope: 'global'
+    })
 
-const backgroundColor = computed(() => {
-    return colorStore.background
-})
-const boderlineColor = computed(() => {
-    return colorStore.borderline
-})
+    const backgroundColor = computed(() => {
+        return colorStore.background
+    })
+    const boderlineColor = computed(() => {
+        return colorStore.borderline
+    })
 
-const settingsSidebar = ref<HTMLDivElement>()
-const settingSidebarHeight = ref(0)
-const offsetTop = ref()
+    const settingsSidebar = ref<HTMLDivElement>()
+    const settingSidebarHeight = ref(0)
+    const offsetTop = ref()
 
-watch(settingSidebarHeight, (newVal, oldVal) => {
-    offsetTop.value = -1 * newVal / 2
-})
+    watch(settingSidebarHeight, (newVal, oldVal) => {
+        offsetTop.value = -1 * newVal / 2
+    })
 
-// find the offset to the top
-nextTick(() => {
-    if (settingsSidebar.value) {
-        offsetTop.value = settingsSidebar.value?.clientHeight as number / 2 * (-1)
-    }
-    new ResizeObserver(() => {
-        if (mainStore.page == 'settings')
-            settingSidebarHeight.value = settingsSidebar.value ? settingsSidebar.value.clientHeight : 0
-    }).observe(settingsSidebar.value!)
-})
-</script>
+    // find the offset to the top
+    nextTick(() => {
+        if (settingsSidebar.value) {
+            offsetTop.value = settingsSidebar.value?.clientHeight as number / 2 * (-1)
+        }
+        new ResizeObserver(() => {
+            if (mainStore.page == 'settings')
+                settingSidebarHeight.value = settingsSidebar.value ? settingsSidebar.value.clientHeight : 0
+        }).observe(settingsSidebar.value!)
+    })
+    </script>
 
 
-<template>
-    <Transition name='settings'>
-        <div class="wrapper" ref='settingsSidebar'>
-            <MainMenu />
-            <PrivacyMenu />
-            <NotificationsMenu />
-            <HelpMenu />
-            <SecurityMenu />
-        </div>  
-    </Transition>
-</template>
+    <template>
+        <Transition name='settings'>
+            <div class="wrapper" ref='settingsSidebar'>
+                <MainMenu />
+                <PrivacyMenu />
+                <NotificationsMenu />
+                <HelpMenu />
+                <SecurityMenu />
+            </div>  
+        </Transition>
+    </template>
 
 <style scoped>
 .settings-enter-active {

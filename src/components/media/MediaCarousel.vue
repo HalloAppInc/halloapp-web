@@ -1,296 +1,307 @@
 <script setup lang="ts">
-import { Ref, ref, toRef } from "vue"
+    import { Ref, ref, toRef } from "vue"
+    import { storeToRefs } from 'pinia'
+    import { liveQuery } from "dexie"
 
-import hal from "../../common/halogger"
-import { liveQuery } from "dexie"
-import { db, Feed, PostMedia, PostMediaType, Mention } from '../../db'
-import { useI18n } from 'vue-i18n'
+    import hal from "../../common/halogger"
 
-const { t } = useI18n({
-    inheritLocale: true,
-    useScope: 'global'
-})
+    import { useColorStore } from '../../stores/colorStore'
 
-// const listData: Ref<PostMedia[]> = ref([])
+    import { db, Feed, PostMedia, PostMediaType, Mention } from '../../db'
+    import { useI18n } from 'vue-i18n'
 
-// const feedObservable = liveQuery (() => db.postMedia.where('postID').equals(props.postID).toArray())
+    const colorStore = useColorStore()
 
-// // Subscribe
-// const subscription = feedObservable.subscribe({
-//     next: result => { 
-//         // console.log('homeMain/feedObservable: ', JSON.stringify(result))
-//         if (result) {
-//             listData.value = result
-//         }
+    const { t } = useI18n({
+        inheritLocale: true,
+        useScope: 'global'
+    })
 
-//     },
-//     error: error => console.error(error)
-// })
+    const { 
+        background: backgroundColor,
+        secondaryBg: secondaryBgColor,
+    } = storeToRefs(colorStore)  
+
+    // const listData: Ref<PostMedia[]> = ref([])
+
+    // const feedObservable = liveQuery (() => db.postMedia.where('postID').equals(props.postID).toArray())
+
+    // // Subscribe
+    // const subscription = feedObservable.subscribe({
+    //     next: result => { 
+    //         // console.log('homeMain/feedObservable: ', JSON.stringify(result))
+    //         if (result) {
+    //             listData.value = result
+    //         }
+
+    //     },
+    //     error: error => console.error(error)
+    // })
 
 
-enum MediaType {
-    Image,
-    Video
-}
-interface Media {
-    type?: PostMediaType;
-    mediaBlob?: any;
-    width: number;
-    height: number;
-    margin: number;
-    lengthMins?: String;
-    lengthSeconds?: String;
-    isReady: boolean;
-}
-
-const props = defineProps({
-    isMobile: {
-        type: Boolean,
-        required: true
-    },
-    isSafari: {
-        type: Boolean,
-        required: true
-    },
-    postID: {
-        type: String,
-        required: true
-    },    
-    isAlbum: {
-        type: Boolean,
-        required: true
-    },
-    album: {
-        type: Object,
-        required: true
-    },
-    showPreviewImage: {
-        type: Boolean,
-        required: true
-    },
-    previewImageSrc: {
-        type: String,
-        required: true
-    },
-    mediaBoxWidth: {
-        type: Number,
-        required: true
-    },
-    mediaBoxHeight: {
-        type: Number,
-        required: true
+    enum MediaType {
+        Image,
+        Video
     }
-})
-
-const isMobile          = toRef(props, 'isMobile')
-const isSafari          = toRef(props, 'isSafari')
-const isAlbum           = toRef(props, 'isAlbum')
-const album             = toRef(props, 'album')
-const showPreviewImage  = toRef(props, 'showPreviewImage')
-const previewImageSrc   = toRef(props, 'previewImageSrc')
-const mediaBoxWidth     = toRef(props, 'mediaBoxWidth')
-const mediaBoxHeight    = toRef(props, 'mediaBoxHeight')
-
-const $postMediaContainer = ref(null)
-const $mediaCarousel = ref(null)
-
-let isDragStarted = false   // indicate mousedown or touchstart
-let dragStartX = 0
-let dragStartY = 0
-
-const selectedMedia = ref(0)
-
-function videoLoaded(event: Event, index: number) {
-    // hal.log('MediaCarousel/videoLoaded index: ' + index)
-    const vid = (event.target as HTMLVideoElement)
-    vid.currentTime += 0.001
-}
-
-function clickPrevious(event: Event) {
-    if (!$mediaCarousel.value) { return }
-    const carousel = $mediaCarousel.value as HTMLElement
-    carousel.style.transition = "transform 0.25s"
-
-    if (selectedMedia.value <= 0) { return }
-    selectedMedia.value -= 1
-
-    const moveX = (-mediaBoxWidth.value) * selectedMedia.value
-    carousel.style.transform = "translateX(" + moveX + "px)"
-}
-
-function clickNext(event: Event) {
-    if (!$mediaCarousel.value) { return }
-    const carousel = $mediaCarousel.value as HTMLElement
-    carousel.style.transition = "transform 0.25s"    
-
-    if (selectedMedia.value >= (props.album.length - 1) ) { 
-        return 
+    interface Media {
+        type?: PostMediaType;
+        mediaBlob?: any;
+        width: number;
+        height: number;
+        margin: number;
+        lengthMins?: String;
+        lengthSeconds?: String;
+        isReady: boolean;
     }
-    selectedMedia.value += 1
 
-    const moveX = (-mediaBoxWidth.value) * selectedMedia.value
-    carousel.style.transform = "translateX(" + moveX + "px)"
-}
+    const props = defineProps({
+        isMobile: {
+            type: Boolean,
+            required: true
+        },
+        isSafari: {
+            type: Boolean,
+            required: true
+        },
+        postID: {
+            type: String,
+            required: true
+        },    
+        isAlbum: {
+            type: Boolean,
+            required: true
+        },
+        album: {
+            type: Object,
+            required: true
+        },
+        showPreviewImage: {
+            type: Boolean,
+            required: true
+        },
+        previewImageSrc: {
+            type: String,
+            required: true
+        },
+        mediaBoxWidth: {
+            type: Number,
+            required: true
+        },
+        mediaBoxHeight: {
+            type: Number,
+            required: true
+        }
+    })
 
-/* drag events */
+    const isMobile          = toRef(props, 'isMobile')
+    const isSafari          = toRef(props, 'isSafari')
+    const isAlbum           = toRef(props, 'isAlbum')
+    const album             = toRef(props, 'album')
+    const showPreviewImage  = toRef(props, 'showPreviewImage')
+    const previewImageSrc   = toRef(props, 'previewImageSrc')
+    const mediaBoxWidth     = toRef(props, 'mediaBoxWidth')
+    const mediaBoxHeight    = toRef(props, 'mediaBoxHeight')
 
-function mouseDown(event: Event) {
-    const drag = (event as DragEvent)
-    const clientX = drag.clientX
-    startCarouselDrag(clientX)
-}
+    const $postMediaContainer = ref(null)
+    const $mediaCarousel = ref(null)
 
-function touchStart(event: Event) {
-    const touch = (event as TouchEvent)
-    if (touch.changedTouches.length < 1) { return }
-    const clientX = touch.changedTouches[0].clientX
-    startCarouselDrag(clientX)
-}
+    let isDragStarted = false   // indicate mousedown or touchstart
+    let dragStartX = 0
+    let dragStartY = 0
 
-function startCarouselDrag(clientX: number) {
-    isDragStarted = true
-    dragStartX = clientX
-}
+    const selectedMedia = ref(0)
 
-let dragThrottled = false
-
-function mouseMove(event: Event) {
-    if (!isDragStarted) { return }
-    const drag = (event as DragEvent) 
-    const clientX = drag.clientX
-
-    const diffX = clientX - dragStartX
-
-    if (!dragThrottled) {    
-        dragCarousel(diffX)  
-        dragThrottled = true
-        setTimeout(function () {          
-            dragThrottled = false          
-        }, 75)
+    function videoLoaded(event: Event, index: number) {
+        // hal.log('MediaCarousel/videoLoaded index: ' + index)
+        const vid = (event.target as HTMLVideoElement)
+        vid.currentTime += 0.001
     }
-}
 
-function touchMove(event: Event) {
-    const touch = (event as TouchEvent)
-    if (touch.changedTouches.length < 1) { return }
-    const clientX = touch.changedTouches[0].clientX
-    const clientY = touch.changedTouches[0].clientY
+    function clickPrevious(event: Event) {
+        if (!$mediaCarousel.value) { return }
+        const carousel = $mediaCarousel.value as HTMLElement
+        carousel.style.transition = "transform 0.25s"
 
-    const diffX = clientX - dragStartX
-    const diffY = clientY - dragStartY
+        if (selectedMedia.value <= 0) { return }
+        selectedMedia.value -= 1
 
-    if ((Math.abs(diffX) > 5) && (Math.abs(diffY) > 0)) {
-        event.preventDefault() /* stops jittery vertical movement when swiping */
-    }    
+        const moveX = (-mediaBoxWidth.value) * selectedMedia.value
+        carousel.style.transform = "translateX(" + moveX + "px)"
+    }
 
-    touchMoveThrottled(clientX, clientY, diffX)
-}
+    function clickNext(event: Event) {
+        if (!$mediaCarousel.value) { return }
+        const carousel = $mediaCarousel.value as HTMLElement
+        carousel.style.transition = "transform 0.25s"    
 
-function touchMoveThrottled(clientX: number, clientY: number, diffX: number) {
-    if (!isDragStarted) { return }
+        if (selectedMedia.value >= (props.album.length - 1) ) { 
+            return 
+        }
+        selectedMedia.value += 1
 
-    if (!$postMediaContainer.value) { return }
-    const postMediaContainer = $postMediaContainer.value as HTMLElement
+        const moveX = (-mediaBoxWidth.value) * selectedMedia.value
+        carousel.style.transform = "translateX(" + moveX + "px)"
+    }
 
-    const box = postMediaContainer.getBoundingClientRect()
+    /* drag events */
 
-    const withinX = clientX > box.left && clientX < box.right
-    const withinY = clientY > box.top && clientY < box.bottom
-    const withinBox = withinX && withinY
- 
-    if (withinBox) {
-        dragCarousel(diffX)
-    } else {
+    function mouseDown(event: Event) {
+        const drag = (event as DragEvent)
+        const clientX = drag.clientX
+        startCarouselDrag(clientX)
+    }
+
+    function touchStart(event: Event) {
+        const touch = (event as TouchEvent)
+        if (touch.changedTouches.length < 1) { return }
+        const clientX = touch.changedTouches[0].clientX
+        startCarouselDrag(clientX)
+    }
+
+    function startCarouselDrag(clientX: number) {
+        isDragStarted = true
+        dragStartX = clientX
+    }
+
+    let dragThrottled = false
+
+    function mouseMove(event: Event) {
+        if (!isDragStarted) { return }
+        const drag = (event as DragEvent) 
+        const clientX = drag.clientX
+
+        const diffX = clientX - dragStartX
+
+        if (!dragThrottled) {    
+            dragCarousel(diffX)  
+            dragThrottled = true
+            setTimeout(function () {          
+                dragThrottled = false          
+            }, 75)
+        }
+    }
+
+    function touchMove(event: Event) {
+        const touch = (event as TouchEvent)
+        if (touch.changedTouches.length < 1) { return }
+        const clientX = touch.changedTouches[0].clientX
+        const clientY = touch.changedTouches[0].clientY
+
+        const diffX = clientX - dragStartX
+        const diffY = clientY - dragStartY
+
+        if ((Math.abs(diffX) > 5) && (Math.abs(diffY) > 0)) {
+            event.preventDefault() /* stops jittery vertical movement when swiping */
+        }    
+
+        touchMoveThrottled(clientX, clientY, diffX)
+    }
+
+    function touchMoveThrottled(clientX: number, clientY: number, diffX: number) {
+        if (!isDragStarted) { return }
+
+        if (!$postMediaContainer.value) { return }
+        const postMediaContainer = $postMediaContainer.value as HTMLElement
+
+        const box = postMediaContainer.getBoundingClientRect()
+
+        const withinX = clientX > box.left && clientX < box.right
+        const withinY = clientY > box.top && clientY < box.bottom
+        const withinBox = withinX && withinY
+    
+        if (withinBox) {
+            dragCarousel(diffX)
+        } else {
+            stopCarouselDrag(clientX)
+        }
+    }
+
+    function dragCarousel(diffX: number) {
+        if (!$mediaCarousel.value) { return }
+        const carousel = $mediaCarousel.value as HTMLElement
+
+        const leftEdgeOfCarousel = 0
+        const rightEdgeOfCarousel = (-mediaBoxWidth.value)*(props.album.length - 1)
+
+        const moveX = (-mediaBoxWidth.value)*(selectedMedia.value) + diffX
+
+        /* 
+        * Different platforms/browsers have different results when dragging slides in the carousel,
+        * especially when the page is first loaded and then dragging the 1st slide to the 2nd 
+        */
+
+        // Desktop Chrome needs transition to be > 0.10s for smooth drags, minDiff 5 helps
+        let transition = "transform 0.15s"
+        let minDiff = 5
+
+        // Desktop Safari needs transition to be < 0.15s for smooth drags, minDiff 3 helps
+        if (isSafari.value) {
+            transition = "transform 0.10s"
+            minDiff = 3
+        }
+
+        // Mobile Safari needs transition set to none for smooth drags, minDiff 0 helps
+        if (isMobile.value) {
+            transition = "none"
+            minDiff = 0       
+        }
+
+        if (diffX > minDiff) {
+            if (moveX > leftEdgeOfCarousel) { return }
+            carousel.style.transition = transition
+            carousel.style.transform = "translateX(" + moveX + "px)"
+        } else if (diffX < -minDiff) {
+            if (moveX < rightEdgeOfCarousel) { return }
+            carousel.style.transition = transition
+            carousel.style.transform = "translateX(" + moveX + "px)"
+        }
+    }
+
+    function stopCarouselDrag(clientX: number) {
+        if (!isDragStarted) { return }
+        isDragStarted = false
+
+        if (!$mediaCarousel.value) { return }
+        const carousel = $mediaCarousel.value as HTMLElement    
+
+        const diffX = clientX - dragStartX    
+
+        const threshold = mediaBoxWidth.value*0.25 /* should be < 0.3 for easier swiping */
+
+        if (diffX < -threshold) {
+            if (selectedMedia.value >= (props.album.length - 1) ) { 
+                selectedMedia.value = props.album.length - 1
+            } else {
+                selectedMedia.value += 1
+            }
+        } else if (diffX > threshold) {
+            if (selectedMedia.value <= 0) { 
+                selectedMedia.value = 0 
+            } else {
+                selectedMedia.value -= 1
+            }
+        }
+
+        const moveX = (-mediaBoxWidth.value) * selectedMedia.value
+        carousel.style.transition = "transform 0.35s ease-out"
+        carousel.style.transform = "translateX(" + moveX + "px)"
+
+        dragStartX = 0
+        dragStartY = 0
+    }
+
+    function mouseUp(event: Event) {
+        const drag = (event as DragEvent)
+        const clientX = drag.clientX
         stopCarouselDrag(clientX)
     }
-}
 
-function dragCarousel(diffX: number) {
-    if (!$mediaCarousel.value) { return }
-    const carousel = $mediaCarousel.value as HTMLElement
-
-    const leftEdgeOfCarousel = 0
-    const rightEdgeOfCarousel = (-mediaBoxWidth.value)*(props.album.length - 1)
-
-    const moveX = (-mediaBoxWidth.value)*(selectedMedia.value) + diffX
-
-    /* 
-     * Different platforms/browsers have different results when dragging slides in the carousel,
-     * especially when the page is first loaded and then dragging the 1st slide to the 2nd 
-     */
-
-    // Desktop Chrome needs transition to be > 0.10s for smooth drags, minDiff 5 helps
-    let transition = "transform 0.15s"
-    let minDiff = 5
-
-    // Desktop Safari needs transition to be < 0.15s for smooth drags, minDiff 3 helps
-    if (isSafari.value) {
-        transition = "transform 0.10s"
-        minDiff = 3
+    function touchEnd(event: Event) {
+        const touch = (event as TouchEvent)
+        if (touch.changedTouches.length < 1) { return }
+        const clientX = touch.changedTouches[0].clientX
+        stopCarouselDrag(clientX)
     }
-
-    // Mobile Safari needs transition set to none for smooth drags, minDiff 0 helps
-    if (isMobile.value) {
-        transition = "none"
-        minDiff = 0       
-    }
-
-    if (diffX > minDiff) {
-        if (moveX > leftEdgeOfCarousel) { return }
-        carousel.style.transition = transition
-        carousel.style.transform = "translateX(" + moveX + "px)"
-    } else if (diffX < -minDiff) {
-        if (moveX < rightEdgeOfCarousel) { return }
-        carousel.style.transition = transition
-        carousel.style.transform = "translateX(" + moveX + "px)"
-    }
-}
-
-function stopCarouselDrag(clientX: number) {
-    if (!isDragStarted) { return }
-    isDragStarted = false
-
-    if (!$mediaCarousel.value) { return }
-    const carousel = $mediaCarousel.value as HTMLElement    
-
-    const diffX = clientX - dragStartX    
-
-    const threshold = mediaBoxWidth.value*0.25 /* should be < 0.3 for easier swiping */
-
-    if (diffX < -threshold) {
-        if (selectedMedia.value >= (props.album.length - 1) ) { 
-            selectedMedia.value = props.album.length - 1
-        } else {
-            selectedMedia.value += 1
-        }
-    } else if (diffX > threshold) {
-        if (selectedMedia.value <= 0) { 
-            selectedMedia.value = 0 
-        } else {
-            selectedMedia.value -= 1
-        }
-    }
-
-    const moveX = (-mediaBoxWidth.value) * selectedMedia.value
-    carousel.style.transition = "transform 0.35s ease-out"
-    carousel.style.transform = "translateX(" + moveX + "px)"
-
-    dragStartX = 0
-    dragStartY = 0
-}
-
-function mouseUp(event: Event) {
-    const drag = (event as DragEvent)
-    const clientX = drag.clientX
-    stopCarouselDrag(clientX)
-}
-
-function touchEnd(event: Event) {
-    const touch = (event as TouchEvent)
-    if (touch.changedTouches.length < 1) { return }
-    const clientX = touch.changedTouches[0].clientX
-    stopCarouselDrag(clientX)
-}
 
 </script>
 
@@ -391,17 +402,11 @@ function touchEnd(event: Event) {
     width: v-bind(mediaBoxWidth + 'px');
     height: v-bind(mediaBoxHeight + 'px');
     
-    background-color: white;
+    background-color: v-bind(secondaryBgColor);
 
     display: flex;
     justify-content: center;
     align-items: center;
-}
-
-@media (prefers-color-scheme: dark) {
-    .mediaBox {
-        background-color: rgba(47, 46, 42, 1);
-    }
 }
 
 .carouselButton {

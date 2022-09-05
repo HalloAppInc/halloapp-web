@@ -63,14 +63,14 @@ export function network() {
         return packet       
     }
 
-    const createNoiseMessageIKB = (contentBuf: any) => {
+    const createNoiseMessage = (contentBuf: ArrayBuffer, messageType: any) => {
         const contentBinArr = new Uint8Array(contentBuf)
 
         const id = nanoid()
         const publicKey = Base64.toUint8Array(mainStore.publicKeyBase64)        
 
         const noiseMessage = server.NoiseMessage.create({
-            messageType: server.NoiseMessage.MessageType.IK_B,
+            messageType: messageType,
             content: contentBinArr
         })
 
@@ -89,7 +89,7 @@ export function network() {
         const packetProto = server.Packet.encode(packet).finish()
         const packetBuf = packetProto.buffer.slice(packetProto.byteOffset, packetProto.byteLength + packetProto.byteOffset)
 
-        hal.log('network/createNoiseMessageIKB/packet:\n' + JSON.stringify(packet) + '\n\n')
+        hal.log('network/createNoiseMessage/packet:\n' + JSON.stringify(packet) + '\n\n')
 
         return packetBuf
     }
@@ -187,7 +187,7 @@ export function network() {
     return { 
         addKey, removeKey, createPingPacket,
         check,
-        createNoiseMessageIKB, 
+        createNoiseMessage, 
         createWebStanzaPacket, 
         encodeFeedRequestWebContainer,
         uploadMedia 

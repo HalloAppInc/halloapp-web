@@ -25,7 +25,7 @@ export const useConnStore = defineStore('conn', () => {
     const testAgainstLocalServer = false /* used for testing, turn off for production releases */
 
     const mainStore = useMainStore()
-    let { createPingPacket, addKey, removeKey, check, createNoiseMessageIKB, createWebStanzaPacket, encodeFeedRequestWebContainer, uploadMedia } = network()
+    let { createPingPacket, addKey, removeKey, check, createNoiseMessage, createWebStanzaPacket, encodeFeedRequestWebContainer, uploadMedia } = network()
 
 
     const { processWebContainer } = useHAFeed()
@@ -74,16 +74,14 @@ export const useConnStore = defineStore('conn', () => {
         webSocket.removeEventListener('message', handleInboundMsg)
         webSocket.addEventListener('message', handleInboundMsg)
 
-        /* temporary: for debugging */
-        hal.log('connStore/websocketOnopen/web client public key (base64): ' + mainStore.publicKeyBase64)
+        addKeyToServer(function() {
+            hal.log('connStore/connectToServer/added public key successfully')
+            mainStore.haveAddedPublicKeyToServer = true
 
-        if (!testAgainstLocalServer) {
-            addKeyToServer(function() {
-                hal.log('connStore/connectToServer/added public key successfully')
-                mainStore.haveAddedPublicKeyToServer = true
-            })
-        }
-
+            initNoiseProtocolHandshake()
+            
+        })
+        
         sendReadyMessagesInQueue()
     }
 
@@ -153,6 +151,26 @@ export const useConnStore = defineStore('conn', () => {
         disconnectFromServer()
     }
 
+    async function initNoiseProtocolHandshake() {
+
+        if (noise == undefined) {
+            noise = await initNoise()
+        }
+
+        if (mainStore.haveInitialHandshakeCompleted) {
+            hal.log('connStore/initNoiseProtocolHandshake/reHandshake')
+
+            if (!handshakeState) {
+                initHandshake(noise, 'KK', noise.constants.NOISE_ROLE_INITIATOR)
+            }
+
+            handleNoiseHandshakeMsg('KK', noise.constants.NOISE_ROLE_INITIATOR)
+
+        }
+
+
+    }
+
     async function initNoise() {
         return new Promise(resolve => {
             createNoise(function (createdNoise: any) { 
@@ -172,6 +190,8 @@ export const useConnStore = defineStore('conn', () => {
     
         const msg = packet?.msg
         const webStanza = msg?.webStanza
+
+        const errorStanza = msg?.errorStanza
 
         if (ping) {
             hal.log('connStore/handleInboundMsg/ping: ' + JSON.stringify(packet) + '\n')
@@ -206,19 +226,20 @@ export const useConnStore = defineStore('conn', () => {
             if (noiseMessage) {
                 hal.log('connStore/handleInboundMsg/webStanza/noiseMessage')
 
+                // if (noise == undefined) {
+                //     noise = await initNoise()
+                // }    
+
                 if (!mainStore.haveInitialHandshakeCompleted) {
                     hal.log('connStore/handleInboundMsg/webStanza/noiseMessage/start handshake')
-                    if (noise == undefined) {
-                        noise = await initNoise()
-                    }    
 
                     if (!handshakeState) {
-                        initHandshake(noise)
+                        initHandshake(noise, 'IK', noise.constants.NOISE_ROLE_RESPONDER)
                     }
 
                     if (noiseMessage.messageType == server.NoiseMessage.MessageType.IK_A) {
                         hal.log('connStore/handleInboundMsg/webStanza/noiseMessage/IK_A')
-                        handleNoiseHandshakeMsg(noiseMessage.content)
+                        handleNoiseHandshakeMsg('IK', noise.constants.NOISE_ROLE_RESPONDER, noiseMessage.content)
                     } 
                     else {
                         hal.log('connStore/handleInboundMsg/webStanza/noiseMessage/not IK_A: ' + noiseMessage.messageType)
@@ -226,7 +247,30 @@ export const useConnStore = defineStore('conn', () => {
                 }
                 else {
                     hal.log('connStore/handleInboundMsg/webStanza/noiseMessage/handshake completed previously')
-                    /* todo: handle scenario in which noiseMessage is received after handshake, most likely redo handshake with KK */
+
+                    /* web requested to redo handshake */
+                    if (noiseMessage.messageType == server.NoiseMessage.MessageType.KK_B) {
+
+                        if (!handshakeState) {
+                            initHandshake(noise, 'KK', noise.constants.NOISE_ROLE_INITIATOR)
+                        }
+
+                        handleNoiseHandshakeMsg('KK', noise.constants.NOISE_ROLE_INITIATOR, noiseMessage.content)
+
+                    }
+
+                    /* mobile is requesting to redo handshake */
+                    else if (noiseMessage.messageType == server.NoiseMessage.MessageType.KK_A) {
+
+                        if (!handshakeState) {
+                            initHandshake(noise, 'KK', noise.constants.NOISE_ROLE_RESPONDER)
+                            handleNoiseHandshakeMsg('KK', noise.constants.NOISE_ROLE_RESPONDER, noiseMessage.content)
+
+                        } 
+
+                    }
+                  
+                    
                 }
             } 
             
@@ -255,6 +299,14 @@ export const useConnStore = defineStore('conn', () => {
             }
     
         } 
+
+        else if (errorStanza) {
+            hal.log('connStore/handleInboundMsg/errorStanza: ' + errorStanza.reason)
+            if (errorStanza.reason == 'not_authenticated') {
+                hal.log('(mobile client was disconnected?  Disconnected showing on Manage Web Client page?)')
+                logout()
+            }
+        }
         
     }
 
@@ -307,8 +359,9 @@ export const useConnStore = defineStore('conn', () => {
         return cb
     }
 
-    /* currently only handle IK handshakes */
-    function handleNoiseHandshakeMsg(contentBinArr: any) {
+    /* tested only for IK and KK handshakes */
+    function handleNoiseHandshakeMsg(noisePattern: any, role?: any, contentBinArr?: Uint8Array) {
+        if (!handshakeState) { return }
         hal.prod('handleNoiseHandshakeMsg')
 
         let action = handshakeState.GetAction()
@@ -319,7 +372,10 @@ export const useConnStore = defineStore('conn', () => {
         }
 
         else if (action == noise.constants.NOISE_ACTION_READ_MESSAGE) { // 16642
+            if (!contentBinArr) { return }
+
             hal.prod('handleNoiseHandshakeMsg/action/read')
+
             const fallbackSupported = false
             try {
                 handshakeState.ReadMessage(contentBinArr, fallbackSupported)
@@ -331,42 +387,55 @@ export const useConnStore = defineStore('conn', () => {
                 return
             }
 
-            let nextAction = handshakeState.GetAction()
-            if (nextAction != noise.constants.NOISE_ACTION_READ_MESSAGE) {
-                handleNoiseHandshakeMsg(contentBinArr)
-            }
+            // let nextAction = handshakeState.GetAction()
+            // if (nextAction != noise.constants.NOISE_ACTION_READ_MESSAGE) {
+            //     handleNoiseHandshakeMsg(contentBinArr)
+            // }
         }
 
         else if (action == noise.constants.NOISE_ACTION_WRITE_MESSAGE) { // 16641
             hal.prod('handleNoiseHandshakeMsg/action/write')
+
             const writeMessageBuf = handshakeState.WriteMessage()
 
-            if (testAgainstLocalServer) {
-                webSocket.send(writeMessageBuf)
-            } else {
-                const noiseMessageIKBBuf = createNoiseMessageIKB(writeMessageBuf)
-                webSocket.send(noiseMessageIKBBuf)
+            let noiseMessageBuf: any
+
+            if (noisePattern == 'IK') {
+                noiseMessageBuf = createNoiseMessage(writeMessageBuf, server.NoiseMessage.MessageType.IK_B)
+                
+            } else if (noisePattern == 'KK') {
+                if (role == noise.constants.NOISE_ROLE_INITIATOR) {
+                    noiseMessageBuf = createNoiseMessage(writeMessageBuf, server.NoiseMessage.MessageType.KK_A)
+                } else if (role == noise.constants.NOISE_ROLE_RESPONDER) {
+                    noiseMessageBuf = createNoiseMessage(writeMessageBuf, server.NoiseMessage.MessageType.KK_B)
+                }
             }
 
-            let nextAction = handshakeState.GetAction()
-            if (nextAction != noise.constants.NOISE_ACTION_READ_MESSAGE) {
-                handleNoiseHandshakeMsg(contentBinArr)
+            if (noiseMessageBuf) {
+                webSocket.send(noiseMessageBuf)
             }
+            
+            // let nextAction = handshakeState.GetAction()
+            // if (nextAction != noise.constants.NOISE_ACTION_READ_MESSAGE) {
+            //     handleNoiseHandshakeMsg(contentBinArr)
+            // }
         }
 
         else if (action == noise.constants.NOISE_ACTION_SPLIT) { // 16644
-            hal.prod('handleNoiseHandshakeMsg/action/split')
+            // hal.prod('handleNoiseHandshakeMsg/action/split')
     
             const remotePublicKey = handshakeState.GetRemotePublicKey()
-            const mobilePublicKeyBase64 = Base64.fromUint8Array(remotePublicKey)
-            hal.prod('handleNoiseHandshakeMsg/action/split/mobilePublicKeyBase64: ' + mobilePublicKeyBase64)
+            mainStore.mobilePublicKeyBase64 = Base64.fromUint8Array(remotePublicKey)
+            // hal.prod('handleNoiseHandshakeMsg/action/split/mobilePublicKeyBase64: ' + mainStore.mobilePublicKeyBase64)
     
             const split = handshakeState.Split()
             mainStore.cipherStateSend = split[0]
             mainStore.cipherStateReceive = split[1]
     
-            mainStore.isPublicKeyAuthenticated = true
-            mainStore.haveInitialHandshakeCompleted = true
+            if (noisePattern == 'IK') {
+                mainStore.isPublicKeyAuthenticated = true
+                mainStore.haveInitialHandshakeCompleted = true
+            }
 
             /* should try to permanently delete */
             /* handshakeState.free() is in the noiseprotocol spec but was not done in the wasm implementation */
@@ -375,17 +444,23 @@ export const useConnStore = defineStore('conn', () => {
             }
             handshakeState = undefined
     
-            hal.prod('handleNoiseHandshakeMsg/action/split/noise handshake successful, logging in')
-            login()
+            if (noisePattern == 'IK') {
+                hal.prod('handleNoiseHandshakeMsg/action/split/noise handshake successful, logging in')
+                login()
+            } else if (noisePattern = 'KK') {
+                hal.prod('handleNoiseHandshakeMsg/action/split/noise rehandshake successful')
+            }
         }
 
         else {
             console.log("handleNoiseHandshakeMsg/action/can't find action")
             return
         }
+
+        handleNoiseHandshakeMsg(noisePattern, role)
     }
     
-    function initHandshake(noise: any) {
+    function initHandshake(noise: any, noisePattern: string, role: any) {
     
         /* create public key */
         // let [first, second] = noise.CreateKeyPair(noise.constants.NOISE_DH_CURVE25519)
@@ -396,12 +471,12 @@ export const useConnStore = defineStore('conn', () => {
         // console.log("1: " + newBase64PrivateKey)
         // console.log("2: " + newBase64PublicKey)
     
-        const pattern   = 'IK'
-        const curve     = '25519'
-        const cipher    = 'AESGCM'
-        const hash      = 'SHA256'
-        const protocolName = `Noise_${pattern}_${curve}_${cipher}_${hash}`
-        handshakeState = noise.HandshakeState(protocolName, noise.constants.NOISE_ROLE_RESPONDER)
+        const pattern       = noisePattern
+        const curve         = '25519'
+        const cipher        = 'AESGCM'
+        const hash          = 'SHA256'
+        const protocolName  = `Noise_${pattern}_${curve}_${cipher}_${hash}`
+        handshakeState = noise.HandshakeState(protocolName, role)
         hal.log('connStore/initHandshake: ')
         // hal.dir(handshakeState)
     
@@ -412,6 +487,16 @@ export const useConnStore = defineStore('conn', () => {
         let psk
         let remotePublicKey
         const privateKey = Base64.toUint8Array(mainStore.privateKeyBase64)
+
+        if (noisePattern == 'KK') {
+            if (mainStore.mobilePublicKeyBase64) {
+                remotePublicKey = Base64.toUint8Array(mainStore.mobilePublicKeyBase64)
+            } else {
+                handshakeState = undefined
+                hal.log('connStore/initHandshake/KK/no mobile key')
+                return
+            }
+        }
     
         handshakeState.Initialize(
             prologue,
@@ -419,15 +504,6 @@ export const useConnStore = defineStore('conn', () => {
             remotePublicKey,
             psk
         )
-    
-        /* send message */
-        // let counter = 0
-        // setInterval(function () {
-        //     console.log('handleHandshakeMessage/action/split/sent...')
-        //     const encrypted = cipherStateSend.EncryptWithAd([], 'Tony is here ' + counter)
-        //     webSocket.send(encrypted)
-        //     counter++
-        // }, 3000)
     }
 
     async function decodeProtobufToPacket(binArray: Uint8Array) {
@@ -546,6 +622,16 @@ export const useConnStore = defineStore('conn', () => {
 
     async function addKeyToServer(callback?: Function) {
         hal.log('connStore/addKey')
+        const packet = addKey()
+        enqueue(packet, false, callback)
+    }
+
+    async function reHandshake(callback?: Function) {
+        hal.log('connStore/reHandshake')
+
+
+
+
         const packet = addKey()
         enqueue(packet, false, callback)
     }

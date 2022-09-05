@@ -1,46 +1,29 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+    import { ref, computed } from 'vue'
+    import { storeToRefs } from 'pinia'
 
-import { useMainStore } from '../../stores/mainStore'
-import { useColorStore } from '../../stores/colorStore'
-import { useI18n } from 'vue-i18n'
+    import { useMainStore } from '../../stores/mainStore'
+    import { useColorStore } from '../../stores/colorStore'
+    import { useI18n } from 'vue-i18n'
 
-import Avatar from '../media/Avatar.vue'
+    import Avatar from '../media/Avatar.vue'
 
-const props = defineProps(['postID'])
+    const props = defineProps(['postID'])
 
-const { t } = useI18n({
-    inheritLocale: true,
-    useScope: 'global'
-})
+    const { t } = useI18n({
+        inheritLocale: true,
+        useScope: 'global'
+    })
 
-const colorStore = useColorStore()
+    const mainStore = useMainStore()
+    const colorStore = useColorStore()
 
-const mainStore = useMainStore()
+    const { 
+        background: backgroundColor,
+        hover: hoverColor, 
+        icon: iconColor,
+    } = storeToRefs(colorStore)    
 
-const hoverColor = computed(() => {
-    return colorStore.hover
-})
-
-const lineColor = computed(() => {
-    return colorStore.line
-})
-
-const textColor = computed(() => {
-    return colorStore.text
-})
-
-const headerColor = computed(() => {
-    return colorStore.header
-})
-
-const iconColor = computed(() => {
-    return colorStore.icon
-})
-
-const backgroundColor = computed(() => {
-    return colorStore.background
-})
 </script>
 
 <template>
@@ -50,7 +33,7 @@ const backgroundColor = computed(() => {
         <div class='container'>
             
             <div class="avatarContainer">
-                <Avatar :userID="mainStore.userID" :width="30"></Avatar>
+                <Avatar :userID="mainStore.userID" :width="30" :key="mainStore.userID"></Avatar>
             </div>
 
             <div class="titleContainer">
@@ -75,7 +58,7 @@ const backgroundColor = computed(() => {
     
     height: 100%;
 
-    background-color: rgb(243, 243, 240);
+    background-color: v-bind(backgroundColor);
 }
 
 .container {

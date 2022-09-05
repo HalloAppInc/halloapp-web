@@ -8,6 +8,7 @@ export const useColorStore = defineStore('color', {
     state: () => ({
         // color
         background: colors.backgroundLight,
+        secondaryBg: colors.secondaryBgLight,
         header: colors.headerLight,
         hover: colors.hoverLight,
         text: colors.textLight,
@@ -55,6 +56,7 @@ export const useColorStore = defineStore('color', {
 
         computeColors(mode: string) {
             this.background = colors['background' + mode]
+            this.secondaryBg = colors['secondaryBg' + mode]
             this.header = colors['header' + mode]
             this.hover = colors['hover' + mode]
             this.text = colors['text' + mode]
@@ -72,7 +74,7 @@ export const useColorStore = defineStore('color', {
             this.inBoundMsgBubble = colors['inBoundMsgBubble' +  mode]
             this.timestamp = colors['timestamp' + mode]
             this.timeBubble = colors['timeBubble' + mode]
-            this.colorList = colors['colorList' + mode]
+            this.colorList = colors['colorList' + mode] /* colors of selectable chat background */
             this.cursor = colors['cursor' + mode]
         },
 

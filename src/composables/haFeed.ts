@@ -66,9 +66,9 @@ export function useHAFeed() {
 
             const numDBItems = await db.feed.count()
 
-            /* if there's less than 50 feed items, fill it */
-            if (numDBItems < 50) {
-                connStore.requestFeedItems(mainStore.mainFeedTrailingCursor, 20, function() {})
+            /* if there's less than x feed items, fill it */
+            if (numDBItems < 10) {
+                connStore.requestFeedItems(mainStore.mainFeedTrailingCursor, 10, function() {})
             }
 
         }

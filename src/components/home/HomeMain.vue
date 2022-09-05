@@ -1,137 +1,141 @@
 
 <script setup lang="ts">
-import { Ref, ref, watch, watchEffect, computed } from 'vue'
+    import { Ref, ref, watch, watchEffect, computed } from 'vue'
 
-import { useMainStore } from '../../stores/mainStore'
-import { useConnStore } from '../../stores/connStore'
+    import { useMainStore } from '../../stores/mainStore'
+    import { useConnStore } from '../../stores/connStore'
+    import { useColorStore } from '../../stores/colorStore'
 
-import HomeHeader from './HomeHeader.vue'
-import Post from './Post.vue'
-import Comment from '../comment/CommentMain.vue'
-import hal from '../../common/halogger'
+    import HomeHeader from './HomeHeader.vue'
+    import Post from './Post.vue'
+    import Comment from '../comment/CommentMain.vue'
+    import hal from '../../common/halogger'
 
-import { Dexie, liveQuery } from "dexie"
-import { db, Feed, PostMedia, Mention } from '../../db'
+    import { Dexie, liveQuery } from "dexie"
+    import { db, Feed, PostMedia, Mention } from '../../db'
 
-import { useI18n } from 'vue-i18n'
+    import { useI18n } from 'vue-i18n'
 
-import { clients } from "../../proto/clients.js"
-import { useTimeformatter } from '../../composables/timeformatter'
+    import { clients } from "../../proto/clients.js"
+    import { useTimeformatter } from '../../composables/timeformatter'
 
-const mainStore = useMainStore()
-const connStore = useConnStore()
+    const mainStore = useMainStore()
+    const connStore = useConnStore()
+    const colorStore = useColorStore()
 
-const { formatTime, formatTimer } = useTimeformatter()
+    const { formatTime, formatTimer } = useTimeformatter()
 
-const listBoxWidth = ref('100%')
-const showComments = ref(false)
+    const listBoxWidth = ref('100%')
+    const showComments = ref(false)
 
-const inViewPostID = ref('')
+    const inViewPostID = ref('')
 
-const content = ref<HTMLElement | null>(null)
-let handleScrollTimer: any
+    const content = ref<HTMLElement | null>(null)
+    let handleScrollTimer: any
 
-const { t, locale } = useI18n({
-    inheritLocale: true,
-    useScope: 'global'
-})
+    const { t, locale } = useI18n({
+        inheritLocale: true,
+        useScope: 'global'
+    })
 
-const listData: Ref<Feed[]> = ref([])
+    const listData: Ref<Feed[]> = ref([])
 
-const feedObservable = liveQuery (() => db.feed
-    .orderBy('timestamp')
-    .toArray()
-)
+    const feedObservable = liveQuery (() => db.feed
+        .reverse()
+        .sortBy('timestamp')
+        
+    )
 
-// Subscribe
-const subscription = feedObservable.subscribe({
-    next: result => { 
-        // console.log('homeMain/feedObservable: ', JSON.stringify(result))
-        if (result) {
-            listData.value = result
+    // Subscribe
+    const subscription = feedObservable.subscribe({
+        next: result => { 
+            // console.log('homeMain/feedObservable: ', JSON.stringify(result))
+            if (result) {
+                listData.value = result
+            }
+
+        },
+        error: error => console.error(error)
+    })
+
+    init()
+
+    async function init() {
+        const cursor = ''
+        console.log('homeMain/init')
+        connStore.requestFeedItems(cursor, 3, function() {})
+
+    }
+
+    watchEffect(() => {
+        if (mainStore.scrollToTop == 'home') {
+            scrollToTop()
+            mainStore.scrollToTop = ''
         }
+    })
 
-    },
-    error: error => console.error(error)
-})
-
-init()
-
-async function init() {
-    const cursor = ''
-    console.log('homeMain/init')
-    connStore.requestFeedItems(cursor, 5, function() {})
-
-    // setTimeout(function() {
-    //     connStore.requestFeedItems(mainStore.mainFeedTrailingCursor, 1, function() {})
-    // },5000)
-}
-
-watchEffect(() => {
-    if (mainStore.scrollToTop == 'home') {
-        scrollToTop()
-        mainStore.scrollToTop = ''
+    function scrollToTop() {    
+        content.value?.scrollTo({ left: 0, top: 0, behavior: 'smooth' })
     }
-})
 
-function scrollToTop() {    
-    content.value?.scrollTo({ left: 0, top: 0, behavior: 'smooth' })
-}
-
-function openCommentsIfNeeded(postID: string) {
-    if (showComments.value) {
-        inViewPostID.value = postID
-    } else {
-        commentsClick(postID)
-    }
-}
-
-function commentsBackClick() {
-    commentsClick('')
-}
-
-function commentsClick(postID: string) {
-    if (listBoxWidth.value == '100%') {
-        let width = '500px'
-        if (mainStore.isMobile) {
-            width = '0px'
-        }
-        listBoxWidth.value = width
-
-        inViewPostID.value = postID
-        showComments.value = true
-        mainStore.mobileNavlessPanel = 'comments'
-    } else {
-        listBoxWidth.value = '100%'
-
-        inViewPostID.value = ''
-        showComments.value = false
-        mainStore.mobileNavlessPanel = ''
-    }
-}
-
-function handleScroll() {
-    clearTimeout(handleScrollTimer)
-    handleScrollTimer = setTimeout(debouncedHandleScroll, 250)
-}
-
-function debouncedHandleScroll() {
-    if (!content.value) { return }
-
-    const contentViewportRect = content.value.getBoundingClientRect()
-    const pointX = (contentViewportRect.width / 2) + contentViewportRect.left
-    const pointY = contentViewportRect.top + 100
-    
-    const closestTopElement = document.elementFromPoint(pointX, pointY)
-    const closestElement = closestTopElement?.closest('[data-ha-postID]')
-
-    if (closestElement) {
-        const attr = closestElement.getAttribute('data-ha-postID')
-        if (attr) {
-            inViewPostID.value = attr
+    function openCommentsIfNeeded(postID: string) {
+        if (showComments.value) {
+            inViewPostID.value = postID
+        } else {
+            commentsClick(postID)
         }
     }
-}
+
+    function commentsBackClick() {
+        commentsClick('')
+    }
+
+    function commentsClick(postID: string) {
+        if (listBoxWidth.value == '100%') {
+            let width = '500px'
+            if (mainStore.isMobile) {
+                width = '0px'
+            }
+            listBoxWidth.value = width
+
+            inViewPostID.value = postID
+            showComments.value = true
+            mainStore.mobileNavlessPanel = 'comments'
+        } else {
+            listBoxWidth.value = '100%'
+
+            inViewPostID.value = ''
+            showComments.value = false
+            mainStore.mobileNavlessPanel = ''
+        }
+    }
+
+    function handleScroll() {
+        clearTimeout(handleScrollTimer)
+        handleScrollTimer = setTimeout(debouncedHandleScroll, 250)
+    }
+
+    function debouncedHandleScroll() {
+        if (!content.value) { return }
+
+        const contentViewportRect = content.value.getBoundingClientRect()
+        const pointX = (contentViewportRect.width / 2) + contentViewportRect.left
+        const pointY = contentViewportRect.top + 100
+        
+        const closestTopElement = document.elementFromPoint(pointX, pointY)
+        const closestElement = closestTopElement?.closest('[data-ha-postID]')
+
+        if (closestElement) {
+            const attr = closestElement.getAttribute('data-ha-postID')
+            if (attr) {
+                inViewPostID.value = attr
+            }
+        }
+    }
+
+    const backgroundColor = computed(() => {
+        return colorStore.background
+    })
 
 </script>
 
@@ -200,6 +204,8 @@ function debouncedHandleScroll() {
     overflow-x: hidden;
 
     transition: flex 300ms ease-in-out;
+
+    background-color: v-bind(backgroundColor);
 }
 
 .header {

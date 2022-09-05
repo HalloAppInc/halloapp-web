@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue"
+import { ref, computed } from "vue"
 
 import hal from "../../common/halogger"
 import { clients } from "../../proto/clients.js"
@@ -15,6 +15,7 @@ import Avatar from '../media/Avatar.vue'
 import MP4Box from 'mp4box'
 
 import { useMainStore } from '../../stores/mainStore'
+import { useColorStore } from '../../stores/colorStore'
 import { useHAText } from '../../composables/haText'
 import { useTimeformatter } from '../../composables/timeformatter'
 
@@ -24,11 +25,22 @@ import { db, Feed, PostMedia, PostMediaType, Mention } from '../../db'
 import { useHAFeed } from '../../composables/haFeed'
 import { track } from "@vue/reactivity"
 
+import { storeToRefs } from 'pinia'
+
 const mainStore = useMainStore()
+const colorStore = useColorStore()
 const { processText } = useHAText()
 const { formatTime, formatTimer } = useTimeformatter()
 
 const { getPostMedia, modifyPost, setPostMediaIsCodecH265 } = useHAFeed()
+
+const { 
+    background: backgroundColor, 
+    secondaryBg: secondaryBgColor,
+    text: textColor,
+    secondaryText: secondaryTextColor,
+    timestamp: timestampColor 
+} = storeToRefs(colorStore)
 
 interface Props {
     post: Feed,
@@ -392,9 +404,6 @@ async function fetchAndDecryptStream(media: any, videoInfo: string, blobSize: an
                 const bb = new Blob([combine], {type: "video/mp4"})
                 modifyPost(media.postID, media.order, bb)
 
-                console.log("---> saving")
-
-
             } else {
                 hal.log('fetchAndDecryptStream/done/error')
             }
@@ -542,6 +551,8 @@ async function processPost(post: Feed) {
 
     let isVoiceNote = false
     let voiceNoteMedia: any
+
+    postTimestamp.value = formatTime(post.timestamp, locale.value as string)
 
     const postMedia = await getPostMedia(post.postID)
 
@@ -806,7 +817,7 @@ function expandText() {
                     <div id="name">
                         {{ mainStore.pushnames[props.post.userID] }}
                     </div>
-                    <div id="time">
+                    <div id="time" class="timestampLabel">
                         {{ postTimestamp }}
                     </div>
                 </div>
@@ -892,17 +903,13 @@ function expandText() {
     width: 100%;
     padding-bottom: 25px;
     
-    background-color: rgb(243, 243, 240);
+    /* background-color: rgb(243, 243, 240); */
+    background-color: v-bind(backgroundColor);
 
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-}
-@media (prefers-color-scheme: dark) {
-    #postRow {
-        background-color: rgb(17, 17, 17, 1);
-    }
 }
 
 .post {
@@ -913,7 +920,7 @@ function expandText() {
     padding: 10px 10px 15px 10px;
  
     border-radius: 15px;
-    background-color: white;
+    background-color: v-bind(secondaryBgColor);
     box-shadow: rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.05) 0px 8px 32px;
     
     display: flex;
@@ -922,11 +929,6 @@ function expandText() {
 
 .morePostMargin {
     margin: 70px 0px 100px 0px;
-}
-@media (prefers-color-scheme: dark) {
-    .post {
-        background-color: rgba(47, 46, 42, 1);
-    }
 }
 
 /* postHeader row */
@@ -961,23 +963,14 @@ function expandText() {
     font-family: "Gotham", Helvetica, "Helvetica Neue", Arial, Avenir, sans-serif;
     font-size: 18px;
     font-weight: 400;
-    color: rgb(0, 0, 0)
-}
-@media (prefers-color-scheme: dark) {
-    .post #nameBox #name {
-        color: rgba(255, 255, 255, 1);
-    }
+    /* color: rgb(0, 0, 0) */
+    color: v-bind(textColor);
 }
 
 .post #nameBox #time {
     font-size: 15px;
     font-weight: 500;
-    color: rgb(0, 0 , 0, 0.4)
-}
-@media (prefers-color-scheme: dark) {
-    .post #nameBox #time {
-        color: rgba(255, 255, 255, 0.4);
-    }
+    color: v-bind(timestampColor);
 }
 
 .post #postMediaContainer {
@@ -1028,12 +1021,13 @@ function expandText() {
 
     overflow-wrap: break-word;
     user-select: text;
+    color: v-bind(textColor)
 }
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
     .postBodyContent {
         color: rgba(255, 255, 255, 0.90)
     }
-}
+} */
 .postBodyContent #readMore {
     color: v-bind(primaryBlue);
     cursor: pointer;

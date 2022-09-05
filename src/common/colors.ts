@@ -7,8 +7,11 @@ export default defineComponent({
     headerLight: '#f0f2f5',
     headerDark: '#202c33',
 
-    backgroundLight: '#FFFFFF',
-    backgroundDark: '#111b21',
+    backgroundLight: '#F3F3F0',
+    backgroundDark: 'rgb(17, 17, 17, 1)',
+
+    secondaryBgLight: 'white',
+    secondaryBgDark: 'rgba(47, 46, 42, 1)',    
 
     hoverLight: 'rgb(226, 226, 226)',
     hoverDark: '#2a3942',
