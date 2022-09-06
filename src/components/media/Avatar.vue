@@ -51,12 +51,9 @@ async function setupObserver() {
 
     const subscription = feedObservable.subscribe({
         next: result => { 
-            console.log('avatar/subscribed: ', JSON.stringify(result))
-            console.log('avatar/width/userID: ' + props.width + ' ' + props.userID)
             if (result && result.length > 0) {
                 if (result[0].image) {
                     if (result[0].image.size > 0) {
-                        console.log('avatar/observable changing, width: ' + props.width)
                         const avatarImgBlobUrl = URL.createObjectURL(result[0].image)
                         avatarImageUrl.value = avatarImgBlobUrl 
                     }

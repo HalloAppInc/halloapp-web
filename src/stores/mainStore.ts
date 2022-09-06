@@ -41,8 +41,8 @@ export const useMainStore = defineStore('main', {
         haveInitialHandshakeCompleted: false,
         mobilePublicKeyBase64: '', 
 
-        cipherStateSend: <any>{},
-        cipherStateReceive: <any>{},
+        // cipherStateSend: <any>{},
+        // cipherStateReceive: <any>{},
 
         userID: 0,
 
@@ -89,13 +89,13 @@ export const useMainStore = defineStore('main', {
             this.isPublicKeyAuthenticated = false
             this.haveInitialHandshakeCompleted = false
 
-            for (let prop in this.cipherStateReceive) {
-                delete this.cipherStateReceive[prop]
-            }
+            // for (let prop in this.cipherStateReceive) {
+            //     delete this.cipherStateReceive[prop]
+            // }
 
-            for (let prop in this.cipherStateSend) {
-                delete this.cipherStateSend[prop]
-            }            
+            // for (let prop in this.cipherStateSend) {
+            //     delete this.cipherStateSend[prop]
+            // }            
 
             this.userID = 0
 

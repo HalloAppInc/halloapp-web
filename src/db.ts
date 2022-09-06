@@ -37,7 +37,8 @@ export interface LinkPreview {
 export enum PostMediaType {
     Unknown = 0,
     Image = 1,
-    Video = 2
+    Video = 2,
+    Audio = 3
 }
 
 export interface PostMedia {
@@ -66,6 +67,7 @@ export interface Feed {
     postID: string
     userID: number
     groupID?: string
+    voiceNote?: PostMedia
     text?: string
     mentions?: Mention[]
     linkPreview?: LinkPreview

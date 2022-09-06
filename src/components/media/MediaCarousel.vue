@@ -22,23 +22,6 @@
         secondaryBg: secondaryBgColor,
     } = storeToRefs(colorStore)  
 
-    // const listData: Ref<PostMedia[]> = ref([])
-
-    // const feedObservable = liveQuery (() => db.postMedia.where('postID').equals(props.postID).toArray())
-
-    // // Subscribe
-    // const subscription = feedObservable.subscribe({
-    //     next: result => { 
-    //         // console.log('homeMain/feedObservable: ', JSON.stringify(result))
-    //         if (result) {
-    //             listData.value = result
-    //         }
-
-    //     },
-    //     error: error => console.error(error)
-    // })
-
-
     enum MediaType {
         Image,
         Video

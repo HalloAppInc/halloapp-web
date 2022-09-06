@@ -19,7 +19,6 @@ import { useHAFeed } from '../composables/haFeed'
 import { useHAAvatar } from '../composables/haAvatar'
 
 
-
 export const useConnStore = defineStore('conn', () => {
 
     const testAgainstLocalServer = false /* used for testing, turn off for production releases */
@@ -44,8 +43,8 @@ export const useConnStore = defineStore('conn', () => {
     let webSocket: WebSocket
     let noise: any
     let handshakeState: any
-    // let cipherStateSend: { EncryptWithAd: (arg0: never[], arg1: string) => any }
-    // let cipherStateReceive: { DecryptWithAd: (arg0: never[], arg1: any) => any }
+    let cipherStateSend: { EncryptWithAd: (arg0: never[], arg1: any) => any }
+    let cipherStateReceive: { DecryptWithAd: (arg0: never[], arg1: any) => any }
 
     if (testAgainstLocalServer) {
         webSocketServer = 'wss://localhost:7071'
@@ -71,8 +70,8 @@ export const useConnStore = defineStore('conn', () => {
     
         mainStore.isConnectedToServer = true
 
-        webSocket.removeEventListener('message', handleInboundMsg)
-        webSocket.addEventListener('message', handleInboundMsg)
+        webSocket.removeEventListener('message', handleInbound)
+        webSocket.addEventListener('message', handleInbound)
 
         addKeyToServer(function() {
             hal.log('connStore/connectToServer/added public key successfully')
@@ -179,7 +178,7 @@ export const useConnStore = defineStore('conn', () => {
         })
     }
 
-    async function handleInboundMsg(event: any) {
+    async function handleInbound(event: any) {
         const eventDataBinArr = new Uint8Array(event.data)
         const packet = await decodePacket(eventDataBinArr)
 
@@ -193,24 +192,17 @@ export const useConnStore = defineStore('conn', () => {
 
         const errorStanza = msg?.errorStanza
 
-        if (ping) {
-            hal.log('connStore/handleInboundMsg/ping: ' + JSON.stringify(packet) + '\n')
-        } 
-        else {
-            hal.log('connStore/handleInboundMsg/packet: ')
-            hal.dir(packet)
-        }
 
         if (ping) {
             const packet = createPingPacket()
             const packetProto = server.Packet.encode(packet).finish()
             const buf = packetProto.buffer.slice(packetProto.byteOffset, packetProto.byteLength + packetProto.byteOffset)
-            hal.log('connStore/handleInboundMsg/ping/send: ' + JSON.stringify(packet))
+            hal.log('connStore/handleInbound/ping/respond with: ' + JSON.stringify(packet))
             webSocket.send(buf)
         } 
         
         else if (ack || iq) {
-
+            hal.log('connStore/handleInbound/ack')
             const callback = findPacketInSendQueue(packet)
             if (callback) { 
                 callback(packet) 
@@ -218,35 +210,43 @@ export const useConnStore = defineStore('conn', () => {
 
         } 
 
+        else if (iq) {
+            hal.log('connStore/handleInbound/iq')
+            const callback = findPacketInSendQueue(packet)
+            if (callback) { 
+                callback(packet) 
+            }
+        }
+
         else if (webStanza) {
-            hal.log('connStore/handleInboundMsg/webStanza')
+            hal.log('connStore/handleInbound/webStanza')
 
             const noiseMessage = webStanza?.noiseMessage
 
             if (noiseMessage) {
-                hal.log('connStore/handleInboundMsg/webStanza/noiseMessage')
+                hal.log('connStore/handleInbound/webStanza/noiseMessage')
 
                 // if (noise == undefined) {
                 //     noise = await initNoise()
                 // }    
 
                 if (!mainStore.haveInitialHandshakeCompleted) {
-                    hal.log('connStore/handleInboundMsg/webStanza/noiseMessage/start handshake')
+                    hal.log('connStore/handleInbound/webStanza/noiseMessage/start handshake')
 
                     if (!handshakeState) {
                         initHandshake(noise, 'IK', noise.constants.NOISE_ROLE_RESPONDER)
                     }
 
                     if (noiseMessage.messageType == server.NoiseMessage.MessageType.IK_A) {
-                        hal.log('connStore/handleInboundMsg/webStanza/noiseMessage/IK_A')
+                        hal.log('connStore/handleInbound/webStanza/noiseMessage/IK_A')
                         handleNoiseHandshakeMsg('IK', noise.constants.NOISE_ROLE_RESPONDER, noiseMessage.content)
                     } 
                     else {
-                        hal.log('connStore/handleInboundMsg/webStanza/noiseMessage/not IK_A: ' + noiseMessage.messageType)
+                        hal.log('connStore/handleInbound/webStanza/noiseMessage/not IK_A: ' + noiseMessage.messageType)
                     }
                 }
                 else {
-                    hal.log('connStore/handleInboundMsg/webStanza/noiseMessage/handshake completed previously')
+                    hal.log('connStore/handleInbound/webStanza/noiseMessage/handshake completed previously')
 
                     /* web requested to redo handshake */
                     if (noiseMessage.messageType == server.NoiseMessage.MessageType.KK_B) {
@@ -287,10 +287,10 @@ export const useConnStore = defineStore('conn', () => {
                     if (webStanza.content) {
 
                         const webStanzaContentsBinArr = new Uint8Array(webStanza.content)
-                        const decrypted = mainStore.cipherStateReceive.DecryptWithAd([], webStanzaContentsBinArr)
+                        const decrypted = cipherStateReceive.DecryptWithAd([], webStanzaContentsBinArr)
                         const webContainer = await decodeWebContainer(decrypted)
 
-                        hal.log('connStore/handleInboundMsg/webStanza/decoded/webContainer:')
+                        hal.log('connStore/handleInbound/webStanza/decoded/webContainer:')
                         hal.dir(webContainer)
                         processWebContainer(webContainer)
                     }
@@ -301,7 +301,7 @@ export const useConnStore = defineStore('conn', () => {
         } 
 
         else if (errorStanza) {
-            hal.log('connStore/handleInboundMsg/errorStanza: ' + errorStanza.reason)
+            hal.log('connStore/handleInbound/errorStanza: ' + errorStanza.reason)
             if (errorStanza.reason == 'not_authenticated') {
                 hal.log('(mobile client was disconnected?  Disconnected showing on Manage Web Client page?)')
                 logout()
@@ -311,7 +311,7 @@ export const useConnStore = defineStore('conn', () => {
     }
 
     function findPacketInSendQueue(packet: any) {
-        hal.log('connStore/findPacketInSendQueue')
+        // hal.log('connStore/findPacketInSendQueue')
 
         let cb = undefined
 
@@ -429,8 +429,8 @@ export const useConnStore = defineStore('conn', () => {
             // hal.prod('handleNoiseHandshakeMsg/action/split/mobilePublicKeyBase64: ' + mainStore.mobilePublicKeyBase64)
     
             const split = handshakeState.Split()
-            mainStore.cipherStateSend = split[0]
-            mainStore.cipherStateReceive = split[1]
+            cipherStateSend = split[0]
+            cipherStateReceive = split[1]
     
             if (noisePattern == 'IK') {
                 mainStore.isPublicKeyAuthenticated = true
@@ -645,18 +645,23 @@ export const useConnStore = defineStore('conn', () => {
     async function requestFeedItems(cursor: string, limit: number, callback?: Function) {
         console.log('connStore/requestFeedItems/cursor: ' + cursor)
         
-        if (Object.keys(mainStore.cipherStateSend).length === 0) {
+        if (!cipherStateSend) {
+            hal.log('homeMain/requestFeedItems/exit/undefined cipherStateSend')
+            return
+        }
+
+        if (Object.keys(cipherStateSend).length === 0) {
             hal.log('homeMain/requestFeedItems/exit/empty cipherStateSend')
             return
         }
 
-        if (typeof mainStore.cipherStateSend.EncryptWithAd != 'function') {
-            hal.log('homeMain/requestFeedItems/exit/EncryptWithAd not in cipherStateSend: ' + JSON.stringify(mainStore.cipherStateSend))
+        if (typeof cipherStateSend.EncryptWithAd != 'function') {
+            hal.log('homeMain/requestFeedItems/exit/EncryptWithAd not in cipherStateSend: ' + JSON.stringify(cipherStateSend))
             return
         }
 
         const webContainerBinArr = encodeFeedRequestWebContainer(cursor, limit)        
-        const encryptedWebContainer = mainStore.cipherStateSend.EncryptWithAd([], webContainerBinArr)
+        const encryptedWebContainer = cipherStateSend.EncryptWithAd([], webContainerBinArr)
 
         const packet = createWebStanzaPacket(encryptedWebContainer)
         

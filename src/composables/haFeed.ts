@@ -67,8 +67,8 @@ export function useHAFeed() {
             const numDBItems = await db.feed.count()
 
             /* if there's less than x feed items, fill it */
-            if (numDBItems < 10) {
-                connStore.requestFeedItems(mainStore.mainFeedTrailingCursor, 10, function() {})
+            if (numDBItems < 20) {
+                connStore.requestFeedItems(mainStore.mainFeedTrailingCursor, 20, function() {})
             }
 
         }
@@ -116,7 +116,7 @@ export function useHAFeed() {
         let isTextPostTextOnly = false
         let isAlbum = false
         let isVoiceNote = false
-        let voiceNoteMedia: any
+        // let voiceNoteMedia: any
     
         let postMentions: any
     
@@ -131,7 +131,11 @@ export function useHAFeed() {
     
         if (postContainer.voiceNote) {
             isVoiceNote = true
-            voiceNoteMedia = postContainer.voiceNote.audio
+
+            const voiceNoteMedia = processVoiceNote(postObject.postID, postContainer.voiceNote)
+            if (voiceNoteMedia) {
+                postObject.voiceNote = voiceNoteMedia
+            }
         }
     
         if (isAlbum) {
@@ -167,7 +171,6 @@ export function useHAFeed() {
     
                     if (mediaInfo.video && mediaInfo.video.width && mediaInfo.video.height) {
                         const encryptedResourceInfo = mediaInfo.video.video
-
 
                         if (encryptedResourceInfo?.encryptionKey && encryptedResourceInfo?.ciphertextHash && encryptedResourceInfo?.downloadUrl) {
                             let postMedia: PostMedia = {
@@ -211,7 +214,13 @@ export function useHAFeed() {
             /* voiceNote inside album */
             if (postContainer.album?.voiceNote) {
                 isVoiceNote = true
-                voiceNoteMedia = postContainer.album.voiceNote.audio
+            
+                const voiceNoteMedia = processVoiceNote(postObject.postID, postContainer.album.voiceNote)
+                if (voiceNoteMedia) {
+                    postObject.voiceNote = voiceNoteMedia
+                }
+
+
             }     
         }
     
@@ -246,6 +255,23 @@ export function useHAFeed() {
         insertPostMedia(postObject.postID, postMediaArr)  
     }
     
+    function processVoiceNote(postID: string, voiceNote: any) {
+        const encryptedResourceInfo = voiceNote.audio
+        if (encryptedResourceInfo?.encryptionKey && encryptedResourceInfo?.ciphertextHash && encryptedResourceInfo?.downloadUrl) {
+            let postMedia: PostMedia = {
+                postID: postID,
+                type: PostMediaType.Video,
+                order: 0,
+                width: 0,
+                height: 0,
+                key: encryptedResourceInfo.encryptionKey,
+                hash: encryptedResourceInfo.ciphertextHash,
+                downloadURL: encryptedResourceInfo.downloadUrl,
+            }
+            return postMedia
+        }
+        return undefined
+    }
 
     function processMentions(postMentions: any) {
 
@@ -318,6 +344,15 @@ export function useHAFeed() {
         
         return        
     }
+
+    async function modifyPostVoiceNote(postID: string, blob: Blob) {
+        await db.feed.where('postID').equals(postID).modify({
+            voiceNote: {
+                blob: blob
+            }
+        })
+        return        
+    }    
     
     async function setPostMediaIsCodecH265(postID: string, order: number, isCodecH265: boolean) {
         await db.postMedia.where('postID').equals(postID).and((postMedia) => {
@@ -339,5 +374,8 @@ export function useHAFeed() {
         return postContainer
     }
 
-    return { processWebContainer, getPostMedia, modifyPost, setPostMediaIsCodecH265 }
+    return { 
+        processWebContainer, getPostMedia, 
+        modifyPost, modifyPostVoiceNote, 
+        setPostMediaIsCodecH265 }
 }

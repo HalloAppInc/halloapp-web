@@ -63,7 +63,7 @@
     async function init() {
         const cursor = ''
         console.log('homeMain/init')
-        connStore.requestFeedItems(cursor, 3, function() {})
+        connStore.requestFeedItems(cursor, 50000, function() {})
 
     }
 
@@ -112,12 +112,13 @@
 
     function handleScroll() {
         clearTimeout(handleScrollTimer)
-        handleScrollTimer = setTimeout(debouncedHandleScroll, 250)
+        handleScrollTimer = setTimeout(debouncedHandleScroll, 200)
     }
 
     function debouncedHandleScroll() {
         if (!content.value) { return }
 
+        /* auto select post for comments when post is near top */
         const contentViewportRect = content.value.getBoundingClientRect()
         const pointX = (contentViewportRect.width / 2) + contentViewportRect.left
         const pointY = contentViewportRect.top + 100
@@ -130,6 +131,14 @@
             if (attr) {
                 inViewPostID.value = attr
             }
+        }
+
+        /* fetch more posts before user gets to the end of their feed */
+        var element = content.value;
+        const scrolled = element.scrollHeight - element.scrollTop
+        const nearEnd = element.clientHeight * 3
+        if (scrolled < nearEnd) {
+            connStore.requestFeedItems(mainStore.mainFeedTrailingCursor, 10, function() {})
         }
     }
 

@@ -32,7 +32,7 @@ const colorStore = useColorStore()
 const { processText } = useHAText()
 const { formatTime, formatTimer } = useTimeformatter()
 
-const { getPostMedia, modifyPost, setPostMediaIsCodecH265 } = useHAFeed()
+const { getPostMedia, modifyPost, modifyPostVoiceNote, setPostMediaIsCodecH265 } = useHAFeed()
 
 const { 
     background: backgroundColor, 
@@ -391,11 +391,7 @@ async function fetchAndDecryptStream(media: any, videoInfo: string, blobSize: an
             if (decryptedBinArr) {
 
                 let buf: any = decryptedBinArr.buffer.slice(decryptedBinArr.byteOffset, decryptedBinArr.byteLength + decryptedBinArr.byteOffset)
-
-                let buf2: any = decryptedBinArr.buffer.slice(decryptedBinArr.byteOffset, decryptedBinArr.byteLength + decryptedBinArr.byteOffset)
                 saveToDB.push(decryptedBinArr)
-
-                // let buf: any = decryptedBinArr.buffer
 
                 buf.fileStart = fileStartOffset
                 mp4box.appendBuffer(buf)
@@ -433,11 +429,7 @@ async function fetchAndDecryptStream(media: any, videoInfo: string, blobSize: an
             if (decryptedBinArr) {
 
                 let buf: any = decryptedBinArr.buffer.slice(decryptedBinArr.byteOffset, decryptedBinArr.byteLength + decryptedBinArr.byteOffset)
-                let buf2: any = decryptedBinArr.buffer.slice(decryptedBinArr.byteOffset, decryptedBinArr.byteLength + decryptedBinArr.byteOffset)
-
                 saveToDB.push(decryptedBinArr)
-
-                // let buf: any = decryptedBinArr.buffer
 
                 buf.fileStart = fileStartOffset
                 mp4box.appendBuffer(buf)
@@ -570,11 +562,6 @@ async function processPost(post: Feed) {
         }
     }
 
-    // if (postContainer.voiceNote) {
-    //     isVoiceNote = true
-    //     voiceNoteMedia = postContainer.voiceNote.audio
-    // }
-
     if (isAlbum.value) {
    
         /* media */
@@ -667,16 +654,26 @@ async function processPost(post: Feed) {
             }
         }
 
-        /* voiceNote inside album */
-        // if (postContainer.album.voiceNote) {
-        //     isVoiceNote = true
-        //     voiceNoteMedia = postContainer.album.voiceNote.audio
-        // }     
     }
 
     /* voiceNote */
-    if (isVoiceNote) {
-        const mediaBlob = await getMediaBlob(voiceNoteInfo, voiceNoteMedia)
+    if (post.voiceNote) {
+        isVoiceNote = true
+        voiceNoteMedia = post.voiceNote
+        
+        let mediaBlob: Blob | undefined
+
+        if (voiceNoteMedia.blob) {
+            mediaBlob = voiceNoteMedia.blob
+        } else {
+            mediaBlob = await getMediaBlob(voiceNoteInfo, voiceNoteMedia)
+            if (mediaBlob) {
+                modifyPostVoiceNote(props.post.postID, mediaBlob)
+            }
+
+        }
+
+
         if (mediaBlob) {
             postVoiceNoteSrc.value = URL.createObjectURL(mediaBlob)
             showVoiceNote.value = true
