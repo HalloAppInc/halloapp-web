@@ -1,4 +1,4 @@
-import { ref, resolveComponent, watch } from 'Vue'
+import { ref, resolveComponent, watch } from 'vue'
 import { defineStore } from 'pinia'
 import createNoise from 'noise-c.wasm'
 import { Base64 } from 'js-base64'
