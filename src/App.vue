@@ -1,10 +1,7 @@
 <script setup lang="ts">
-    import { ref, onMounted, ComputedRef, computed } from 'vue'
-
-    import QRCode from './components/login/QRCode.vue'
-    import Sidebar from './components/Sidebar.vue'
-    import Sidestrip from './components/Sidestrip.vue'
-    import MainPanel from './components/MainPanel.vue'
+    import { ref, ComputedRef, computed } from 'vue'
+    import { storeToRefs } from 'pinia'
+    import { useI18n } from 'vue-i18n'
 
     import hal from './common/halogger'
 
@@ -12,17 +9,34 @@
     import { useConnStore } from './stores/connStore'
     import { useColorStore } from './stores/colorStore'
 
-    import { useI18n } from 'vue-i18n'
+    import MainPanel from './components/MainPanel.vue'
+    import Sidebar from './components/Sidebar.vue'
+    import Sidestrip from './components/Sidestrip.vue'    
     import BottomNav from './components/BottomNav.vue'
 
-    const mainStore = useMainStore()
-    const connStore = useConnStore()
-    const colorStore = useColorStore()
+    import QRCode from './components/login/QRCode.vue'
 
     const { t } = useI18n({
         inheritLocale: true,
         useScope: 'global'
     })
+
+    const mainStore = useMainStore()
+    const connStore = useConnStore()
+    const colorStore = useColorStore()
+
+    const { 
+        haveInitialHandshakeCompleted,
+    } = storeToRefs(mainStore)  
+
+    const { 
+        isNoiseReHandshakeCompleted,
+    } = storeToRefs(connStore)  
+
+    const { 
+        primaryBlue: primaryBlueColor,
+        text: textColor,
+    } = storeToRefs(colorStore)  
 
     const sideBarWidth: ComputedRef<string> = computed((): string => {
         let widthPercent = '30%'
@@ -63,8 +77,7 @@
     init()
 
     async function init() {
-        hal.log('app/init')
-        hal.log('app/init/haveInitialHandshakeCompleted: ' + mainStore.haveInitialHandshakeCompleted)
+        hal.log('app/init, haveInitialHandshakeCompleted: ' + mainStore.haveInitialHandshakeCompleted)
         connStore.clearMessagesInQueue()
 
         mainStore.isConnectedToServer = false // needs to be reset on refresh
@@ -246,17 +259,25 @@
     }
 
     a {
-        color: rgba(0,0,0,.6);
         text-decoration: underline;
-        font-weight: bold;
+        /* color: rgba(0,0,0,.6);
+         */
+         color: v-bind(primaryBlueColor);
         transition: all 0.6s ease;
     }
 
     a:hover {
         text-decoration: underline;
-        font-weight: bold;
         color: rgba(0,0,0,1);
         transition: all 0.15s ease;
+    }
+
+    .mention {
+        display: inline-block; /* needed so text-decoration here can overwrite the markdowns */
+        text-decoration: none;
+        font-weight: bold;
+        font-style: normal;
+        color: v-bind(textColor);
     }
 
     h1, h2, h3, h4, h5, h6 {

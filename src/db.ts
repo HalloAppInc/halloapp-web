@@ -32,6 +32,8 @@ export interface LinkPreview {
     id?: number
     title: string
     url: string
+    description: string
+    preview?: PostMedia
 }
 
 export enum PostMediaType {

@@ -1,6 +1,6 @@
-
 <script setup lang="ts">
     import { Ref, ref, watch, watchEffect, computed } from 'vue'
+    import { storeToRefs } from 'pinia'
 
     import { useMainStore } from '../../stores/mainStore'
     import { useConnStore } from '../../stores/connStore'
@@ -23,8 +23,6 @@
     const connStore = useConnStore()
     const colorStore = useColorStore()
 
-    const { formatTime, formatTimer } = useTimeformatter()
-
     const listBoxWidth = ref('100%')
     const showComments = ref(false)
 
@@ -43,7 +41,6 @@
     const feedObservable = liveQuery (() => db.feed
         .reverse()
         .sortBy('timestamp')
-        
     )
 
     // Subscribe
@@ -57,15 +54,6 @@
         },
         error: error => console.error(error)
     })
-
-    init()
-
-    async function init() {
-        const cursor = ''
-        console.log('homeMain/init')
-        connStore.requestFeedItems(cursor, 50000, function() {})
-
-    }
 
     watchEffect(() => {
         if (mainStore.scrollToTop == 'home') {
@@ -136,9 +124,9 @@
         /* fetch more posts before user gets to the end of their feed */
         var element = content.value;
         const scrolled = element.scrollHeight - element.scrollTop
-        const nearEnd = element.clientHeight * 3
+        const nearEnd = element.clientHeight * 4 // 3 screens up
         if (scrolled < nearEnd) {
-            connStore.requestFeedItems(mainStore.mainFeedTrailingCursor, 10, function() {})
+            connStore.requestFeedItems(mainStore.mainFeedNextCursor, 10, function() {})
         }
     }
 

@@ -1,34 +1,25 @@
-import { defineStore } from 'pinia'
 import { ref, resolveComponent, watch } from 'Vue'
-import hal from '../common/halogger'
-import hacrypto from '../common/hacrypto'
-
+import { defineStore } from 'pinia'
+import createNoise from 'noise-c.wasm'
 import { Base64 } from 'js-base64'
 
-import { network } from '../common/network'
-
 import { useMainStore } from './mainStore'
+import { network } from '../common/network'
 
 import { server } from '../proto/server.js'
 import { web } from '../proto/web.js'
 
-import createNoise from "noise-c.wasm"
+import hacrypto from '../common/hacrypto'
+import hal from '../common/halogger'
 
 import { useHAFeed } from '../composables/haFeed'
 
-import { useHAAvatar } from '../composables/haAvatar'
-
-
 export const useConnStore = defineStore('conn', () => {
-
-    const testAgainstLocalServer = false /* used for testing, turn off for production releases */
 
     const mainStore = useMainStore()
     let { createPingPacket, addKey, removeKey, check, createNoiseMessage, createWebStanzaPacket, encodeFeedRequestWebContainer, uploadMedia } = network()
 
-
     const { processWebContainer } = useHAFeed()
-    const { getAvatar } = useHAAvatar()
 
     // todo: should switch automatically to prod/test servers
     let webSocketServer = 'wss://ws-test.halloapp.net/ws'
@@ -43,12 +34,12 @@ export const useConnStore = defineStore('conn', () => {
     let webSocket: WebSocket
     let noise: any
     let handshakeState: any
-    let cipherStateSend: { EncryptWithAd: (arg0: never[], arg1: any) => any }
-    let cipherStateReceive: { DecryptWithAd: (arg0: never[], arg1: any) => any }
+    // let cipherStateSend: { EncryptWithAd: (arg0: never[], arg1: any) => any }
+    // let cipherStateReceive: { DecryptWithAd: (arg0: never[], arg1: any) => any }
+    let cipherStateSend: any
+    let cipherStateReceive: any
+    const isNoiseReHandshakeCompleted = ref(false)
 
-    if (testAgainstLocalServer) {
-        webSocketServer = 'wss://localhost:7071'
-    }
 
     async function connectToServerIfNeeded() {
         hal.log('connStore/connectToServerIfNeeded')
@@ -77,8 +68,7 @@ export const useConnStore = defineStore('conn', () => {
             hal.log('connStore/connectToServer/added public key successfully')
             mainStore.haveAddedPublicKeyToServer = true
 
-            initNoiseProtocolHandshake()
-            
+            initNoiseReHandshake()
         })
         
         sendReadyMessagesInQueue()
@@ -150,24 +140,20 @@ export const useConnStore = defineStore('conn', () => {
         disconnectFromServer()
     }
 
-    async function initNoiseProtocolHandshake() {
-
+    async function initNoiseReHandshake() {
         if (noise == undefined) {
             noise = await initNoise()
         }
 
         if (mainStore.haveInitialHandshakeCompleted) {
-            hal.log('connStore/initNoiseProtocolHandshake/reHandshake')
+            hal.log('connStore/initNoiseReHandshake')
 
             if (!handshakeState) {
                 initHandshake(noise, 'KK', noise.constants.NOISE_ROLE_INITIATOR)
             }
 
             handleNoiseHandshakeMsg('KK', noise.constants.NOISE_ROLE_INITIATOR)
-
         }
-
-
     }
 
     async function initNoise() {
@@ -224,14 +210,8 @@ export const useConnStore = defineStore('conn', () => {
             const noiseMessage = webStanza?.noiseMessage
 
             if (noiseMessage) {
-                hal.log('connStore/handleInbound/webStanza/noiseMessage')
-
-                // if (noise == undefined) {
-                //     noise = await initNoise()
-                // }    
 
                 if (!mainStore.haveInitialHandshakeCompleted) {
-                    hal.log('connStore/handleInbound/webStanza/noiseMessage/start handshake')
 
                     if (!handshakeState) {
                         initHandshake(noise, 'IK', noise.constants.NOISE_ROLE_RESPONDER)
@@ -246,10 +226,10 @@ export const useConnStore = defineStore('conn', () => {
                     }
                 }
                 else {
-                    hal.log('connStore/handleInbound/webStanza/noiseMessage/handshake completed previously')
-
+                    
                     /* web requested to redo handshake */
                     if (noiseMessage.messageType == server.NoiseMessage.MessageType.KK_B) {
+                        hal.log('connStore/handleInbound/webStanza/noiseMessage/KK_B')
 
                         if (!handshakeState) {
                             initHandshake(noise, 'KK', noise.constants.NOISE_ROLE_INITIATOR)
@@ -261,6 +241,7 @@ export const useConnStore = defineStore('conn', () => {
 
                     /* mobile is requesting to redo handshake */
                     else if (noiseMessage.messageType == server.NoiseMessage.MessageType.KK_A) {
+                        hal.log('connStore/handleInbound/webStanza/noiseMessage/KK_A')
 
                         if (!handshakeState) {
                             initHandshake(noise, 'KK', noise.constants.NOISE_ROLE_RESPONDER)
@@ -268,6 +249,8 @@ export const useConnStore = defineStore('conn', () => {
 
                         } 
 
+                    } else {
+                        hal.log('connStore/handleInbound/webStanza/noiseMessage/unknown')
                     }
                   
                     
@@ -291,7 +274,7 @@ export const useConnStore = defineStore('conn', () => {
                         const webContainer = await decodeWebContainer(decrypted)
 
                         hal.log('connStore/handleInbound/webStanza/decoded/webContainer:')
-                        hal.dir(webContainer)
+                        console.dir(webContainer)
                         processWebContainer(webContainer)
                     }
 
@@ -362,7 +345,6 @@ export const useConnStore = defineStore('conn', () => {
     /* tested only for IK and KK handshakes */
     function handleNoiseHandshakeMsg(noisePattern: any, role?: any, contentBinArr?: Uint8Array) {
         if (!handshakeState) { return }
-        hal.prod('handleNoiseHandshakeMsg')
 
         let action = handshakeState.GetAction()
     
@@ -386,11 +368,6 @@ export const useConnStore = defineStore('conn', () => {
                 }
                 return
             }
-
-            // let nextAction = handshakeState.GetAction()
-            // if (nextAction != noise.constants.NOISE_ACTION_READ_MESSAGE) {
-            //     handleNoiseHandshakeMsg(contentBinArr)
-            // }
         }
 
         else if (action == noise.constants.NOISE_ACTION_WRITE_MESSAGE) { // 16641
@@ -414,11 +391,6 @@ export const useConnStore = defineStore('conn', () => {
             if (noiseMessageBuf) {
                 webSocket.send(noiseMessageBuf)
             }
-            
-            // let nextAction = handshakeState.GetAction()
-            // if (nextAction != noise.constants.NOISE_ACTION_READ_MESSAGE) {
-            //     handleNoiseHandshakeMsg(contentBinArr)
-            // }
         }
 
         else if (action == noise.constants.NOISE_ACTION_SPLIT) { // 16644
@@ -432,11 +404,6 @@ export const useConnStore = defineStore('conn', () => {
             cipherStateSend = split[0]
             cipherStateReceive = split[1]
     
-            if (noisePattern == 'IK') {
-                mainStore.isPublicKeyAuthenticated = true
-                mainStore.haveInitialHandshakeCompleted = true
-            }
-
             /* should try to permanently delete */
             /* handshakeState.free() is in the noiseprotocol spec but was not done in the wasm implementation */
             for (let prop in handshakeState) {
@@ -446,9 +413,14 @@ export const useConnStore = defineStore('conn', () => {
     
             if (noisePattern == 'IK') {
                 hal.prod('handleNoiseHandshakeMsg/action/split/noise handshake successful, logging in')
+                mainStore.isPublicKeyAuthenticated = true
+                mainStore.haveInitialHandshakeCompleted = true
+                requestFeedItems('', 3, function() {})             
                 login()
             } else if (noisePattern = 'KK') {
                 hal.prod('handleNoiseHandshakeMsg/action/split/noise rehandshake successful')
+                isNoiseReHandshakeCompleted.value = true
+                requestFeedItems('', 3, function() {})
             }
         }
 
@@ -477,11 +449,6 @@ export const useConnStore = defineStore('conn', () => {
         const hash          = 'SHA256'
         const protocolName  = `Noise_${pattern}_${curve}_${cipher}_${hash}`
         handshakeState = noise.HandshakeState(protocolName, role)
-        hal.log('connStore/initHandshake: ')
-        // hal.dir(handshakeState)
-    
-        // let cipherStateSend: { EncryptWithAd: (arg0: never[], arg1: string) => any }
-        // let cipherStateReceive: { DecryptWithAd: (arg0: never[], arg1: any) => any }
     
         let prologue
         let psk
@@ -626,16 +593,6 @@ export const useConnStore = defineStore('conn', () => {
         enqueue(packet, false, callback)
     }
 
-    async function reHandshake(callback?: Function) {
-        hal.log('connStore/reHandshake')
-
-
-
-
-        const packet = addKey()
-        enqueue(packet, false, callback)
-    }
-
     async function getMediaUrl(size: number, isResumable: boolean, callback?: Function) {
         hal.log('connStore/getMediaUrl')
         const packet = uploadMedia(size, isResumable)
@@ -647,16 +604,6 @@ export const useConnStore = defineStore('conn', () => {
         
         if (!cipherStateSend) {
             hal.log('homeMain/requestFeedItems/exit/undefined cipherStateSend')
-            return
-        }
-
-        if (Object.keys(cipherStateSend).length === 0) {
-            hal.log('homeMain/requestFeedItems/exit/empty cipherStateSend')
-            return
-        }
-
-        if (typeof cipherStateSend.EncryptWithAd != 'function') {
-            hal.log('homeMain/requestFeedItems/exit/EncryptWithAd not in cipherStateSend: ' + JSON.stringify(cipherStateSend))
             return
         }
 
@@ -675,6 +622,13 @@ export const useConnStore = defineStore('conn', () => {
     function logout() {
         hal.log('connStore/logout/logging out...')
 
+        sendMessagesRetryNum = 0
+    
+        handshakeState = undefined
+        cipherStateSend = undefined
+        cipherStateReceive = undefined
+        isNoiseReHandshakeCompleted.value = false
+
         /* wait to disconnect fully first as the login screen will connect right away */
         if (mainStore.isConnectedToServer) {
             isLoggingOut = true
@@ -687,6 +641,8 @@ export const useConnStore = defineStore('conn', () => {
     }
 
     return {
+        isNoiseReHandshakeCompleted,
+
         connectToServerIfNeeded, 
         disconnectFromServer, 
         generatePublicKeyIfNeeded,

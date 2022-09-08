@@ -54,9 +54,11 @@ export const useMainStore = defineStore('main', {
         settingsPage: '',
 
         haveFetchedInitialMainFeed: false,
-        mainFeedHeadCursor: '',
-        mainFeedHeadCursorTimestamp: 0,
-        mainFeedTrailingCursor: '',
+        mainFeedHeadPostID: '',
+        mainFeedHeadPostTimestamp: 0,
+        mainFeedTailPostID: '',
+        mainFeedTailPostTimestamp: 0,
+        mainFeedNextCursor: '',
 
         mobileNavlessPanel: '',
         scrollToTop: '',
@@ -91,21 +93,19 @@ export const useMainStore = defineStore('main', {
 
             // for (let prop in this.cipherStateReceive) {
             //     delete this.cipherStateReceive[prop]
-            // }
-
-            // for (let prop in this.cipherStateSend) {
-            //     delete this.cipherStateSend[prop]
-            // }            
+            // }       
 
             this.userID = 0
 
             this.haveFetchedInitialMainFeed = false
-            this.mainFeedHeadCursor = ''
-            this.mainFeedHeadCursorTimestamp = 0
-            this.mainFeedTrailingCursor = ''
+            this.mainFeedHeadPostID = ''
+            this.mainFeedHeadPostTimestamp = 0
+            this.mainFeedTailPostID = ''
+            this.mainFeedTailPostTimestamp = 0
+            this.mainFeedNextCursor = ''
 
             // deletes the entire db and re-opens it
-            // todo: make sure all dbs including chat is also deleted, test to see if delete/re-open is fast enough
+            // todo: make sure all other dbs like chat is also deleted, test to see if delete/re-open is fast enough
             db.delete().then(() => db.open())
     
             // todo: remove public key from server? (what if there's no connection)
