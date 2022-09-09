@@ -1,10 +1,10 @@
 import { createApp } from 'vue'
-import App from './App.vue'
+import { createPinia } from 'pinia'
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 
 import { i18n } from "./i18n"
 
-import { createPinia } from 'pinia'
-import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
+import App from './App.vue'
 
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome"
@@ -14,6 +14,7 @@ import {
     faAngleRight,
     faArrowLeft,
     faBell,
+    faCaretRight,
     faCamera,
     faCheckDouble,
     faChevronLeft,
@@ -49,6 +50,7 @@ library.add(
     faArrowLeft,
     faBell,
     faCamera,
+    faCaretRight,
     faCheckDouble,
     faChevronLeft,
     faChevronRight,

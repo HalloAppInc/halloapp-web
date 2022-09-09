@@ -1,4 +1,5 @@
 import Dexie, { Table } from 'dexie'
+import { web } from '@/proto/web.js'
 
 export interface MessageList {
     id?: number
@@ -74,6 +75,17 @@ export interface Feed {
     mentions?: Mention[]
     linkPreview?: LinkPreview
     timestamp: number
+
+    retractState?: web.PostDisplayInfo.RetractState
+    unreadComments?: number
+    userReceipts?: web.ReceiptInfo[]
+}
+
+export interface Group {
+    groupID: string,
+    name?: string,  // will need this for search, maybe
+    description?: string
+    background?: string
 }
 
 export interface Chat {
@@ -93,15 +105,23 @@ export interface Avatar {
     image?: Blob
 }
 
+export interface GroupAvatar {
+    groupID: string
+    avatarID?: string
+    image?: Blob
+}
+
 export class HADexie extends Dexie {
 
     messageList!: Table<MessageList>
     media!: Table<Media>
     feed!: Table<Feed>
+    group!: Table<Group>
     chat!: Table<Chat>
     postMedia!: Table<PostMedia>
     contact!: Table<Contact>
     avatar!: Table<Avatar>
+    groupAvatar!: Table<GroupAvatar>
     
     constructor() {
         super('myDatabase')
@@ -109,10 +129,12 @@ export class HADexie extends Dexie {
             messageList: '++id, fromUserID, toUserID',
             media: '++id',
             feed: '++id, postID, userID, groupID, text, timestamp',
+            group: 'groupID, name',
             chat: '++id, proto',
             postMedia: '++id, postID, order',
             contact: '++id, userName, userID',
-            avatar: 'userID'
+            avatar: 'userID',
+            groupAvatar: 'groupID'
         })
     }
     

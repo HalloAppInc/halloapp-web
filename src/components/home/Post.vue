@@ -7,19 +7,19 @@
     import hkdf from "js-crypto-hkdf"
     import { useI18n } from 'vue-i18n'
 
-    import { db, Feed, PostMediaType } from '../../db'
-    
-    import { clients } from "../../proto/clients.js"
+    import { useMainStore } from '@/stores/mainStore'
+    import { useColorStore } from '@/stores/colorStore'
 
-    import { useMainStore } from '../../stores/mainStore'
-    import { useColorStore } from '../../stores/colorStore'
+    import { db, Feed, PostMediaType } from '@/db'
 
-    import { useHAFeed } from '../../composables/haFeed'
+    import { clients } from "@/proto/clients.js"
+    import { web } from "@/proto/web.js"
 
-    import hal from "../../common/halogger"
+    import { useHAFeed } from '@/composables/haFeed'
+    import { useHAText } from '@/composables/haText'
+    import { useTimeformatter } from '@/composables/timeformatter'
 
-    import { useHAText } from '../../composables/haText'
-    import { useTimeformatter } from '../../composables/timeformatter'
+    import hal from "@/common/halogger"
 
     import Avatar from '../media/Avatar.vue'
     import MediaCarousel from '../media/MediaCarousel.vue'
@@ -30,7 +30,7 @@
         postID: string
     }
     const props = defineProps<Props>()
-    const post   = toRef(props, 'post')
+    const post = toRef(props, 'post')
 
     const feedObservable = liveQuery (() => db.postMedia.where('postID').equals(props.postID).toArray())
 
@@ -41,6 +41,11 @@
         },
         error: error => console.error(error)
     })    
+
+    const { t, locale } = useI18n({
+        inheritLocale: true,
+        useScope: 'global'
+    })
 
     const mainStore = useMainStore()
     const colorStore = useColorStore()
@@ -60,28 +65,15 @@
         setPostMediaIsCodecH265 
     } = useHAFeed()
 
-    let isAvailable = ref(true)
-
-    const { t, locale } = useI18n({
-        inheritLocale: true,
-        useScope: 'global'
-    })
-
     const primaryBlue = ref("#007AFF")
     const primaryBlueDark = ref("rgb(10, 132, 255, 1)")
-    const primaryBg = ref("rgb(243, 243, 240)")
-    const primaryBgDark = ref("rgb(17, 17, 17, 1)")
 
     const headerWidth = ref(450)
     const postWidth = ref(430)
 
-    const externalShareInfo = Base64.fromBase64("SGFsbG9BcHAgU2hhcmUgUG9zdA==")
     const imageInfo         = Base64.fromBase64("SGFsbG9BcHAgaW1hZ2U=")
     const videoInfo         = Base64.fromBase64("SGFsbG9BcHAgdmlkZW8=") 
     const voiceNoteInfo     = Base64.fromBase64("SGFsbG9BcHAgYXVkaW8=") 
-
-    const avatarImageUrlPrefix = ref(mainStore.devCORSWorkaroundUrlPrefix + "https://avatar-cdn.halloapp.net/")
-    const avatarImageUrl = ref(mainStore.devCORSWorkaroundUrlPrefix + "https://web.halloapp.com/assets/avatar.svg")
 
     const postTimestamp = ref("")
 
@@ -120,11 +112,16 @@
     const showVoiceNote = ref(false)
     const postVoiceNoteSrc = ref("")
 
+    const isDeleted = ref(false)
+
     setPostSize()
     init()
 
     async function init() {  
         processPost(props.post)
+        if (props.post.retractState == web.PostDisplayInfo.RetractState.RETRACTED) {
+            isDeleted.value = true
+        }
     }
 
     async function getDerivedKey(secret: any, info: any) {
@@ -770,17 +767,24 @@
 <template>
 
     <!-- post row -->
-    <div v-if="isAvailable" id="postRow">
+    <div v-if="!isDeleted" class="postRow">
+
         <div :class="['post']">
 
             <!-- postHeader row -->
             <div id="postHeader">
                 <Avatar :userID="props.post.userID" :width="45"></Avatar>
                 <div id="nameBox">
-                    <div id="name">
+                    <div class="name">
                         {{ mainStore.pushnames[props.post.userID] }}
+                        <span v-if="props.post.groupID" class="groupIndicator">
+                            <font-awesome-icon :icon="['fas', 'caret-right']" size='sm' class="groupIndicatorIcon"/>
+                        </span>
+                        <span v-if="props.post.groupID" class="groupName">
+                            {{ mainStore.groupnames[props.post.groupID] }}
+                        </span>
                     </div>
-                    <div id="time" class="timestampLabel">
+                    <div class="time">
                         {{ postTimestamp }}
                     </div>
                 </div>
@@ -846,30 +850,17 @@
         </div>
     </div>
 
+    <div v-else class="postRow">
+        <div class="deletedPost">
+            {{ mainStore.pushnames[props.post.userID] }} deleted their post
+        </div>
+    </div>
+
 </template>
 
 <style scoped>
-
-    #headerRow {
-        position: sticky;
-        z-index: 2;
-        top: 0px;
-
-        width: 100%;
-        flex: 0 0 60px;
-
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-        align-items: center;
-        gap: 5px 5px;    
-
-        backdrop-filter: blur(25px);
-        -webkit-backdrop-filter: blur(25px); /* mobile Safari */
-    }
-
     /* post row */
-    #postRow {
+    .postRow {
         position: relative;
         z-index: 1;
 
@@ -883,6 +874,21 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
+    }
+
+    .postRow .deletedPost {
+        position: relative;
+  
+        margin: 20px 0px 20px 0px;
+        padding: 10px 20px 10px 20px;
+    
+        border-radius: 20px;
+        background-color: lightgray;
+
+        font-size: 14px;
+        color: gray;
+        text-align: center;
+        
     }
 
     .post {
@@ -932,16 +938,28 @@
         align-items: flex-start;
         gap: 3px 0px;
     }
-    .post #nameBox #name {
+    .post #nameBox .name {
         font-family: "Gotham", Helvetica, "Helvetica Neue", Arial, Avenir, sans-serif;
-        font-size: 18px;
+        font-size: 16px;
         font-weight: 400;
-        /* color: rgb(0, 0, 0) */
+        text-align: left;
         color: v-bind(textColor);
     }
+    .post #nameBox .name .groupIndicator {
+        margin-right: 5px;
+        color: lightgray;
+        text-align: bottom;
+    }
+    .post #nameBox .name .groupIndicator .groupIndicatorIcon {
+        margin-bottom: -1px;
+    }
 
-    .post #nameBox #time {
-        font-size: 15px;
+    .post #nameBox .name .groupName {
+        display: inline-block; /* this breaks the block to the next line when it's too long to fit */
+    }
+
+    .post #nameBox .time {
+        font-size: 14px;
         font-weight: 500;
         color: v-bind(timestampColor);
     }

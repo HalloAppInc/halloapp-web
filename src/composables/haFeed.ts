@@ -1,19 +1,23 @@
-import { clients } from '../proto/clients.js'
-import hal from '../common/halogger'
-
 import { Dexie, liveQuery } from "dexie"
-import { db, Feed, PostMedia, PostMediaType, LinkPreview, Mention } from '../db'
 
-import { useMainStore } from '../stores/mainStore.js'
-import { useConnStore } from '../stores/connStore.js'
-import { useHAAvatar } from './haAvatar'
+import { useMainStore } from '@/stores/mainStore.js'
+import { useConnStore } from '@/stores/connStore.js'
+
+import { db, Feed, PostMedia, PostMediaType, LinkPreview, Mention, Group } from '@/db'
+
+import { clients } from '@/proto/clients.js'
+import { web } from '@/proto/web.js'
+
+import { useHAAvatar } from '@/composables/haAvatar'
+
+import hal from '../common/halogger'
 
 export function useHAFeed() {
 
     const mainStore = useMainStore()
     const connStore = useConnStore()
 
-    const { getAvatar } = useHAAvatar()
+    const { getAvatar, fetchGroupAvatar } = useHAAvatar()
 
     async function processWebContainer(webContainer: any) {
         const feedResponse = webContainer?.feedResponse
@@ -29,15 +33,14 @@ export function useHAFeed() {
 
         const items = feedResponse.items
         const userInfo = feedResponse.userDisplayInfo
-        const postInfo = feedResponse.postDisplayInfo
+        const postInfoList = feedResponse.postDisplayInfo
+        const groupInfo = feedResponse.groupDisplayInfo
     
         if (items.length < 1) { return }
 
         const firstItemPost = items[0].post
         const lastItemPost = items[items.length - 1].post
 
-        let shouldProcessPosts = true
-        
         /* 
             special case to not process posts as this is usually our first request upon browser refresh
             to pre-emptively (for better UX) see if there are new posts, of which usually there isn't 
@@ -51,16 +54,23 @@ export function useHAFeed() {
             we will only process up to 3 or 5, the rest are to be handled via updates
         */
         for (let i = 0; i < items.length; i++) {
-            const serverPost = items[i].post
-            if (!serverPost) { continue }
-
-            processServerPost(serverPost)
+            const item = items[i]
+            let infoIdx = postInfoList.findIndex((info: any) => info.id === item.post.id)
+            const postInfo = postInfoList[infoIdx]
+            processFeedItem(items[i], postInfo)
+            postInfoList.splice(infoIdx, 1)
         }
         
         for (let j = 0; j < userInfo.length; j++) {
             const info = userInfo[j]
             if (!info) { continue }
             processUserDisplayInfo(info)
+        }
+
+        for (let j = 0; j < groupInfo.length; j++) {
+            const info = groupInfo[j]
+            if (!info) { continue }
+            processGroupDisplayInfo(info)
         }
 
         /* 
@@ -110,7 +120,26 @@ export function useHAFeed() {
         getAvatar(userInfo.uid, userInfo.avatarId)
     }
 
-    async function processServerPost(serverPost: any) {
+    async function processGroupDisplayInfo(info: any) {
+
+        let group: Group = { 
+            groupID: info.id,
+            name: info.name
+        }
+
+        if (!mainStore.groupnames[group.groupID] || mainStore.groupnames[group.groupID] != group.name) {
+            mainStore.groupnames[group.groupID] = group.name
+        }
+        fetchGroupAvatar(group.groupID, info.avatarId)
+        insertGroup(group)
+    }    
+    
+    async function processFeedItem(feedItem: any, postInfo: any) {
+
+        const groupID = feedItem.groupId
+
+        const serverPost = feedItem.post
+        if (!serverPost) { return }
         
         const publisherUID = serverPost.publisherUid
 
@@ -120,7 +149,8 @@ export function useHAFeed() {
         let postObject: Feed = { 
             postID: serverPost.id,
             userID: publisherUID,
-            timestamp: serverPost.timestamp 
+            timestamp: serverPost.timestamp,
+            retractState: postInfo.retractState
         }
 
         let postMediaArr: PostMedia[] = []
@@ -134,6 +164,10 @@ export function useHAFeed() {
     
         if (!postContainer) { return }
     
+        if (groupID) {
+            postObject.groupID = groupID
+        }
+
         if (publisherUID) {
             postObject.userID = publisherUID
         }
@@ -276,7 +310,7 @@ export function useHAFeed() {
         console.dir(postObject)
 
         insertPostIfNotExist(postObject)
-        insertPostMedia(postObject.postID, postMediaArr)  
+        insertPostMedia(postObject.postID, postMediaArr)
     }
     
     function processLinkPreview(postID: string, linkPreview: any) {
@@ -339,7 +373,6 @@ export function useHAFeed() {
     }
 
     async function insertPostIfNotExist(post: any) {
-    
         const postID = post.postID
         const dbFeedsList = await db.feed.where('postID').equals(postID).toArray()
         
@@ -352,7 +385,6 @@ export function useHAFeed() {
         } else {
             // hal.log('homeMain/processPostContainer/exit/postObject already in db \n' + JSON.stringify(post) + '\n\n')
         }
-    
     }
     
     async function insertPostMedia(postID: string, postMediaArr: any) {
@@ -423,6 +455,14 @@ export function useHAFeed() {
         })
         
         return        
+    }
+
+    async function insertGroup(group: any) {
+        try {
+            const id = await db.group.put(group)
+        } catch (error) {
+            hal.log('haFeed/insertGroup/put/error ' + error)
+        }
     }
 
     async function decodeToPostContainer(binArray: Uint8Array) {

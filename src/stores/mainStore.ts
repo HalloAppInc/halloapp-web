@@ -26,10 +26,6 @@ export const useMainStore = defineStore('main', {
         privateKeyBase64: '',
         publicKeyBase64: '',
 
-        messageQueue: <any>[],
-        pushnames: <any>{},
-        pushnumbers: <any>{},
-
         isLoggedIntoApp: false,
         isConnectedToServer: false,
         haveAddedPublicKeyToServer: false,
@@ -41,10 +37,12 @@ export const useMainStore = defineStore('main', {
         haveInitialHandshakeCompleted: false,
         mobilePublicKeyBase64: '', 
 
-        // cipherStateSend: <any>{},
-        // cipherStateReceive: <any>{},
-
+        messageQueue: <any>[],
+    
         userID: 0,
+        pushnames: <any>{},
+        pushnumbers: <any>{},
+        groupnames: <any>{},
 
         showSidebar: true,
         animateSidebar: false,
@@ -53,7 +51,6 @@ export const useMainStore = defineStore('main', {
         groupsPageGroup: <any>{},
         settingsPage: '',
 
-        haveFetchedInitialMainFeed: false,
         mainFeedHeadPostID: '',
         mainFeedHeadPostTimestamp: 0,
         mainFeedTailPostID: '',
@@ -97,7 +94,6 @@ export const useMainStore = defineStore('main', {
 
             this.userID = 0
 
-            this.haveFetchedInitialMainFeed = false
             this.mainFeedHeadPostID = ''
             this.mainFeedHeadPostTimestamp = 0
             this.mainFeedTailPostID = ''
@@ -118,6 +114,21 @@ export const useMainStore = defineStore('main', {
             this.settingsPage = ''
             // todo: might have to stop in-flight messages
             this.messageQueue.splice(0, this.messageQueue.length) // clear messages
+
+            for (const prop of Object.getOwnPropertyNames(this.pushnames)) {
+                delete this.pushnames[prop]
+            }
+            for (const prop of Object.getOwnPropertyNames(this.pushnumbers)) {
+                delete this.pushnumbers[prop]
+            }
+            for (const prop of Object.getOwnPropertyNames(this.groupnames)) {
+                delete this.groupnames[prop]
+            }            
+            
+            for (const prop of Object.getOwnPropertyNames(this.groupsPageGroup)) {
+                delete this.groupsPageGroup[prop]
+            }                 
+
             hal.log('mainStore/logged out')
         },
         gotoPage(page: string) {

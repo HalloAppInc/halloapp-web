@@ -18,7 +18,11 @@
             skipping cause vue-i18n had typing issues and protobufjs's long type had issues with 4.0.0 vs 5.x, 
             should revisit when the libraries update
         */
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["src/*"]
+        }
     },
     "include": [
         "src/**/*.ts", 

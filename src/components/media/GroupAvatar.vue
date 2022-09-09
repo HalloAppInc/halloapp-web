@@ -11,7 +11,7 @@
     import { useHAAvatar } from '../../composables/haAvatar'
 
     const props = defineProps({
-        userID: {
+        groupID: {
             type: Number,
             required: true
         },
@@ -42,7 +42,7 @@
     init()
 
     async function init() {
-        const avatarImgBlob = await getAvatar(props.userID)
+        const avatarImgBlob = await getAvatar(props.groupID)
 
         if (avatarImgBlob) {
             const avatarImgBlobUrl = URL.createObjectURL(avatarImgBlob)
@@ -53,7 +53,7 @@
     }
 
     async function setupObserver() {
-        const observable = liveQuery (() => db.avatar.where('userID').equals(props.userID).toArray())
+        const observable = liveQuery (() => db.avatar.where('groupID').equals(props.groupID).toArray())
         const subscription = observable.subscribe({
             next: result => {
                 if (!result) { return }
@@ -73,13 +73,13 @@
 
 <template>
 
-    <img class="avatarImage" crossorigin="" :src="avatarImageUrl" alt="Avatar"/>
+    <img class="groupAvatarImage" crossorigin="" :src="avatarImageUrl" alt="Group Avatar"/>
 
 </template>
 
 <style scoped>
 
-    .avatarImage {
+    .groupAvatarImage {
         height: v-bind(avatarWidth); 
         width: v-bind(avatarHeight); 
         object-fit: contain; 
