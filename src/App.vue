@@ -34,6 +34,7 @@
     } = storeToRefs(connStore)  
 
     const { 
+        background: backgroundColor,
         primaryBlue: primaryBlueColor,
         text: textColor,
     } = storeToRefs(colorStore)  

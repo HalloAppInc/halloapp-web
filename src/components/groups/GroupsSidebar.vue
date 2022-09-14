@@ -1,72 +1,57 @@
 <script setup lang="ts">
-    import { ref } from 'vue'
-    import { useMainStore } from '../../stores/mainStore'
-    import { useTimeformatter } from '../../composables/timeformatter'
+    import { Ref, ref } from 'vue'
+    import { storeToRefs } from 'pinia'
+    import { liveQuery } from 'dexie'
     import { useI18n } from 'vue-i18n'
 
-    import GroupsSidebarHeader from './GroupsSidebarHeader.vue'
+    import { db, Group } from '@/db'
 
-    const { formatTime } = useTimeformatter()
+    import { useMainStore } from '@/stores/mainStore'
+    import { useColorStore } from '@/stores/colorStore'
+
+    import { useTimeformatter } from '@/composables/timeformatter'
+    
+    import GroupsSidebarHeader from '@/components/groups/GroupsSidebarHeader.vue'
+    import GroupAvatar from '@/components/media/GroupAvatar.vue'
 
     const { t, locale } = useI18n({
         inheritLocale: true,
         useScope: 'global'
     })
-
+    
     const mainStore = useMainStore()
+    const colorStore = useColorStore()
+    const { formatTime } = useTimeformatter()
 
-    const listData = [
-        { 
-            groupID: "1",
-            title: "Test group",
-            subtitle: "this is a link",
-            timestamp: "1649204213",
-        },
-        { 
-            groupID: "2",
-            title: "Group 2",
-            subtitle: "apple",
-            timestamp: "1649204213",
-        },
-        { 
-            groupID: "3",
-            title: "Group 3",
-            subtitle: "this is a link",
-            timestamp: "1649204213",
-        },     
-        { 
-            groupID: "4",
-            title: "Group 4",
-            subtitle: "this is a link",
-            timestamp: "1649204213",
-        },
-        { 
-            groupID: "5",
-            title: "Group 5",
-            subtitle: "this is a link",
-            timestamp: "1649204213",
-        },
-        { 
-            groupID: "6",
-            title: "Group 6",
-            subtitle: "this is a link",
-            timestamp: "1649204213",
-        },
-        { 
-            groupID: "7",
-            title: "Group 7",
-            subtitle: "this is a link",
-            timestamp: "1649204213",
-        },     
-        { 
-            groupID: "8",
-            title: "Group 8",
-            subtitle: "this is a link",
-            timestamp: "1649204213",
-        },          
-    ]
+    const feedObservable = liveQuery (() => db.group.reverse().sortBy('lastChangeTimestamp'))
+    const subscription = feedObservable.subscribe({
+        next: result => { 
+            // console.log('homeMain/feedObservable: ', JSON.stringify(result))
+            if (result) {
+                listData.value = result
+            }
 
-    mainStore.groupsPageGroup = listData[0]
+            if (!mainStore.groupsPageGroup.groupID) {
+               selectGroup(listData.value[0])
+            }
+
+        },
+        error: error => console.error(error)
+    })
+
+    const { 
+        background: backgroundColor,
+        secondaryBg: secondaryBgColor,
+        primaryBlue: primaryBlueColor,
+        text: textColor,
+        secondaryText: secondaryTextColor,
+        line: lineColor,
+        secondaryBgHover: secondaryBgHoverColor,
+        secondaryBgSelected: secondaryBgSelectedColor,
+        secondaryBorder: secondaryBorderColor,
+    } = storeToRefs(colorStore)  
+
+    const listData: Ref<Group[]> = ref([])
 
     function selectGroup(group: any) {
         mainStore.groupsPageGroup = group
@@ -77,6 +62,7 @@
 <template>
 
     <div class="groupsSidebarWrapper">
+
         <div class="header"> 
             <GroupsSidebarHeader></GroupsSidebarHeader>
         </div>
@@ -86,19 +72,22 @@
                 :class="['container', {selected: mainStore.groupsPageGroup.groupID == value.groupID}]"
                 @click="selectGroup(value)">
                 <div class="avatarContainer">
-                    <div class="avatar"></div>
+
+                    <GroupAvatar :groupID="value.groupID" :width="50">
+                    </GroupAvatar>
+
                 </div>
                 <div class="content">
                     <div class="contentHeader">
                         <div class="contentTitle">
-                            {{ value.title }}
+                            {{ mainStore.groupnames[value.groupID] }}
                         </div>
                         <div class="contentTimestamp">
-                            {{ formatTime(parseInt(value.timestamp), locale as string) }}
+                            <!-- {{ formatTime(parseInt(value.timestamp), locale as string) }} -->
                         </div>
                     </div>
                     <div class="contentBody">
-                        {{ value.subtitle }}
+                        <!-- {{ value.subtitle }} -->
                     </div>
                 </div>
                 
@@ -115,7 +104,7 @@
     }
 
     *::-webkit-scrollbar-track {
-        background: white;        /* color of the tracking area */
+        background: v-bind(secondaryBgColor);        /* color of the tracking area */
     }
 
     *::-webkit-scrollbar-thumb {
@@ -138,27 +127,31 @@
 
     .header {
         flex: 0 0 50px;
-        background-color: #f0f2f5;
     }
 
     .listBox {
         overflow-y: auto;
         overflow-x: hidden;
         height: 100%;
+
+        background-color: v-bind(secondaryBgColor);
     }
 
     .container {
         display: flex;
         flex-direction: horizontal;
         padding: 0px;
+        
     }
     .container:hover {
-        background-color: rgb(226, 226, 226);
+        /* background-color: rgb(226, 226, 226); */
+        background-color: v-bind(secondaryBgHoverColor);
         cursor: pointer;
     }
 
     .selected {
-        background-color: rgb(205, 203, 203);
+        /* background-color: rgb(205, 203, 203); */
+        background-color: v-bind(secondaryBgSelectedColor);
     }
 
 
@@ -177,9 +170,9 @@
         margin-top: 5px;
         width: 100%;
         padding: 10px 10px 10px 5px;
-        border-bottom: 1px solid rgb(226, 224, 224);
+        border-bottom: 1px solid v-bind(secondaryBorderColor);
 
-        color: #3b4a54;
+        color: v-bind(secondaryTextColor);
 
         display: flex;
         width: 100%;
@@ -198,7 +191,7 @@
     }
 
     .contentTitle {
-        color: #111b21;
+        color: v-bind(textColor);;
         font-weight: 600; 
 
         flex: 1 1 auto;

@@ -38,7 +38,6 @@
 
             <div class="titleContainer">
                 {{ t('general.home') }}
-                
             </div>
 
             <!-- for now, empty element only used to space things evenly -->

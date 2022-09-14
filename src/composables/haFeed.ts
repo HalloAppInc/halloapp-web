@@ -35,7 +35,14 @@ export function useHAFeed() {
         const userInfo = feedResponse.userDisplayInfo
         const postInfoList = feedResponse.postDisplayInfo
         const groupInfo = feedResponse.groupDisplayInfo
-    
+
+        /* processs groups first as process items might need to modify groups list */
+        for (let j = 0; j < groupInfo.length; j++) {
+            const info = groupInfo[j]
+            if (!info) { continue }
+            processGroupDisplayInfo(info)
+        }        
+
         if (items.length < 1) { return }
 
         const firstItemPost = items[0].post
@@ -67,12 +74,6 @@ export function useHAFeed() {
             processUserDisplayInfo(info)
         }
 
-        for (let j = 0; j < groupInfo.length; j++) {
-            const info = groupInfo[j]
-            if (!info) { continue }
-            processGroupDisplayInfo(info)
-        }
-
         /* 
          * robustness: should make all processing async/awaits and bulk insert into db,
          * and record only after everything succeeds 
@@ -100,8 +101,8 @@ export function useHAFeed() {
                     const numDBItems = await db.feed.count()
         
                     /* if there's less than x feed items, fill it */
-                    if (numDBItems < 10) {
-                        connStore.requestFeedItems(mainStore.mainFeedNextCursor, 10, function() {})
+                    if (numDBItems <= 3) {
+                        // connStore.requestFeedItems(mainStore.mainFeedNextCursor, 10, function() {})
                     }
                 } 
                 
@@ -111,6 +112,19 @@ export function useHAFeed() {
                 }
             }
         }
+
+        if (feedResponse.type == web.FeedType.GROUP) {
+
+            if (lastItemPost.groupId) {
+
+                // todo: check for timestamp also?
+                if (feedResponse.nextCursor) {
+                    mainStore.groupFeedCursors[lastItemPost.groupId] = feedResponse.nextCursor
+                }
+
+            }
+        }
+
     }
     
     async function processUserDisplayInfo(userInfo: any) {
@@ -121,17 +135,33 @@ export function useHAFeed() {
     }
 
     async function processGroupDisplayInfo(info: any) {
+        const groupID = info.id
+        const name = info.name
 
-        let group: Group = { 
-            groupID: info.id,
-            name: info.name
-        }
+        const dbGroupsList = await db.feed.where('groupID').equals(groupID).toArray()
+        
+        if (dbGroupsList.length == 0) {
+            
+            let group: Group = { 
+                groupID: info.id,
+                name: info.name,
+                description: info.description,
+                background: info.background,
+                lastChangeTimestamp: 0
+            }            
+            insertGroup(group)
+        } else {
+            const dbGroup = dbGroupsList[0]
+            // todo: modify appropriate based on changes
+            
+        }   
 
-        if (!mainStore.groupnames[group.groupID] || mainStore.groupnames[group.groupID] != group.name) {
-            mainStore.groupnames[group.groupID] = group.name
+
+        if (!mainStore.groupnames[groupID] || mainStore.groupnames[groupID] != name) {
+            mainStore.groupnames[groupID] = name
         }
-        fetchGroupAvatar(group.groupID, info.avatarId)
-        insertGroup(group)
+        fetchGroupAvatar(groupID, info.avatarId)
+
     }    
     
     async function processFeedItem(feedItem: any, postInfo: any) {
@@ -309,8 +339,13 @@ export function useHAFeed() {
         console.log("haFeed/processServerPost/postObject: ")
         console.dir(postObject)
 
+        if (groupID) {
+            modifyGroupTimestampIfNeeded(postObject)
+        }
+
         insertPostIfNotExist(postObject)
         insertPostMedia(postObject.postID, postMediaArr)
+
     }
     
     function processLinkPreview(postID: string, linkPreview: any) {
@@ -370,6 +405,34 @@ export function useHAFeed() {
         }
 
         return arr
+    }
+
+    async function modifyGroupTimestampIfNeeded(post: any) {
+        await db.group.where('groupID').equals(post.groupID).modify(group => {
+            if (group.lastChangeTimestamp < post.timestamp) {
+                group.lastChangeTimestamp = post.timestamp
+            }
+        })
+        return        
+    }
+
+    async function modifyGroupIfNeeded(post: any) {
+        await db.group.where('postID').equals(post.groupID).modify(group => {
+        })
+        return        
+    }
+
+    async function modifyGroupIfNeeded2(post: any) {
+        const groupID = post.groupID
+        const dbGroupsList = await db.group.where('groupID').equals(groupID).toArray()
+        
+        if (dbGroupsList.length > 0) {
+            const dbGroup = dbGroupsList[0]
+            if (dbGroup.lastChangeTimestamp < post.timestamp) {
+                // todo: record more info if needed
+
+            }
+        } 
     }
 
     async function insertPostIfNotExist(post: any) {

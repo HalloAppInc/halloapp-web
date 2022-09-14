@@ -1,64 +1,46 @@
 <script setup lang="ts">
-    import { ref } from 'vue'
-    import { useMainStore } from '../../stores/mainStore'
+    import { Ref, ref } from 'vue'
+    import { storeToRefs } from 'pinia'
+    import { liveQuery } from 'dexie'
 
-    import Feed from '../feed/Feed.vue'
-    import GroupFeedHeader from './GroupFeedHeader.vue'
+    import { useMainStore } from '@/stores/mainStore'
+    import { useColorStore } from '@/stores/colorStore'
+
+    import { db, Feed } from '@/db'
+
+    import FeedList from '@/components/feed/FeedList.vue'
+    import GroupFeedHeader from '@/components/groups/GroupFeedHeader.vue'
 
     const mainStore = useMainStore()
+    const colorStore = useColorStore()
 
-    const feedRef = ref<InstanceType<typeof Feed>>()
+    const feedRef = ref<InstanceType<typeof FeedList>>()
 
-    const postsList = [
-        { 
-            groupID: "1",
-            title: "Test group",
-            subtitle: "this is a link",
-            timestamp: "1649204213",
+    let groupID = mainStore.groupsPageGroup.groupID
+
+    const listData: Ref<Feed[]> = ref([])
+
+    const feedObservable = liveQuery (() => db.feed.where('groupID').equals(groupID)
+        .reverse()
+        .sortBy('timestamp')
+    )
+    const subscription = feedObservable.subscribe({
+        next: result => { 
+            if (result) {
+                listData.value = result
+            }
         },
-        { 
-            groupID: "2",
-            title: "Group 2",
-            subtitle: "apple",
-            timestamp: "1649204213",
-        },
-        { 
-            groupID: "3",
-            title: "Group 3",
-            subtitle: "this is a link",
-            timestamp: "1649204213",
-        },     
-        { 
-            groupID: "4",
-            title: "Group 4",
-            subtitle: "this is a link",
-            timestamp: "1649204213",
-        },
-        {
-            groupID: "5",
-            title: "Group 5",
-            subtitle: "this is a link",
-            timestamp: "1649204213",
-        },
-        { 
-            groupID: "6",
-            title: "Group 6",
-            subtitle: "this is a link",
-            timestamp: "1649204213",
-        },
-        { 
-            groupID: "7",
-            title: "Group 7",
-            subtitle: "this is a link",
-            timestamp: "1649204213",
-        },     
-        { 
-            groupID: "8",
-            title: "Group 8",
-            subtitle: "this is a link",
-            timestamp: "1649204213",
-        },          
-    ]
+        error: error => console.error(error)
+    })
+
+    const { 
+        background: backgroundColor,
+        secondaryBg: secondaryBgColor,
+        primaryBlue: primaryBlueColor,
+        text: textColor,
+        line: lineColor,
+        secondaryBorder: secondaryBorderColor,
+    } = storeToRefs(colorStore) 
 
     function commentsClick() {
         
@@ -74,11 +56,11 @@
 
 <template>
 
-    <!-- <Feed ref="feedRef" :postsList="postsList" @commentsClick="commentsClick()">
+    <FeedList ref="feedRef" :postsList="listData" @commentsClick="commentsClick()">
         <template v-slot:header>
             <GroupFeedHeader @toggleSidebar="toggleSidebar()"></GroupFeedHeader>
         </template>
-    </Feed> -->
+    </FeedList>
 
 </template>
 
@@ -88,7 +70,8 @@
         width: 100%;
         height: 100%;
 
-        border-left: 1px solid #b8b7b7;
+        /* border-left: 1px solid #b8b7b7; */
+        border-left: 1px solid red;
 
         background-color: rgb(229, 229, 247);
 

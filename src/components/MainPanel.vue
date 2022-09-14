@@ -47,7 +47,7 @@ watch(page, (newVal, oldVal) => {
         <HomeMain v-if='mainStore.page == "home"'/>
     </keep-alive>
     <keep-alive>
-        <GroupsMain v-if='mainStore.page == "groups" || openGroups'/>
+        <GroupsMain v-if='(mainStore.page == "groups" || openGroups) && mainStore.groupsPageGroup && mainStore.groupsPageGroup.groupID' :key='mainStore.groupsPageGroup.groupID'/>
     </keep-alive>    
     <keep-alive>
         <ChatsMain v-if='mainStore.page == "chats" || openChats'/>

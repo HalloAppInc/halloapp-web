@@ -117,6 +117,30 @@ export function network() {
         return webContainerBinArr
     }
 
+    const encodeGroupFeedRequestWebContainer = (groupID: string, cursor: string, limit: number) => {
+        const id = nanoid()
+
+        let feedRequest = web.FeedRequest.create({
+            id: id,
+            type: web.FeedType.GROUP,
+            cursor: cursor,
+            limit: limit,
+            contentId: groupID
+        })
+
+        const webContainer = web.WebContainer.create({
+            feedRequest: feedRequest
+        })
+
+        hal.log('network/encodeGroupFeedRequestWebContainer:\n' + JSON.stringify(webContainer) + '\n\n')
+
+        const webContainerProto = web.WebContainer.encode(webContainer).finish()
+        const webContainerBuf = webContainerProto.buffer.slice(webContainerProto.byteOffset, webContainerProto.byteLength + webContainerProto.byteOffset)
+        const webContainerBinArr = new Uint8Array(webContainerBuf)
+
+        return webContainerBinArr
+    }
+
     function removeKey(websocket: any) {
         let id = nanoid()
     
@@ -190,6 +214,7 @@ export function network() {
         createNoiseMessage, 
         createWebStanzaPacket, 
         encodeFeedRequestWebContainer,
+        encodeGroupFeedRequestWebContainer,
         uploadMedia 
     }
 }

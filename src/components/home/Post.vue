@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { toRef, ref, computed } from "vue"
+    import { toRef, ref, onBeforeUnmount } from "vue"
     import { storeToRefs } from 'pinia'
     import { liveQuery } from "dexie"
     import MP4Box from 'mp4box'
@@ -27,20 +27,25 @@
 
     interface Props {
         post: Feed,
-        postID: string
+        postID: string,
+        atMainFeed: boolean
     }
     const props = defineProps<Props>()
     const post = toRef(props, 'post')
 
-    const feedObservable = liveQuery (() => db.postMedia.where('postID').equals(props.postID).toArray())
+    const postObservable = liveQuery (() => db.postMedia.where('postID').equals(props.postID).toArray())
 
-    const subscription = feedObservable.subscribe({
+    const postSubscription = postObservable.subscribe({
         next: result => { 
             /* improve: might be too heavy, maybe just reprocess the media */
             processPost(props.post)
         },
         error: error => console.error(error)
-    })    
+    })
+
+    onBeforeUnmount(() => {
+        postSubscription.unsubscribe()
+    })
 
     const { t, locale } = useI18n({
         inheritLocale: true,
@@ -777,10 +782,10 @@
                 <div id="nameBox">
                     <div class="name">
                         {{ mainStore.pushnames[props.post.userID] }}
-                        <span v-if="props.post.groupID" class="groupIndicator">
+                        <span v-if="atMainFeed && props.post.groupID" class="groupIndicator">
                             <font-awesome-icon :icon="['fas', 'caret-right']" size='sm' class="groupIndicatorIcon"/>
                         </span>
-                        <span v-if="props.post.groupID" class="groupName">
+                        <span v-if="atMainFeed && props.post.groupID" class="groupName">
                             {{ mainStore.groupnames[props.post.groupID] }}
                         </span>
                     </div>
@@ -819,7 +824,7 @@
                 </div>
             </div>
 
-            <LinkPreview v-if="showPreviewImage"
+            <LinkPreview v-if="showPreviewImage && post.linkPreview"
                 :post="post"
                 :linkPreview="post.linkPreview"
                 :postID="post.postID"

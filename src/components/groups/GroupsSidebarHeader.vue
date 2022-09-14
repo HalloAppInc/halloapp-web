@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-
-import { useMainStore } from '../../stores/mainStore'
-import { useColorStore } from '../../stores/colorStore'
+import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 
-import Avatar from '../media/Avatar.vue'
+import { useMainStore } from '@/stores/mainStore'
+import { useColorStore } from '@/stores/colorStore'
+
+import Avatar from '@/components/media/Avatar.vue'
 
 const props = defineProps(['postID'])
 
@@ -14,9 +15,16 @@ const { t } = useI18n({
     useScope: 'global'
 })
 
+const mainStore = useMainStore()
 const colorStore = useColorStore()
 
-const mainStore = useMainStore()
+const { 
+        background: backgroundColor,
+        secondaryBg: secondaryBgColor,
+        primaryBlue: primaryBlueColor,
+        text: textColor,
+    } = storeToRefs(colorStore)  
+
 
 const hoverColor = computed(() => {
     return colorStore.hover
@@ -24,10 +32,6 @@ const hoverColor = computed(() => {
 
 const lineColor = computed(() => {
     return colorStore.line
-})
-
-const textColor = computed(() => {
-    return colorStore.text
 })
 
 const headerColor = computed(() => {
@@ -38,9 +42,6 @@ const iconColor = computed(() => {
     return colorStore.icon
 })
 
-const backgroundColor = computed(() => {
-    return colorStore.background
-})
 </script>
 
 <template>
@@ -85,7 +86,7 @@ const backgroundColor = computed(() => {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    background-color: rgb(243, 243, 240);
+    background-color: v-bind(secondaryBgColor);
 }
 
 .leftGutter {

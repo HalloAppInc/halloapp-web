@@ -1,24 +1,20 @@
 <script setup lang="ts">
-    import { Ref, ref, watch, watchEffect, computed } from 'vue'
-    import { storeToRefs } from 'pinia'
-
-    import { useMainStore } from '../../stores/mainStore'
-    import { useConnStore } from '../../stores/connStore'
-    import { useColorStore } from '../../stores/colorStore'
-
-    import HomeHeader from './HomeHeader.vue'
-    import Post from './Post.vue'
-    import Comment from '../comment/CommentMain.vue'
-    import hal from '../../common/halogger'
-
-    import { Dexie, liveQuery } from "dexie"
-    import { db, Feed, PostMedia, Mention } from '../../db'
-
+    import { Ref, ref, computed, watchEffect, onMounted, onActivated, onDeactivated } from 'vue'
+    import { liveQuery } from 'dexie'
     import { useI18n } from 'vue-i18n'
+  
+    import { db, Feed } from '@/db'
+    
+    import { useMainStore } from '@/stores/mainStore'
+    import { useConnStore } from '@/stores/connStore'
+    import { useColorStore } from '@/stores/colorStore'
 
-    import { clients } from "../../proto/clients.js"
-    import { useTimeformatter } from '../../composables/timeformatter'
+    import hal from '@/common/halogger'
 
+    import HomeHeader from '@/components/home/HomeHeader.vue'
+    import Post from '@/components/home/Post.vue'
+    import Comment from '@/components/comment/CommentMain.vue'
+    
     const mainStore = useMainStore()
     const connStore = useConnStore()
     const colorStore = useColorStore()
@@ -36,31 +32,30 @@
         useScope: 'global'
     })
 
+    const dbListData: Ref<Feed[]> = ref([])
     const listData: Ref<Feed[]> = ref([])
+
+    const count = ref(5)
 
     const feedObservable = liveQuery (() => db.feed
         .reverse()
         .sortBy('timestamp')
     )
 
-    // Subscribe
     const subscription = feedObservable.subscribe({
         next: result => { 
-            // console.log('homeMain/feedObservable: ', JSON.stringify(result))
             if (result) {
                 listData.value = result
             }
-
         },
         error: error => console.error(error)
     })
 
-    watchEffect(() => {
-        if (mainStore.scrollToTop == 'home') {
-            scrollToTop()
-            mainStore.scrollToTop = ''
-        }
+    const backgroundColor = computed(() => {
+        return colorStore.background
     })
+
+    let savedScrollTop = 0 // store scroll position
 
     function scrollToTop() {    
         content.value?.scrollTo({ left: 0, top: 0, behavior: 'smooth' })
@@ -68,7 +63,14 @@
 
     function openCommentsIfNeeded(postID: string) {
         if (showComments.value) {
-            inViewPostID.value = postID
+
+            // close comment if user clicked on the same post after open
+            if (inViewPostID.value == postID) {
+                commentsClick(postID)
+            } else {
+                inViewPostID.value = postID
+            }
+
         } else {
             commentsClick(postID)
         }
@@ -126,100 +128,112 @@
         const scrolled = element.scrollHeight - element.scrollTop
         const nearEnd = element.clientHeight * 4 // 3 screens up
         if (scrolled < nearEnd) {
-            connStore.requestFeedItems(mainStore.mainFeedNextCursor, 10, function() {})
+            connStore.requestFeedItems(mainStore.mainFeedNextCursor, 15, function() {})
         }
+
+        savedScrollTop = element.scrollTop
     }
 
-    const backgroundColor = computed(() => {
-        return colorStore.background
+    onActivated(() => {
+        if (!content.value) { return }
+        let element = content.value
+        element.scrollTop = savedScrollTop
     })
+
+    watchEffect(() => {
+        if (mainStore.scrollToTop == 'home') {
+            scrollToTop()
+            mainStore.scrollToTop = ''
+        }
+    })    
 
 </script>
 
 <template>
 
-<div class="homeMainWrapper">
+    <div class="homeMainWrapper">
+        
+        <div class="listBox" ref='content' @scroll='handleScroll()'>
+
+            <div class='header'>
+                <HomeHeader/>
+            </div>
+
+            <div v-for="value in listData" class="container">
+                <!-- data-ha-postID is used only for detecting post while scrolling -->
+                <Post
+                    :post="value"
+                    :postID="value.postID"
+                    :userID="value.userID"
+                    :atMainFeed=true
+                    @commentsClick="openCommentsIfNeeded(value.postID)" 
+                    :data-ha-postID="value.postID">
+                </Post>        
+            </div>
+
+        </div>
     
-    <div class="listBox" ref='content' @scroll='handleScroll()'>
-
-        <div class='header'>
-            <HomeHeader/>
+        <div v-if="showComments" class="comments">
+            <Comment :postID='inViewPostID' @backClick="commentsBackClick"></Comment>
         </div>
-
-        <div v-for="value in listData" class="container">
-            <!-- data-ha-postID is used only for detecting post while scrolling -->
-            <Post
-                :post="value"
-                :postID="value.postID"
-                :userID="value.userID" 
-                @commentsClick="openCommentsIfNeeded(value.postID)" 
-                :data-ha-postID="value.postID">
-            </Post>
-        </div>
+    
     </div>
- 
-    <div v-if="showComments" class="comments">
-        <Comment :postID='inViewPostID' @backClick="commentsBackClick"></Comment>
-    </div>
-  
-</div>
 
 </template>
 
 <style scoped>
 
-*::-webkit-scrollbar {
-    width: 10px;
-}
+    *::-webkit-scrollbar {
+        width: 10px;
+    }
 
-*::-webkit-scrollbar-track {
-    background: white;        /* color of the tracking area */
-}
+    *::-webkit-scrollbar-track {
+        background: v-bind(backgroundColor);        /* color of the tracking area */
+    }
 
-*::-webkit-scrollbar-thumb {
-    background-color: rgb(172, 169, 169);    /* color of the scroll thumb */
+    *::-webkit-scrollbar-thumb {
+        background-color: rgb(172, 169, 169);    /* color of the scroll thumb */
 
-    border: 0px solid white;  /* creates padding around scroll thumb */
-}
+        border: 0px solid white;  /* creates padding around scroll thumb */
+    }
 
-.homeMainWrapper {
-    width: 100%;
-    height: 100%;
+    .homeMainWrapper {
+        width: 100%;
+        height: 100%;
 
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-}
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+    }
 
-.listBox {
-    position: relative;
-    flex: 0 0 v-bind(listBoxWidth);
-    height: 100%;
+    .listBox {
+        position: relative;
+        flex: 0 0 v-bind(listBoxWidth);
+        height: 100%;
 
-   
-    overflow-y: auto;
-    overflow-x: hidden;
+        overflow-y: auto;
+        overflow-x: hidden;
 
-    transition: flex 300ms ease-in-out;
+        transition: flex 300ms ease-in-out;
 
-    background-color: v-bind(backgroundColor);
-}
+        background-color: v-bind(backgroundColor);
+    }
 
-.header {
-    position: sticky;
-    top: 0px;
-    width: 100%;
-    height: 50px;
-    z-index: 2;
-}
+    .header {
+        position: sticky;
+        top: 0px;
+        width: 100%;
+        height: 50px;
+        z-index: 2;
+    }
 
-.comments {
-    flex: 1 1 auto;
-    height: 100%;
-    
-    overflow-y: auto;
-    overflow-x: hidden;
-    transition: 1s all ease-in-out;
-}
+    .comments {
+        flex: 1 1 auto;
+        height: 100%;
+        
+        overflow-y: auto;
+        overflow-x: hidden;
+        transition: 1s all ease-in-out;
+    }
 
 </style>

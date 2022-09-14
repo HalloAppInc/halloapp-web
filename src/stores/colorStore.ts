@@ -17,6 +17,9 @@ export const useColorStore = defineStore('color', {
         primaryBlue: colors.primaryBlueLight,
         borderline: colors.borderlineLight,
         secondaryText: colors.secondaryTextLight,
+        secondaryBgHover: colors.secondaryBgHoverLight,
+        secondaryBgSelected: colors.secondaryBgSelectedLight,
+        secondaryBorder: colors.secondaryBorderLight,
         icon: colors.iconLight,
         wraper: colors.wraperLight,
         shadow: colors.shadowLight,
@@ -65,7 +68,10 @@ export const useColorStore = defineStore('color', {
             this.hoverTextBackground = colors['hoverTextBackground' + mode]
             this.primaryBlue = colors['primaryBlue' + mode]
             this.secondaryText = colors['secondaryText' + mode]
+            this.secondaryBgHover = colors['secondaryBgHover' + mode]
+            this.secondaryBgSelected = colors['secondaryBgSelected' + mode]
             this.borderline = colors['borderline' + mode]
+            this.secondaryBorder = colors['secondaryBorder' + mode]
             this.icon = colors['icon' + mode]
             this.wraper = colors['wraper' + mode]
             this.shadow = colors['shadow' + mode]

@@ -17,7 +17,11 @@ import { useHAFeed } from '../composables/haFeed'
 export const useConnStore = defineStore('conn', () => {
 
     const mainStore = useMainStore()
-    let { createPingPacket, addKey, removeKey, check, createNoiseMessage, createWebStanzaPacket, encodeFeedRequestWebContainer, uploadMedia } = network()
+    let { 
+        createPingPacket, addKey, removeKey, check, createNoiseMessage, createWebStanzaPacket, 
+        encodeFeedRequestWebContainer, encodeGroupFeedRequestWebContainer,
+        uploadMedia 
+    } = network()
 
     const { processWebContainer } = useHAFeed()
 
@@ -178,7 +182,6 @@ export const useConnStore = defineStore('conn', () => {
 
         const errorStanza = msg?.errorStanza
 
-
         if (ping) {
             const packet = createPingPacket()
             const packetProto = server.Packet.encode(packet).finish()
@@ -193,7 +196,6 @@ export const useConnStore = defineStore('conn', () => {
             if (callback) { 
                 callback(packet) 
             }            
-
         } 
 
         else if (iq) {
@@ -236,7 +238,6 @@ export const useConnStore = defineStore('conn', () => {
                         }
 
                         handleNoiseHandshakeMsg('KK', noise.constants.NOISE_ROLE_INITIATOR, noiseMessage.content)
-
                     }
 
                     /* mobile is requesting to redo handshake */
@@ -246,14 +247,12 @@ export const useConnStore = defineStore('conn', () => {
                         if (!handshakeState) {
                             initHandshake(noise, 'KK', noise.constants.NOISE_ROLE_RESPONDER)
                             handleNoiseHandshakeMsg('KK', noise.constants.NOISE_ROLE_RESPONDER, noiseMessage.content)
-
                         } 
 
                     } else {
                         hal.log('connStore/handleInbound/webStanza/noiseMessage/unknown')
                     }
                   
-                    
                 }
             } 
             
@@ -280,7 +279,6 @@ export const useConnStore = defineStore('conn', () => {
 
                 }
             }
-    
         } 
 
         else if (errorStanza) {
@@ -415,12 +413,12 @@ export const useConnStore = defineStore('conn', () => {
                 hal.prod('handleNoiseHandshakeMsg/action/split/noise handshake successful, logging in')
                 mainStore.isPublicKeyAuthenticated = true
                 mainStore.haveInitialHandshakeCompleted = true
-                requestFeedItems('', 3, function() {})             
+                requestFeedItems('', 15, function() {})             
                 login()
             } else if (noisePattern = 'KK') {
                 hal.prod('handleNoiseHandshakeMsg/action/split/noise rehandshake successful')
                 isNoiseReHandshakeCompleted.value = true
-                requestFeedItems('', 3, function() {})
+                requestFeedItems('', 5, function() {})
             }
         }
 
@@ -615,6 +613,22 @@ export const useConnStore = defineStore('conn', () => {
         enqueue(packet, true, callback)            
     }
 
+    async function requestGroupFeedItems(groupID: string, cursor: string, limit: number, callback?: Function) {
+        console.log('connStore/requestGroupFeedItems/group: ' + groupID + ', cursor: ' + cursor)
+        
+        if (!cipherStateSend) {
+            hal.log('homeMain/requestGroupFeedItems/exit/undefined cipherStateSend')
+            return
+        }
+
+        const webContainerBinArr = encodeGroupFeedRequestWebContainer(groupID, cursor, limit)        
+        const encryptedWebContainer = cipherStateSend.EncryptWithAd([], webContainerBinArr)
+
+        const packet = createWebStanzaPacket(encryptedWebContainer)
+        
+        enqueue(packet, true, callback)            
+    }
+
     function login() {
         mainStore.loginMain()
     }
@@ -654,6 +668,7 @@ export const useConnStore = defineStore('conn', () => {
         clearMessagesInQueue,
 
         requestFeedItems,
+        requestGroupFeedItems,
 
         getMediaUrl,
 

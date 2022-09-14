@@ -1,18 +1,27 @@
 <script setup lang="ts">
-    import { ref, watchEffect } from 'vue'
+    import { initCustomFormatter, ref, watchEffect } from 'vue'
+    import { storeToRefs } from 'pinia'
 
-    import { useMainStore } from '../../stores/mainStore'
+    import { useMainStore } from '@/stores/mainStore'
+    import { useConnStore } from '@/stores/connStore'
+    import { useColorStore } from '@/stores/colorStore'
 
     import Post from '../home/Post.vue'
     import Comment from '../comment/CommentMain.vue'
     import hal from '../../common/halogger'
 
     const mainStore = useMainStore()
+    const connStore = useConnStore()
+    const colorStore = useColorStore()
 
     const listBoxWidth = ref('100%')
     const showComments = ref(false)
 
     const props = defineProps(['postsList'])
+
+    const { 
+        background: backgroundColor
+    } = storeToRefs(colorStore)  
 
     const inViewPostID = ref('')
 
@@ -34,7 +43,14 @@
 
     function openCommentsIfNeeded(postID: string) {
         if (showComments.value) {
-            inViewPostID.value = postID
+          
+            // close comment if user clicked on the same post after open
+            if (inViewPostID.value == postID) {
+                commentsClick(postID)
+            } else {
+                inViewPostID.value = postID
+            }
+
         } else {
             commentsClick(postID)
         }
@@ -93,7 +109,36 @@
                 inViewPostID.value = attr
             }
         }
+
+        var element = content.value;
+        const scrolled = element.scrollHeight - element.scrollTop
+        const nearEnd = element.clientHeight * 4 // 3 screens up
+        if (scrolled < nearEnd) {
+            const groupID = mainStore.groupsPageGroup.groupID
+            let groupCursor = ''
+            if (mainStore.groupFeedCursors[groupID]) {
+                groupCursor = mainStore.groupFeedCursors[groupID]
+            }
+            let name = mainStore.groupsPageGroup.name
+            console.log("FeedList/debouncedHandleScroll/request group feed: " + name + ' ' + groupID)            
+            connStore.requestGroupFeedItems(groupID, groupCursor, 20, function() {})
+        }
+
     }
+
+    init()
+
+    function init() {
+        const groupID = mainStore.groupsPageGroup.groupID
+        if (!mainStore.groupFeedCursors[groupID]) {
+            let groupCursor = ''
+            groupCursor = mainStore.groupFeedCursors[groupID]
+            let name = mainStore.groupsPageGroup.name
+            console.log("FeedList/init/request group feed: " + name + ' ' + groupID)
+            connStore.requestGroupFeedItems(groupID, groupCursor, 10, function() {})
+        }
+    }
+
 
     defineExpose({
         closeCommentsPanel
@@ -118,7 +163,8 @@
                 <Post
                     :post="value"
                     :postID="value.postID"
-                    userID="value.userID" 
+                    userID="value.userID"
+                    :atMainFeed=false
                     @commentsClick="openCommentsIfNeeded(value.postID)" 
                     :data-ha-postID="value.postID"> 
                 </Post>
@@ -163,7 +209,8 @@
         flex: 0 0 v-bind(listBoxWidth);
         height: 100%;
 
-    
+        background-color: v-bind(backgroundColor);
+
         overflow-y: auto;
         overflow-x: hidden;
 

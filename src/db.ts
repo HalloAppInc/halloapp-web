@@ -86,6 +86,7 @@ export interface Group {
     name?: string,  // will need this for search, maybe
     description?: string
     background?: string
+    lastChangeTimestamp: number
 }
 
 export interface Chat {
@@ -125,7 +126,7 @@ export class HADexie extends Dexie {
     
     constructor() {
         super('myDatabase')
-        this.version(5).stores({
+        this.version(6).stores({
             messageList: '++id, fromUserID, toUserID',
             media: '++id',
             feed: '++id, postID, userID, groupID, text, timestamp',

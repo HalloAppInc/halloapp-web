@@ -12,7 +12,7 @@
 
     const props = defineProps({
         groupID: {
-            type: Number,
+            type: String,
             required: true
         },
         avatarID: {
@@ -32,17 +32,17 @@
 
     const mainStore = useMainStore()
 
-    const { getAvatar } = useHAAvatar()
+    const { fetchGroupAvatar } = useHAAvatar()
 
     const avatarWidth = props.width.toString() + 'px'
     const avatarHeight = props.width.toString() + 'px'
 
-    const avatarImageUrl = ref(mainStore.devCORSWorkaroundUrlPrefix + "https://web.halloapp.com/assets/avatar.svg")
+    const avatarImageUrl = ref(mainStore.devCORSWorkaroundUrlPrefix + "https://web.halloapp.com/assets/groupAvatar.svg")
 
     init()
 
     async function init() {
-        const avatarImgBlob = await getAvatar(props.groupID)
+        const avatarImgBlob = await fetchGroupAvatar(props.groupID)
 
         if (avatarImgBlob) {
             const avatarImgBlobUrl = URL.createObjectURL(avatarImgBlob)
@@ -53,7 +53,7 @@
     }
 
     async function setupObserver() {
-        const observable = liveQuery (() => db.avatar.where('groupID').equals(props.groupID).toArray())
+        const observable = liveQuery (() => db.groupAvatar.where('groupID').equals(props.groupID).toArray())
         const subscription = observable.subscribe({
             next: result => {
                 if (!result) { return }
@@ -82,9 +82,9 @@
     .groupAvatarImage {
         height: v-bind(avatarWidth); 
         width: v-bind(avatarHeight); 
-        object-fit: contain; 
-        border-radius: 50%; 
-        background-color: gray;
+        object-fit: cover;
+        border-radius: 30%; 
+        background-color: rgb(200, 192, 192);
     } 
 
 </style>

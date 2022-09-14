@@ -20,20 +20,29 @@ export default defineComponent({
     textLight: '#111b21',
     textDark: '#e9edef',
 
+    secondaryTextLight: '#83939d',
+    secondaryTextDark: '#83939d',
+
     hoverTextLight: '#FFFFFF',
     hoverTextDark: '#000000',
 
     hoverTextBackgroundLight: '#111b21',
     hoverTextBackgroundDark: '#FFFFFF',
 
-    secondaryTextLight: '#83939d',
-    secondaryTextDark: '#83939d',
+    secondaryBgHoverLight: 'rgb(236, 236, 236)',
+    secondaryBgHoverDark: 'rgb(90, 89, 89)',
+
+    secondaryBgSelectedLight: 'rgb(226, 226, 226)',
+    secondaryBgSelectedDark: 'rgb(73, 73, 73)',     
 
     lineLight: 'rgb(226, 224, 224)',
     lineDark: '#8899a6',
 
     borderlineLight: 'rgb(226, 224, 224)',
     borderlineDark: '#22303c',
+
+    secondaryBorderLight: 'rgb(226, 224, 224)',
+    secondaryBorderDark: 'rgb(62, 61, 61)',    
 
     iconLight: 'black',
     iconDark: '#FFFFFF',

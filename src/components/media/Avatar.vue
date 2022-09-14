@@ -4,11 +4,11 @@
     import { liveQuery } from 'dexie'
     import { useI18n } from 'vue-i18n'
 
-    import { useMainStore } from '../../stores/mainStore'
-    import { db } from '../../db'
-    import hal from '../../common/halogger'
+    import { useMainStore } from '@/stores/mainStore'
+    import { db } from '@/db'
+    import hal from '@/common/halogger'
 
-    import { useHAAvatar } from '../../composables/haAvatar'
+    import { useHAAvatar } from '@/composables/haAvatar'
 
     const props = defineProps({
         userID: {
@@ -54,7 +54,7 @@
 
     async function setupObserver() {
         const observable = liveQuery (() => db.avatar.where('userID').equals(props.userID).toArray())
-        const subscription = observable.subscribe({
+        const avatarSubscription = observable.subscribe({
             next: result => {
                 if (!result) { return }
                 if (result.length == 0) { return }

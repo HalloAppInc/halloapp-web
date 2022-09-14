@@ -57,6 +57,8 @@ export const useMainStore = defineStore('main', {
         mainFeedTailPostTimestamp: 0,
         mainFeedNextCursor: '',
 
+        groupFeedCursors: <any>{},
+
         mobileNavlessPanel: '',
         scrollToTop: '',
 
@@ -127,7 +129,11 @@ export const useMainStore = defineStore('main', {
             
             for (const prop of Object.getOwnPropertyNames(this.groupsPageGroup)) {
                 delete this.groupsPageGroup[prop]
-            }                 
+            }       
+
+            for (const prop of Object.getOwnPropertyNames(this.groupFeedCursors)) {
+                delete this.groupFeedCursors[prop]
+            }    
 
             hal.log('mainStore/logged out')
         },

@@ -1,34 +1,34 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+    import { ref, computed } from 'vue'
+    import { storeToRefs } from 'pinia'
+    import { useI18n } from 'vue-i18n'
 
-import { useColorStore } from '../../stores/colorStore'
+    import { useMainStore } from '@/stores/mainStore'
+    import { useColorStore } from '@/stores/colorStore'
 
-import { useMainStore } from '../../stores/mainStore'
+    import GroupAvatar from '@/components/media/GroupAvatar.vue'
 
-import { useI18n } from 'vue-i18n'
+    const props = defineProps(['title'])
 
-import Avatar from '../media/Avatar.vue'
+    const { t } = useI18n({
+        inheritLocale: true,
+        useScope: 'global'
+    })
 
-const props = defineProps(['title'])
+    const mainStore = useMainStore()
+    const colorStore = useColorStore()
 
-const { t } = useI18n({
-    inheritLocale: true,
-    useScope: 'global'
-})
+    const { 
+        background: backgroundColor
+    } = storeToRefs(colorStore)  
 
-const colorStore = useColorStore()
+    const hoverColor = computed(() => {
+        return colorStore.hover
+    })
 
-const mainStore = useMainStore()
-
-const hoverColor = computed(() => {
-    return colorStore.hover
-})
-
-const iconColor = computed(() => {
-    return colorStore.icon
-})
-
-
+    const iconColor = computed(() => {
+        return colorStore.icon
+    })
 </script>
 
 <template>
@@ -43,9 +43,9 @@ const iconColor = computed(() => {
                 </div>
             </div>
            
-            <!-- <div class="avatarContainer">
-                <Avatar :userID="111" :width="30"></Avatar>
-            </div>            -->
+            <div class="avatarContainer">
+                <GroupAvatar v-if="mainStore.groupsPageGroup && mainStore.groupsPageGroup.groupID" :groupID="mainStore.groupsPageGroup.groupID" :width="30"></GroupAvatar>
+            </div>           
 
             <div class='titleContainer'>
                 {{ mainStore.groupsPageGroup.title }}
@@ -58,86 +58,85 @@ const iconColor = computed(() => {
 
 <style scoped>
 
-.groupHeader {
-    position: sticky;
-    top: 0px;
-    width: 100%;
-    height: 50px;
-    background-color: rgb(243, 243, 240);
-    z-index: 2;
-}
+    .groupHeader {
+        position: sticky;
+        top: 0px;
+        width: 100%;
+        height: 50px;
+        background-color: v-bind(backgroundColor);
+        z-index: 2;
+    }
 
-.container {
-    height: 50px;
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
+    .container {
+        height: 50px;
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
+    }
 
-}
+    .leftGutter {
+        flex: 0 0 10px;
+    }
 
-.leftGutter {
-    flex: 0 0 10px;
-}
+    .rightGutter {
+        flex: 0 0 10px;
+    }
 
-.rightGutter {
-    flex: 0 0 10px;
-}
+    .iconContainer {
+        flex: 0 0 50px;
+        
+        color: v-bind(iconColor);
 
-.iconContainer {
-    flex: 0 0 50px;
-    
-    color: v-bind(iconColor);
+        display: flex;
+        justify-content: center;
+    }
 
-    display: flex;
-    justify-content: center;
-}
+    .iconContainer:hover {
+        cursor: pointer;
+    }
 
-.iconContainer:hover {
-    cursor: pointer;
-}
+    .iconShadow {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
 
-.iconShadow {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+        border-radius: 50%;
+    }
 
-    border-radius: 50%;
-}
+    .iconShadow:hover {
+        background-color: v-bind(hoverColor);
+    }
 
-.iconShadow:hover {
-    background-color: v-bind(hoverColor);
-}
+    .avatarContainer {
+        padding-top: 5px;
+        padding-left: 15px;
+        flex: 0 0 65px;
+    }
 
-.avatarContainer {
-    padding-top: 5px;
-    padding-left: 15px;
-    flex: 0 0 65px;
-}
+    .avatar {
 
-.avatar {
+        background-color: lightgray;
+        border-radius: 50%;
+    }
 
-    background-color: lightgray;
-    border-radius: 50%;
-}
+    .titleContainer {
+        font-family: "Gotham", Helvetica, "Helvetica Neue", Arial, Avenir, sans-serif;
+        font-size: 14px;
 
-.titleContainer {
-    font-family: "Gotham", Helvetica, "Helvetica Neue", Arial, Avenir, sans-serif;
-    font-size: 14px;
+        color: v-bind(iconColor);
 
-    color: v-bind(iconColor);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
 
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.verticalLine {
-    border-right: 1px solid rgb(200, 200, 200);
-    height: 30px;
-    margin: 10px 30px;
-}
+    .verticalLine {
+        border-right: 1px solid rgb(200, 200, 200);
+        height: 30px;
+        margin: 10px 30px;
+    }
 
 </style>
