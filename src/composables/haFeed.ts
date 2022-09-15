@@ -78,37 +78,39 @@ export function useHAFeed() {
          * robustness: should make all processing async/awaits and bulk insert into db,
          * and record only after everything succeeds 
          */
+        if (feedResponse.type == web.FeedType.HOME) {
 
-        /* record most recent post */
-        if (firstItemPost.timestamp >= mainStore.mainFeedHeadPostTimestamp) {
-            if (firstItemPost.id != mainStore.mainFeedHeadPostID) {
-                mainStore.mainFeedHeadPostID = firstItemPost.id
-                mainStore.mainFeedHeadPostTimestamp = firstItemPost.timestamp                
+            /* record most recent main feed post */
+            if (firstItemPost.timestamp >= mainStore.mainFeedHeadPostTimestamp) {
+                if (firstItemPost.id != mainStore.mainFeedHeadPostID) {
+                    mainStore.mainFeedHeadPostID = firstItemPost.id
+                    mainStore.mainFeedHeadPostTimestamp = firstItemPost.timestamp                
+                }
             }
-        }
 
-        /* record oldest post */
-        if (lastItemPost.timestamp <= mainStore.mainFeedTailPostTimestamp || 
-            mainStore.mainFeedTailPostTimestamp == 0) {
+            /* record oldest main feed post */
+            if (lastItemPost.timestamp <= mainStore.mainFeedTailPostTimestamp || 
+                mainStore.mainFeedTailPostTimestamp == 0) {
 
-            if (lastItemPost.id != mainStore.mainFeedTailPostID) {
-                mainStore.mainFeedTailPostID = lastItemPost.id
-                mainStore.mainFeedTailPostTimestamp = lastItemPost.timestamp       
-                
-                /* record nextCursor as there's more items */
-                if (feedResponse.nextCursor) {
-                    mainStore.mainFeedNextCursor = feedResponse.nextCursor
-                    const numDBItems = await db.feed.count()
-        
-                    /* if there's less than x feed items, fill it */
-                    if (numDBItems <= 3) {
-                        // connStore.requestFeedItems(mainStore.mainFeedNextCursor, 10, function() {})
+                if (lastItemPost.id != mainStore.mainFeedTailPostID) {
+                    mainStore.mainFeedTailPostID = lastItemPost.id
+                    mainStore.mainFeedTailPostTimestamp = lastItemPost.timestamp       
+                    
+                    /* record nextCursor as there's more items */
+                    if (feedResponse.nextCursor) {
+                        mainStore.mainFeedNextCursor = feedResponse.nextCursor
+                        const numDBItems = await db.feed.count()
+
+                        /* if there's less than x feed items, fill it */
+                        if (numDBItems < 5) {
+                            connStore.requestFeedItems(mainStore.mainFeedNextCursor, 50, function() {})
+                        }
+                    } 
+                    
+                    /* no more feed items to retrieve, use the oldest post for the next request */
+                    else {
+                        mainStore.mainFeedNextCursor = mainStore.mainFeedTailPostID
                     }
-                } 
-                
-                /* no more feed items to retrieve, use the oldest post for the next request */
-                else {
-                    mainStore.mainFeedNextCursor = mainStore.mainFeedTailPostID
                 }
             }
         }
@@ -189,7 +191,7 @@ export function useHAFeed() {
         if (!payloadBinArr) { return }
         const postContainer = await decodeToPostContainer(payloadBinArr)
     
-        hal.log('haFeed/processServerPost/postContainer:')
+        // hal.log('haFeed/processServerPost/postContainer:')
         console.dir(postContainer)
     
         if (!postContainer) { return }
@@ -315,7 +317,6 @@ export function useHAFeed() {
                     const media = previewImage.img
 
                     const linkPreview = processLinkPreview(postObject.postID, postContainer.text.link)
-                    console.dir(linkPreview)
                     if (linkPreview) {
                         postObject.linkPreview = linkPreview
 
@@ -336,8 +337,8 @@ export function useHAFeed() {
             postObject.mentions = processMentions(postMentions)
         }
 
-        console.log("haFeed/processServerPost/postObject: ")
-        console.dir(postObject)
+        // console.log("haFeed/processServerPost/postObject: ")
+        // console.dir(postObject)
 
         if (groupID) {
             modifyGroupTimestampIfNeeded(postObject)
@@ -483,7 +484,7 @@ export function useHAFeed() {
         return arr
     }
 
-    async function modifyPost(postID: string, order: number, blob: Blob) {
+    async function modifyPostMedia(postID: string, order: number, blob: Blob) {
         await db.postMedia.where('postID').equals(postID).and((postMedia) => {
             return postMedia.order == order
         }).modify({
@@ -540,6 +541,6 @@ export function useHAFeed() {
 
     return { 
         processWebContainer, getPostMedia, 
-        modifyPost, modifyPostVoiceNote, modifyPostLinkPreviewMedia,
+        modifyPostMedia, modifyPostVoiceNote, modifyPostLinkPreviewMedia,
         setPostMediaIsCodecH265 }
 }

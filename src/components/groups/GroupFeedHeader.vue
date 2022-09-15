@@ -44,11 +44,11 @@
             </div>
            
             <div class="avatarContainer">
-                <GroupAvatar v-if="mainStore.groupsPageGroup && mainStore.groupsPageGroup.groupID" :groupID="mainStore.groupsPageGroup.groupID" :width="30"></GroupAvatar>
+                <GroupAvatar v-if="mainStore.groupsPageGroupID" :groupID="mainStore.groupsPageGroupID" :width="30"></GroupAvatar>
             </div>           
 
-            <div class='titleContainer'>
-                {{ mainStore.groupsPageGroup.title }}
+            <div v-if="mainStore.groupsPageGroupID" class='titleContainer'>
+                {{ mainStore.groupnames[mainStore.groupsPageGroupID] }}
             </div>
 
         </div>

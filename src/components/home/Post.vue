@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { toRef, ref, onBeforeUnmount } from "vue"
+    import { toRef, Ref, ref, onBeforeUnmount } from "vue"
     import { storeToRefs } from 'pinia'
     import { liveQuery } from "dexie"
     import MP4Box from 'mp4box'
@@ -33,15 +33,6 @@
     const props = defineProps<Props>()
     const post = toRef(props, 'post')
 
-    const postObservable = liveQuery (() => db.postMedia.where('postID').equals(props.postID).toArray())
-
-    const postSubscription = postObservable.subscribe({
-        next: result => { 
-            /* improve: might be too heavy, maybe just reprocess the media */
-            processPost(props.post)
-        },
-        error: error => console.error(error)
-    })
 
     onBeforeUnmount(() => {
         postSubscription.unsubscribe()
@@ -57,7 +48,8 @@
     const { processText } = useHAText()
     const { formatTime } = useTimeformatter()
 
-    const { 
+    const {
+        primaryBlue: primaryBlueColor,
         background: backgroundColor, 
         secondaryBg: secondaryBgColor,
         text: textColor,
@@ -66,12 +58,9 @@
        
     const { 
         getPostMedia, 
-        modifyPost, modifyPostVoiceNote, modifyPostLinkPreviewMedia, 
+        modifyPostMedia, modifyPostVoiceNote, modifyPostLinkPreviewMedia, 
         setPostMediaIsCodecH265 
     } = useHAFeed()
-
-    const primaryBlue = ref("#007AFF")
-    const primaryBlueDark = ref("rgb(10, 132, 255, 1)")
 
     const headerWidth = ref(450)
     const postWidth = ref(430)
@@ -109,7 +98,8 @@
         isReady: boolean;
         errorMsg?: String;
     }
-    const album = ref({media: [] as Media[]})
+   
+    const album: Ref<Media[]> = ref([])
 
     const isAlbum = ref(false)
 
@@ -120,14 +110,30 @@
     const isDeleted = ref(false)
 
     setPostSize()
-    init()
+    processPost(props.post)
 
-    async function init() {  
-        processPost(props.post)
-        if (props.post.retractState == web.PostDisplayInfo.RetractState.RETRACTED) {
-            isDeleted.value = true
-        }
-    }
+    const postObservable = liveQuery (() => db.postMedia.where('postID').equals(props.postID).toArray())
+    const postSubscription = postObservable.subscribe({
+        next: resultList => { 
+
+            /* only update recently downloaded media */
+            for (let i = 0; i < resultList.length; i++) {
+                const result = resultList[i]
+                if (!result.blob) { continue }
+ 
+                const albumItem = album.value[result.order]
+
+                if (!albumItem.isReady) {
+                    const object = URL.createObjectURL(result.blob)
+                    albumItem.mediaBlob = object
+                    albumItem.isReady = true
+                }
+            }
+        },
+        error: error => console.error(error)
+    })
+
+
 
     async function getDerivedKey(secret: any, info: any) {
         const derivedKeyObj = await hkdf.compute(secret, 'SHA-256', 80, info, new Uint8Array())
@@ -385,7 +391,7 @@
 
                     const combine = combineBinaryArrays(saveToDB)
                     const bb = new Blob([combine], {type: "video/mp4"})
-                    modifyPost(media.postID, media.order, bb)
+                    modifyPostMedia(media.postID, media.order, bb)
 
                 } else {
                     hal.log('fetchAndDecryptStream/done/error')
@@ -530,6 +536,13 @@
         let isVoiceNote = false
         let voiceNoteMedia: any
 
+
+        if (props.post.retractState == web.PostDisplayInfo.RetractState.RETRACTED) {
+            isDeleted.value = true
+            return
+        }
+
+
         postTimestamp.value = formatTime(post.timestamp, locale.value as string)
 
         const postMedia = await getPostMedia(post.postID)
@@ -541,7 +554,7 @@
             for (const [index, mediaInfo] of postMedia.entries()) {
                 
                 if (mediaInfo.isCodecH265) {
-                    album.value.media[index].errorMsg = t('post.noH265VideoSupportText')
+                    album.value[index].errorMsg = t('post.noH265VideoSupportText')
                 }
 
                 if (mediaInfo.type == PostMediaType.Image) {
@@ -555,15 +568,15 @@
                         
                         mediaBlob = await getMediaBlob(imageInfo, mediaInfo)
                         if (mediaBlob) {
-                            modifyPost(props.post.postID, index, mediaBlob)
+                            modifyPostMedia(props.post.postID, index, mediaBlob)
                         }
 
                     }
 
                     if (mediaBlob) {
                         const object = URL.createObjectURL(mediaBlob)
-                        album.value.media[index].mediaBlob = object
-                        album.value.media[index].isReady = true
+                        album.value[index].mediaBlob = object
+                        album.value[index].isReady = true
                     }
                 }
 
@@ -575,8 +588,8 @@
                         mediaBlob = mediaInfo.blob
 
                         const object = URL.createObjectURL(mediaBlob)
-                        album.value.media[index].mediaBlob = object
-                        album.value.media[index].isReady = true
+                        album.value[index].mediaBlob = object
+                        album.value[index].isReady = true
 
                     } else {
                         const chunkSize = mediaInfo.chunkSize
@@ -590,28 +603,28 @@
                                 const blobSize = mediaInfo.blobSize
                                 setupStreamingMediaSource(mediaSource, mediaInfo, videoInfo, blobSize, chunkSize)
 
-                                album.value.media[index].mediaBlob = mediaSourceUrl
+                                album.value[index].mediaBlob = mediaSourceUrl
 
                                 
                             } else {
                                 
                                 mediaBlob = await getChunkedMediaBlob(mediaInfo, videoInfo, chunkSize)
                                 const mediaBlobUrl = URL.createObjectURL(mediaBlob)
-                                album.value.media[index].mediaBlob = mediaBlobUrl
+                                album.value[index].mediaBlob = mediaBlobUrl
 
-                                modifyPost(props.post.postID, index, mediaBlob)
+                                modifyPostMedia(props.post.postID, index, mediaBlob)
 
                             }
 
-                            album.value.media[index].isReady = true                                               
+                            album.value[index].isReady = true                                               
                         } else {
                             mediaBlob = await getMediaBlob(videoInfo, mediaInfo)
                             if (mediaBlob) {
                                 const mediaBlobUrl = URL.createObjectURL(mediaBlob)
-                                album.value.media[index].mediaBlob = mediaBlobUrl
-                                album.value.media[index].isReady = true    
+                                album.value[index].mediaBlob = mediaBlobUrl
+                                album.value[index].isReady = true    
                                 
-                                modifyPost(props.post.postID, index, mediaBlob)
+                                modifyPostMedia(props.post.postID, index, mediaBlob)
                             }
                         }
                     }
@@ -719,36 +732,33 @@
 
         let tallestMediaItemHeight = 0
 
-        for (const [idx, media] of mediaList.entries()) {
-        // for (const media of mediaList) {
-            // const type = media.type ? PostMediaType.Image : PostMediaType.Video
-            let mediaItem = media
-            // if (type == PostMediaType.Image) {
-            //     mediaItem = media
-            // } else if (type == PostMediaType.Video) {
-            //     mediaItem = media
-            // }
+        for (const [index, mediaItem] of mediaList.entries()) {
+            let mediaItemWidth = mediaItem.width
+            let mediaItemHeight = mediaItem.height
 
-            let mediaItemWidth = media.width
-            let mediaItemHeight = media.height
+            /* 99% of the time the item height or width will be greater */
+            if (mediaItemHeight > maxBoxHeight || mediaItemWidth > maxBoxWidth) {
 
-            if (mediaItemHeight > maxBoxHeight) {
-                const mediaItemRatio = mediaItem.width/mediaItem.height
+                const mediaItemRatio = mediaItemWidth/mediaItemHeight
+
+                /* item is wider, scale by max width */
                 if (mediaItemRatio > defaultRatio) {
                     mediaItemWidth = maxBoxWidth
                     mediaItemHeight = mediaItemWidth/mediaItemRatio
-                } else {
+                } 
+    
+                /* scale by max height */
+                else {
                     mediaItemHeight = maxBoxHeight
                     mediaItemWidth = mediaItemHeight*mediaItemRatio
                 }
             }
 
             /* add margins so carousel have some spacing between slides */
-            let mediaItemMargin = postWidth.value - mediaItemWidth
+            const mediaItemMargin = postWidth.value - mediaItemWidth
 
-            const obj: Media = { type: media.type, width: mediaItemWidth, height: mediaItemHeight, margin: mediaItemMargin, isReady: false }
-            // album.value.media.push(obj)
-            album.value.media[idx] = obj
+            const mediaObj: Media = { type: mediaItem.type, width: mediaItemWidth, height: mediaItemHeight, margin: mediaItemMargin, isReady: false }
+            album.value[index] = mediaObj
 
             if (mediaItemHeight > tallestMediaItemHeight) {
                 tallestMediaItemHeight = mediaItemHeight
@@ -785,7 +795,7 @@
                         <span v-if="atMainFeed && props.post.groupID" class="groupIndicator">
                             <font-awesome-icon :icon="['fas', 'caret-right']" size='sm' class="groupIndicatorIcon"/>
                         </span>
-                        <span v-if="atMainFeed && props.post.groupID" class="groupName">
+                        <span v-if="atMainFeed && props.post.groupID" class="groupName" @click="mainStore.gotoGroup(props.post.groupID)">
                             {{ mainStore.groupnames[props.post.groupID] }}
                         </span>
                     </div>
@@ -800,7 +810,7 @@
                 :isSafari="mainStore.isSafari"
                 :postID="post.postID"
                 :isAlbum="isAlbum"
-                :album="album.media"
+                :album="album"
                 :showPreviewImage="showPreviewImage"
                 :previewImageSrc="previewImageSrc"
                 :mediaBoxWidth="mediaBoxWidth"
@@ -961,6 +971,11 @@
 
     .post #nameBox .name .groupName {
         display: inline-block; /* this breaks the block to the next line when it's too long to fit */
+        cursor: pointer;
+    }
+
+    .post #nameBox .name .groupName:hover {
+        color: v-bind(primaryBlueColor);
     }
 
     .post #nameBox .time {
@@ -1025,13 +1040,8 @@
         }
     } */
     .postBodyContent #readMore {
-        color: v-bind(primaryBlue);
+        color: v-bind(primaryBlueColor);
         cursor: pointer;
-    }
-    @media (prefers-color-scheme: dark) {
-        .postBodyContent #readMore {
-            color: v-bind(primaryBlueDark);
-        }
     }
     @media (pointer: fine) {
         .postBodyContent #readMore:hover {
@@ -1092,15 +1102,10 @@
         width: 6px;
         height: 6px;
         border-radius: 50%;
-        background-color: rgba(0, 122, 255, 0.7);
+        background-color: v-bind(primaryBlueColor);
         display: none;
     }
-    @media (prefers-color-scheme: dark) {
-        #newCommentIndicator {
-            background-color: v-bind(primaryBlueDark);
-        }
-    }
-
+    
     #replyButton {
         display: flex;
         flex-direction: horizontal;

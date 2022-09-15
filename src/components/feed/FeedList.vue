@@ -1,15 +1,19 @@
 <script setup lang="ts">
-    import { initCustomFormatter, ref, watchEffect } from 'vue'
+    import { Ref, ref, watchEffect, onActivated, onBeforeUnmount } from 'vue'
+    import { liveQuery } from 'dexie'
     import { storeToRefs } from 'pinia'
+
+    import { db, Feed } from '@/db'
 
     import { useMainStore } from '@/stores/mainStore'
     import { useConnStore } from '@/stores/connStore'
     import { useColorStore } from '@/stores/colorStore'
 
-    import Post from '../home/Post.vue'
-    import Comment from '../comment/CommentMain.vue'
-    import hal from '../../common/halogger'
+    import hal from '@/common/halogger'
 
+    import Post from '@/components/home/Post.vue'
+    import Comment from '@/components/comment/CommentMain.vue'
+    
     const mainStore = useMainStore()
     const connStore = useConnStore()
     const colorStore = useColorStore()
@@ -17,16 +21,56 @@
     const listBoxWidth = ref('100%')
     const showComments = ref(false)
 
-    const props = defineProps(['postsList'])
+    interface Props {
+        atMainFeed: boolean,
+        groupID?: string
+    }
+    const props = defineProps<Props>()
 
     const { 
         background: backgroundColor
     } = storeToRefs(colorStore)  
 
+    const dbListData: Ref<Feed[]> = ref([])
+    const listData: Ref<Feed[]> = ref([])
+    const count = ref(5)
+
     const inViewPostID = ref('')
+
+    let savedScrollTop = 0 // store scroll position
 
     const content = ref<HTMLElement | null>(null)
     let handleScrollTimer: any
+
+    let feedObservable: any
+
+    if (props.atMainFeed) {
+        feedObservable = liveQuery (() => db.feed
+            .reverse()
+            .sortBy('timestamp')
+        )
+    } else if (props.groupID) {
+
+        const groupId = props.groupID
+
+        feedObservable = liveQuery (() => db.feed.where('groupID').equals(groupId)
+            .reverse()
+            .sortBy('timestamp')
+        )
+
+
+    }
+
+    const subscription = feedObservable.subscribe({
+        next: (result: any) => { 
+            if (result) {
+                dbListData.value = result
+                makeList()
+            }
+        },
+        error: (error: any) => console.error(error)
+    })
+
 
     const emit = defineEmits<{(e: 'commentsClick', postID: string): void}>()
 
@@ -36,6 +80,14 @@
             mainStore.scrollToTop = ''
         }
     })
+
+    function makeList() {
+        if (dbListData.value.length > count.value) {
+            listData.value = dbListData.value.slice(0, count.value)
+        } else {
+            listData.value = dbListData.value
+        }
+    }
 
     function scrollToTop() {    
         content.value?.scrollTo({ left: 0, top: 0, behavior: 'smooth' })
@@ -90,12 +142,13 @@
 
     function handleScroll() {
         clearTimeout(handleScrollTimer)
-        handleScrollTimer = setTimeout(debouncedHandleScroll, 250)
+        handleScrollTimer = setTimeout(debouncedHandleScroll, 200)
     }
 
     function debouncedHandleScroll() {
         if (!content.value) { return }
 
+        /* auto select post for comments when post is near top */
         const contentViewportRect = content.value.getBoundingClientRect()
         const pointX = (contentViewportRect.width / 2) + contentViewportRect.left
         const pointY = contentViewportRect.top + 100
@@ -110,35 +163,52 @@
             }
         }
 
+        /* fetch more posts before user gets to the end of their feed */
         var element = content.value;
         const scrolled = element.scrollHeight - element.scrollTop
-        const nearEnd = element.clientHeight * 4 // 3 screens up
+        const nearEnd = element.clientHeight * 3 // 2 screens up
         if (scrolled < nearEnd) {
-            const groupID = mainStore.groupsPageGroup.groupID
-            let groupCursor = ''
-            if (mainStore.groupFeedCursors[groupID]) {
-                groupCursor = mainStore.groupFeedCursors[groupID]
+
+            if (props.atMainFeed) {
+
+                connStore.requestFeedItems(mainStore.mainFeedNextCursor, 50, function() {})
+
+            } else if (!props.atMainFeed && props.groupID) {
+
+                const groupID = mainStore.groupsPageGroupID
+                let groupCursor = ''
+                if (mainStore.groupFeedCursors[groupID]) {
+                    groupCursor = mainStore.groupFeedCursors[groupID]
+                }      
+                connStore.requestGroupFeedItems(groupID, groupCursor, 50, function() {})
             }
-            let name = mainStore.groupsPageGroup.name
-            console.log("FeedList/debouncedHandleScroll/request group feed: " + name + ' ' + groupID)            
-            connStore.requestGroupFeedItems(groupID, groupCursor, 20, function() {})
+
+            count.value += 5
+            makeList()
         }
+
+        savedScrollTop = element.scrollTop
 
     }
 
-    init()
+    onActivated(() => {
+        if (!content.value) { return }
+        let element = content.value
+        element.scrollTop = savedScrollTop
+    })
 
-    function init() {
-        const groupID = mainStore.groupsPageGroup.groupID
+    if (!props.atMainFeed && props.groupID) {
+        initGroupFeed()
+    }
+
+    function initGroupFeed() {
+        const groupID = mainStore.groupsPageGroupID
         if (!mainStore.groupFeedCursors[groupID]) {
             let groupCursor = ''
             groupCursor = mainStore.groupFeedCursors[groupID]
-            let name = mainStore.groupsPageGroup.name
-            console.log("FeedList/init/request group feed: " + name + ' ' + groupID)
             connStore.requestGroupFeedItems(groupID, groupCursor, 10, function() {})
         }
-    }
-
+    }    
 
     defineExpose({
         closeCommentsPanel
@@ -154,17 +224,13 @@
 
             <slot name="header"></slot>
 
-            <!-- <div class='header'>
-                
-            </div> -->
-
-            <div v-for="value in props.postsList" class="container">
+            <div v-for="value in listData" class="container">
                 <!-- data-ha-postID is used only for detecting post while scrolling -->
                 <Post
                     :post="value"
                     :postID="value.postID"
                     userID="value.userID"
-                    :atMainFeed=false
+                    :atMainFeed="props.atMainFeed"
                     @commentsClick="openCommentsIfNeeded(value.postID)" 
                     :data-ha-postID="value.postID"> 
                 </Post>
@@ -182,11 +248,11 @@
 <style scoped>
 
     *::-webkit-scrollbar {
-        width: 5px;
+        width: 10px;
     }
 
     *::-webkit-scrollbar-track {
-        background: white;        /* color of the tracking area */
+        background: v-bind(backgroundColor);        /* color of the tracking area */
     }
 
     *::-webkit-scrollbar-thumb {

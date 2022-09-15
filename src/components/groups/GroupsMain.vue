@@ -8,30 +8,15 @@
 
     import { db, Feed } from '@/db'
 
-    import FeedList from '@/components/feed/FeedList.vue'
     import GroupFeedHeader from '@/components/groups/GroupFeedHeader.vue'
+    import FeedList from '@/components/feed/FeedList.vue'
 
     const mainStore = useMainStore()
     const colorStore = useColorStore()
 
     const feedRef = ref<InstanceType<typeof FeedList>>()
 
-    let groupID = mainStore.groupsPageGroup.groupID
-
-    const listData: Ref<Feed[]> = ref([])
-
-    const feedObservable = liveQuery (() => db.feed.where('groupID').equals(groupID)
-        .reverse()
-        .sortBy('timestamp')
-    )
-    const subscription = feedObservable.subscribe({
-        next: result => { 
-            if (result) {
-                listData.value = result
-            }
-        },
-        error: error => console.error(error)
-    })
+    let groupID = mainStore.groupsPageGroupID
 
     const { 
         background: backgroundColor,
@@ -56,7 +41,7 @@
 
 <template>
 
-    <FeedList ref="feedRef" :postsList="listData" @commentsClick="commentsClick()">
+    <FeedList ref="feedRef" :atMainFeed='false' :groupID="groupID" @commentsClick="commentsClick()">
         <template v-slot:header>
             <GroupFeedHeader @toggleSidebar="toggleSidebar()"></GroupFeedHeader>
         </template>
@@ -70,8 +55,7 @@
         width: 100%;
         height: 100%;
 
-        /* border-left: 1px solid #b8b7b7; */
-        border-left: 1px solid red;
+        border-left: 1px solid #b8b7b7;
 
         background-color: rgb(229, 229, 247);
 

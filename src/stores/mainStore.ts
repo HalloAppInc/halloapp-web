@@ -48,7 +48,7 @@ export const useMainStore = defineStore('main', {
         animateSidebar: false,
 
         page: 'home',
-        groupsPageGroup: <any>{},
+        groupsPageGroupID: '',
         settingsPage: '',
 
         mainFeedHeadPostID: '',
@@ -85,57 +85,53 @@ export const useMainStore = defineStore('main', {
             }
         },
         logoutMain() {
-            this.privateKeyBase64 = ''
-            this.mobilePublicKeyBase64 = ''
-            this.isPublicKeyAuthenticated = false
-            this.haveInitialHandshakeCompleted = false
-
-            // for (let prop in this.cipherStateReceive) {
-            //     delete this.cipherStateReceive[prop]
-            // }       
-
-            this.userID = 0
-
-            this.mainFeedHeadPostID = ''
-            this.mainFeedHeadPostTimestamp = 0
-            this.mainFeedTailPostID = ''
-            this.mainFeedTailPostTimestamp = 0
-            this.mainFeedNextCursor = ''
 
             // deletes the entire db and re-opens it
             // todo: make sure all other dbs like chat is also deleted, test to see if delete/re-open is fast enough
-            db.delete().then(() => db.open())
+            db.delete().then(() => {
+
+                this.privateKeyBase64 = ''
+                this.mobilePublicKeyBase64 = ''
+                this.isPublicKeyAuthenticated = false
+                this.haveInitialHandshakeCompleted = false
     
-            // todo: remove public key from server? (what if there's no connection)
+                this.userID = 0
+    
+                this.mainFeedHeadPostID = ''
+                this.mainFeedHeadPostTimestamp = 0
+                this.mainFeedTailPostID = ''
+                this.mainFeedTailPostTimestamp = 0
+                this.mainFeedNextCursor = ''
+    
+                // todo: remove public key from server? (what if there's no connection)
+    
+                this.isLoggedIntoApp = false
+                this.loginUserID = ''
+                
+                /* manual reset instead of $reset() so we can preserve the states we want */
+                this.page = 'home'
+                this.groupsPageGroupID = ''
+                this.settingsPage = ''
+                // todo: might have to stop in-flight messages
+                this.messageQueue.splice(0, this.messageQueue.length) // clear messages
+    
+                for (const prop of Object.getOwnPropertyNames(this.pushnames)) {
+                    delete this.pushnames[prop]
+                }
+                for (const prop of Object.getOwnPropertyNames(this.pushnumbers)) {
+                    delete this.pushnumbers[prop]
+                }
+                for (const prop of Object.getOwnPropertyNames(this.groupnames)) {
+                    delete this.groupnames[prop]
+                }            
+                for (const prop of Object.getOwnPropertyNames(this.groupFeedCursors)) {
+                    delete this.groupFeedCursors[prop]
+                }    
+    
+                hal.log('mainStore/logged out')
 
-            this.isLoggedIntoApp = false
-            this.loginUserID = ''
-            
-            /* manual reset instead of $reset() so we can preserve the states we want */
-            this.page = 'home'
-            this.settingsPage = ''
-            // todo: might have to stop in-flight messages
-            this.messageQueue.splice(0, this.messageQueue.length) // clear messages
-
-            for (const prop of Object.getOwnPropertyNames(this.pushnames)) {
-                delete this.pushnames[prop]
-            }
-            for (const prop of Object.getOwnPropertyNames(this.pushnumbers)) {
-                delete this.pushnumbers[prop]
-            }
-            for (const prop of Object.getOwnPropertyNames(this.groupnames)) {
-                delete this.groupnames[prop]
-            }            
-            
-            for (const prop of Object.getOwnPropertyNames(this.groupsPageGroup)) {
-                delete this.groupsPageGroup[prop]
-            }       
-
-            for (const prop of Object.getOwnPropertyNames(this.groupFeedCursors)) {
-                delete this.groupFeedCursors[prop]
-            }    
-
-            hal.log('mainStore/logged out')
+                db.open() 
+            })
         },
         gotoPage(page: string) {
             if (page == this.page) {
@@ -156,6 +152,11 @@ export const useMainStore = defineStore('main', {
             if (this.page == 'groups') {
                 this.animateSidebar = true
             }
+        },
+        gotoGroup(groupID?: string) {
+            if (!groupID) return
+            this.page = 'groups'
+            this.groupsPageGroupID = groupID
         },
         gotoSettingsPage(page: string) {
             this.settingsPage = page

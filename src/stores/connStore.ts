@@ -272,8 +272,8 @@ export const useConnStore = defineStore('conn', () => {
                         const decrypted = cipherStateReceive.DecryptWithAd([], webStanzaContentsBinArr)
                         const webContainer = await decodeWebContainer(decrypted)
 
-                        hal.log('connStore/handleInbound/webStanza/decoded/webContainer:')
-                        console.dir(webContainer)
+                        // hal.log('connStore/handleInbound/webStanza/decoded/webContainer:')
+                        // console.dir(webContainer)
                         processWebContainer(webContainer)
                     }
 
@@ -413,7 +413,7 @@ export const useConnStore = defineStore('conn', () => {
                 hal.prod('handleNoiseHandshakeMsg/action/split/noise handshake successful, logging in')
                 mainStore.isPublicKeyAuthenticated = true
                 mainStore.haveInitialHandshakeCompleted = true
-                requestFeedItems('', 15, function() {})             
+                requestFeedItems('', 5, function() {})             
                 login()
             } else if (noisePattern = 'KK') {
                 hal.prod('handleNoiseHandshakeMsg/action/split/noise rehandshake successful')
