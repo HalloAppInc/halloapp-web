@@ -1,200 +1,205 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+    import { ref, onMounted, onBeforeUnmount } from 'vue'
+    import { storeToRefs } from 'pinia'
+    import { Base64 } from 'js-base64'
+    import { useI18n } from 'vue-i18n'
+    import qrCodeStyling from 'qr-code-styling'
 
-import hal from '../../common/halogger'
+    import { useMainStore } from '@/stores/mainStore'
+    import { useConnStore } from '@/stores/connStore'
+    import { useColorStore } from '@/stores/colorStore'
 
-import hacrypto from '../../common/hacrypto'
-import { Base64 } from 'js-base64'
+    import { useTimeformatter } from '@/composables/timeformatter'
 
-import { useMainStore } from '../../stores/mainStore'
-import { useConnStore } from '../../stores/connStore'
-import commonColors from '../../common/colors'
-import { useTimeformatter } from '../../composables/timeformatter'
+    import hal from '@/common/halogger'
+    import hacrypto from '@/common/hacrypto'
 
-import { useI18n } from 'vue-i18n'
+    const mainStore = useMainStore()
+    const connStore = useConnStore()
+    const colorStore = useColorStore()
+    const { formatTimer } = useTimeformatter()
 
-import qrCodeStyling from 'qr-code-styling'
+    const { t } = useI18n({
+        inheritLocale: true,
+        useScope: 'global'
+    })
 
-const mainStore = useMainStore()
-const connStore = useConnStore()
-const { formatTimer } = useTimeformatter()
+    const { 
+        background: backgroundColor,
+        primaryBlue: primaryBlueColor,
+        text: textColor,
+    } = storeToRefs(colorStore)  
 
-const primaryBlue = commonColors.primaryBlue
+    const $qrCode = ref(null)
+    const showQRCode = ref(true)
+    const showCountdown = ref(false)
+    let qrCodeTimer: any
+    let countdownInterval: any
+    let countdown = ref('')
 
-const { t } = useI18n({
-    inheritLocale: true,
-    useScope: 'global'
-})
+    let qrCodeStylingWithOptions: any
 
-const showQRCode = ref(true)
+    onMounted(() => {
+        generateQRCodeAndConnect()
+    })
 
-let qrCodeTimer: any
-let countdownInterval: any
+    onBeforeUnmount(() => {
+        // timers/intervals should not fire after unmount but clearing anyways
+        clearTimeout(qrCodeTimer)
+        clearInterval(countdownInterval)
+    })
 
-const $qrCode = ref(null)
+    function setCountdown(countdownTimeMs: any) {
+        const countDownDate: any = new Date(new Date().getTime() + countdownTimeMs)
 
-let qrCodeStylingWithOptions: any
+        countdown.value = formatTimer(countDownDate).display // run once first so re-runs won't show 00:00
 
-let countdown = ref('')
+        countdownInterval = setInterval(function() {
+            const formattedTimer = formatTimer(countDownDate)
+            if (formattedTimer.timeDiffMs <= 1000) {
+                clearInterval(countdownInterval)
+                showCountdown.value = false
+            } else {
+                countdown.value = formattedTimer.display
+                if (formattedTimer.timeDiffMs <= (2*60000)) {
+                    showCountdown.value = true
+                }
+            }
+        }, 750)
+    }
 
-onMounted(() => {
-    generateQRCodeAndConnect()
-})
+    function generateQRCodeAndConnect() {
+        
+        connStore.generatePublicKeyIfNeeded()
+        showQRCode.value = true
 
-onBeforeUnmount(() => {
-    // timers/intervals should not fire after unmount but clearing anyways
-    clearTimeout(qrCodeTimer)
-    clearInterval(countdownInterval)
-})
+        const countdownTimeMs = 3*60000
+        clearTimeout(qrCodeTimer)
+        clearInterval(countdownInterval)
+        qrCodeTimer = setTimeout(deleteQRCodeAndWait, countdownTimeMs)
+        setCountdown(countdownTimeMs)
 
-function setCountdown(countdownTimeMs: any) {
-    const countDownDate: any = new Date(new Date().getTime() + countdownTimeMs)
+        let qrCodeArr = []
 
-    countdown.value = formatTimer(countDownDate).display // run once first so re-runs won't show 00:00
+        let version = 1
+        let versionBinArr = new Uint8Array(1)
+        versionBinArr[0] = version
 
-    countdownInterval = setInterval(function() {
-        const formattedTimer = formatTimer(countDownDate)
-        if (formattedTimer.timeDiffMs <= 1000) {
-            clearInterval(countdownInterval)
+        qrCodeArr.push(versionBinArr)
+        qrCodeArr.push(Base64.toUint8Array(mainStore.publicKeyBase64))
+        
+        const qrCodeBinArr = hacrypto.combineBinaryArrays(qrCodeArr)
+        const qrCodeBase64 = Base64.fromUint8Array(qrCodeBinArr)
+
+        const options: any = {
+            width: 250,
+            height: 250,
+            type: 'svg',
+            data: qrCodeBase64,
+            image: mainStore.devCORSWorkaroundUrlPrefix + 'https://web.halloapp.com/assets/images/favicon.ico',
+            dotsOptions: {
+                color: '#4267b2',
+                type: 'rounded'
+            },
+            backgroundOptions: {
+                color: '#e9ebee',
+            },
+            imageOptions: {
+                crossOrigin: 'anonymous',
+                margin: 15
+            }
+        }
+
+        if (!qrCodeStylingWithOptions) {
+            qrCodeStylingWithOptions = new qrCodeStyling(options)
+            if ($qrCode.value) {
+                const el = $qrCode.value as HTMLElement
+                qrCodeStylingWithOptions.append(el)
+            }
         } else {
-             countdown.value = formattedTimer.display
+            qrCodeStylingWithOptions.update(options)
         }
-    }, 750)
-}
 
-function generateQRCodeAndConnect() {
-    
-    connStore.generatePublicKeyIfNeeded()
-    showQRCode.value = true
-
-    const countdownTimeMs = 3*60000
-    clearTimeout(qrCodeTimer)
-    clearInterval(countdownInterval)
-    qrCodeTimer = setTimeout(deleteQRCodeAndWait, countdownTimeMs)
-    setCountdown(countdownTimeMs)
-
-    let qrCodeArr = []
-
-    let version = 1
-    let versionBinArr = new Uint8Array(1)
-    versionBinArr[0] = version
-
-    qrCodeArr.push(versionBinArr)
-    qrCodeArr.push(Base64.toUint8Array(mainStore.publicKeyBase64))
-    
-    const qrCodeBinArr = hacrypto.combineBinaryArrays(qrCodeArr)
-    const qrCodeBase64 = Base64.fromUint8Array(qrCodeBinArr)
-
-    const options: any = {
-        width: 250,
-        height: 250,
-        type: 'svg',
-        data: qrCodeBase64,
-        image: mainStore.devCORSWorkaroundUrlPrefix + 'https://web.halloapp.com/assets/images/favicon.ico',
-        dotsOptions: {
-            color: '#4267b2',
-            type: 'rounded'
-        },
-        backgroundOptions: {
-            color: '#e9ebee',
-        },
-        imageOptions: {
-            crossOrigin: 'anonymous',
-            margin: 15
-        }
+        connStore.connectToServerIfNeeded()
     }
 
-    if (!qrCodeStylingWithOptions) {
-        qrCodeStylingWithOptions = new qrCodeStyling(options)
-        if ($qrCode.value) {
-            const el = $qrCode.value as HTMLElement
-            qrCodeStylingWithOptions.append(el)
-        }
-    } else {
-        qrCodeStylingWithOptions.update(options)
+    function fakeAuth() {
+        connStore.login()
     }
 
-    connStore.connectToServerIfNeeded()
-}
+    function getNewQRCode() {
+        generateQRCodeAndConnect()
+    }
 
-function fakeAuth() {
-    connStore.login()
-}
-
-function getNewQRCode() {
-    generateQRCodeAndConnect()
-}
-
-function deleteQRCodeAndWait() {
-    hal.log('com/QRCode/deleteQRCodeAndWait')
-    connStore.waitForUserToRegenKey()
-    showQRCode.value = false
-}
+    function deleteQRCodeAndWait() {
+        hal.log('com/QRCode/deleteQRCodeAndWait')
+        connStore.waitForUserToRegenKey()
+        showQRCode.value = false
+    }
 
 </script>
 
 <template>
 
-<div class="qrCodeColumn">
-    <div v-show='showQRCode' id="qrCodeBox" ref="$qrCode">
-    </div>
+    <div class="qrCodeColumn">
+        <div v-show='showQRCode' id="qrCodeBox" ref="$qrCode">
+        </div>
 
-    <div v-if='showQRCode'>
-        <div v-if="mainStore.isDebug" class="fakeAuthButton" @click="fakeAuth">
-            Fake Phone Auth
+        <div v-if='showQRCode'>
+            <!-- <div v-if="mainStore.isDebug" class="fakeAuthButton" @click="fakeAuth">
+                Fake Phone Auth
+            </div> -->
+            <div v-if="showCountdown" class="countdown">
+                {{ countdown }}
+            </div>
         </div>
-        <div class="countdown">
-            {{ countdown }}
-        </div>
+        <div id="getQRCodeButton" @click="getNewQRCode">
+            {{ t('login.getQRCode') }}
+        </div>    
     </div>
-    <div v-else id="getQRCodeButton" @click="getNewQRCode">
-        {{ t('login.getQRCode') }}
-    </div>    
-</div>
 
 </template>
 
 <style scoped>
 
-.qrCodeColumn {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-}
-#qrCodeBox {
-    width: 250px;
-    height: 250px;
-}
-.fakeAuthButton {
-    margin-top: 40px;
-    background-color: red;
-    border-radius: 30px;
-    padding: 10px 30px 10px 30px;
-    color: white;
-    font-weight: bold;
-}
-.fakeAuthButton:hover {
-    background-color: gray;
-    cursor: pointer;
-}
-.countdown {
-    margin-top: 10px;
-    text-align: center;
-    color: gray;
-}
-#getQRCodeButton {
-    margin-top: 40px;
-    background-color: v-bind(primaryBlue);
-    border-radius: 30px;
-    padding: 10px 30px 10px 30px;
-    color: white;
-    font-weight: bold;
-}
-#getQRCodeButton:hover {
-    background-color: gray;
-    cursor: pointer;
-}
-
+    .qrCodeColumn {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+    }
+    #qrCodeBox {
+        width: 250px;
+        height: 250px;
+    }
+    .fakeAuthButton {
+        margin-top: 40px;
+        background-color: red;
+        border-radius: 30px;
+        padding: 10px 30px 10px 30px;
+        color: white;
+        font-weight: bold;
+    }
+    .fakeAuthButton:hover {
+        background-color: gray;
+        cursor: pointer;
+    }
+    .countdown {
+        margin-top: 10px;
+        text-align: center;
+        color: gray;
+    }
+    #getQRCodeButton {
+        margin-top: 40px;
+        background-color: v-bind(primaryBlueColor);
+        border-radius: 30px;
+        padding: 10px 30px 10px 30px;
+        color: white;
+        font-weight: bold;
+    }
+    #getQRCodeButton:hover {
+        background-color: gray;
+        cursor: pointer;
+    }
 
 </style>

@@ -60,6 +60,7 @@ export function useHAFeed() {
             nb: There is a special case in which there can be more than 3 or 5 new posts (ie. 10) and 
             we will only process up to 3 or 5, the rest are to be handled via updates
         */
+        hal.log('haFeed/processFeedResponse/process num items: ' + items.length)
         for (let i = 0; i < items.length; i++) {
             const item = items[i]
             let infoIdx = postInfoList.findIndex((info: any) => info.id === item.post.id)
@@ -126,9 +127,23 @@ export function useHAFeed() {
 
             }
         }
-
     }
     
+    async function processReceiptInfo(receiptInfo: any) {
+
+        // for (let j = 0; j < userInfo.length; j++) {
+        //     const info = userInfo[j]
+        //     if (!info) { continue }
+        //     processUserDisplayInfo(info)
+        // }
+
+
+        // if (!mainStore.pushnames[userInfo.uid] || mainStore.pushnames[userInfo.uid] != userInfo.contactName) {
+        //     mainStore.pushnames[userInfo.uid] = userInfo.contactName
+        // }
+        // getAvatar(userInfo.uid, userInfo.avatarId)
+    }
+
     async function processUserDisplayInfo(userInfo: any) {
         if (!mainStore.pushnames[userInfo.uid] || mainStore.pushnames[userInfo.uid] != userInfo.contactName) {
             mainStore.pushnames[userInfo.uid] = userInfo.contactName
@@ -155,15 +170,12 @@ export function useHAFeed() {
         } else {
             const dbGroup = dbGroupsList[0]
             // todo: modify appropriate based on changes
-            
         }   
-
 
         if (!mainStore.groupnames[groupID] || mainStore.groupnames[groupID] != name) {
             mainStore.groupnames[groupID] = name
         }
         fetchGroupAvatar(groupID, info.avatarId)
-
     }    
     
     async function processFeedItem(feedItem: any, postInfo: any) {
@@ -182,7 +194,12 @@ export function useHAFeed() {
             postID: serverPost.id,
             userID: publisherUID,
             timestamp: serverPost.timestamp,
-            retractState: postInfo.retractState
+            retractState: postInfo.retractState,
+            unreadComments: postInfo.unreadComments,
+        }
+
+        if (postInfo.userReceipts) {
+            postObject.userReceipts = postInfo.userReceipts
         }
 
         let postMediaArr: PostMedia[] = []
@@ -192,7 +209,7 @@ export function useHAFeed() {
         const postContainer = await decodeToPostContainer(payloadBinArr)
     
         // hal.log('haFeed/processServerPost/postContainer:')
-        console.dir(postContainer)
+        // console.dir(postContainer)
     
         if (!postContainer) { return }
     
@@ -338,7 +355,7 @@ export function useHAFeed() {
         }
 
         // console.log("haFeed/processServerPost/postObject: ")
-        // console.dir(postObject)
+        console.dir(postObject)
 
         if (groupID) {
             modifyGroupTimestampIfNeeded(postObject)

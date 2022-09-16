@@ -22,6 +22,10 @@
         width: {
             type: Number,
             required: true
+        },
+        useBorder: {
+            type: Boolean,
+            required: false
         }
     })
 
@@ -37,7 +41,13 @@
     const avatarWidth = props.width.toString() + 'px'
     const avatarHeight = props.width.toString() + 'px'
 
+    const borderCss = ref('0px')
+
     const avatarImageUrl = ref(mainStore.devCORSWorkaroundUrlPrefix + "https://web.halloapp.com/assets/avatar.svg")
+
+    if (props.useBorder) {
+        borderCss.value = '2px solid white'
+    }
 
     init()
 
@@ -85,6 +95,8 @@
         object-fit: contain; 
         border-radius: 50%; 
         background-color: gray;
+
+        border: v-bind(borderCss);
     } 
 
 </style>

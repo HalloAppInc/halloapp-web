@@ -4,7 +4,6 @@
     import { liveQuery } from "dexie"
     import MP4Box from 'mp4box'
     import { Base64 } from "js-base64"
-    import hkdf from "js-crypto-hkdf"
     import { useI18n } from 'vue-i18n'
 
     import { useMainStore } from '@/stores/mainStore'
@@ -15,73 +14,16 @@
     import { clients } from "@/proto/clients.js"
     import { web } from "@/proto/web.js"
 
+    import { useHACrypto } from '@/composables/haCrypto'
     import { useHAFeed } from '@/composables/haFeed'
     import { useHAText } from '@/composables/haText'
     import { useTimeformatter } from '@/composables/timeformatter'
 
     import hal from "@/common/halogger"
 
-    import Avatar from '../media/Avatar.vue'
-    import MediaCarousel from '../media/MediaCarousel.vue'
-    import LinkPreview from '../media/LinkPreview.vue'
-
-    interface Props {
-        post: Feed,
-        postID: string,
-        atMainFeed: boolean
-    }
-    const props = defineProps<Props>()
-    const post = toRef(props, 'post')
-
-
-    onBeforeUnmount(() => {
-        postSubscription.unsubscribe()
-    })
-
-    const { t, locale } = useI18n({
-        inheritLocale: true,
-        useScope: 'global'
-    })
-
-    const mainStore = useMainStore()
-    const colorStore = useColorStore()
-    const { processText } = useHAText()
-    const { formatTime } = useTimeformatter()
-
-    const {
-        primaryBlue: primaryBlueColor,
-        background: backgroundColor, 
-        secondaryBg: secondaryBgColor,
-        text: textColor,
-        timestamp: timestampColor 
-    } = storeToRefs(colorStore)
-       
-    const { 
-        getPostMedia, 
-        modifyPostMedia, modifyPostVoiceNote, modifyPostLinkPreviewMedia, 
-        setPostMediaIsCodecH265 
-    } = useHAFeed()
-
-    const headerWidth = ref(450)
-    const postWidth = ref(430)
-
-    const imageInfo         = Base64.fromBase64("SGFsbG9BcHAgaW1hZ2U=")
-    const videoInfo         = Base64.fromBase64("SGFsbG9BcHAgdmlkZW8=") 
-    const voiceNoteInfo     = Base64.fromBase64("SGFsbG9BcHAgYXVkaW8=") 
-
-    const postTimestamp = ref("")
-
-    const isTextPostTextOnly = ref(false)
-
-    const isTruncatedText = ref(false)
-
-    const mediaBoxWidth = ref(300)
-    const mediaBoxHeight = ref(400)
-
-    const showPreviewImage = ref(false)
-    const previewImageSrc = ref("")
-
-    const bodyContent = ref("")
+    import Avatar from '@/components/media/Avatar.vue'
+    import MediaCarousel from '@/components/media/MediaCarousel.vue'
+    import LinkPreview from '@/components/media/LinkPreview.vue'
 
     enum MediaType {
         Image,
@@ -98,16 +40,70 @@
         isReady: boolean;
         errorMsg?: String;
     }
-   
-    const album: Ref<Media[]> = ref([])
+
+    interface Props {
+        post: Feed,
+        postID: string,
+        atMainFeed: boolean
+    }
+    const props = defineProps<Props>()
+    const post = toRef(props, 'post')
+
+    const { t, locale } = useI18n({ inheritLocale: true, useScope: 'global' })
+
+    const mainStore = useMainStore()
+    const colorStore = useColorStore()
+    
+    const { getDerivedKey, 
+            decryptChunk, decryptBinArr, verifyHMAC,
+            isUint8ArrayEqual, combineBinaryArrays 
+    } = useHACrypto()
+    
+    const { processText } = useHAText()
+    const { formatTime } = useTimeformatter()
+
+    const { primaryBlue: primaryBlueColor,
+            background: backgroundColor, 
+            secondaryBg: secondaryBgColor,
+            text: textColor,
+            timestamp: timestampColor 
+    } = storeToRefs(colorStore)
+       
+    const { 
+        getPostMedia, 
+        modifyPostMedia, modifyPostVoiceNote, modifyPostLinkPreviewMedia, 
+        setPostMediaIsCodecH265 
+    } = useHAFeed()
+
+    const imageInfo         = Base64.fromBase64("SGFsbG9BcHAgaW1hZ2U=")
+    const videoInfo         = Base64.fromBase64("SGFsbG9BcHAgdmlkZW8=") 
+    const voiceNoteInfo     = Base64.fromBase64("SGFsbG9BcHAgYXVkaW8=") 
+
+    const headerWidth = ref(450)
+    const postWidth = ref(430)
+
+    const isDeleted = ref(false)
+
+    const postTimestamp = ref("")
 
     const isAlbum = ref(false)
+    const album: Ref<Media[]> = ref([])
+
+    const mediaBoxWidth = ref(300)
+    const mediaBoxHeight = ref(400)
+
+    const bodyContent = ref("")
+    const isTextPostTextOnly = ref(false)
+    const isTruncatedText = ref(false)
 
     const $postVoiceNote = ref(null)
     const showVoiceNote = ref(false)
     const postVoiceNoteSrc = ref("")
 
-    const isDeleted = ref(false)
+    const showPreviewImage = ref(false)
+    const previewImageSrc = ref("")
+
+    const userReceipts: Ref<web.ReceiptInfo[]> = ref([])
 
     setPostSize()
     processPost(props.post)
@@ -133,108 +129,20 @@
         error: error => console.error(error)
     })
 
+    onBeforeUnmount(() => {
+        postSubscription.unsubscribe()
+    })
 
+    async function getMediaBlob(info: any, media: any) {
+        const ciphertextHash = media.hash
+        const encryptionKey = media.key
+        const downloadUrl = media.downloadURL
 
-    async function getDerivedKey(secret: any, info: any) {
-        const derivedKeyObj = await hkdf.compute(secret, 'SHA-256', 80, info, new Uint8Array())
-        return derivedKeyObj
-    }
+        const derivedKeyObj = await getDerivedKey(encryptionKey, info)
+        const derivedKey = derivedKeyObj.key
 
-    async function decryptBlob(rawKey: any, IV: any, ciphertext: any) {
-        const baseKey = await window.crypto.subtle.importKey(           
-            "raw",
-            rawKey,                                                 
-            "AES-CBC",
-            true,
-            ["decrypt"]
-        )
-        .catch( (error) => { hal.log("decryptBlob/importKey error: " + error) })
-        
-        const decryptedCiphertext = await window.crypto.subtle.decrypt(
-            { name: "AES-CBC", iv: IV },
-            baseKey as CryptoKey,
-            ciphertext
-        )
-        .catch( (error) => { hal.log("decryptBlob/decrypt error: " + error) })
-
-        if (!decryptedCiphertext) return undefined
-        let decryptedCiphertextArray = new Uint8Array(decryptedCiphertext)
-        return decryptedCiphertextArray
-    }
-
-    async function verifyHMAC(rawKey: any, ciphertext: any, signature: any) {
-        const algorithm =  { name: "HMAC", hash: "SHA-256" }
-        const baseKey = await window.crypto.subtle.importKey(           
-            "raw",
-            rawKey,                                                 
-            algorithm,
-            false,
-            ["sign", "verify"]
-        )
-        .catch( (error) => { hal.log("verifyHMAC/importKey error: " + error) })
-        
-        const isValid = await window.crypto.subtle.verify(
-            algorithm,
-            baseKey as CryptoKey,
-            signature,
-            ciphertext
-        )
-        .catch( (error) => { hal.log("verifyHMAC/verify error: " + error) })
-
-        return isValid
-    }
-
-    async function decodeProtobufToPostContainer(binArray: Uint8Array) {
-        let tryPostContainer = false
-        try {
-            const postContainerBlob = clients.PostContainerBlob.decode(binArray)
-
-            if (postContainerBlob && postContainerBlob.hasOwnProperty("postContainer")) {
-                const containerTimestamp = postContainerBlob.timestamp as number
-                if (containerTimestamp) {
-                    postTimestamp.value = formatTime(containerTimestamp, locale.value as string)
-                }
-                return postContainerBlob.postContainer
-            } else {
-                tryPostContainer = true
-            }
-        } catch (e) {
-            hal.log("decodeProtobufToPostContainer/error " + e)
-            tryPostContainer = true
-        }
-
-        if (tryPostContainer) {
-            hal.log("decodeProtobufToPostContainer/try fallback to PostContainer")
-            const err = clients.PostContainer.verify(binArray)
-            if (err) {
-                throw err
-            }
-            const message = clients.PostContainer.decode(binArray)
-            return message
-        }
-    }
-
-    function isUint8ArrayEqual(arr1: Uint8Array, arr2: Uint8Array) {
-        if (arr1.length != arr2.length) {
-            return false
-        }
-        for (let i = 0; i <= arr1.length; i++) {
-            if (arr1[i] != arr2[i]) {
-                return false
-            }
-        }
-        return true
-    }
-
-    function combineBinaryArrays(arrays: any) {
-        let totalLength = arrays.reduce((a: any, b: any) => a + b.byteLength, 0)
-        let result = new Uint8Array(totalLength)
-        let offset = 0
-        for (let arr of arrays) {
-            result.set(arr, offset)
-            offset += arr.byteLength
-        }
-        return result
+        const mediaBlob = await fetchAndDecrypt(derivedKey, downloadUrl, ciphertextHash)
+        return mediaBlob
     }
 
     async function getChunkedMediaBlob(media: any, info: string, chunkSize: number) {
@@ -268,18 +176,6 @@
         return new Blob([combinedBinArr])
     }
 
-    async function getMediaBlob(info: any, media: any) {
-        const ciphertextHash = media.hash
-        const encryptionKey = media.key
-        const downloadUrl = media.downloadURL
-
-        const derivedKeyObj = await getDerivedKey(encryptionKey, info)
-        const derivedKey = derivedKeyObj.key
-
-        const mediaBlob = await fetchAndDecrypt(derivedKey, downloadUrl, ciphertextHash)
-        return mediaBlob
-    }
-
     async function fetchAndDecrypt(derivedKey: Uint8Array, url: any, ciphertextHash: any) {
         const IV = derivedKey.slice(0, 16)
         const AESKey = derivedKey.slice(16, 48)
@@ -306,45 +202,10 @@
             hal.log("fetchAndDecrypt/mismatch HMAC")
         }
 
-        const decryptedBinaryArray = await decryptBlob(AESKey, IV, encryptedBinaryArray)
+        const decryptedBinaryArray = await decryptBinArr(AESKey, IV, encryptedBinaryArray)
         if (!decryptedBinaryArray) return undefined
         /* use blob instead of base64 string as converting to base64 is slow */
         return new Blob([decryptedBinaryArray])
-    }
-
-    function processPostText(text: string, mentions: any, truncateText: boolean = true, isTextPostTextOnly: boolean) {
-
-        // rough estimate of 330 chars for 12 lines and 110 for 3 lines
-        const maxCharsWhenTruncatedForTextOnlyPost: number = 330
-        let maxCharsWhenTruncated: number = 110
-        
-        if (isTextPostTextOnly) {
-            maxCharsWhenTruncated = maxCharsWhenTruncatedForTextOnlyPost
-        }
-
-        const processedText = processText(text, mentions, truncateText, maxCharsWhenTruncated)
-        isTruncatedText.value = processedText.isTruncated
-        return processedText.html
-    }
-
-    async function decryptChunk(chunkWithMAC: any, encryptionKey: any, chunkInfo: any) {
-        const derivedKeyObj = await getDerivedKey(encryptionKey, chunkInfo)
-        const derivedKey = derivedKeyObj.key
-
-        const IV = derivedKey.slice(0, 16)
-        const AESKey = derivedKey.slice(16, 48)
-        const SHA256Key = derivedKey.slice(48, 80)
-
-        const MAC = chunkWithMAC.slice(-32)
-        const chunk = chunkWithMAC.slice(0, -32)
-
-        const isHMACMatch = await verifyHMAC(SHA256Key, chunk, MAC)
-        if (!isHMACMatch) {
-            hal.log('decryptChunk/' + chunkInfo + '/mismatch HMAC')
-        }
-
-        const decryptedBinArr = await decryptBlob(AESKey, IV, chunk)
-        return decryptedBinArr
     }
 
     async function fetchAndDecryptStream(media: any, videoInfo: string, blobSize: any, chunkSize: number, mp4box: any) {
@@ -536,12 +397,10 @@
         let isVoiceNote = false
         let voiceNoteMedia: any
 
-
         if (props.post.retractState == web.PostDisplayInfo.RetractState.RETRACTED) {
             isDeleted.value = true
             return
         }
-
 
         postTimestamp.value = formatTime(post.timestamp, locale.value as string)
 
@@ -694,6 +553,12 @@
         if (props.post.text) {            
             bodyContent.value = processPostText(props.post.text, post.mentions, true, isTextPostTextOnly.value)
         }
+
+        /* user receipts */
+        if (props.post.userReceipts) {
+            userReceipts.value = props.post.userReceipts.slice(0, 3)
+        }
+
     }
 
     function setPostSize() {
@@ -769,6 +634,20 @@
         if (tallestMediaItemHeight < mediaBoxHeight.value) {
             mediaBoxHeight.value = tallestMediaItemHeight
         }
+    }
+
+    function processPostText(text: string, mentions: any, truncateText: boolean = true, isTextPostTextOnly: boolean) {
+        // rough estimate of 330 chars for 12 lines and 110 for 3 lines
+        const maxCharsWhenTruncatedForTextOnlyPost: number = 330
+        let maxCharsWhenTruncated: number = 110
+
+        if (isTextPostTextOnly) {
+            maxCharsWhenTruncated = maxCharsWhenTruncatedForTextOnlyPost
+        }
+
+        const processedText = processText(text, mentions, truncateText, maxCharsWhenTruncated)
+        isTruncatedText.value = processedText.isTruncated
+        return processedText.html
     }
 
     function expandText() {
@@ -851,8 +730,19 @@
                     <div>
                         {{ t('post.comment') }}
                     </div>
-                    <div id="newCommentIndicator">
+                    <div v-if="post.unreadComments" class="newCommentIndicator">
                     </div>
+                </div>
+                <div v-if="mainStore.userID == post.userID" class="userReceiptsBox">
+
+                    <div v-for='(value, idx) in userReceipts' 
+                        class="userReceiptsAvatar" :style="{ 'z-index': (idx*-1 + 100) }">
+                
+                        <Avatar :style="{ 'margin-right': '-6px' }"
+                            :userID="(value.uid as number)" :width="20" :useBorder=true>
+                        </Avatar>
+                    </div>
+
                 </div>
                 <!-- <div id="replyButton" @click="">
                     <img id="replyIcon" src="https://d1efjkqerxchlh.cloudfront.net/es/assets/Reply.png" alt="Reply Icon">
@@ -867,7 +757,12 @@
 
     <div v-else class="postRow">
         <div class="deletedPost">
-            {{ mainStore.pushnames[props.post.userID] }} deleted their post
+            <div v-if="props.post.userID == mainStore.userID">
+                You deleted your post
+            </div>
+            <div v-else>
+                {{ mainStore.pushnames[props.post.userID] }} deleted their post
+            </div>
         </div>
     </div>
 
@@ -1097,13 +992,19 @@
         }
     }
 
-    #newCommentIndicator {
+    .newCommentIndicator {
         margin-left: 4px;
         width: 6px;
         height: 6px;
         border-radius: 50%;
         background-color: v-bind(primaryBlueColor);
-        display: none;
+    }
+
+    .userReceiptsBox {
+        display: flex;
+        flex-direction: horizontal;
+        justify-content: center;
+        align-items: center;
     }
     
     #replyButton {

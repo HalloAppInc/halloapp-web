@@ -7,8 +7,9 @@ import nacl from 'tweetnacl'
 
 export function useHACrypto() {
 
-    const imageInfo = Base64.fromBase64("SGFsbG9BcHAgaW1hZ2U=")
-    const videoInfo = Base64.fromBase64("SGFsbG9BcHAgdmlkZW8=")
+    const imageInfo     = Base64.fromBase64("SGFsbG9BcHAgaW1hZ2U=")
+    const videoInfo     = Base64.fromBase64("SGFsbG9BcHAgdmlkZW8=")
+    const voiceNoteInfo = Base64.fromBase64("SGFsbG9BcHAgYXVkaW8=") 
 
     async function encryptImageOrNonStreamVideo(plaintextArray: Uint8Array, encryptionKey: Uint8Array) {
         const derivedKeyObj = await getDerivedKey(encryptionKey, imageInfo)
@@ -83,9 +84,9 @@ export function useHACrypto() {
             rawKey,
             algorithm,
             false,
-            ["verify"]
+            ["sign", "verify"]
         )
-            .catch((error) => { hal.log("haCrypto/verifyHMAC/importKey error: " + error) })
+        .catch((error) => { hal.log("haCrypto/verifyHMAC/importKey error: " + error) })
 
         const isValid = await window.crypto.subtle.verify(
             algorithm,
@@ -93,7 +94,7 @@ export function useHACrypto() {
             signature,
             ciphertext
         )
-            .catch((error) => { hal.log("haCrypto/verifyHMAC/verify error: " + error) })
+        .catch((error) => { hal.log("haCrypto/verifyHMAC/verify error: " + error) })
 
         return isValid
     }
@@ -153,25 +154,18 @@ export function useHACrypto() {
             true,
             ["decrypt"]
         )
-            .catch((error) => { hal.log("haCrypto/decryptBinArr/importKey error: " + error) })
+        .catch((error) => { hal.log("haCrypto/decryptBinArr/importKey error: " + error) })
 
         const decryptedCiphertext = await window.crypto.subtle.decrypt(
             { name: "AES-CBC", iv: IV },
             baseKey as CryptoKey,
             ciphertext
         )
-            .catch((error) => { hal.log("haCrypto/decryptBinArr/decrypt error: " + error) })
+        .catch((error) => { hal.log("haCrypto/decryptBinArr/decrypt error: " + error) })
 
-
-        if (decryptedCiphertext) {
-            let decryptedCiphertextArray = new Uint8Array(decryptedCiphertext)
-            return decryptedCiphertextArray
-        } else {
-            return undefined
-        }
-        
-        
-
+        if (!decryptedCiphertext) return undefined
+        let decryptedCiphertextArray = new Uint8Array(decryptedCiphertext)
+        return decryptedCiphertextArray
     }
 
     function isUint8ArrayEqual(arr1: Uint8Array, arr2: Uint8Array) {
@@ -385,5 +379,14 @@ export function useHACrypto() {
         }
     }
 
-    return { encryptImageOrNonStreamVideo, decryptImageOrNonStreamVideo, encryptVideo, decryptVideo, decryptStream, keygen}
+    return { 
+        getDerivedKey, 
+        encryptImageOrNonStreamVideo, encryptVideo,
+        decryptChunk, decryptBinArr,
+        decryptImageOrNonStreamVideo,
+        decryptVideo, decryptStream,
+        verifyHMAC,
+        keygen,
+        isUint8ArrayEqual, combineBinaryArrays
+    }
 }

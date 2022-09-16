@@ -14,6 +14,7 @@ export const useMainStore = defineStore('main', {
         },
     },
     state: () => ({
+        version: '30',
         isDebug: false,
         devCORSWorkaroundUrlPrefix: '',
 

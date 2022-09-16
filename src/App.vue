@@ -177,6 +177,10 @@
             </div>
 
             <QRCode/>
+
+            <div class="version">
+                ver. {{ mainStore.version }}
+            </div>
         </div>
 
     </div>
@@ -307,6 +311,8 @@
         overflow: auto;  
     }
 
+
+
     #signInWrapperHeader {
         margin-top: 20px;
         width: 80%;
@@ -357,6 +363,13 @@
         justify-content: center;
         align-items: flex-start;
         gap: 30px 30px;
+    }
+    #qrCodeBanner .version {
+        position: absolute;
+        font-size: 12px;
+        color: gray;
+        left: 15px;
+        bottom: 10px;
     }
     #howTo .howToTitle {
         font-size: 24px;
