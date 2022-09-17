@@ -146,14 +146,11 @@
         </div>
 
         <div v-if='showQRCode'>
-            <!-- <div v-if="mainStore.isDebug" class="fakeAuthButton" @click="fakeAuth">
-                Fake Phone Auth
-            </div> -->
             <div v-if="showCountdown" class="countdown">
                 {{ countdown }}
             </div>
         </div>
-        <div id="getQRCodeButton" @click="getNewQRCode">
+        <div v-else id="getQRCodeButton" @click="getNewQRCode">
             {{ t('login.getQRCode') }}
         </div>    
     </div>

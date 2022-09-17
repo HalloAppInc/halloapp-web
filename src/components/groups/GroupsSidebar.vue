@@ -4,7 +4,7 @@
     import { liveQuery } from 'dexie'
     import { useI18n } from 'vue-i18n'
 
-    import { db, Group } from '@/db'
+    import { db, Group, PostMediaType } from '@/db'
 
     import { useMainStore } from '@/stores/mainStore'
     import { useColorStore } from '@/stores/colorStore'
@@ -21,7 +21,7 @@
     
     const mainStore = useMainStore()
     const colorStore = useColorStore()
-    const { formatTime } = useTimeformatter()
+    const { formatTimeForGroupsList } = useTimeformatter()
 
     const feedObservable = liveQuery (() => db.group.reverse().sortBy('lastChangeTimestamp'))
     const subscription = feedObservable.subscribe({
@@ -31,7 +31,7 @@
                 listData.value = result
             }
 
-            if (!mainStore.groupsPageGroupID) {
+            if (!mainStore.groupsPageGroupID && listData.value.length > 0) {
                selectGroup(listData.value[0].groupID)
             }
 
@@ -82,12 +82,19 @@
                         <div class="contentTitle">
                             {{ mainStore.groupnames[value.groupID] }}
                         </div>
-                        <div class="contentTimestamp">
-                            <!-- {{ formatTime(parseInt(value.timestamp), locale as string) }} -->
+                        <div v-if="value.lastChangeTimestamp" class="contentTimestamp">
+                            {{ formatTimeForGroupsList(value.lastChangeTimestamp, locale as string) }}
                         </div>
                     </div>
-                    <div class="contentBody">
-                        <!-- {{ value.subtitle }} -->
+                    <div class="contentBody" >
+                        <div v-if="value.lastContentMediaType == PostMediaType.Image" class="iconBox" >
+                            <font-awesome-icon :icon="['fas', 'image']" />
+                        </div>
+                        <div v-else-if="value.lastContentMediaType == PostMediaType.Video" class="iconBox" >
+                            <font-awesome-icon :icon="['fas', 'video']" />
+                        </div>
+                        <div :class="['text', {'paddingLeft': value.lastContentMediaType != 0}]" v-html="value.lastContent">
+                        </div>
                     </div>
                 </div>
                 
@@ -211,5 +218,26 @@
 
         user-select: none;
     }
+
+    .contentBody {
+        position: relative;
+    }
+
+    .contentBody .iconBox {
+        position: absolute;
+        left: 0;
+    }
+
+    .contentBody .text {
+        display: -webkit-box;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+    }
+
+    .contentBody .paddingLeft {
+        padding-left: 25px;
+    }    
 
 </style>

@@ -1,4 +1,4 @@
-import { Dexie, liveQuery } from "dexie"
+import { Dexie, liveQuery } from 'dexie'
 
 import { useMainStore } from '@/stores/mainStore.js'
 import { useConnStore } from '@/stores/connStore.js'
@@ -9,15 +9,18 @@ import { clients } from '@/proto/clients.js'
 import { web } from '@/proto/web.js'
 
 import { useHAAvatar } from '@/composables/haAvatar'
+import { useHAText } from '@/composables/haText'
 
-import hal from '../common/halogger'
+import hal from '@/common/halogger'
 
 export function useHAFeed() {
 
     const mainStore = useMainStore()
     const connStore = useConnStore()
-
+    
     const { getAvatar, fetchGroupAvatar } = useHAAvatar()
+    const { processText } = useHAText()
+
 
     async function processWebContainer(webContainer: any) {
         const feedResponse = webContainer?.feedResponse
@@ -36,11 +39,11 @@ export function useHAFeed() {
         const postInfoList = feedResponse.postDisplayInfo
         const groupInfo = feedResponse.groupDisplayInfo
 
-        /* processs groups first as process items might need to modify groups list */
+        /* processs groups first and wait for it to finish as processItems might need to modify groups list */
         for (let j = 0; j < groupInfo.length; j++) {
             const info = groupInfo[j]
             if (!info) { continue }
-            processGroupDisplayInfo(info)
+            await processGroupDisplayInfo(info)
         }        
 
         if (items.length < 1) { return }
@@ -65,7 +68,7 @@ export function useHAFeed() {
             const item = items[i]
             let infoIdx = postInfoList.findIndex((info: any) => info.id === item.post.id)
             const postInfo = postInfoList[infoIdx]
-            processFeedItem(items[i], postInfo)
+            await processFeedItem(items[i], postInfo)
             postInfoList.splice(infoIdx, 1)
         }
         
@@ -128,21 +131,6 @@ export function useHAFeed() {
             }
         }
     }
-    
-    async function processReceiptInfo(receiptInfo: any) {
-
-        // for (let j = 0; j < userInfo.length; j++) {
-        //     const info = userInfo[j]
-        //     if (!info) { continue }
-        //     processUserDisplayInfo(info)
-        // }
-
-
-        // if (!mainStore.pushnames[userInfo.uid] || mainStore.pushnames[userInfo.uid] != userInfo.contactName) {
-        //     mainStore.pushnames[userInfo.uid] = userInfo.contactName
-        // }
-        // getAvatar(userInfo.uid, userInfo.avatarId)
-    }
 
     async function processUserDisplayInfo(userInfo: any) {
         if (!mainStore.pushnames[userInfo.uid] || mainStore.pushnames[userInfo.uid] != userInfo.contactName) {
@@ -166,7 +154,7 @@ export function useHAFeed() {
                 background: info.background,
                 lastChangeTimestamp: 0
             }            
-            insertGroup(group)
+            await insertGroup(group)
         } else {
             const dbGroup = dbGroupsList[0]
             // todo: modify appropriate based on changes
@@ -178,7 +166,7 @@ export function useHAFeed() {
         fetchGroupAvatar(groupID, info.avatarId)
     }    
     
-    async function processFeedItem(feedItem: any, postInfo: any) {
+    function processFeedItem(feedItem: any, postInfo: any) {
 
         const groupID = feedItem.groupId
 
@@ -206,10 +194,10 @@ export function useHAFeed() {
         
         const payloadBinArr = serverPost.payload
         if (!payloadBinArr) { return }
-        const postContainer = await decodeToPostContainer(payloadBinArr)
+        const postContainer = decodeToPostContainer(payloadBinArr)
     
-        // hal.log('haFeed/processServerPost/postContainer:')
-        // console.dir(postContainer)
+        hal.log('haFeed/processServerPost/postContainer:')
+        console.dir(postContainer)
     
         if (!postContainer) { return }
     
@@ -357,12 +345,220 @@ export function useHAFeed() {
         // console.log("haFeed/processServerPost/postObject: ")
         console.dir(postObject)
 
-        if (groupID) {
-            modifyGroupTimestampIfNeeded(postObject)
+        /* only modify groups list if the post is not deleted */
+        if (groupID && postObject.retractState != web.PostDisplayInfo.RetractState.RETRACTED) {
+         
+            let mediaType: PostMediaType = 0
+            if (postMediaArr.length > 0) {
+                const firstMedia = postMediaArr[0]
+                mediaType = firstMedia.type
+            }
+
+            modifyGroupIfNeeded(postObject, mediaType, isVoiceNote)
         }
 
         insertPostIfNotExist(postObject)
         insertPostMedia(postObject.postID, postMediaArr)
+
+    }
+
+    async function processFeedItem2(feedItem: any, postInfo: any) {
+
+        return new Promise(function (resolve, reject) {
+
+            const groupID = feedItem.groupId
+
+            const serverPost = feedItem.post
+            if (!serverPost) { return reject('not a server post') }
+            
+            const publisherUID = serverPost.publisherUid
+
+            // console.log("haFeed/processServerPost/serverPost: ")
+            // console.dir(serverPost)
+
+            let postObject: Feed = { 
+                postID: serverPost.id,
+                userID: publisherUID,
+                timestamp: serverPost.timestamp,
+                retractState: postInfo.retractState,
+                unreadComments: postInfo.unreadComments,
+            }
+
+            if (postInfo.userReceipts) {
+                postObject.userReceipts = postInfo.userReceipts
+            }
+
+            let postMediaArr: PostMedia[] = []
+            
+            const payloadBinArr = serverPost.payload
+            if (!payloadBinArr) { return reject('empty payloadBinArr') }
+            const postContainer = decodeToPostContainer(payloadBinArr)
+        
+            hal.log('haFeed/processServerPost/postContainer:')
+            console.dir(postContainer)
+        
+            if (!postContainer) { return reject('empty postContainer') }
+        
+            if (groupID) {
+                postObject.groupID = groupID
+            }
+
+            if (publisherUID) {
+                postObject.userID = publisherUID
+            }
+        
+            let text = ''
+            let isTextPost = false
+            let isTextPostTextOnly = false
+            let isAlbum = false
+            let isVoiceNote = false
+        
+            let postMentions: any
+        
+            if (postContainer.album) {
+                isAlbum = true
+            }
+        
+            if (postContainer.text) {
+                isTextPost = true
+            }
+        
+            if (postContainer.voiceNote) {
+                isVoiceNote = true
+
+                const voiceNoteMedia = processVoiceNote(postObject.postID, postContainer.voiceNote)
+                if (voiceNoteMedia) {
+                    postObject.voiceNote = voiceNoteMedia
+                }
+            }
+        
+            if (isAlbum) {
+                /* text */
+                if (postContainer.album?.text) {
+                    if (postContainer.album.text.text) {
+                        postObject.text = postContainer.album.text.text
+                    }
+                    postMentions = postContainer.album.text.mentions            
+                }
+        
+                /* media */
+                if (postContainer.album?.media) {
+        
+                    for (const [index, mediaInfo] of postContainer.album.media.entries()) {
+                        
+                        if (mediaInfo.image && mediaInfo.image.width && mediaInfo.image.height) {
+                            const encryptedResourceInfo = mediaInfo.image.img
+                            if (encryptedResourceInfo?.encryptionKey && encryptedResourceInfo?.ciphertextHash && encryptedResourceInfo?.downloadUrl) {
+                                let postMedia: PostMedia = {
+                                    postID: postObject.postID,
+                                    type: PostMediaType.Image,
+                                    order: index,
+                                    width: mediaInfo.image.width,
+                                    height: mediaInfo.image.height,
+                                    key: encryptedResourceInfo.encryptionKey,
+                                    hash: encryptedResourceInfo.ciphertextHash,
+                                    downloadURL: encryptedResourceInfo.downloadUrl,
+                                }
+                                postMediaArr.push(postMedia)
+                            }
+                        }
+        
+                        else if (mediaInfo.video && mediaInfo.video.width && mediaInfo.video.height) {
+                            const encryptedResourceInfo = mediaInfo.video.video
+                            if (encryptedResourceInfo?.encryptionKey && encryptedResourceInfo?.ciphertextHash && encryptedResourceInfo?.downloadUrl) {
+                                let postMedia: PostMedia = {
+                                    postID: postObject.postID,
+                                    type: PostMediaType.Video,
+                                    order: index,
+                                    width: mediaInfo.video.width,
+                                    height: mediaInfo.video.height,
+                                    key: encryptedResourceInfo.encryptionKey,
+                                    hash: encryptedResourceInfo.ciphertextHash,
+                                    downloadURL: encryptedResourceInfo.downloadUrl,
+                                }
+
+                                const isStream = JSON.stringify(mediaInfo.video.streamingInfo) !== '{}'
+                                if (isStream) {
+                                    const blobVersion = mediaInfo.video.streamingInfo?.blobVersion
+                                    const chunkSize = mediaInfo.video.streamingInfo?.chunkSize
+                                    const blobSize = mediaInfo.video.streamingInfo?.blobSize
+                                    if (chunkSize) {
+                                        postMedia.chunkSize = chunkSize                             
+                                    }
+                                    if (blobSize) {
+                                        postMedia.blobSize = blobSize
+                                    }    
+                                    if (blobVersion) {
+                                        postMedia.blobVersion = blobVersion
+                                    }   
+                                }
+                                postMediaArr.push(postMedia)
+                            }
+                        }                
+                    }
+                }
+        
+                /* voiceNote inside album */
+                if (postContainer.album?.voiceNote) {
+                    isVoiceNote = true
+                
+                    const voiceNoteMedia = processVoiceNote(postObject.postID, postContainer.album.voiceNote)
+                    if (voiceNoteMedia) {
+                        postObject.voiceNote = voiceNoteMedia
+                    }
+                }     
+            }
+        
+            if (isTextPost) {
+                /* link preview */
+                if (postContainer?.text?.link &&
+                    postContainer.text.link.preview &&
+                    postContainer.text.link.preview[0] &&
+                    postContainer.text.link.preview[0].img
+                    ) {
+                        const previewImage = postContainer.text.link.preview[0]
+                        const media = previewImage.img
+
+                        const linkPreview = processLinkPreview(postObject.postID, postContainer.text.link)
+                        if (linkPreview) {
+                            postObject.linkPreview = linkPreview
+
+                        }
+
+                } else {
+                    isTextPostTextOnly = true
+                }
+        
+                /* process text after checking if it's text only */
+                if (postContainer.text?.text) {
+                    postObject.text = postContainer.text.text
+                    postMentions = postContainer.text.mentions     
+                }        
+            }
+
+            if (postMentions) {
+                postObject.mentions = processMentions(postMentions)
+            }
+
+            // console.log("haFeed/processServerPost/postObject: ")
+            console.dir(postObject)
+
+            if (groupID) {
+                
+                let mediaType: PostMediaType = 0
+                if (postMediaArr.length > 0) {
+                    const firstMedia = postMediaArr[0]
+                    mediaType = firstMedia.type
+                }
+
+                modifyGroupIfNeeded(postObject, mediaType, isVoiceNote)
+            }
+
+            insertPostIfNotExist(postObject)
+            insertPostMedia(postObject.postID, postMediaArr)
+
+            return resolve(postObject)
+        })
 
     }
     
@@ -425,71 +621,82 @@ export function useHAFeed() {
         return arr
     }
 
-    async function modifyGroupTimestampIfNeeded(post: any) {
+    async function modifyGroupIfNeeded(post: any, mediaType: PostMediaType, isVoiceNote: boolean) {
+
+
         await db.group.where('groupID').equals(post.groupID).modify(group => {
             if (group.lastChangeTimestamp < post.timestamp) {
                 group.lastChangeTimestamp = post.timestamp
+
+                group.lastContentMediaType = mediaType
+                
+                if (post.text) {
+                    const truncateText = true
+                    const maxCharsWhenTruncated = 500
+                    const processedText = processText(post.text, post.mentions, truncateText, maxCharsWhenTruncated)
+                    group.lastContent = processedText.html
+                }
+
+                // todo: figure out if voicenote display is actually neeede
+
             }
-        })
-        return        
-    }
 
-    async function modifyGroupIfNeeded(post: any) {
-        await db.group.where('postID').equals(post.groupID).modify(group => {
-        })
-        return        
-    }
+            return
 
-    async function modifyGroupIfNeeded2(post: any) {
-        const groupID = post.groupID
-        const dbGroupsList = await db.group.where('groupID').equals(groupID).toArray()
+        })
         
-        if (dbGroupsList.length > 0) {
-            const dbGroup = dbGroupsList[0]
-            if (dbGroup.lastChangeTimestamp < post.timestamp) {
-                // todo: record more info if needed
-
-            }
-        } 
+                    
     }
 
     async function insertPostIfNotExist(post: any) {
+
         const postID = post.postID
         const dbFeedsList = await db.feed.where('postID').equals(postID).toArray()
         
         if (dbFeedsList.length == 0) {
             try {
                 const id = await db.feed.put(post)
+                // hal.log('haFeed/insertPostIfNotExist/db/put/inserting: ' + post.postID)
             } catch (error) {
-                hal.log('homeMain/processPostContainer/db/put/error ' + error)
+                hal.log('haFeed/insertPostIfNotExist/db/put/error ' + error)
             }
         } else {
-            // hal.log('homeMain/processPostContainer/exit/postObject already in db \n' + JSON.stringify(post) + '\n\n')
+            hal.log('haFeed/insertPostIfNotExist/exit/postObject already in db \n' + JSON.stringify(post) + '\n\n')
         }
+        
     }
     
     async function insertPostMedia(postID: string, postMediaArr: any) {
-        if (postMediaArr.length < 1) { return }
-
-        const dbPostMediaList = await db.postMedia.where('postID').equals(postID).toArray()
-        
-        if (dbPostMediaList.length == 0) {
-            for (let i = 0; i < postMediaArr.length; i++) {
-                let postMedia = postMediaArr[i]
-                
-                try {
-                    const id = await db.postMedia.put(postMedia)
-
-                    const arr = await db.postMedia.toArray()
-
-                } catch (error) {
-                    hal.log('homeMain/insertPostMedia/db/put/error ' + error)
-                }
+            if (postMediaArr.length < 1) { 
+                return 
             }
 
-        } else {
-            // hal.log('homeMain/processPostContainer/exit/postObject already in db \n' + JSON.stringify(post) + '\n\n')
-        }
+            const dbPostMediaList = await db.postMedia.where('postID').equals(postID).toArray()
+            
+            if (dbPostMediaList.length == 0) {
+                for (let i = 0; i < postMediaArr.length; i++) {
+                    let postMedia = postMediaArr[i]
+                    
+                    try {
+                        const id = await db.postMedia.put(postMedia)
+
+                        
+
+                    } catch (error) {
+                        hal.log('homeMain/insertPostMedia/db/put/error ' + error)
+                        
+                    }
+                }
+
+            } else {
+                
+                // hal.log('homeMain/processPostContainer/exit/postObject already in db \n' + JSON.stringify(post) + '\n\n')
+                
+            }       
+            
+            return 
+            
+    
     
     }
 
@@ -539,21 +746,30 @@ export function useHAFeed() {
     }
 
     async function insertGroup(group: any) {
-        try {
-            const id = await db.group.put(group)
-        } catch (error) {
-            hal.log('haFeed/insertGroup/put/error ' + error)
-        }
+
+        return new Promise(async function (resolve, reject) {
+            try {
+                const id = await db.group.put(group)
+                return resolve(id)
+            } catch (error) {
+                hal.log('haFeed/insertGroup/put/error ' + error)
+                return reject(error)
+            }
+        })
     }
 
-    async function decodeToPostContainer(binArray: Uint8Array) {
-        const err = clients.Container.verify(binArray)
-        if (err) {
-            throw err
-        }
+    function decodeToPostContainer(binArray: Uint8Array) {
+        
+        // const err = clients.Container.verify(binArray)
+        // if (err) {
+        //     throw err
+        // }
         const container = clients.Container.decode(binArray)
-        const postContainer = container?.postContainer
+        
+        const postContainer = container.postContainer
+
         return postContainer
+    
     }
 
     return { 

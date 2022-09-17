@@ -40,6 +40,7 @@ import {
     faShieldHalved,
     faUserGroup,
     faUsers,
+    faVideo,
     faXmark,
 } from "@fortawesome/free-solid-svg-icons"
 
@@ -75,6 +76,7 @@ library.add(
     faShieldHalved,
     faUserGroup,
     faUsers,
+    faVideo,
     faXmark)
 
 const pinia = createPinia()

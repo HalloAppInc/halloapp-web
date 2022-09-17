@@ -232,7 +232,10 @@
                     userID="value.userID"
                     :atMainFeed="props.atMainFeed"
                     @commentsClick="openCommentsIfNeeded(value.postID)" 
-                    :data-ha-postID="value.postID"> 
+                    :data-ha-postID="value.postID"
+                    
+                    :key="value.postID"
+                    > 
                 </Post>
             </div>
         </div>

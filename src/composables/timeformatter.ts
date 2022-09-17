@@ -31,6 +31,25 @@ export function useTimeformatter() {
         return result
     }
 
+    function formatTimeForGroupsList(seconds: number, locale: string) {
+        let result = ""
+        const dt = DateTime.fromSeconds(seconds)
+        const currentTime = DateTime.local()
+    
+        if (currentTime.diff(dt, 'minutes').minutes < 1) {
+            result = "Now"
+        } else if ((currentTime.diff(dt, 'hours').hours < 6) || (dt.hasSame(currentTime, 'day'))) {   
+            result = dt.toFormat("t", { locale: locale })                           // 8:48 PM
+        } else if (currentTime.diff(dt, 'days').days < 5) {   
+            result = dt.toFormat("ccc", { locale: locale })                         // Thu
+        } else if (currentTime.diff(dt, 'weeks').weeks < 26) {  
+            result = dt.toFormat("LLL d", { locale: locale })                       // Jan 20
+        } else {
+            result = dt.toFormat("D", { locale: locale })                           // 6/20/2020
+        }
+        return result
+    }
+
     function formatTimer(countDownDate: any) {
         const now = new Date().getTime()
         const timeDiffMs = countDownDate - now
@@ -99,5 +118,10 @@ export function useTimeformatter() {
     }
 
 
-    return { formatTime, formatTimer, formatTimeDateOnlyChat, formatTimeChat, formatTimeFullChat, timeDiffBiggerThanOneDay }
+    return {    
+        formatTime, formatTimer, 
+        formatTimeDateOnlyChat, 
+        formatTimeForGroupsList,
+        formatTimeChat, 
+        formatTimeFullChat, timeDiffBiggerThanOneDay }
 }

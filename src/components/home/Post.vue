@@ -671,6 +671,7 @@
                 <div id="nameBox">
                     <div class="name">
                         {{ mainStore.pushnames[props.post.userID] }}
+                        <span v-if="mainStore.devMode" class="devPostID">{{ props.post.postID }}</span>
                         <span v-if="atMainFeed && props.post.groupID" class="groupIndicator">
                             <font-awesome-icon :icon="['fas', 'caret-right']" size='sm' class="groupIndicatorIcon"/>
                         </span>
@@ -855,6 +856,10 @@
         text-align: left;
         color: v-bind(textColor);
     }
+
+    .post #nameBox .devPostID {
+        font-size: 12px;
+    }    
     .post #nameBox .name .groupIndicator {
         margin-right: 5px;
         color: lightgray;

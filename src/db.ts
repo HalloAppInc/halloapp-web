@@ -86,6 +86,8 @@ export interface Group {
     name?: string,  // will need this for search, maybe
     description?: string
     background?: string
+    lastContent?: string
+    lastContentMediaType?: PostMediaType
     lastChangeTimestamp: number
 }
 

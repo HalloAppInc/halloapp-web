@@ -95,7 +95,7 @@
 
     function videoLoaded(event: Event, index: number) {
         const vid = (event.target as HTMLVideoElement)
-        vid.currentTime += 1 // 1 sec seem the best compromise as some videoes are blank from 0.1 to 0.5
+        vid.currentTime += 2.0 // 1 sec seem the best compromise as some videoes are blank from 0.1 to 0.5
     }
 
     function clickPrevious(event: Event) {
@@ -298,10 +298,10 @@
 
         <div v-if="isAlbum" class="mediaCarousel" ref="$mediaCarousel">
 
-            <div v-for="(item, index) in props.album" class="mediaBox">
+            <div v-for="(item, index) in props.album" :key="item.postID" class="mediaBox">
 
                 <div v-if='item.errorMsg' class='mediaLoaderBox'>
-                    <div class="mediaErrorMsg">{{ item.errorMsg }}</div>
+                    <div :class="['mediaErrorMsg']">{{ item.errorMsg }}</div>
                 </div>
 
                 <div v-else-if="!item.isReady" class="mediaLoaderBox">
