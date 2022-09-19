@@ -141,6 +141,31 @@ export function network() {
         return webContainerBinArr
     }
 
+
+    const encodeCommentsRequestWebContainer = (postID: string, cursor: string, limit: number) => {
+        const id = nanoid()
+
+        let feedRequest = web.FeedRequest.create({
+            id: id,
+            type: web.FeedType.POST_COMMENTS,
+            cursor: cursor,
+            limit: limit,
+            contentId: postID
+        })
+
+        const webContainer = web.WebContainer.create({
+            feedRequest: feedRequest
+        })
+
+        hal.log('network/encodeCommentsRequestWebContainer:\n' + JSON.stringify(webContainer) + '\n\n')
+
+        const webContainerProto = web.WebContainer.encode(webContainer).finish()
+        const webContainerBuf = webContainerProto.buffer.slice(webContainerProto.byteOffset, webContainerProto.byteLength + webContainerProto.byteOffset)
+        const webContainerBinArr = new Uint8Array(webContainerBuf)
+
+        return webContainerBinArr
+    }
+
     function removeKey(websocket: any) {
         let id = nanoid()
     
@@ -215,6 +240,7 @@ export function network() {
         createWebStanzaPacket, 
         encodeFeedRequestWebContainer,
         encodeGroupFeedRequestWebContainer,
+        encodeCommentsRequestWebContainer,
         uploadMedia 
     }
 }

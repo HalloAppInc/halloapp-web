@@ -83,7 +83,7 @@
             </div>
 
             <div class="version">
-                ver. {{ mainStore.version }}
+                ver. {{ connStore.version }}
             </div>
 
         </div>

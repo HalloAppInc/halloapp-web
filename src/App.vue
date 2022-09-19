@@ -64,7 +64,7 @@
     })
 
     if (process.env.NODE_ENV?.toString() == 'development') {
-        mainStore.isDebug = true
+        connStore.isDebug = true
         mainStore.devCORSWorkaroundUrlPrefix = 'https://cors-anywhere.herokuapp.com/'
     }
 
@@ -179,7 +179,7 @@
             <QRCode/>
 
             <div class="version">
-                ver. {{ mainStore.version }}
+                ver. {{ connStore.version }}
             </div>
         </div>
 

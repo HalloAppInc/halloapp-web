@@ -3,7 +3,7 @@ import { Dexie, liveQuery } from 'dexie'
 import { useMainStore } from '@/stores/mainStore.js'
 import { useConnStore } from '@/stores/connStore.js'
 
-import { db, Feed, PostMedia, PostMediaType, LinkPreview, Mention, Group } from '@/db'
+import { db, Feed, PostMedia, PostMediaType, Comment, LinkPreview, Mention, Group } from '@/db'
 
 import { clients } from '@/proto/clients.js'
 import { web } from '@/proto/web.js'
@@ -51,25 +51,36 @@ export function useHAFeed() {
         const firstItemPost = items[0].post
         const lastItemPost = items[items.length - 1].post
 
-        /* 
-            special case to not process posts as this is usually our first request upon browser refresh
-            to pre-emptively (for better UX) see if there are new posts, of which usually there isn't 
-        */
-        if (firstItemPost.id == mainStore.mainFeedHeadPostID && [3, 5].includes(items.length)) {
-            return
-        }
-
-        /* 
-            nb: There is a special case in which there can be more than 3 or 5 new posts (ie. 10) and 
-            we will only process up to 3 or 5, the rest are to be handled via updates
-        */
         hal.log('haFeed/processFeedResponse/process num items: ' + items.length)
-        for (let i = 0; i < items.length; i++) {
-            const item = items[i]
-            let infoIdx = postInfoList.findIndex((info: any) => info.id === item.post.id)
-            const postInfo = postInfoList[infoIdx]
-            await processFeedItem(items[i], postInfo)
-            postInfoList.splice(infoIdx, 1)
+        if (feedResponse.type == web.FeedType.POST_COMMENTS) {
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i]
+                let infoIdx = postInfoList.findIndex((info: any) => info.id === item.post.id)
+                const postInfo = postInfoList[infoIdx]
+                processFeedItemComment(items[i], postInfo)
+                postInfoList.splice(infoIdx, 1)
+            }
+        } else {
+
+            /* 
+                special case to not process posts as this is usually our first request upon browser refresh
+                to pre-emptively (for better UX) see if there are new posts, of which usually there isn't 
+            */
+            if (firstItemPost.id == mainStore.mainFeedHeadPostID && [3, 5].includes(items.length)) {
+                return
+            }
+    
+            /* 
+                nb: There is a special case in which there can be more than 3 or 5 new posts (ie. 10) and 
+                we will only process up to 3 or 5, the rest are to be handled via updates
+            */
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i]
+                let infoIdx = postInfoList.findIndex((info: any) => info.id === item.post.id)
+                const postInfo = postInfoList[infoIdx]
+                processFeedItem(items[i], postInfo)
+                postInfoList.splice(infoIdx, 1)
+            }
         }
         
         for (let j = 0; j < userInfo.length; j++) {
@@ -362,206 +373,191 @@ export function useHAFeed() {
 
     }
 
-    async function processFeedItem2(feedItem: any, postInfo: any) {
+    
+    function processFeedItemComment(feedItem: any, postInfo: any) {
 
-        return new Promise(function (resolve, reject) {
+        const serverComment = feedItem.comment
+        if (!serverComment) { return }
+        
+        const publisherUID = serverComment.publisherUid
 
-            const groupID = feedItem.groupId
+        console.log("haFeed/processFeedItemComment/serverComment: ")
+        console.dir(serverComment)
 
-            const serverPost = feedItem.post
-            if (!serverPost) { return reject('not a server post') }
+        let postObject: Comment = {
+            commentID: serverComment.id,
+            postID: serverComment.postId,
+            userID: publisherUID,
+            type: serverComment.CommentType,
+            timestamp: serverComment.timestamp,
+        }
+
+        // todo: record name
+
+        let postMediaArr: PostMedia[] = []
+        
+        const payloadBinArr = serverComment.payload
+        if (!payloadBinArr) { return }
+        const commentContainer = decodeToCommentContainer(payloadBinArr)
+    
+        hal.log('haFeed/processFeedItemComment/commentContainer:')
+        console.dir(commentContainer)
+    
+        if (!commentContainer) { return }
+    
+        let text = ''
+        let isTextPost = false
+        let isTextPostTextOnly = false
+        let isAlbum = false
+        let isVoiceNote = false
+    
+        let postMentions: any
+    
+        if (commentContainer.album) {
+            isAlbum = true
+        }
+    
+        if (commentContainer.text) {
+            isTextPost = true
+        }
+    
+        // if (commentContainer.voiceNote) {
+        //     isVoiceNote = true
+
+        //     const voiceNoteMedia = processVoiceNote(postObject.postID, postContainer.voiceNote)
+        //     if (voiceNoteMedia) {
+        //         postObject.voiceNote = voiceNoteMedia
+        //     }
+        // }
+    
+        // if (isAlbum) {
+        //     /* text */
+        //     if (postContainer.album?.text) {
+        //         if (postContainer.album.text.text) {
+        //             postObject.text = postContainer.album.text.text
+        //         }
+        //         postMentions = postContainer.album.text.mentions            
+        //     }
+    
+        //     /* media */
+        //     if (postContainer.album?.media) {
+    
+        //         for (const [index, mediaInfo] of postContainer.album.media.entries()) {
+                    
+        //             if (mediaInfo.image && mediaInfo.image.width && mediaInfo.image.height) {
+        //                 const encryptedResourceInfo = mediaInfo.image.img
+        //                 if (encryptedResourceInfo?.encryptionKey && encryptedResourceInfo?.ciphertextHash && encryptedResourceInfo?.downloadUrl) {
+        //                     let postMedia: PostMedia = {
+        //                         postID: postObject.postID,
+        //                         type: PostMediaType.Image,
+        //                         order: index,
+        //                         width: mediaInfo.image.width,
+        //                         height: mediaInfo.image.height,
+        //                         key: encryptedResourceInfo.encryptionKey,
+        //                         hash: encryptedResourceInfo.ciphertextHash,
+        //                         downloadURL: encryptedResourceInfo.downloadUrl,
+        //                     }
+        //                     postMediaArr.push(postMedia)
+        //                 }
+        //             }
+    
+        //             else if (mediaInfo.video && mediaInfo.video.width && mediaInfo.video.height) {
+        //                 const encryptedResourceInfo = mediaInfo.video.video
+        //                 if (encryptedResourceInfo?.encryptionKey && encryptedResourceInfo?.ciphertextHash && encryptedResourceInfo?.downloadUrl) {
+        //                     let postMedia: PostMedia = {
+        //                         postID: postObject.postID,
+        //                         type: PostMediaType.Video,
+        //                         order: index,
+        //                         width: mediaInfo.video.width,
+        //                         height: mediaInfo.video.height,
+        //                         key: encryptedResourceInfo.encryptionKey,
+        //                         hash: encryptedResourceInfo.ciphertextHash,
+        //                         downloadURL: encryptedResourceInfo.downloadUrl,
+        //                     }
+
+        //                     const isStream = JSON.stringify(mediaInfo.video.streamingInfo) !== '{}'
+        //                     if (isStream) {
+        //                         const blobVersion = mediaInfo.video.streamingInfo?.blobVersion
+        //                         const chunkSize = mediaInfo.video.streamingInfo?.chunkSize
+        //                         const blobSize = mediaInfo.video.streamingInfo?.blobSize
+        //                         if (chunkSize) {
+        //                             postMedia.chunkSize = chunkSize                             
+        //                         }
+        //                         if (blobSize) {
+        //                             postMedia.blobSize = blobSize
+        //                         }    
+        //                         if (blobVersion) {
+        //                             postMedia.blobVersion = blobVersion
+        //                         }   
+        //                     }
+        //                     postMediaArr.push(postMedia)
+        //                 }
+        //             }                
+        //         }
+        //     }
+    
+        //     /* voiceNote inside album */
+        //     if (postContainer.album?.voiceNote) {
+        //         isVoiceNote = true
             
-            const publisherUID = serverPost.publisherUid
+        //         const voiceNoteMedia = processVoiceNote(postObject.postID, postContainer.album.voiceNote)
+        //         if (voiceNoteMedia) {
+        //             postObject.voiceNote = voiceNoteMedia
+        //         }
+        //     }     
+        // }
+    
+        // if (isTextPost) {
+        //     /* link preview */
+        //     if (postContainer?.text?.link &&
+        //         postContainer.text.link.preview &&
+        //         postContainer.text.link.preview[0] &&
+        //         postContainer.text.link.preview[0].img
+        //         ) {
+        //             const previewImage = postContainer.text.link.preview[0]
+        //             const media = previewImage.img
 
-            // console.log("haFeed/processServerPost/serverPost: ")
-            // console.dir(serverPost)
+        //             const linkPreview = processLinkPreview(postObject.postID, postContainer.text.link)
+        //             if (linkPreview) {
+        //                 postObject.linkPreview = linkPreview
 
-            let postObject: Feed = { 
-                postID: serverPost.id,
-                userID: publisherUID,
-                timestamp: serverPost.timestamp,
-                retractState: postInfo.retractState,
-                unreadComments: postInfo.unreadComments,
-            }
+        //             }
 
-            if (postInfo.userReceipts) {
-                postObject.userReceipts = postInfo.userReceipts
-            }
+        //     } else {
+        //         isTextPostTextOnly = true
+        //     }
+    
+        //     /* process text after checking if it's text only */
+        //     if (postContainer.text?.text) {
+        //         postObject.text = postContainer.text.text
+        //         postMentions = postContainer.text.mentions     
+        //     }        
+        // }
 
-            let postMediaArr: PostMedia[] = []
-            
-            const payloadBinArr = serverPost.payload
-            if (!payloadBinArr) { return reject('empty payloadBinArr') }
-            const postContainer = decodeToPostContainer(payloadBinArr)
-        
-            hal.log('haFeed/processServerPost/postContainer:')
-            console.dir(postContainer)
-        
-            if (!postContainer) { return reject('empty postContainer') }
-        
-            if (groupID) {
-                postObject.groupID = groupID
-            }
+        // if (postMentions) {
+        //     postObject.mentions = processMentions(postMentions)
+        // }
 
-            if (publisherUID) {
-                postObject.userID = publisherUID
-            }
-        
-            let text = ''
-            let isTextPost = false
-            let isTextPostTextOnly = false
-            let isAlbum = false
-            let isVoiceNote = false
-        
-            let postMentions: any
-        
-            if (postContainer.album) {
-                isAlbum = true
-            }
-        
-            if (postContainer.text) {
-                isTextPost = true
-            }
-        
-            if (postContainer.voiceNote) {
-                isVoiceNote = true
+        // // console.log("haFeed/processServerPost/postObject: ")
+        // console.dir(postObject)
 
-                const voiceNoteMedia = processVoiceNote(postObject.postID, postContainer.voiceNote)
-                if (voiceNoteMedia) {
-                    postObject.voiceNote = voiceNoteMedia
-                }
-            }
-        
-            if (isAlbum) {
-                /* text */
-                if (postContainer.album?.text) {
-                    if (postContainer.album.text.text) {
-                        postObject.text = postContainer.album.text.text
-                    }
-                    postMentions = postContainer.album.text.mentions            
-                }
-        
-                /* media */
-                if (postContainer.album?.media) {
-        
-                    for (const [index, mediaInfo] of postContainer.album.media.entries()) {
-                        
-                        if (mediaInfo.image && mediaInfo.image.width && mediaInfo.image.height) {
-                            const encryptedResourceInfo = mediaInfo.image.img
-                            if (encryptedResourceInfo?.encryptionKey && encryptedResourceInfo?.ciphertextHash && encryptedResourceInfo?.downloadUrl) {
-                                let postMedia: PostMedia = {
-                                    postID: postObject.postID,
-                                    type: PostMediaType.Image,
-                                    order: index,
-                                    width: mediaInfo.image.width,
-                                    height: mediaInfo.image.height,
-                                    key: encryptedResourceInfo.encryptionKey,
-                                    hash: encryptedResourceInfo.ciphertextHash,
-                                    downloadURL: encryptedResourceInfo.downloadUrl,
-                                }
-                                postMediaArr.push(postMedia)
-                            }
-                        }
-        
-                        else if (mediaInfo.video && mediaInfo.video.width && mediaInfo.video.height) {
-                            const encryptedResourceInfo = mediaInfo.video.video
-                            if (encryptedResourceInfo?.encryptionKey && encryptedResourceInfo?.ciphertextHash && encryptedResourceInfo?.downloadUrl) {
-                                let postMedia: PostMedia = {
-                                    postID: postObject.postID,
-                                    type: PostMediaType.Video,
-                                    order: index,
-                                    width: mediaInfo.video.width,
-                                    height: mediaInfo.video.height,
-                                    key: encryptedResourceInfo.encryptionKey,
-                                    hash: encryptedResourceInfo.ciphertextHash,
-                                    downloadURL: encryptedResourceInfo.downloadUrl,
-                                }
+        // /* only modify groups list if the post is not deleted */
+        // if (groupID && postObject.retractState != web.PostDisplayInfo.RetractState.RETRACTED) {
+         
+        //     let mediaType: PostMediaType = 0
+        //     if (postMediaArr.length > 0) {
+        //         const firstMedia = postMediaArr[0]
+        //         mediaType = firstMedia.type
+        //     }
 
-                                const isStream = JSON.stringify(mediaInfo.video.streamingInfo) !== '{}'
-                                if (isStream) {
-                                    const blobVersion = mediaInfo.video.streamingInfo?.blobVersion
-                                    const chunkSize = mediaInfo.video.streamingInfo?.chunkSize
-                                    const blobSize = mediaInfo.video.streamingInfo?.blobSize
-                                    if (chunkSize) {
-                                        postMedia.chunkSize = chunkSize                             
-                                    }
-                                    if (blobSize) {
-                                        postMedia.blobSize = blobSize
-                                    }    
-                                    if (blobVersion) {
-                                        postMedia.blobVersion = blobVersion
-                                    }   
-                                }
-                                postMediaArr.push(postMedia)
-                            }
-                        }                
-                    }
-                }
-        
-                /* voiceNote inside album */
-                if (postContainer.album?.voiceNote) {
-                    isVoiceNote = true
-                
-                    const voiceNoteMedia = processVoiceNote(postObject.postID, postContainer.album.voiceNote)
-                    if (voiceNoteMedia) {
-                        postObject.voiceNote = voiceNoteMedia
-                    }
-                }     
-            }
-        
-            if (isTextPost) {
-                /* link preview */
-                if (postContainer?.text?.link &&
-                    postContainer.text.link.preview &&
-                    postContainer.text.link.preview[0] &&
-                    postContainer.text.link.preview[0].img
-                    ) {
-                        const previewImage = postContainer.text.link.preview[0]
-                        const media = previewImage.img
+        //     modifyGroupIfNeeded(postObject, mediaType, isVoiceNote)
+        // }
 
-                        const linkPreview = processLinkPreview(postObject.postID, postContainer.text.link)
-                        if (linkPreview) {
-                            postObject.linkPreview = linkPreview
-
-                        }
-
-                } else {
-                    isTextPostTextOnly = true
-                }
-        
-                /* process text after checking if it's text only */
-                if (postContainer.text?.text) {
-                    postObject.text = postContainer.text.text
-                    postMentions = postContainer.text.mentions     
-                }        
-            }
-
-            if (postMentions) {
-                postObject.mentions = processMentions(postMentions)
-            }
-
-            // console.log("haFeed/processServerPost/postObject: ")
-            console.dir(postObject)
-
-            if (groupID) {
-                
-                let mediaType: PostMediaType = 0
-                if (postMediaArr.length > 0) {
-                    const firstMedia = postMediaArr[0]
-                    mediaType = firstMedia.type
-                }
-
-                modifyGroupIfNeeded(postObject, mediaType, isVoiceNote)
-            }
-
-            insertPostIfNotExist(postObject)
-            insertPostMedia(postObject.postID, postMediaArr)
-
-            return resolve(postObject)
-        })
+        // insertPostIfNotExist(postObject)
+        // insertPostMedia(postObject.postID, postMediaArr)
 
     }
-    
+
     function processLinkPreview(postID: string, linkPreview: any) {
 
         let linkPreviewObject: LinkPreview = {
@@ -759,21 +755,37 @@ export function useHAFeed() {
     }
 
     function decodeToPostContainer(binArray: Uint8Array) {
-        
-        // const err = clients.Container.verify(binArray)
-        // if (err) {
-        //     throw err
-        // }
+        const err = clients.Container.verify(binArray)
+        if (err) {
+            throw err
+        }
         const container = clients.Container.decode(binArray)
-        
         const postContainer = container.postContainer
-
         return postContainer
-    
+    }
+
+    function decodeToCommentContainer(binArray: Uint8Array) {
+        const err = clients.Container.verify(binArray)
+        if (err) {
+            throw err
+        }
+        const container = clients.Container.decode(binArray)
+        const commentContainer = container.commentContainer
+        return commentContainer
+    }
+
+    async function getComments(postID: string) {
+        const arr = await db.comment.where('postID').equals(postID).toArray()
+        if (!arr || arr.length == 0) {
+            return undefined
+        }
+        return arr
     }
 
     return { 
-        processWebContainer, getPostMedia, 
+        processWebContainer, 
+        getPostMedia, getComments, 
         modifyPostMedia, modifyPostVoiceNote, modifyPostLinkPreviewMedia,
-        setPostMediaIsCodecH265 }
+        setPostMediaIsCodecH265 
+    }
 }

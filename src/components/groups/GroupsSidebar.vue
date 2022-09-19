@@ -32,7 +32,7 @@
             }
 
             if (!mainStore.groupsPageGroupID && listData.value.length > 0) {
-               selectGroup(listData.value[0].groupID)
+                mainStore.selectGroup(listData.value[0].groupID)
             }
 
         },
@@ -53,10 +53,6 @@
 
     const listData: Ref<Group[]> = ref([])
 
-    function selectGroup(groupID: string) {
-        mainStore.groupsPageGroupID = groupID
-    }
-
 </script>
 
 <template>
@@ -70,7 +66,7 @@
         <div class="listBox"> 
             <div v-for="value in listData" :key="value.groupID"
                 :class="['container', {selected: mainStore.groupsPageGroupID == value.groupID}]"
-                @click="selectGroup(value.groupID)">
+                @click="mainStore.gotoGroup(value.groupID)">
                 <div class="avatarContainer">
 
                     <GroupAvatar :groupID="value.groupID" :width="50">

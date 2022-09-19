@@ -16,10 +16,14 @@ import { useHAFeed } from '../composables/haFeed'
 
 export const useConnStore = defineStore('conn', () => {
 
+    const version = '30'
+    const devMode = false
+    const isDebug = false
+
     const mainStore = useMainStore()
     let { 
         createPingPacket, addKey, removeKey, check, createNoiseMessage, createWebStanzaPacket, 
-        encodeFeedRequestWebContainer, encodeGroupFeedRequestWebContainer,
+        encodeFeedRequestWebContainer, encodeGroupFeedRequestWebContainer, encodeCommentsRequestWebContainer,
         uploadMedia 
     } = network()
 
@@ -629,6 +633,22 @@ export const useConnStore = defineStore('conn', () => {
         enqueue(packet, true, callback)            
     }
 
+    async function requestComments(postID: string, cursor: string, limit: number, callback?: Function) {
+        console.log('connStore/requestComments/post: ' + postID + ', cursor: ' + cursor)
+        
+        if (!cipherStateSend) {
+            hal.log('homeMain/requestComments/exit/undefined cipherStateSend')
+            return
+        }
+
+        const webContainerBinArr = encodeCommentsRequestWebContainer(postID, cursor, limit)        
+        const encryptedWebContainer = cipherStateSend.EncryptWithAd([], webContainerBinArr)
+
+        const packet = createWebStanzaPacket(encryptedWebContainer)
+        
+        enqueue(packet, true, callback)            
+    }
+
     function login() {
         mainStore.loginMain()
     }
@@ -655,6 +675,10 @@ export const useConnStore = defineStore('conn', () => {
     }
 
     return {
+        devMode,
+        version,
+        isDebug,
+
         isNoiseReHandshakeCompleted,
 
         connectToServerIfNeeded, 
@@ -669,6 +693,7 @@ export const useConnStore = defineStore('conn', () => {
 
         requestFeedItems,
         requestGroupFeedItems,
+        requestComments,
 
         getMediaUrl,
 

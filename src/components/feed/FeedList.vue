@@ -75,10 +75,26 @@
     const emit = defineEmits<{(e: 'commentsClick', postID: string): void}>()
 
     watchEffect(() => {
-        if (mainStore.scrollToTop == 'home') {
+
+        /* at main feed */
+        if (props.atMainFeed) {
+            if (mainStore.scrollToTop != 'home') { return }
+
             scrollToTop()
             mainStore.scrollToTop = ''
+        } 
+        
+        /* at group feed */
+        else if (!props.atMainFeed) {
+            
+            if (mainStore.scrollToTop == props.groupID) {
+           
+                scrollToTop()
+                mainStore.scrollToTop = ''
+            }
         }
+
+        
     })
 
     function makeList() {

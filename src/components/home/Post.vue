@@ -7,6 +7,7 @@
     import { useI18n } from 'vue-i18n'
 
     import { useMainStore } from '@/stores/mainStore'
+    import { useConnStore } from '@/stores/connStore'
     import { useColorStore } from '@/stores/colorStore'
 
     import { db, Feed, PostMediaType } from '@/db'
@@ -52,6 +53,7 @@
     const { t, locale } = useI18n({ inheritLocale: true, useScope: 'global' })
 
     const mainStore = useMainStore()
+    const connStore = useConnStore()
     const colorStore = useColorStore()
     
     const { getDerivedKey, 
@@ -70,7 +72,7 @@
     } = storeToRefs(colorStore)
        
     const { 
-        getPostMedia, 
+        getPostMedia, getComments,
         modifyPostMedia, modifyPostVoiceNote, modifyPostLinkPreviewMedia, 
         setPostMediaIsCodecH265 
     } = useHAFeed()
@@ -112,12 +114,24 @@
     const postSubscription = postObservable.subscribe({
         next: resultList => { 
 
-            /* only update recently downloaded media */
+            /* only update when there's an error or recently downloaded media */
             for (let i = 0; i < resultList.length; i++) {
                 const result = resultList[i]
-                if (!result.blob) { continue }
- 
+
                 const albumItem = album.value[result.order]
+
+                if (!albumItem) { continue }
+
+
+                if (!albumItem.errorMsg) {
+
+                    if (result.isCodecH265) {
+                        albumItem.errorMsg = t('post.noH265VideoSupportText')
+                    }
+
+                }
+
+                if (!result.blob) { continue }
 
                 if (!albumItem.isReady) {
                     const object = URL.createObjectURL(result.blob)
@@ -394,6 +408,8 @@
     }
 
     async function processPost(post: Feed) {
+        const postID = post.postID
+
         let isVoiceNote = false
         let voiceNoteMedia: any
 
@@ -404,7 +420,7 @@
 
         postTimestamp.value = formatTime(post.timestamp, locale.value as string)
 
-        const postMedia = await getPostMedia(post.postID)
+        const postMedia = await getPostMedia(postID)
 
         if (postMedia) {
             isAlbum.value = true
@@ -454,6 +470,7 @@
                         const chunkSize = mediaInfo.chunkSize
                         if (chunkSize) {
                             
+
                             // MediaSource is not supported on iOS yet
                             if ('MediaSource' in window) {
                                 hal.log('processPostContainer/video/stream/stream via mediaSource')
@@ -477,13 +494,43 @@
 
                             album.value[index].isReady = true                                               
                         } else {
+
                             mediaBlob = await getMediaBlob(videoInfo, mediaInfo)
                             if (mediaBlob) {
+
+
+                                /* todo: check if this is needed */
+                                /* h265 video is not supported on desktop browsers except for Safari */
+                                // if (!mainStore.isMobile && !mainStore.isSafari) {
+                                    // let mp4box = MP4Box.createFile()
+                                    // mp4box.onReady = function(info: any) {
+                                    //     info.tracks.forEach(function(track: any) {
+                                    //         const codecType = track.codec.substring(0, 4)
+                                    //         if (codecType == 'hvc1') {
+                                    //             hal.prod('processPostContainer/video/non-streaming/can not play h265 video: ' + track.codec)
+                                    //             // album.value[index].errorMsg = t('post.noH265VideoSupportText')
+
+                                    //             setPostMediaIsCodecH265(props.post.postID, index, true)
+                                    //         }
+                                    //     })
+                                    // }
+                                
+                                    /* 
+                                    * nb: mp4box has a bug that does not process h265 files properly
+                                    * filed: https://github.com/gpac/mp4box.js/issues/283 
+                                    */
+                                    // let mediaBuffer: any = mediaBlob.arrayBuffer()
+                                    // mediaBuffer.fileStart = 0
+                                    // mp4box.appendBuffer(mediaBuffer)
+                                    // mp4box.flush()
+                                // }
+
+
                                 const mediaBlobUrl = URL.createObjectURL(mediaBlob)
                                 album.value[index].mediaBlob = mediaBlobUrl
                                 album.value[index].isReady = true    
                                 
-                                modifyPostMedia(props.post.postID, index, mediaBlob)
+                                modifyPostMedia(postID, index, mediaBlob)
                             }
                         }
                     }
@@ -503,7 +550,7 @@
             } else {
                 mediaBlob = await getMediaBlob(voiceNoteInfo, voiceNoteMedia)
                 if (mediaBlob) {
-                    modifyPostVoiceNote(props.post.postID, mediaBlob)
+                    modifyPostVoiceNote(postID, mediaBlob)
                 }
             }
 
@@ -530,7 +577,7 @@
                     } else {
                         mediaBlob = await getMediaBlob(imageInfo, linkPreviewMedia)
                         if (mediaBlob) {
-                            modifyPostLinkPreviewMedia(props.post.postID, mediaBlob)
+                            modifyPostLinkPreviewMedia(postID, mediaBlob)
                         }
                     }
 
@@ -559,6 +606,15 @@
             userReceipts.value = props.post.userReceipts.slice(0, 3)
         }
 
+        /* preemptively request comments for the post */
+        const numComments = await db.comment.where('postID').equals(postID).count()
+        if (numComments == 0) {
+            let commentCursor = ''
+            if (mainStore.commentCursors[postID]) {
+                commentCursor = mainStore.commentCursors[postID]
+            }      
+            connStore.requestComments(postID, commentCursor, 10, function() {})
+        }
     }
 
     function setPostSize() {
@@ -671,7 +727,7 @@
                 <div id="nameBox">
                     <div class="name">
                         {{ mainStore.pushnames[props.post.userID] }}
-                        <span v-if="mainStore.devMode" class="devPostID">{{ props.post.postID }}</span>
+                        <span v-if="connStore.devMode" class="devPostID">{{ connStore.devMode }} {{ props.post.postID }}</span>
                         <span v-if="atMainFeed && props.post.groupID" class="groupIndicator">
                             <font-awesome-icon :icon="['fas', 'caret-right']" size='sm' class="groupIndicatorIcon"/>
                         </span>

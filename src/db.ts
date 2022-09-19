@@ -1,5 +1,5 @@
 import Dexie, { Table } from 'dexie'
-import { web } from '@/proto/web.js'
+import { server, web } from '@/proto/web.js'
 
 export interface MessageList {
     id?: number
@@ -65,6 +65,43 @@ export interface PostMedia {
     isCodecH265?: boolean // pertains to video only
 }
 
+export enum CommonMediaType {
+    Unknown = 0,
+    Feed = 1,
+    Comment = 2,
+    Chat = 3
+}
+
+export enum MediaType {
+    Unknown = 0,
+    Image = 1,
+    Video = 2,
+    Audio = 3
+}
+
+export interface CommonMedia {
+    id?: number
+    type: CommonMediaType
+    typeID?: string
+    mediaType: MediaType
+    
+    order: number
+    width: number
+    height: number
+
+    key: Uint8Array
+    hash: Uint8Array
+    downloadURL: string
+    uploadURL?: string
+
+    blobVersion?: number
+    blob?: Blob
+    blobSize?: number | Long
+    chunkSize?: number
+
+    isCodecH265?: boolean // pertains to video only
+}
+
 export interface Feed {
     id?: number
     postID: string
@@ -79,6 +116,19 @@ export interface Feed {
     retractState?: web.PostDisplayInfo.RetractState
     unreadComments?: number
     userReceipts?: web.ReceiptInfo[]
+}
+
+export interface Comment {
+    id?: number
+    postID: string
+    type: server.Comment.CommentType
+    commentID: string
+    userID: String
+    parentCommentID?: string
+    timestamp: number
+
+    text?: string
+    mentions?: Mention[]
 }
 
 export interface Group {
@@ -119,9 +169,11 @@ export class HADexie extends Dexie {
     messageList!: Table<MessageList>
     media!: Table<Media>
     feed!: Table<Feed>
+    comment!: Table<Comment>
     group!: Table<Group>
     chat!: Table<Chat>
     postMedia!: Table<PostMedia>
+    commonMedia!: Table<CommonMedia>
     contact!: Table<Contact>
     avatar!: Table<Avatar>
     groupAvatar!: Table<GroupAvatar>
@@ -132,10 +184,12 @@ export class HADexie extends Dexie {
             messageList: '++id, fromUserID, toUserID',
             media: '++id',
             feed: '++id, postID, userID, groupID, text, timestamp',
+            comment: '++id, postID, commentID, timestamp',
             group: 'groupID, name',
             chat: '++id, proto',
             postMedia: '++id, postID, order',
             contact: '++id, userName, userID',
+            commonMedia: '++id, type, typeID',
             avatar: 'userID',
             groupAvatar: 'groupID'
         })

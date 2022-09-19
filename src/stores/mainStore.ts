@@ -14,9 +14,6 @@ export const useMainStore = defineStore('main', {
         },
     },
     state: () => ({
-        version: '30',
-        devMode: false,
-        isDebug: false,
         devCORSWorkaroundUrlPrefix: '',
 
         isMobile: false,
@@ -52,6 +49,8 @@ export const useMainStore = defineStore('main', {
         page: 'home',
         groupsPageGroupID: '',
         settingsPage: '',
+        scrollToTop: '',
+        mobileNavlessPanel: '',
 
         mainFeedHeadPostID: '',
         mainFeedHeadPostTimestamp: 0,
@@ -60,9 +59,7 @@ export const useMainStore = defineStore('main', {
         mainFeedNextCursor: '',
 
         groupFeedCursors: <any>{},
-
-        mobileNavlessPanel: '',
-        scrollToTop: '',
+        commentCursors: <any>{}, // keys are postIDs
 
         sounds: false,
         desktopAlerts: false,
@@ -92,6 +89,7 @@ export const useMainStore = defineStore('main', {
             // todo: make sure all other dbs like chat is also deleted, test to see if delete/re-open is fast enough
             db.delete().then(() => {
 
+                /* manual reset instead of $reset() so we can preserve the states we want */
                 this.privateKeyBase64 = ''
                 this.mobilePublicKeyBase64 = ''
                 this.isPublicKeyAuthenticated = false
@@ -110,11 +108,13 @@ export const useMainStore = defineStore('main', {
                 this.isLoggedIntoApp = false
                 this.loginUserID = ''
                 
-                /* manual reset instead of $reset() so we can preserve the states we want */
                 this.page = 'home'
                 this.groupsPageGroupID = ''
                 this.settingsPage = ''
+                this.scrollToTop = ''
+
                 // todo: might have to stop in-flight messages
+
                 this.messageQueue.splice(0, this.messageQueue.length) // clear messages
     
                 for (const prop of Object.getOwnPropertyNames(this.pushnames)) {
@@ -125,19 +125,25 @@ export const useMainStore = defineStore('main', {
                 }
                 for (const prop of Object.getOwnPropertyNames(this.groupnames)) {
                     delete this.groupnames[prop]
-                }            
+                }
                 for (const prop of Object.getOwnPropertyNames(this.groupFeedCursors)) {
                     delete this.groupFeedCursors[prop]
-                }    
-    
-                hal.log('mainStore/logged out')
+                }
+                for (const prop of Object.getOwnPropertyNames(this.commentCursors)) {
+                    delete this.commentCursors[prop]
+                }                
 
+                hal.log('mainStore/logged out')
                 db.open() 
             })
         },
         gotoPage(page: string) {
             if (page == this.page) {
-                this.scrollToTop = page
+                if (page == 'groups') {
+                    this.scrollToTop = this.groupsPageGroupID
+                } else {
+                    this.scrollToTop = page
+                }
             } else { 
                 this.page = page
             }
@@ -157,7 +163,12 @@ export const useMainStore = defineStore('main', {
         },
         gotoGroup(groupID?: string) {
             if (!groupID) return
-            this.page = 'groups'
+            this.selectGroup(groupID)
+            this.gotoPage('groups')
+            
+        },
+        selectGroup(groupID?: string) {
+            if (!groupID) return
             this.groupsPageGroupID = groupID
         },
         gotoSettingsPage(page: string) {
