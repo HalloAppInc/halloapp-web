@@ -1,10 +1,17 @@
 <script setup lang="ts">
-    import { Ref, ref, computed, nextTick, watch, onMounted, onUnmounted } from 'vue'
+    import { Ref, ref, computed, nextTick, watch, onMounted, onUnmounted, onUpdated } from 'vue'
     import { number } from '@intlify/core-base'
-    import GraphemeSplitter from 'grapheme-splitter'
+    import { liveQuery } from 'dexie'
+    import { storeToRefs } from 'pinia'
+
     import { useI18n } from 'vue-i18n'
+    import GraphemeSplitter from 'grapheme-splitter'
+    import { alea } from 'seedrandom'
+
+    import { db, Comment, CommonMedia, SubjectType, MediaType } from '@/db'
 
     import { useMainStore } from '@/stores/mainStore'
+    import { useConnStore } from '@/stores/connStore'
     import { useColorStore } from '@/stores/colorStore'
 
     import hal from '@/common/halogger'
@@ -13,16 +20,25 @@
     import { useHAMediaResize } from '@/composables/haMediaResize'
     import { useHADatabase } from '@/composables/haDb'
     import { useHAText } from '@/composables/haText'
+    import { useHAFeed } from '@/composables/haFeed'
+    
+    import Popup from '@/components/chats/Popup.vue'
+    import Quote from '@/components/chats/Quote.vue'
+    import FullScreener from '@/components/chats/FullScreener.vue'
+    import MediaCollage from '@/components/chats/MediaCollage.vue'
+    import Notification from '@/components/chats/Notification.vue'
 
-    import Popup from './Popup.vue'
-    import Quote from './Quote.vue'
-    import FullScreener from './FullScreener.vue'
-    import MediaCollage from './MediaCollage.vue'
-    import Notification from './Notification.vue'
 
+    import { useHACommonMedia } from '@/composables/haCommonMedia'
 
-    const colorStore = useColorStore()
+    const { fetchVoiceNote
+    } = useHACommonMedia()    
+
     const mainStore = useMainStore()
+    const connStore = useConnStore()
+    const colorStore = useColorStore()
+
+    const count = ref(50)
 
     const { t, locale } = useI18n({
         inheritLocale: true,
@@ -36,12 +52,90 @@
             loadMessageList, notifyWhenChanged, getMedia, 
             getContactByName, getContacts } = useHADatabase()
 
+    const { getCommonMediaList } = useHAFeed()
+    
 
-    fetchContactList()
 
-    const messageListFromDB = ref()
+    interface Props {
+        type: SubjectType,
+        subjectID: string, // postID
+        replyQuoteIdx?: string
+    }
+    const props = defineProps<Props>()
 
-    const props = defineProps(['replyQuoteIdx'])
+    let msgObservable: any
+    if (props.type == SubjectType.Comment) {
+        msgObservable = liveQuery (() => db.comment.where('postID').equals(props.subjectID)
+            .reverse()
+            .sortBy('timestamp')
+        )
+    } else if (props.type == SubjectType.Chat) {
+
+        // const groupId = props.groupID
+
+        // msgObservable = liveQuery (() => db.feed.where('groupID').equals(groupId)
+        //     .reverse()
+        //     .sortBy('timestamp')
+        // )
+
+    }
+
+    if (msgObservable) {
+        const subscription = msgObservable.subscribe({
+            next: (result: any) => { 
+                if (result) {
+                    dbListData.value = result
+                    makeList()
+                }
+            },
+            error: (error: any) => console.error(error)
+        })
+    }
+
+    const dbListData: Ref<any[]> = ref([])
+    const listData: Ref<any[]> = ref([])    
+        
+
+    const commonMediaLists = ref({} as any) // contain arrays of commonMedia per data item
+
+
+    const isInitialized = ref(false)
+
+
+    async function makeList() {
+
+        listData.value = await processDBCommentList(dbListData, count.value) as any
+
+
+        for (const element of listData.value) {
+        
+            if (element.type == 'timestamp') { continue }
+
+            if (props.type == SubjectType.Comment) {
+                if (!commonMediaLists.value[element.commentID]) {
+
+                    const num = await db.commonMedia.toArray()
+
+                    const mediaArr = await getCommonMediaList(SubjectType.Comment, props.subjectID, element.commentID)
+                    if (mediaArr) {
+                        commonMediaLists.value[element.commentID] = mediaArr
+
+                    } 
+
+                }
+            }
+        }
+
+        if (!isInitialized.value) {
+            isInitialized.value = true
+            // nextTick(() => {
+                
+            //     shouldScrollToBottom = false
+            // })
+            
+        }
+    }
+
 
     const menu = ref<HTMLElement | null>(null)
     const content = ref<HTMLElement | null>(null)
@@ -52,6 +146,7 @@
     const chatPanelHeight = ref(0)
 
     let handleScrollTimer: any
+    let requestTimer: any
 
     const showJumpDownButton = ref(false)
     const showMenu = ref(false)
@@ -63,6 +158,7 @@
     const selectMessageIdx = ref(-1)
     const selectMediaList = ref()
     const selectMediaIdx = ref()
+    const selectMediaContentID = ref()
     const menuTimestamp = ref('')
     const quoteMessage = ref({})
     const NotificationQueue: Ref<string[]> = ref([])
@@ -71,9 +167,6 @@
     const currentMsgTimestamp = ref()
 
     const data = ref()
-
-    const contactList = ref()
-    const contactNameList = ref()
 
     const messageNumber = computed(() => {
         if (data.value) {
@@ -84,214 +177,142 @@
         }
     })
 
-    // listen to chatID, if choose another chat in chatlist, update chatPanel
-    const chatID = computed(() => {
-        return mainStore.chatID
-    })
-
-    watch(chatID, () => {
-        loadMessageListIntoChatPanel()
-        fetchContactList()
-    })
-
     // listen to msg list, when a new msg comes in, scroll to the bottom
-    watch(messageNumber, (newVal, oldVal) => {
-        if (newVal > oldVal) {
-            showReply.value = false
-            nextTick(() => {
-                gotoBottom('smooth')
-                handleScroll()
-            })
-        }
-    })
+    // watch(messageNumber, (newVal, oldVal) => {
+    //     if (newVal > oldVal) {
+    //         showReply.value = false
+    //         nextTick(() => {
+    //             gotoBottom('smooth')
+    //             handleScroll()
+    //         })
+    //     }
+    // })
 
-    watch(chatPanelHeight, () => {
-        nextTick(() => {
-            gotoBottom('auto')
-        })
-    })
+    // watch(chatPanelHeight, () => {
+    //     nextTick(() => {
+    //         gotoBottom('auto')
+    //     })
+    // })
 
-    watch(messageListFromDB, () => {
-        parseMessage()
-        // update timestamp
-        handleScroll()
-    })
+    // watch(messageListFromDB, () => {
+    //     parseMessage()
+    
+    //     handleScroll()
+    // })
 
-    notifyWhenChanged(listenerFunction)
 
-    const headerColor = computed(() => {
-        return colorStore.header
-    })
-    const textColor = computed(() => {
-        return colorStore.text
-    })
-    const outBoundMsgBubbleColor = computed(() => {
-        return colorStore.outBoundMsgBubble
-    })
-    const inBoundMsgBubbleColor = computed(() => {
-        return colorStore.inBoundMsgBubble
-    })
-    const timeBubbleColor = computed(() => {
-        return colorStore.timeBubble
-    })
-    const timestampColor = computed(() => {
-        return colorStore.timestamp
-    })
-    const iconColor = computed(() => {
-        return colorStore.icon
-    })
-    const hoverColor = computed(() => {
-        return colorStore.hover
-    })
-    const borderlineColor = computed(() => {
-        return colorStore.borderline
-    })
-    const backgroundColor = computed(() => {
-        return colorStore.background
-    })
+    const { 
+        background: backgroundColor,
+        tertiaryBg: tertiaryBgColor,
+        header: headerColor,
+        text: textColor,
+        outBoundMsgBubble: outBoundMsgBubbleColor,
+        inBoundMsgBubble: inBoundMsgBubbleColor,
+        timeBubble: timeBubbleColor,
+        timestamp: timestampColor,
+        icon: iconColor,
+        hover: hoverColor,
+        borderline: borderlineColor,
+        nameList: nameListColors
 
-    nextTick(() => {
-        handleScroll()
-        gotoBottom('auto')
-        new ResizeObserver(setChatPanelHeight).observe(content.value!)
-    })
+    } = storeToRefs(colorStore)  
 
-    function fetchContactList() {
-        getContacts()
-        .then(res => {
-            // hal.log('ChatPanel/fetchContactList/load contactList ', res)
-            contactList.value = res
-            let result = []
-            for(const contact of contactList.value){
-                result.push(contact.userName)
-            }
-            contactNameList.value = result
-        })
+    function getColor(seed: string, max: number) {
+        const arng = new alea(seed)
+        const rand = (Math.abs(arng.int32()))
+        const result = rand%max
+        return nameListColors.value[result]
     }
 
-    async function parseMessage() {
+    // console.log("-0-> " + getColor('hello', 10))
+    
+    // nextTick(() => {
+        // handleScroll()
+        // gotoBottom('auto')
+        // new ResizeObserver(setChatPanelHeight).observe(content.value!)
+    // })
+
+    async function processDBCommentList(messageListFromDB: any, numMsgToShow: number) {
+        let result = []
+
         if (!messageListFromDB.value) {
-            data.value = []
-            return
+            return []
         }
 
-        let result = []
-        let numOfTimestamp = 0
-        for(let i = 0; i < messageListFromDB.value.length; i++) {
-            const message = messageListFromDB.value[i]
-            // add timestamp
-            if (i == 0) {
-                if (message.timestamp) {
-                    result.push({
-                        'type': 'timestamp',
-                        'timestamp': formatTimeDateOnlyChat(parseInt(message.timestamp), locale.value as string),
-                    })
-                    numOfTimestamp++
-                }
-            }
-            else {
-                const timestampStringOld = messageListFromDB.value[i-1].timestamp
-                const timestampStringNew = message.timestamp
-                if (timestampStringOld && timestampStringNew 
-                    && timeDiffBiggerThanOneDay(parseInt(timestampStringOld), parseInt(timestampStringNew))) {
-                    result.push({
-                        'type': 'timestamp',
-                        'unixTimestamp': timestampStringNew,
-                        'timestamp': formatTimeDateOnlyChat(parseInt(timestampStringNew), locale.value as string),
-                    })
-                    numOfTimestamp++
-                }
-            }
+        let listLength = messageListFromDB.value.length
+        if (listLength > numMsgToShow) {
+            listLength = numMsgToShow
+        }
 
-            let time = formatTimeChat(parseInt(message.timestamp), locale.value as string)
-            let type = (message.fromUserID == mainStore.loginUserID) ? 'outBound' : 'inBound'
+ 
+      
+        for(let i = 0; i < listLength; i++) {
+            const message = messageListFromDB.value[i]
+    
+      
+
+            let time = formatTimeChat(message.timestamp, locale.value as string)
+            let type = (message.userID == mainStore.userID) ? 'outBound' : 'inBound'
             // not delete
             if ( message.text != undefined) {
-                let text = processText(message.text, contactNameList.value).html
+                let text = processText(message.text, message.mentions).html
                 let resMsg = appendSpaceForMsgInfo(text, time, type == 'outBound')
-                let newMediaList
-                if (message.mediaID) {
-                    const mediaArray = await getMedia(message.mediaID)
-                    newMediaList = []
-                    for(const media of mediaArray) {
-                        // create url for file and preview
-                        const file = new Blob([media.file]) 
-                        const newMedia: any = {
-                            'type': media.type,
-                            'width': media.width,
-                            'height': media.height,
-                            'url': URL.createObjectURL(file),
-                            'sendToAWS': media.toOrFromAWS
-                        }
-                        if(!media.preview) {
-                            newMedia['previewUrl'] = newMedia.url
-                        }
-                        else {
-                            const preview = new Blob([media.preview])
-                            newMedia['previewUrl'] = URL.createObjectURL(preview)
-                        }
-                        newMediaList.push(newMedia)
-                    }
-                    setMediaSizeInMediaList(newMediaList)
-                }
-                let quoteMessage
-                if (message.quoteId) {
-                    quoteMessage = await getQuoteMessageData(message.quoteId)
-                }
-                result.push({
-                    'id': message.id,
-                    'type': type,
-                    'timestamp': time,
-                    'text': resMsg[0],
-                    'font': resMsg[1],
-                    'unixTimestamp': message.timestamp,
-                    'display': true,
-                    'media': newMediaList,
-                    'quoteMessage': quoteMessage,
-                    'quoteIdx': message.quoteId,
-                    'sendToAWS': message.toOrFromAWS,
-                })
+
+                // let quotedMessage
+                // if (message.parentCommentID) {
+                //     quotedMessage = await getQuoteMessageData(message.parentCommentID)
+                //     if (quotedMessage) {
+                //         message.quotedMessage = quotedMessage
+                //     }
+                // }
+
             }
-            else {
-                result.push({
-                    'id': message.id,
-                    'type': type,
-                    'unixTimestamp': message.timestamp,
-                    'timestamp': '',
-                    'text': 'You deleted this message.',
-                    'font': 'deletedMessage',
-                    'display': true,
+
+            if (message.voiceNote) {
+               
+                const voiceNoteBlob = await fetchVoiceNote(props.type, message.voiceNote) as any
+
+                if (voiceNoteBlob) {
+    
+                    message.voiceNoteBlobUrl = URL.createObjectURL(voiceNoteBlob)
+                }
+            }
+            
+            result.unshift(message)
+
+
+        /* add timestamp bubbles */
+        if (messageListFromDB.value[i+1]) {
+            const msgTimestamp = message.timestamp
+            const nextMsgTimestamp = messageListFromDB.value[i+1].timestamp
+            
+            if (msgTimestamp && nextMsgTimestamp 
+                && timeDiffBiggerThanOneDay(msgTimestamp, nextMsgTimestamp)) {
+                result.unshift({
+                    'type': 'timestamp',
+                    'unixTimestamp': msgTimestamp,
+                    'timestamp': formatTimeDateOnlyChat(msgTimestamp, locale.value as string),
                 })
-            }       
+    
+            }
         }
-        data.value = result
-    }
+        /* add timestamp to the last of the messages */ 
+        else {
+            if (message.timestamp) {
+                result.unshift({
+                    'type': 'timestamp',
+                    'timestamp': formatTimeDateOnlyChat(message.timestamp, locale.value as string),
+                })
+                
+            }                
+        }
 
-    async function listenerFunction(type: string) {
-        hal.log('ChatPanel/notifyWhenChanged/' + type)
-        loadMessageListIntoChatPanel()
-    }
 
-    let load: any
-    function loadMessageListIntoChatPanel() {
-        /* loadMessageList('mainStore.chatID')
-        .then(res => {
-            messageListFromDB.value = res
-        }) */
-        /* 
-        wait for transaction to finish, add timeout because 
-        db.hook may be trigger before it actual ends.
-        */
-        clearTimeout(load)
-        load = setTimeout(() => {
-            loadMessageList(mainStore.chatID)
-            .then(res => {
-                messageListFromDB.value = res
-            })
-        }, 15)
-    }
 
-    loadMessageListIntoChatPanel()
+
+        }
+        return result
+    }
 
     // add extra space after text to fit time stamp and checkmarks
     function appendSpaceForMsgInfo(msg: string, time: string, isOutBound: boolean) {
@@ -341,13 +362,18 @@
     }
 
     function handleScroll() {
+        
         clearTimeout(handleScrollTimer)
         handleScrollTimer = setTimeout(debouncedHandleScroll, 15) // 15 seems the best but can be tinkered with
     }
 
+
+
     // when scroll the scroll bar get the scroll bar's current height
     // get the value of timestamp of the msg bubble at current floating timestamp's height
     function debouncedHandleScroll() {
+        shouldScrollToBottom = false
+
         if (!content.value) { return }
 
         let contentViewportOffset = content.value.getBoundingClientRect() // offset is relative to viewport
@@ -407,6 +433,36 @@
         else {
             showJumpDownButton.value = false
         }
+
+
+        /* fetch more posts before user gets to the end of their feed */
+        let element = content.value
+        // const scrolled = element.scrollHeight - element.scrollTop
+        // const nearEnd = element.clientHeight * 3 // 2 screens up
+        // if (scrolled < nearEnd) {
+
+        if (element.scrollTop < 100) {
+            
+            if (props.type == SubjectType.Comment) {
+                let commentCursor = ''
+                const postID = props.subjectID
+                if (mainStore.commentCursors[postID]) {
+                    commentCursor = mainStore.commentCursors[postID]
+                }
+
+                // debounce request separately since scrolling is debounced at 15 and that's too frequent for requests
+                clearTimeout(requestTimer)
+                requestTimer = setTimeout(() => {
+                    connStore.requestComments(postID, commentCursor, 30, function() {})
+                }, 1000)               
+                
+            }
+
+            count.value += 10
+            makeList()
+        } 
+
+
     }
 
     // jump to bottom
@@ -425,7 +481,7 @@
         }
     }
 
-    function openMenu(event: any, forInBound: boolean, idx: number, timestamp: string) {
+    function openMenu(event: any, forInBound: boolean, idx: number, timestamp: number) {
         showMenu.value = !showMenu.value
         // if close menu
         if (!showMenu.value) {
@@ -439,7 +495,7 @@
         }
         else {
             isForDeletedMessage.value = false
-            menuTimestamp.value = formatTimeFullChat(parseInt(timestamp), locale.value as string)
+            menuTimestamp.value = formatTimeFullChat(timestamp, locale.value as string)
             selectMessageIdx.value = idx
         }
 
@@ -499,6 +555,17 @@
         showMenu.value = false
     }
 
+    let shouldScrollToBottom = true
+
+    onUpdated(() => {
+        
+        if (shouldScrollToBottom) {
+        
+            gotoBottom('auto')
+        }
+        
+    })
+
     onMounted(() => {
         document.addEventListener("click", closeMenu)
     })
@@ -530,31 +597,34 @@
         showPopup.value.value = true
     }
 
-    function openMedia(mediaList: any, idx: number) {
+    function openMedia(mediaList: any, idx: number, contentID: string) {
+        console.log("msgPanel/openMedia " + idx)
+        console.dir(mediaList)
         selectMediaList.value = mediaList
         selectMediaIdx.value = idx
+        selectMediaContentID.value = contentID
         // go to fullscreener
         showFullScreener.value.value = true
     }
 
     async function openReply(id: number) {
-        showReply.value = true
-        showMenu.value = false
-        // get quote message
-        props.replyQuoteIdx.value = id
-        quoteMessage.value = await getQuoteMessageData(id)
-        // set focus on inputBox
-        const ele = document.getElementsByClassName('textarea')[0] as HTMLElement
-        ele.focus()
-        // move cursor to the end
-        let range = document.createRange()
-        range.selectNodeContents(ele)
-        range.collapse(false)
-        let selection = window.getSelection()
-        if (selection) {
-            selection.removeAllRanges()
-            selection.addRange(range)
-        }
+        // showReply.value = true
+        // showMenu.value = false
+        // // get quote message
+        // props.replyQuoteIdx.value = id
+        // quoteMessage.value = await getQuoteMessageData(id)
+        // // set focus on inputBox
+        // const ele = document.getElementsByClassName('textarea')[0] as HTMLElement
+        // ele.focus()
+        // // move cursor to the end
+        // let range = document.createRange()
+        // range.selectNodeContents(ele)
+        // range.collapse(false)
+        // let selection = window.getSelection()
+        // if (selection) {
+        //     selection.removeAllRanges()
+        //     selection.addRange(range)
+        // }
     }
 
     async function getQuoteMessageData(id: number) {
@@ -591,79 +661,90 @@
         }
     }
 
-    function gotoQuoteMessage(quoteIdx: number) {
-        getMessageByID(quoteIdx)
-        .then((message) => {
-            if (!message) {
-                hal.log('ChatPanel/gotoQuoteMessage/Quoted message has been deleted')
-                // message has been deleted!
-                NotificationQueue.value.push(t('chatNotification.messageDeleted'))
-            }
-            else if (!message.timestamp) {
-                hal.log('ChatPanel/gotoQuoteMessage/Quoted message has been deleted')
-                // message has been deleted!
-                NotificationQueue.value.push(t('chatNotification.messageDeleted'))
-            }
-            else {
-                const targetElement = document.getElementById('messageBubble' + quoteIdx)
-                if (targetElement) {
-                    hal.log('ChatPanel/gotoQuoteMessage/Go to quoted message')
-                    const offsetTop = targetElement.offsetTop - targetElement.offsetHeight
-                    content.value?.scrollTo({ left: 0, top: offsetTop, behavior: 'smooth' })
-                    setTimeout(() => {
-                        targetElement.classList.add('chatBubbleAnimation')
-                        setTimeout(() => {
-                            targetElement.classList.remove('chatBubbleAnimation')
-                        }, 5000)
-                    }, 1000)
-                }
-            }
-        })
+    function gotoQuoteMessage(commentID: string) {
+        
+
+        const targetElement = document.getElementById('messageBubble' + commentID)
+        if (targetElement) {
+            
+            const offsetTop = targetElement.offsetTop - targetElement.offsetHeight
+            content.value?.scrollTo({ left: 0, top: offsetTop, behavior: 'smooth' })
+            setTimeout(() => {
+                targetElement.classList.add('chatBubbleAnimation')
+
+                setTimeout(() => {
+                    
+                    targetElement.classList.remove('chatBubbleAnimation')
+                }, 1800)
+            }, 300)
+        }
+      
     }
+
+
 </script>
 
 <template>
 
-    <div class='contents' ref='content' @scroll='handleScroll()'>
+    <div class='msgPanelContent' ref='content' @scroll='handleScroll()'>
         <slot name="subHeader"></slot>
         <!-- chat msg -->
-        <div class='containerChat' v-for='(value, idx) in data'>
+        <div v-if="isInitialized && listData.length > 0" class='containerChat' v-for='(value, idx) in listData'>
 
             <!-- inbound msg -->
-            <div v-if="value.display && value.type == 'inBound'" class='contentTextBody contentTextBodyInBound'
-                :class="idx == 0 || (idx != 0 && data[idx - 1].type != 'inBound') ? 'chatBubbleBigMargin' : 'chatBubbleSmallMargin'">
-                <div class='chatBubble chatBubbleInBound' :id='"messageBubble" + value.id'>
+            <div v-if="value.type != 'timestamp' && value.userID != mainStore.userID" class='contentTextBody contentTextBodyInBound'
+                :class="idx == 0 || (idx != 0 && listData[idx - 1].userID == mainStore.userID) ? 'chatBubbleBigMargin' : 'chatBubbleSmallMargin'">
+                <div class='chatBubble chatBubbleInBound' :id='"messageBubble" + value.commentID'>
 
                     <!-- toggler -->
                     <div class='menuToggler menuTogglerInBound'>
-                        <div class='togglerIconContainer' @click.stop='openMenu($event, true, value.id, value.timestamp)'>
+                        <div class='togglerIconContainer' @click.stop='openMenu($event, true, idx, value.timestamp)'>
                             <font-awesome-icon :icon="['fas', 'angle-down']" size='xs' />
                         </div>
                     </div>
 
+                    <!-- name -->
+                    <div class="name" :style="{ 'color': getColor(value.postID + value.userID.toString(), 11) }">
+                        {{ mainStore.pushnames[value.userID] }}
+                    </div>
+
                     <!-- quote -->
-                    <div class='chatReplyContainer' v-if='value.quoteIdx'
-                        @click='gotoQuoteMessage(value.quoteIdx)'>
-                        <Quote :quoteMessage='value.quoteMessage' />
+                    <div v-if='value.parentCommentID' class='chatReplyContainer' 
+                        @click='gotoQuoteMessage(value.parentCommentID)'>
+                        <Quote :type="props.type" :subjectID="props.subjectID" :contentID='value.parentCommentID' />
                     </div>
 
                     <!-- media -->
-                    <!-- <div class='mediaContainer' v-if='value.media != null'>
-                        <MediaCollage @openMedia='openMedia' :media-list='value.media' />
-                    </div> -->
+                    <div v-if='commonMediaLists && commonMediaLists[value.commentID]' class='mediaContainer' >
+                        <MediaCollage  
+                            :type="props.type" :subjectID="props.subjectID" :contentID="value.commentID" 
+                            :mediaList='commonMediaLists[value.commentID]' 
+                            @openMedia='openMedia'/>
+                    </div>
+
+                    <div v-if="value.voiceNoteBlobUrl">
+
+                        <audio autobuffer="autobuffer" ref="$postVoiceNote" id="postVoiceNote" preload="metadata" controls controlsList="nodownload">
+                            <source :src="value.voiceNoteBlobUrl" type="audio/mpeg">
+                            <p>{{ t('post.noAudioSupportText') }}</p>
+                        </audio>
+
+                    </div>                    
 
                     <!-- text -->
-                    <div class='chatTextContainer' :class='{ bigChatTextContainer: value.font == "onlyEmoji" }'>
+                    <!-- <div class='chatTextContainer' :class='{ bigChatTextContainer: value.font == "onlyEmoji" }'> -->
+                    <div class='chatTextContainer'>
                         <!-- show message content -->
-                        <span v-html='value.text' :class='value.font'>
+                        <!-- <span v-html='value.text' :class='value.font'> -->
+                        <span v-html='processText(value.text, value.mentions, false).html'>
                         </span>
-                    </div>
+                    </div>                    
 
                     <!-- timestamp -->
                     <div class='msgInfoContainer' v-if='value.timestamp'>
                         <div class='msgInfoContent'>
-                            <div class='timestamp' :data-msg-timestamp='value.unixTimestamp'>
-                                {{ value.timestamp }}
+                            <div class='timestamp' :data-msg-timestamp='value.timestamp'>
+                                {{ formatTimeChat(value.timestamp, locale as string) }}
                             </div>
                         </div>
                     </div>
@@ -672,9 +753,9 @@
             </div>
 
             <!-- outBound msg -->
-            <div v-else-if="value.display && value.type == 'outBound'" class='contentTextBody contentTextBodyOutBound'
-                :class="idx == 0 || (idx != 0 && data[idx - 1].type != 'outBound') ? 'chatBubbleBigMargin' : 'chatBubbleSmallMargin'">
-                <div class='chatBubble chatBubbleoutBound' :id='"messageBubble" + value.id'>
+            <div v-else-if="value.type !== 'timestamp'" class='contentTextBody contentTextBodyOutBound'
+                :class="idx == 0 || (idx != 0 && listData[idx - 1].userID != mainStore.userID) ? 'chatBubbleBigMargin' : 'chatBubbleSmallMargin'">
+                <div class='chatBubble chatBubbleoutBound' :id='"messageBubble" + value.commentID'>
 
                     <!-- toggler -->
                     <div class='menuToggler menuTogglerOutBound'>
@@ -684,32 +765,48 @@
                     </div>
 
                     <!-- quote -->
-                    <div class='chatReplyContainer' v-if='value.quoteIdx'
-                        @click='gotoQuoteMessage(value.quoteIdx)'>
-                        <Quote :quoteMessage='value.quoteMessage' />
+                    <div v-if='value.parentCommentID' class='chatReplyContainer' 
+                        @click='gotoQuoteMessage(value.parentCommentID)'>
+                        <Quote :type="props.type" :subjectID="props.subjectID" :contentID='value.parentCommentID' />
                     </div>
 
-                    <!-- media -->
-                    <!-- <div class='mediaContainer' v-if='value.media != null'>
-                        <MediaCollage @openMedia='openMedia' :media-list='value.media' />
-                    </div> -->
+
+                    <div v-if='commonMediaLists && commonMediaLists[value.commentID]' 
+                        class='mediaContainer'>
+                        <MediaCollage  
+                            :type="props.type" :subjectID="props.subjectID" :contentID="value.commentID" 
+                            :mediaList='commonMediaLists[value.commentID]' 
+                            @openMedia='openMedia'/>
+                    </div>
+
+                    <div v-if="value.voiceNoteBlobUrl">
+
+                        <audio autobuffer="autobuffer" ref="$postVoiceNote" id="postVoiceNote" preload="metadata" controls controlsList="nodownload">
+                            <source :src="value.voiceNoteBlobUrl" type="audio/mpeg">
+                            <p>{{ t('post.noAudioSupportText') }}</p>
+                        </audio>
+
+                    </div>
+
 
                     <!-- text -->
-                    <div class='chatTextContainer' :class='{ bigChatTextContainer: value.font == "onlyEmoji" }'>
+                    <!-- <div class='chatTextContainer' :class='{ bigChatTextContainer: value.font == "onlyEmoji" }'></div> -->
+                    <div class='chatTextContainer'>
                         <!-- show message content -->
-                        <span v-html='value.text' :class='value.font' @click="gotoChatWith($event)">
+                        <!-- <span v-html='value.text' :class='value.font' @click="gotoChatWith($event)"></span> -->
+                        <span v-html='value.text' @click="gotoChatWith($event)">
                         </span>
                     </div>
 
                     <!-- timestamp -->
                     <div class='msgInfoContainer' v-if='value.timestamp'>
                         <div class='msgInfoContent'>
-                            <div class='timestamp' :data-msg-timestamp='value.unixTimestamp'>
-                                {{ value.timestamp }}
+                            <div class='timestamp' :data-msg-timestamp='value.timestamp'>
+                                {{ formatTimeChat(value.timestamp, locale as string) }}
                             </div>
-                            <div class='iconContainer' :class='value.sendToAWS ? "blueIcon" : "grayIcon"'>
+                            <!-- <div class='iconContainer' :class='value.sendToAWS ? "blueIcon" : "grayIcon"'>
                                 <font-awesome-icon :icon="['fas', 'check-double']" size='xs' />
-                            </div>
+                            </div> -->
                         </div>
                     </div>
 
@@ -730,7 +827,7 @@
         </div>
 
         <!-- floating timestamp -->
-        <div class='containerFloatingTimestamp'>
+        <!-- <div class='containerFloatingTimestamp'>
             <div class='contentTextBody contentTextBodyTime'>
                 <div class='chatBubble chatBubbleTime'>
                     <div class='timestampContainerBig'>
@@ -740,7 +837,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <!-- jump down button -->
         <transition name='button'>
@@ -752,11 +849,11 @@
         </transition>
 
 
-        <!-- floating menu -->
+        <!-- message bubble sub menu -->
         <div class='chatSettingsContanier' v-if='showMenu' @click.stop>
             <div class='menu' ref='menu'>
 
-                <div class='menuContainer' @mousedown='openPopup'>
+                <!-- <div class='menuContainer' @mousedown='openPopup'>
                     <div class='textContainer'>
                         <div class='contentTextBody contentTextBodyForSettings'>
                             {{ t('chatMsgBubbleSettings.deleteMessage') }}
@@ -770,7 +867,7 @@
                             {{ t('chatMsgBubbleSettings.reply') }}
                         </div>
                     </div>
-                </div>
+                </div> -->
 
                 <div v-if='!isForDeletedMessage' class='menuTimestampLong'>
                     <div class='timestampContainerBig'>
@@ -801,24 +898,26 @@
     </div>
 
     <!-- show media in full screen -->
-    <FullScreener :showFullScreener='showFullScreener' 
+    <FullScreener v-if="selectMediaContentID && selectMediaList" :key="selectMediaContentID"
+        :showFullScreener='showFullScreener'
+        :type="props.type"
+        :subjectID="props.subjectID"
+        :contentID="selectMediaContentID"
         :selectMediaIndex='selectMediaIdx'
         :selectMediaList='selectMediaList' />
 
     <!-- notification -->
-    <Notification :NotificationQueue='NotificationQueue'/>
+    <!-- <Notification :NotificationQueue='NotificationQueue'/> -->
 
 </template>
 
 <style scoped>
     /* animation for button */
-    .button-enter-active,
-    .button-leave-active {
+    .button-enter-active, .button-leave-active {
         transition: all 0.5s ease
     }
 
-    .button-enter-from,
-    .button-leave-to {
+    .button-enter-from, .button-leave-to {
         transform: scale(0.1);
         opacity: 0;
     }
@@ -828,7 +927,7 @@
     }
 
     *::-webkit-scrollbar-track {
-        background: white;
+        background: v-bind(tertiaryBgColor);
     }
 
     *::-webkit-scrollbar-thumb {
@@ -837,23 +936,29 @@
         border: 0px solid white;
     }
 
-    .contents {
+    .msgPanelContent {
+
         width: 100%;
         height: 100%;
 
-        overflow-y: scroll;
+        overflow-y: auto;
         overflow-x: hidden;
         padding-bottom: 50px;
 
         display: flex;
         flex-direction: column;
+
+        background-color: v-bind(tertiaryBgColor);
+
     }
 
     .containerChat {
-        display: flex;
-        flex-direction: column;
         padding: 0px;
         margin: 0px;
+
+        display: flex;
+        flex-direction: column;
+
     }
 
     .chatReplyContainer {
@@ -951,6 +1056,18 @@
         padding: 10px 0px 0px 0px;
     }
 
+    .name {
+        padding-bottom: 5px;
+        font-weight: bold;
+        font-size: 13px;
+
+
+        align-items: center;
+        letter-spacing: 0.02em;
+
+        margin: 3px 10px 0px 5px;
+    }
+
     .chatTextContainer {
         color: v-bind(textColor);
         font-weight: 500;
@@ -960,7 +1077,7 @@
         align-items: center;
         letter-spacing: 0.02em;
 
-        margin: 10px 10px;
+        margin: 5px 10px 10px 5px;
     }
 
     .bigChatTextContainer {
@@ -990,7 +1107,7 @@
         bottom: 0;
         right: 0;
 
-        margin: 0px 15px 10px 10px;
+        margin: 0px 10px 3px 10px;
         align-self: flex-end;
     }
 
@@ -1119,7 +1236,9 @@
     }
 
     .mediaContainer {
+        padding-bottom: 10px;
         overflow-y: hidden;
+
         display: flex;
         flex-direction: row;
         flex-wrap: wrap;

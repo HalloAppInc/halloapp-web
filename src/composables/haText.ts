@@ -35,6 +35,9 @@ export function useHAText() {
     }
 
     function decorateTextWithMarkdownPlaceholders(text: any) {
+        let result = ''
+        if (!text || text == '') { return result }
+
         let splitter = new GraphemeSplitter()
         const GraphemesList = splitter.splitGraphemes(text)
         const MarkdownTags = ['~', '*', '_']
@@ -42,7 +45,6 @@ export function useHAText() {
         const Opening = 'opening'
         const Closing = 'closing'
     
-        let result = ''
         let foundTags = []
 
         for (let i = 0; i < GraphemesList.length; i++) {

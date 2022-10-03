@@ -110,25 +110,46 @@
     }
 
     function openCommentsIfNeeded(postID: string) {
+
+        /* comments panel already opened */
         if (showComments.value) {
           
             // close comment if user clicked on the same post after open
             if (inViewPostID.value == postID) {
-                commentsClick(postID)
+                toggleCommentsPanel(postID)
             } else {
+                getComments(postID)
                 inViewPostID.value = postID
             }
 
-        } else {
-            commentsClick(postID)
+        } 
+        
+        /* comments panel closed */
+        else {
+            getComments(postID)
+            toggleCommentsPanel(postID)
         }
     }
 
     function commentsBackClick() {
-        commentsClick('')
+        toggleCommentsPanel('')
     }
 
-    function commentsClick(postID: string) {
+
+    async function getComments(postID: string) {
+     
+        const numComments = await db.comment.where('postID').equals(postID).count()
+        if (numComments < 30) {
+            let commentCursor = ''
+            if (mainStore.commentCursors[postID]) {
+                commentCursor = mainStore.commentCursors[postID]
+            }      
+            // connStore.requestComments(postID, commentCursor, 20, function() {})
+        }
+             
+    }
+
+    function toggleCommentsPanel(postID: string) {
 
         if (listBoxWidth.value == '100%') {
             let width = '500px'
@@ -165,19 +186,20 @@
         if (!content.value) { return }
 
         /* auto select post for comments when post is near top */
-        const contentViewportRect = content.value.getBoundingClientRect()
-        const pointX = (contentViewportRect.width / 2) + contentViewportRect.left
-        const pointY = contentViewportRect.top + 100
+        /* turning off for now, seems jarring to have the comments panel switch by itself when the user is just scrolling */
+        // const contentViewportRect = content.value.getBoundingClientRect()
+        // const pointX = (contentViewportRect.width / 2) + contentViewportRect.left
+        // const pointY = contentViewportRect.top + 100
         
-        const closestTopElement = document.elementFromPoint(pointX, pointY)
-        const closestElement = closestTopElement?.closest('[data-ha-postID]')
+        // const closestTopElement = document.elementFromPoint(pointX, pointY)
+        // const closestElement = closestTopElement?.closest('[data-ha-postID]')
 
-        if (closestElement) {
-            const attr = closestElement.getAttribute('data-ha-postID')
-            if (attr) {
-                inViewPostID.value = attr
-            }
-        }
+        // if (closestElement) {
+        //     const attr = closestElement.getAttribute('data-ha-postID')
+        //     if (attr) {
+        //         inViewPostID.value = attr
+        //     }
+        // }
 
         /* fetch more posts before user gets to the end of their feed */
         var element = content.value;

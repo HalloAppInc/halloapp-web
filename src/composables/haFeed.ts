@@ -3,7 +3,7 @@ import { Dexie, liveQuery } from 'dexie'
 import { useMainStore } from '@/stores/mainStore.js'
 import { useConnStore } from '@/stores/connStore.js'
 
-import { db, Feed, PostMedia, PostMediaType, Comment, LinkPreview, Mention, Group } from '@/db'
+import { db, SubjectType, Feed, PostMedia, PostMediaType, MediaType, Comment, CommonMedia, LinkPreview, CommonMediaLinkPreview, Mention, Group } from '@/db'
 
 import { clients } from '@/proto/clients.js'
 import { web } from '@/proto/web.js'
@@ -12,6 +12,7 @@ import { useHAAvatar } from '@/composables/haAvatar'
 import { useHAText } from '@/composables/haText'
 
 import hal from '@/common/halogger'
+import { type } from 'os'
 
 export function useHAFeed() {
 
@@ -55,10 +56,14 @@ export function useHAFeed() {
         if (feedResponse.type == web.FeedType.POST_COMMENTS) {
             for (let i = 0; i < items.length; i++) {
                 const item = items[i]
-                let infoIdx = postInfoList.findIndex((info: any) => info.id === item.post.id)
+                let infoIdx = postInfoList.findIndex((info: any) => info.id === item.comment.postId)
                 const postInfo = postInfoList[infoIdx]
                 processFeedItemComment(items[i], postInfo)
                 postInfoList.splice(infoIdx, 1)
+            }
+            if (items.length > 0) {
+                const postID = items[0].comment.postId
+                modifyPostHaveCommentIfNeeded(postID)
             }
         } else {
 
@@ -141,6 +146,19 @@ export function useHAFeed() {
 
             }
         }
+
+        if (feedResponse.type == web.FeedType.POST_COMMENTS) {
+            const lastItemComment = items[items.length - 1].comment
+            if (lastItemComment.postId) {
+
+                // todo: check for timestamp also?
+                if (feedResponse.nextCursor) {
+                    mainStore.commentCursors[lastItemComment.postId] = feedResponse.nextCursor
+                }
+
+            }
+        }
+
     }
 
     async function processUserDisplayInfo(userInfo: any) {
@@ -207,8 +225,8 @@ export function useHAFeed() {
         if (!payloadBinArr) { return }
         const postContainer = decodeToPostContainer(payloadBinArr)
     
-        hal.log('haFeed/processServerPost/postContainer:')
-        console.dir(postContainer)
+        // hal.log('haFeed/processServerPost/postContainer:')
+        // console.dir(postContainer)
     
         if (!postContainer) { return }
     
@@ -354,7 +372,7 @@ export function useHAFeed() {
         }
 
         // console.log("haFeed/processServerPost/postObject: ")
-        console.dir(postObject)
+        // console.dir(postObject)
 
         /* only modify groups list if the post is not deleted */
         if (groupID && postObject.retractState != web.PostDisplayInfo.RetractState.RETRACTED) {
@@ -381,10 +399,10 @@ export function useHAFeed() {
         
         const publisherUID = serverComment.publisherUid
 
-        console.log("haFeed/processFeedItemComment/serverComment: ")
-        console.dir(serverComment)
+        // console.log("haFeed/processFeedItemComment/serverComment: ")
+        // console.dir(serverComment)
 
-        let postObject: Comment = {
+        let commentObject: Comment = {
             commentID: serverComment.id,
             postID: serverComment.postId,
             userID: publisherUID,
@@ -392,170 +410,165 @@ export function useHAFeed() {
             timestamp: serverComment.timestamp,
         }
 
+        if (serverComment.parentCommentId) {
+            commentObject.parentCommentID = serverComment.parentCommentId
+        }
+
         // todo: record name
 
-        let postMediaArr: PostMedia[] = []
+        let commonMediaArr: CommonMedia[] = []
         
         const payloadBinArr = serverComment.payload
         if (!payloadBinArr) { return }
         const commentContainer = decodeToCommentContainer(payloadBinArr)
     
-        hal.log('haFeed/processFeedItemComment/commentContainer:')
-        console.dir(commentContainer)
+        // hal.log('haFeed/processFeedItemComment/commentContainer:')
+        // console.dir(commentContainer)
     
         if (!commentContainer) { return }
     
         let text = ''
-        let isTextPost = false
-        let isTextPostTextOnly = false
+        let isTextComment = false
+        let isTextCommentTextOnly = false
         let isAlbum = false
         let isVoiceNote = false
     
-        let postMentions: any
+        let commentMentions: any
     
         if (commentContainer.album) {
             isAlbum = true
         }
     
         if (commentContainer.text) {
-            isTextPost = true
+            isTextComment = true
         }
     
-        // if (commentContainer.voiceNote) {
-        //     isVoiceNote = true
+        if (commentContainer.voiceNote) {
+            isVoiceNote = true
 
-        //     const voiceNoteMedia = processVoiceNote(postObject.postID, postContainer.voiceNote)
-        //     if (voiceNoteMedia) {
-        //         postObject.voiceNote = voiceNoteMedia
-        //     }
-        // }
+            const voiceNoteMedia = processCommonMediaVoiceNote(SubjectType.Comment, commentObject.postID, commentObject.commentID, commentContainer.voiceNote)
+            if (voiceNoteMedia) {
+                commentObject.voiceNote = voiceNoteMedia
+            }
+        }
     
-        // if (isAlbum) {
-        //     /* text */
-        //     if (postContainer.album?.text) {
-        //         if (postContainer.album.text.text) {
-        //             postObject.text = postContainer.album.text.text
-        //         }
-        //         postMentions = postContainer.album.text.mentions            
-        //     }
+        if (isAlbum) {
+            /* text */
+            if (commentContainer.album?.text) {
+                if (commentContainer.album.text.text) {
+                    commentObject.text = commentContainer.album.text.text
+                }
+                commentMentions = commentContainer.album.text.mentions            
+            }
     
-        //     /* media */
-        //     if (postContainer.album?.media) {
+            /* media */
+            if (commentContainer.album?.media) {
     
-        //         for (const [index, mediaInfo] of postContainer.album.media.entries()) {
+                for (const [index, mediaInfo] of commentContainer.album.media.entries()) {
                     
-        //             if (mediaInfo.image && mediaInfo.image.width && mediaInfo.image.height) {
-        //                 const encryptedResourceInfo = mediaInfo.image.img
-        //                 if (encryptedResourceInfo?.encryptionKey && encryptedResourceInfo?.ciphertextHash && encryptedResourceInfo?.downloadUrl) {
-        //                     let postMedia: PostMedia = {
-        //                         postID: postObject.postID,
-        //                         type: PostMediaType.Image,
-        //                         order: index,
-        //                         width: mediaInfo.image.width,
-        //                         height: mediaInfo.image.height,
-        //                         key: encryptedResourceInfo.encryptionKey,
-        //                         hash: encryptedResourceInfo.ciphertextHash,
-        //                         downloadURL: encryptedResourceInfo.downloadUrl,
-        //                     }
-        //                     postMediaArr.push(postMedia)
-        //                 }
-        //             }
+                    if (mediaInfo.image && mediaInfo.image.width && mediaInfo.image.height) {
+                        const encryptedResourceInfo = mediaInfo.image.img
+                        if (encryptedResourceInfo?.encryptionKey && encryptedResourceInfo?.ciphertextHash && encryptedResourceInfo?.downloadUrl) {
+                            let commonMedia: CommonMedia = {
+                                type: SubjectType.Comment,
+                                subjectID: commentObject.postID,
+                                contentID: commentObject.commentID,
+                                mediaType: MediaType.Image,
+                                order: index,
+                                width: mediaInfo.image.width,
+                                height: mediaInfo.image.height,
+                                key: encryptedResourceInfo.encryptionKey,
+                                hash: encryptedResourceInfo.ciphertextHash,
+                                downloadURL: encryptedResourceInfo.downloadUrl,
+                            }
+                            commonMediaArr.push(commonMedia)
+                        }
+                    }
     
-        //             else if (mediaInfo.video && mediaInfo.video.width && mediaInfo.video.height) {
-        //                 const encryptedResourceInfo = mediaInfo.video.video
-        //                 if (encryptedResourceInfo?.encryptionKey && encryptedResourceInfo?.ciphertextHash && encryptedResourceInfo?.downloadUrl) {
-        //                     let postMedia: PostMedia = {
-        //                         postID: postObject.postID,
-        //                         type: PostMediaType.Video,
-        //                         order: index,
-        //                         width: mediaInfo.video.width,
-        //                         height: mediaInfo.video.height,
-        //                         key: encryptedResourceInfo.encryptionKey,
-        //                         hash: encryptedResourceInfo.ciphertextHash,
-        //                         downloadURL: encryptedResourceInfo.downloadUrl,
-        //                     }
+                    else if (mediaInfo.video && mediaInfo.video.width && mediaInfo.video.height) {
+                        const encryptedResourceInfo = mediaInfo.video.video
+                        if (encryptedResourceInfo?.encryptionKey && encryptedResourceInfo?.ciphertextHash && encryptedResourceInfo?.downloadUrl) {
+                            let commonMedia: CommonMedia = {
+                                type: SubjectType.Comment,
+                                subjectID: commentObject.postID,
+                                contentID: commentObject.commentID,
+                                mediaType: MediaType.Video,
+                                order: index,
+                                width: mediaInfo.video.width,
+                                height: mediaInfo.video.height,
+                                key: encryptedResourceInfo.encryptionKey,
+                                hash: encryptedResourceInfo.ciphertextHash,
+                                downloadURL: encryptedResourceInfo.downloadUrl,
+                            }
 
-        //                     const isStream = JSON.stringify(mediaInfo.video.streamingInfo) !== '{}'
-        //                     if (isStream) {
-        //                         const blobVersion = mediaInfo.video.streamingInfo?.blobVersion
-        //                         const chunkSize = mediaInfo.video.streamingInfo?.chunkSize
-        //                         const blobSize = mediaInfo.video.streamingInfo?.blobSize
-        //                         if (chunkSize) {
-        //                             postMedia.chunkSize = chunkSize                             
-        //                         }
-        //                         if (blobSize) {
-        //                             postMedia.blobSize = blobSize
-        //                         }    
-        //                         if (blobVersion) {
-        //                             postMedia.blobVersion = blobVersion
-        //                         }   
-        //                     }
-        //                     postMediaArr.push(postMedia)
-        //                 }
-        //             }                
-        //         }
-        //     }
+                            const isStream = JSON.stringify(mediaInfo.video.streamingInfo) !== '{}'
+                            if (isStream) {
+                                const blobVersion = mediaInfo.video.streamingInfo?.blobVersion
+                                const chunkSize = mediaInfo.video.streamingInfo?.chunkSize
+                                const blobSize = mediaInfo.video.streamingInfo?.blobSize
+                                if (chunkSize) {
+                                    commonMedia.chunkSize = chunkSize                             
+                                }
+                                if (blobSize) {
+                                    commonMedia.blobSize = blobSize
+                                }    
+                                if (blobVersion) {
+                                    commonMedia.blobVersion = blobVersion
+                                }   
+                            }
+                            commonMediaArr.push(commonMedia)
+                        }
+                    }                
+                }
+            }
     
-        //     /* voiceNote inside album */
-        //     if (postContainer.album?.voiceNote) {
-        //         isVoiceNote = true
+            /* voiceNote inside album */
+            if (commentContainer.album?.voiceNote) {
+                isVoiceNote = true
             
-        //         const voiceNoteMedia = processVoiceNote(postObject.postID, postContainer.album.voiceNote)
-        //         if (voiceNoteMedia) {
-        //             postObject.voiceNote = voiceNoteMedia
-        //         }
-        //     }     
-        // }
+                const voiceNoteMedia = processCommonMediaVoiceNote(SubjectType.Comment, commentObject.postID, commentObject.commentID, commentContainer.album.voiceNote)
+                if (voiceNoteMedia) {
+                    commentObject.voiceNote = voiceNoteMedia
+                }
+
+            }     
+        }
     
-        // if (isTextPost) {
-        //     /* link preview */
-        //     if (postContainer?.text?.link &&
-        //         postContainer.text.link.preview &&
-        //         postContainer.text.link.preview[0] &&
-        //         postContainer.text.link.preview[0].img
-        //         ) {
-        //             const previewImage = postContainer.text.link.preview[0]
-        //             const media = previewImage.img
+        if (isTextComment) {
+            /* link preview */
+            if (commentContainer?.text?.link &&
+                commentContainer.text.link.preview &&
+                commentContainer.text.link.preview[0] &&
+                commentContainer.text.link.preview[0].img
+                ) {
+                    const previewImage = commentContainer.text.link.preview[0]
+                    const media = previewImage.img
 
-        //             const linkPreview = processLinkPreview(postObject.postID, postContainer.text.link)
-        //             if (linkPreview) {
-        //                 postObject.linkPreview = linkPreview
+                    const linkPreview = processCommonMediaLinkPreview(SubjectType.Comment, commentObject.commentID, commentContainer.text.link)
+                    if (linkPreview) {
+                        commentObject.linkPreview = linkPreview
+                    }
 
-        //             }
-
-        //     } else {
-        //         isTextPostTextOnly = true
-        //     }
+            } else {
+                isTextCommentTextOnly = true
+            }
     
-        //     /* process text after checking if it's text only */
-        //     if (postContainer.text?.text) {
-        //         postObject.text = postContainer.text.text
-        //         postMentions = postContainer.text.mentions     
-        //     }        
-        // }
+            /* process text after checking if it's text only */
+            if (commentContainer.text?.text) {
+                commentObject.text = commentContainer.text.text
+                commentMentions = commentContainer.text.mentions     
+            }        
+        }
 
-        // if (postMentions) {
-        //     postObject.mentions = processMentions(postMentions)
-        // }
+        if (commentMentions) {
+            commentObject.mentions = processMentions(commentMentions)
+        }
 
-        // // console.log("haFeed/processServerPost/postObject: ")
-        // console.dir(postObject)
+        console.log('haFeed/processFeedItemComment/commnentObject: ')
+        console.dir(commentObject)
 
-        // /* only modify groups list if the post is not deleted */
-        // if (groupID && postObject.retractState != web.PostDisplayInfo.RetractState.RETRACTED) {
-         
-        //     let mediaType: PostMediaType = 0
-        //     if (postMediaArr.length > 0) {
-        //         const firstMedia = postMediaArr[0]
-        //         mediaType = firstMedia.type
-        //     }
-
-        //     modifyGroupIfNeeded(postObject, mediaType, isVoiceNote)
-        // }
-
-        // insertPostIfNotExist(postObject)
-        // insertPostMedia(postObject.postID, postMediaArr)
-
+        insertComment(commentObject)
+        insertCommonMedia(SubjectType.Comment, commentObject.postID, commentObject.commentID, commonMediaArr)
     }
 
     function processLinkPreview(postID: string, linkPreview: any) {
@@ -584,6 +597,34 @@ export function useHAFeed() {
         return linkPreviewObject        
     }
 
+    function processCommonMediaLinkPreview(type: SubjectType, contentID: string, linkPreview: any) {
+
+        let linkPreviewObject: CommonMediaLinkPreview = {
+            url: linkPreview.url,
+            title: linkPreview.title,
+            description: linkPreview.description
+        }
+        const linkPreviewMedia = linkPreview.preview[0]
+
+        const encryptedResourceInfo = linkPreviewMedia.img
+        if (encryptedResourceInfo?.encryptionKey && encryptedResourceInfo?.ciphertextHash && encryptedResourceInfo?.downloadUrl) {
+            let commonMedia: CommonMedia = {
+                type: type,
+                subjectID: '', // todo: this needs to be assigned
+                contentID: contentID,
+                mediaType: MediaType.Image,
+                order: 0,
+                width: linkPreviewMedia.width,
+                height: linkPreviewMedia.height,
+                key: encryptedResourceInfo.encryptionKey,
+                hash: encryptedResourceInfo.ciphertextHash,
+                downloadURL: encryptedResourceInfo.downloadUrl,
+            }
+            linkPreviewObject.preview = commonMedia
+        }
+        return linkPreviewObject        
+    }
+
     function processVoiceNote(postID: string, voiceNote: any) {
         const encryptedResourceInfo = voiceNote.audio
         if (encryptedResourceInfo?.encryptionKey && encryptedResourceInfo?.ciphertextHash && encryptedResourceInfo?.downloadUrl) {
@@ -598,6 +639,26 @@ export function useHAFeed() {
                 downloadURL: encryptedResourceInfo.downloadUrl,
             }
             return postMedia
+        }
+        return undefined
+    }
+
+    function processCommonMediaVoiceNote(type: SubjectType, subjectID: string, contentID: string, voiceNote: any) {
+        const encryptedResourceInfo = voiceNote.audio
+        if (encryptedResourceInfo?.encryptionKey && encryptedResourceInfo?.ciphertextHash && encryptedResourceInfo?.downloadUrl) {
+            let commonMedia: CommonMedia = {
+                type: type,
+                subjectID: subjectID,
+                contentID: contentID,
+                mediaType: MediaType.Audio,
+                order: 0,
+                width: 0,
+                height: 0,
+                key: encryptedResourceInfo.encryptionKey,
+                hash: encryptedResourceInfo.ciphertextHash,
+                downloadURL: encryptedResourceInfo.downloadUrl,
+            }
+            return commonMedia
         }
         return undefined
     }
@@ -657,43 +718,102 @@ export function useHAFeed() {
                 hal.log('haFeed/insertPostIfNotExist/db/put/error ' + error)
             }
         } else {
-            hal.log('haFeed/insertPostIfNotExist/exit/postObject already in db \n' + JSON.stringify(post) + '\n\n')
+            hal.log('haFeed/insertPostIfNotExist/exit/post already in db: ' + post.postID)
         }
         
     }
-    
-    async function insertPostMedia(postID: string, postMediaArr: any) {
-            if (postMediaArr.length < 1) { 
-                return 
+
+    async function insertComment(comment: Comment) {
+
+        const commentID = comment.commentID
+        const dbCommentsList = await db.comment.where('commentID').equals(commentID).toArray()
+        
+        if (dbCommentsList.length == 0) {
+            try {
+                const id = await db.comment.put(comment)
+                hal.log('haFeed/insertComment/post: ' + comment.postID + ', comment: ' + comment.commentID)
+            } catch (error) {
+                hal.log('haFeed/insertComment/post: ' + comment.postID + ', ' + 'error: ' + error)
             }
+        } else {
+            hal.log('haFeed/insertComment/post: ' + comment.postID + ', comment: ' + comment.commentID + ' already exists: ' + comment.commentID)
+        }
+        
+    }    
+    
+    function handleDbError(error: any) {
+        let result = {
+            continue: true
+        }
+        switch (error.name) {
+            case Dexie.errnames.DatabaseClosed:
+                console.error ("DatabaseClosed error")
+                result.continue = false
+                break
+            default:
+                console.error ("error: " + error)
+        }
+        return result
+    }
 
-            const dbPostMediaList = await db.postMedia.where('postID').equals(postID).toArray()
-            
-            if (dbPostMediaList.length == 0) {
-                for (let i = 0; i < postMediaArr.length; i++) {
-                    let postMedia = postMediaArr[i]
-                    
-                    try {
-                        const id = await db.postMedia.put(postMedia)
-
-                        
-
-                    } catch (error) {
-                        hal.log('homeMain/insertPostMedia/db/put/error ' + error)
-                        
+    async function insertPostMedia(postID: string, postMediaArr: any) {
+        if (postMediaArr.length < 1) { 
+            return 
+        }
+        const dbPostMediaList = await db.postMedia.where('postID').equals(postID).toArray()
+        
+        if (dbPostMediaList.length == 0) {
+            for (let i = 0; i < postMediaArr.length; i++) {
+                let postMedia = postMediaArr[i]
+                
+                try {
+                    const id = await db.postMedia.put(postMedia)
+                } catch (error) {
+                    hal.log('homeMain/insertPostMedia/db/put/error ' + error)
+                    if (!handleDbError(error).continue) {
+                        return
                     }
                 }
+            }
 
-            } else {
-                
-                // hal.log('homeMain/processPostContainer/exit/postObject already in db \n' + JSON.stringify(post) + '\n\n')
-                
-            }       
-            
+        } else {
+            // hal.log('homeMain/processPostContainer/exit/postObject already in db \n' + JSON.stringify(post) + '\n\n')
+        }       
+        return 
+    }
+
+    async function insertCommonMedia(type: SubjectType, subjectID: string, contentID: string, commonMediaArr: any) {
+        if (commonMediaArr.length < 1) { 
             return 
-            
-    
-    
+        }
+
+        const dbCommonMediaList = await getCommonMediaList(type, subjectID, contentID)
+        
+        if (!dbCommonMediaList) {
+            for (let i = 0; i < commonMediaArr.length; i++) {
+                let media = commonMediaArr[i]
+                
+                try {
+                    const id = await db.commonMedia.put(media)
+                } catch (error) {
+                    hal.log('haFeed/insertCommonMedia/db/put/error ' + error)
+                }
+            }
+
+        } else {
+            // hal.log('haFeed/insertCommonMedia/exit/bbject already in db')
+        }       
+        return 
+    }    
+
+    async function getCommonMediaList(type: SubjectType, subjectID: string, contentID: string) {
+        const arr = await db.commonMedia.where('contentID').equals(contentID).and((commonMed) => {
+            return commonMed.subjectID == subjectID && commonMed.type == type
+        }).toArray()
+        if (!arr || arr.length == 0) {
+            return undefined
+        }
+        return arr
     }
 
     async function getPostMedia(postID: string) {
@@ -702,6 +822,15 @@ export function useHAFeed() {
             return undefined
         }
         return arr
+    }
+
+    async function modifyPostHaveCommentIfNeeded(postID: string) {
+        await db.feed.where('postID').equals(postID).modify(function(item) {
+            if (!item.haveComments) {
+                item.haveComments = true
+            }
+        })
+        return        
     }
 
     async function modifyPostMedia(postID: string, order: number, blob: Blob) {
@@ -782,9 +911,21 @@ export function useHAFeed() {
         return arr
     }
 
+    async function getComment(postID: string, commentID: string) {
+        const commentArr = await db.comment.where('commentID').equals(commentID).and((item) => {
+            return item.postID == postID
+        }).toArray()
+        if (!commentArr || commentArr.length == 0) {
+            return undefined
+        }
+        return commentArr[0]
+    }
+
     return { 
         processWebContainer, 
-        getPostMedia, getComments, 
+        getComment,
+        getComments,
+        getCommonMediaList, getPostMedia,  
         modifyPostMedia, modifyPostVoiceNote, modifyPostLinkPreviewMedia,
         setPostMediaIsCodecH265 
     }

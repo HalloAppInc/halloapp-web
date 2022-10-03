@@ -16,7 +16,7 @@ import { useHAFeed } from '../composables/haFeed'
 
 export const useConnStore = defineStore('conn', () => {
 
-    const version = '30'
+    const version = '33'
     const devMode = false
     const isDebug = false
 
@@ -27,6 +27,8 @@ export const useConnStore = defineStore('conn', () => {
         uploadMedia 
     } = network()
 
+    const fetchAbortController = ref(new AbortController())
+    
     const { processWebContainer } = useHAFeed()
 
     // todo: should switch automatically to prod/test servers
@@ -92,6 +94,9 @@ export const useConnStore = defineStore('conn', () => {
 
     async function wsOnclose(event: any) {
         hal.log('connStore/wsOnclose ')
+        fetchAbortController.value.abort()
+        fetchAbortController.value = new AbortController() // once aborted, controller is consumed, need to refresh
+
         mainStore.isConnectedToServer = false
 
         if (isLoggingOut) {
@@ -238,7 +243,10 @@ export const useConnStore = defineStore('conn', () => {
                         hal.log('connStore/handleInbound/webStanza/noiseMessage/KK_B')
 
                         if (!handshakeState) {
+                            /* there should be an instance already, if not, this will initiate a new re-handshake */
                             initHandshake(noise, 'KK', noise.constants.NOISE_ROLE_INITIATOR)
+                            handleNoiseHandshakeMsg('KK', noise.constants.NOISE_ROLE_INITIATOR)
+                            return
                         }
 
                         handleNoiseHandshakeMsg('KK', noise.constants.NOISE_ROLE_INITIATOR, noiseMessage.content)
@@ -248,10 +256,13 @@ export const useConnStore = defineStore('conn', () => {
                     else if (noiseMessage.messageType == server.NoiseMessage.MessageType.KK_A) {
                         hal.log('connStore/handleInbound/webStanza/noiseMessage/KK_A')
 
-                        if (!handshakeState) {
-                            initHandshake(noise, 'KK', noise.constants.NOISE_ROLE_RESPONDER)
-                            handleNoiseHandshakeMsg('KK', noise.constants.NOISE_ROLE_RESPONDER, noiseMessage.content)
-                        } 
+                        /* reset handshakestate (does not matter what state it is in) and re-handshake */
+                        for (let prop in handshakeState) {
+                            delete handshakeState[prop]
+                        }
+                        handshakeState = undefined
+                        initHandshake(noise, 'KK', noise.constants.NOISE_ROLE_RESPONDER)
+                        handleNoiseHandshakeMsg('KK', noise.constants.NOISE_ROLE_RESPONDER, noiseMessage.content)
 
                     } else {
                         hal.log('connStore/handleInbound/webStanza/noiseMessage/unknown')
@@ -561,8 +572,10 @@ export const useConnStore = defineStore('conn', () => {
  
             const encodedPacketBuf = server.Packet.encode(packet).finish()
             const buf = encodedPacketBuf.buffer.slice(encodedPacketBuf.byteOffset, encodedPacketBuf.byteLength + encodedPacketBuf.byteOffset)
-       
-            webSocket.send(buf)
+            
+            if (mainStore.isConnectedToServer) {
+                webSocket.send(buf)
+            }
         }
 
         isSendingMessages = false
@@ -690,6 +703,8 @@ export const useConnStore = defineStore('conn', () => {
         addKeyToServer,
 
         clearMessagesInQueue,
+
+        fetchAbortController,
 
         requestFeedItems,
         requestGroupFeedItems,

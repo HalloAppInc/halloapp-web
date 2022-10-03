@@ -1,46 +1,34 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+    import { ref, computed } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import { storeToRefs } from 'pinia'
 
-import { useColorStore } from '../../stores/colorStore'
+    import { useMainStore } from '@/stores/mainStore'
+    import { useColorStore } from '@/stores/colorStore'
 
-import { useMainStore } from '../../stores/mainStore'
 
-import { useI18n } from 'vue-i18n'
+    const props = defineProps(['postID'])
 
-const props = defineProps(['postID'])
+    const { t } = useI18n({
+        inheritLocale: true,
+        useScope: 'global'
+    })
 
-const { t } = useI18n({
-    inheritLocale: true,
-    useScope: 'global'
-})
+    const mainStore = useMainStore()
+    const colorStore = useColorStore()
 
-const colorStore = useColorStore()
+    const { 
 
-const mainStore = useMainStore()
+        tertiaryBg: tertiaryBgColor,
 
-const hoverColor = computed(() => {
-    return colorStore.hover
-})
+        icon: iconColor,
+        hover: hoverColor,
 
-const lineColor = computed(() => {
-    return colorStore.line
-})
+    } = storeToRefs(colorStore)  
 
-const textColor = computed(() => {
-    return colorStore.text
-})
 
-const headerColor = computed(() => {
-    return colorStore.header
-})
 
-const iconColor = computed(() => {
-    return colorStore.icon
-})
 
-const backgroundColor = computed(() => {
-    return colorStore.background
-})
 </script>
 
 <template>
@@ -57,7 +45,7 @@ const backgroundColor = computed(() => {
             </div>
             
             <div class='titleContainer'>
-                Comments ({{ postID }})
+                Comments
             </div>
 
             <div class='iconContainer'>
@@ -70,83 +58,83 @@ const backgroundColor = computed(() => {
 
 <style scoped>
 
-.commentHeader {
-    overflow-y: auto;
-    overflow-x: hidden;
-    
-    height: 100%;
-    background-color: rgb(243, 243, 240);
-}
+    .commentHeader {
+        overflow-y: auto;
+        overflow-x: hidden;
+        
+        height: 100%;
+        background-color: v-bind(tertiaryBgColor);
+    }
 
-.container {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-}
+    .container {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+    }
 
-.leftGutter {
-    flex: 0 0 10px;
-}
+    .leftGutter {
+        flex: 0 0 10px;
+    }
 
-.rightGutter {
-    flex: 0 0 10px;
-}
+    .rightGutter {
+        flex: 0 0 10px;
+    }
 
-.avatarContainer {
-    flex: 0 0 70px;
-    padding: 5px 0px 5px 0px;
-}
+    .avatarContainer {
+        flex: 0 0 70px;
+        padding: 5px 0px 5px 0px;
+    }
 
-.avatar {
-    width: 40px;
-    height: 40px;
+    .avatar {
+        width: 40px;
+        height: 40px;
 
-    background-color: lightgray;
-    border-radius: 50%;
-}
+        background-color: lightgray;
+        border-radius: 50%;
+    }
 
-.iconContainer {
-    flex: 0 0 50px;
-    padding: 5px 0px 5px 0px;
-    color: v-bind(iconColor);
+    .iconContainer {
+        flex: 0 0 50px;
+        padding: 5px 0px 5px 0px;
+        color: v-bind(iconColor);
 
-    display: flex;
-    justify-content: center;
-}
+        display: flex;
+        justify-content: center;
+    }
 
-.iconContainer:hover {
-    cursor: pointer;
-}
+    .iconContainer:hover {
+        cursor: pointer;
+    }
 
-.iconShadow {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    .iconShadow {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
 
-    border-radius: 50%;
-}
+        border-radius: 50%;
+    }
 
-.iconShadow:hover {
-    background-color: v-bind(hoverColor);
-}
+    .iconShadow:hover {
+        background-color: v-bind(hoverColor);
+    }
 
-.titleContainer {
-    font-family: "Gotham", Helvetica, "Helvetica Neue", Arial, Avenir, sans-serif;
-    font-size: 14px;
+    .titleContainer {
+        font-family: "Gotham", Helvetica, "Helvetica Neue", Arial, Avenir, sans-serif;
+        font-size: 14px;
 
-    color: v-bind(iconColor);
+        color: v-bind(iconColor);
 
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
 
-.verticalLine {
-    border-right: 1px solid rgb(200, 200, 200);
-    height: 30px;
-    margin: 10px 30px;
-}
+    .verticalLine {
+        border-right: 1px solid rgb(200, 200, 200);
+        height: 30px;
+        margin: 10px 30px;
+    }
 
 </style>

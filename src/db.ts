@@ -37,6 +37,14 @@ export interface LinkPreview {
     preview?: PostMedia
 }
 
+export interface CommonMediaLinkPreview {
+    id?: number
+    title: string
+    url: string
+    description: string
+    preview?: CommonMedia
+}
+
 export enum PostMediaType {
     Unknown = 0,
     Image = 1,
@@ -65,11 +73,10 @@ export interface PostMedia {
     isCodecH265?: boolean // pertains to video only
 }
 
-export enum CommonMediaType {
-    Unknown = 0,
-    Feed = 1,
-    Comment = 2,
-    Chat = 3
+export enum SubjectType {
+    FeedPost = 0,
+    Comment = 1,
+    Chat = 2
 }
 
 export enum MediaType {
@@ -81,9 +88,10 @@ export enum MediaType {
 
 export interface CommonMedia {
     id?: number
-    type: CommonMediaType
-    typeID?: string
-    mediaType: MediaType
+    type: SubjectType       // Feed, Comment, Chat
+    subjectID: string       // '', GroupID, PostID, ChatID
+    contentID: string       // PostID, CommentID, MessageID
+    mediaType: MediaType    // Image, Video, VoiceNote
     
     order: number
     width: number
@@ -95,11 +103,12 @@ export interface CommonMedia {
     uploadURL?: string
 
     blobVersion?: number
-    blob?: Blob
     blobSize?: number | Long
     chunkSize?: number
+    blob?: Blob
 
     isCodecH265?: boolean // pertains to video only
+    previewImage?: Blob
 }
 
 export interface Feed {
@@ -116,6 +125,8 @@ export interface Feed {
     retractState?: web.PostDisplayInfo.RetractState
     unreadComments?: number
     userReceipts?: web.ReceiptInfo[]
+
+    haveComments?: boolean
 }
 
 export interface Comment {
@@ -123,12 +134,15 @@ export interface Comment {
     postID: string
     type: server.Comment.CommentType
     commentID: string
-    userID: String
+    userID: number
     parentCommentID?: string
     timestamp: number
 
     text?: string
     mentions?: Mention[]
+    voiceNote?: CommonMedia
+
+    linkPreview?: CommonMediaLinkPreview
 }
 
 export interface Group {
@@ -180,7 +194,7 @@ export class HADexie extends Dexie {
     
     constructor() {
         super('myDatabase')
-        this.version(6).stores({
+        this.version(9).stores({
             messageList: '++id, fromUserID, toUserID',
             media: '++id',
             feed: '++id, postID, userID, groupID, text, timestamp',
@@ -188,8 +202,8 @@ export class HADexie extends Dexie {
             group: 'groupID, name',
             chat: '++id, proto',
             postMedia: '++id, postID, order',
+            commonMedia: '++id, contentID, subjectID, type',
             contact: '++id, userName, userID',
-            commonMedia: '++id, type, typeID',
             avatar: 'userID',
             groupAvatar: 'groupID'
         })

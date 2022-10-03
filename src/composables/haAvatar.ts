@@ -1,12 +1,14 @@
 import { ref } from 'vue'
 
-import { useMainStore } from '../stores/mainStore'
-import { db } from '../db'
-import hal from '../common/halogger'
+import { useMainStore } from '@/stores/mainStore'
+import { useConnStore } from '@/stores/connStore'
+import { db } from '@/db'
+import hal from '@/common/halogger'
 
 export function useHAAvatar() {
 
     const mainStore = useMainStore()
+    const connStore = useConnStore()
     const avatarImageUrlPrefix = mainStore.devCORSWorkaroundUrlPrefix + 'https://avatar-cdn.halloapp.net/'
 
     async function getAvatar(userID: number, avatarID?: string) {

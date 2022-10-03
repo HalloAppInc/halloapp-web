@@ -50,7 +50,7 @@
             </div>
         </div>    
 
-        <div class="sideIconWrapper">
+        <!-- <div class="sideIconWrapper">
             <div :class="['sideIcon', {selected: mainStore.page == 'chats'}]" @click='mainStore.gotoPage("chats")'>
                 <div class="icon">
                     <font-awesome-icon :icon="['fas', 'message']" />
@@ -59,7 +59,7 @@
                     {{ t('general.chats') }}
                 </div>
             </div>
-        </div>
+        </div> -->
         
         <div class="sideIconWrapper sideIconWrapperTop">
             <div :class="['sideIcon', {selected: mainStore.page == 'settings'}]" @click='mainStore.gotoPage("settings")'>

@@ -5,16 +5,16 @@
 
     import hal from './common/halogger'
 
-    import { useMainStore } from './stores/mainStore'
-    import { useConnStore } from './stores/connStore'
-    import { useColorStore } from './stores/colorStore'
+    import { useMainStore } from '@/stores/mainStore'
+    import { useConnStore } from '@/stores/connStore'
+    import { useColorStore } from '@/stores/colorStore'
 
-    import MainPanel from './components/MainPanel.vue'
-    import Sidebar from './components/Sidebar.vue'
-    import Sidestrip from './components/Sidestrip.vue'    
-    import BottomNav from './components/BottomNav.vue'
+    import MainPanel from '@/components/MainPanel.vue'
+    import Sidebar from '@/components/Sidebar.vue'
+    import Sidestrip from '@/components/Sidestrip.vue'    
+    import BottomNav from '@/components/BottomNav.vue'
 
-    import QRCode from './components/login/QRCode.vue'
+    import QRCode from '@/components/login/QRCode.vue'
 
     const { t } = useI18n({
         inheritLocale: true,
@@ -66,6 +66,7 @@
     if (process.env.NODE_ENV?.toString() == 'development') {
         connStore.isDebug = true
         mainStore.devCORSWorkaroundUrlPrefix = 'https://cors-anywhere.herokuapp.com/'
+        // mainStore.devCORSWorkaroundUrlPrefix = 'https://corsproxy.io/?'
     }
 
     const gothamFontUrl = ref("https://web.halloapp.com/fonts/gotham/woff2/Gotham-Book_Web.woff2")

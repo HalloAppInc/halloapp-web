@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { Ref, ref } from 'vue'
+    import { initCustomFormatter, Ref, ref } from 'vue'
     import { storeToRefs } from 'pinia'
     import { liveQuery } from 'dexie'
 
@@ -13,6 +13,7 @@
 
     const mainStore = useMainStore()
     const colorStore = useColorStore()
+    
 
     const feedRef = ref<InstanceType<typeof FeedList>>()
 
@@ -35,6 +36,12 @@
     function toggleSidebar() {
         feedRef.value?.closeCommentsPanel()
         mainStore.showSidebar = !mainStore.showSidebar
+    }
+
+    init()
+
+    function init() {
+        mainStore.showSidebar = true
     }
 
 </script>

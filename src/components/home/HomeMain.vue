@@ -34,9 +34,6 @@
         </template>
     </FeedList>
 
-   
-
-
 </template>
 
 <style scoped>

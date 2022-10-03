@@ -1,127 +1,89 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
-import { useMainStore  } from '../../stores/mainStore'
-import { useColorStore } from '../../stores/colorStore'
-import { useTimeformatter } from '../../composables/timeformatter'
+    import { Ref, ref, toRef, computed, watch } from 'vue'
+    import { liveQuery } from "dexie"
+    import { useI18n } from 'vue-i18n'
+    import { storeToRefs } from 'pinia'
 
-import { useI18n } from 'vue-i18n'
+    import { useMainStore  } from '@/stores/mainStore'
+    import { useColorStore } from '@/stores/colorStore'
 
-import CommentHeader from './CommentHeader.vue'
-import ChatPanel from '../chats/ChatPanel.vue'
-import InputBox from '../chats/InputBox.vue'
+    import { db, Feed, SubjectType } from '@/db'
 
-import Avatar from '../media/Avatar.vue'
+    import { useHAText } from '@/composables/haText'
+    import { useTimeformatter } from '@/composables/timeformatter'
 
-const mainStore = useMainStore()
-const colorStore = useColorStore()
+    import Avatar from '@/components/media/Avatar.vue'
 
-const { formatTime } = useTimeformatter()
+    import CommentHeader from '@/components/comment/CommentHeader.vue'
+    import MediaThumbnails from '@/components/media/MediaThumbnails.vue'
+    import MsgPanel from '@/components/msg/MsgPanel.vue'
+    import InputBox from '@/components/chats/InputBox.vue'
 
-const props = defineProps(['postID'])
+    const mainStore = useMainStore()
+    const colorStore = useColorStore()
 
-const content = ref<HTMLElement | null>(null)
+    const { formatTime } = useTimeformatter()
 
-const { t, locale } = useI18n({
-    inheritLocale: true,
-    useScope: 'global'
-})
+    const { 
+        tertiaryBg: tertiaryBgColor,
+     } = storeToRefs(colorStore)  
 
-
-
-const messageList = ref([
-    {
-        type: "timestamp",
-        timestamp: "1649204213",
-    },
-    {
-        type: "inBound",
-        message: "Short text testing:<br> ~123~ <s>123</s>,_123_<i>123</i>,*123*<b>123</b>",
-        timestamp: "1649204213",
-        display: true,
-    },
-    {
-        type: "outBound",
-        message: "Long text testing: The item is sized according to its width and height properties, The item is sized according to its width and height properties, The item is sized according to its width and height properties",
-        timestamp: "1649204213",
-        display: true
-    },
-    {
-        type: "timestamp",
-        timestamp: "1656853200"
-    },
-    {
-        type: "inBound",
-        message: "Long text testing: The item is sized according to its width and height properties, The item is sized according to its width and height properties, The item is sized according to its width and height properties",
-        timestamp: "1656853200",
-        display: true
-    },
-    {
-        type: "timestamp",
-        timestamp: "1657026000",
-    },
-    {
-        type: "inBound",
-        quoteIdx: 1,
-        message: "asdfasdfsadfasdflsadkfl;sdakf;lasdkf;asdkf;lasdkf;lsadkf;lsadkf;sadkf;lasdfksd;lfksd;lfdsf",
-        timestamp: "1657026000",
-        display: true
-    },
-    {
-        type: "inBound",
-        quoteIdx: 2,
-        message: "😍😍😍😍",
-        timestamp: "1657026000",
-        display: true
-    },
-    {
-        type: "inBound",
-        message: "😍!",
-        timestamp: "1657026000",
-        display: true
-    },
-    {
-        type: "inBound",
-        message: "😍",
-        timestamp: "1657026000",
-        display: true
-    },
-    {
-        type: "inBound",
-        message: "☺️", // this emoji can't be displayed 
-        timestamp: "1657026000",
-        display: true
-    },
-    {
-        type: "inBound",
-        message: "❤️",  // this emoji can't be detected
-        timestamp: "1657026000",
-        display: true
-    },
-    {
-        type: "timestamp",
-        timestamp: "1657112400",
-    },
-    {
-        type: "inBound",
-        message: "asdfasdfsadfasdflsadkfl;sdakf;lasdkf;asdkf;lasdkf;lsadkf;",
-        timestamp: "1657112400",
-        display: true
+    interface Props {
+        postID: string,
     }
-])
+    const props = defineProps<Props>()
 
-const contactList = ref([
-    "UserA",
-    "UserB",
-    "abcd123",
-    "?@#$%^&"
-])
+    const { processText } = useHAText()
+            
+    const { t, locale } = useI18n({
+        inheritLocale: true,
+        useScope: 'global'
+    })
 
-// todo: look into object to see if it's needed
-const replyQuoteIdx = ref({'value': -1})
+    const post = ref<(Feed | null)>(null)
+    const postText = ref('')
+    
+    let subscription: any
 
-const messageNumber = computed(() => {
-    return messageList.value.length
-})
+    watch(() => props.postID, (newValue, oldValue) => {
+        if (newValue != oldValue) {
+
+            setupObserver()
+        }
+    })
+
+    const numMedia = ref(0)
+
+    setupObserver()
+
+    async function setupObserver() {
+        if (subscription) { subscription.unsubscribe() }
+        const observable = liveQuery (() => db.feed.where('postID').equals(props.postID).toArray())
+        subscription = observable.subscribe({
+            next: async result => {
+                if (!result) { return }
+                if (result.length == 0) { return }
+
+                post.value = result[0]
+
+                numMedia.value = await db.postMedia.where('postID').equals(post.value.postID).count()
+
+                if (post.value.text) {
+                    const truncateText = true
+                    const maxCharsWhenTruncated = 500
+                    const processedText = processText(post.value.text, post.value.mentions, truncateText, maxCharsWhenTruncated)
+                    postText.value = processedText.html
+                }
+
+
+
+            },
+            error: error => console.error(error)
+        })
+    }
+
+    // todo: look into object to see if it's needed
+    const replyQuoteIdx = ref({'value': -1})
 
 </script>
 
@@ -134,99 +96,117 @@ const messageNumber = computed(() => {
             <CommentHeader :postID='postID' @backClick="$emit('backClick')"/>
         </div>
 
-        <div class='content' ref='content'>
-            <ChatPanel>
+        <MsgPanel v-if="post" :type="SubjectType.Comment" :subjectID="post.postID" :key="post.postID">
 
-                <template v-slot:subHeader>
-                    <div class='subHeader'>
-                        <div>
-                            <Avatar :userID="111" :width="30"></Avatar>
+            <template v-slot:subHeader>
+                <div class='subHeader'>
+                    <div>
+                        <Avatar :userID="post.userID" :width="30" :key="post.userID"></Avatar>
+                    </div>
+                    <div class='subHeaderBody'>
+                        <div v-if="post">
+                            {{ mainStore.pushnames[post.userID] }}
                         </div>
-                        <div class='subHeaderBody'>
-                            <div>
-                                Test User
-                            </div>
-                            <div>
-                                
-                            </div>
-                            <div>
-                                Test test test
-                            </div>
-                            <div class='timestamp'>
-                                {{ formatTime(1657026000, locale as string) }}
-                            </div>
+
+                        <MediaThumbnails v-if="numMedia" class="thumbnails" :key="post.postID"
+                            
+                            :type=SubjectType.FeedPost
+                            :subjectID="post.groupID"
+                            :contentID="post.postID"
+                            :mediaBoxWidth=50
+                            :mediaBoxHeight=50>
+                        </MediaThumbnails>
+                                  
+
+                        <div v-html="postText" class="text">
+
+                        </div>
+
+                        <div v-if="post" class='timestamp'>
+                            {{ formatTime(post.timestamp, locale as string) }}
                         </div>
                     </div>
-                </template>
+                </div>
+            </template>
 
-            </ChatPanel>
-        </div>
-
+        </MsgPanel>
+       
         <!-- input tray -->
-        <div class='footer'>
-
+        <!-- <div class='footer'>
             <InputBox 
-
                 :uploadFiles='""'
                 :alwaysShowSendButton='false'
                 :replyQuoteIdx='replyQuoteIdx' />
-            
-        </div>
+        </div> -->
 
     </div>
 
 </template>
 
 <style scoped>
-.commentMainWrapper {
-    width: 100%;
-    height: 100%;
-    position: relative;
+    .commentMainWrapper {
+        width: 100%;
+        height: 100%;
+        position: relative;
 
-    background-color: rgb(243, 243, 240);
+        background-color: rgb(243, 243, 240);
 
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-}
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+    }
 
-.header {
-    flex: 1 1 50px;
-    background-color: #f0f2f5;
-}
+    .header {
+        flex: 1 1 50px;
+        background-color: #f0f2f5;
+    }
 
-.subHeader {
-    background-color: rgb(243, 243, 240);
-    padding: 5px 15px 10px 15px;
+    .subHeader {
+        background-color: v-bind(tertiaryBgColor);
+        padding: 5px 15px 10px 15px;
 
-    border-bottom: 1px solid rgb(232,232,232);
+        border-bottom: 1px solid rgb(232,232,232);
 
-    display: flex;
-    flex-direction: row;
-    gap: 0px 10px;
+        display: flex;
+        flex-direction: row;
+        gap: 0px 10px;
 
-    z-index: 10; /* used to cover up the floating timestamp in chat panel */
-}
+        z-index: 10; /* used to cover up the floating timestamp in chat panel */
 
-.timestamp {
-    color: gray;
-    font-size: 14px;
-}
+        
+    }
 
-.content {
-    width: 100%;
-    height: 100%;
-    overflow-y: hidden;
-    overflow-x: hidden;
-}
 
-.footer {
-    width: 100%;
 
-    background-color: rgb(243, 243, 240);
+    .subHeader .subHeaderBody {
 
-    padding: 5px 10px 5px 10px;
-}
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: flex-start;
+
+    }
+
+    .subHeader .subHeaderBody .thumbnails {
+        margin-top: 5px;
+    }
+
+    .subHeader .subHeaderBody .text {
+        margin-top: 5px;
+    }
+    .subHeader .subHeaderBody .timestamp {
+        margin-top: 5px;
+        color: gray;
+        font-size: 12px;
+    }
+
+    .footer {
+        width: 100%;
+
+        background-color: rgb(243, 243, 240);
+
+        padding: 5px 10px 5px 10px;
+    }
 
 
 </style>

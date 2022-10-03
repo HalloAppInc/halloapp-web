@@ -1,5 +1,5 @@
-import { clients } from '../proto/clients.js'
-import hal from '../common/halogger'
+import { clients } from '@/proto/clients.js'
+import hal from '@/common/halogger'
 
 export function useHAProtobuf() {
 

@@ -72,7 +72,7 @@
     } = storeToRefs(colorStore)
        
     const { 
-        getPostMedia, getComments,
+        getPostMedia,
         modifyPostMedia, modifyPostVoiceNote, modifyPostLinkPreviewMedia, 
         setPostMediaIsCodecH265 
     } = useHAFeed()
@@ -205,7 +205,6 @@
         const isCorrectHash = isUint8ArrayEqual(new Uint8Array(hash), ciphertextHash)
         if (!isCorrectHash) {
             hal.log("fetchAndDecrypt/hash does not match: " + ciphertextHash)
-            hal.log("fetchAndDecrypt/hash does not match 2: " + new Uint8Array(hash))
         }
 
         const attachedMAC = encryptedArrayWithMAC.slice(-32)
@@ -607,13 +606,15 @@
         }
 
         /* preemptively request comments for the post */
-        const numComments = await db.comment.where('postID').equals(postID).count()
-        if (numComments == 0) {
-            let commentCursor = ''
-            if (mainStore.commentCursors[postID]) {
-                commentCursor = mainStore.commentCursors[postID]
-            }      
-            connStore.requestComments(postID, commentCursor, 10, function() {})
+        if (!isDeleted.value) {
+            const numComments = await db.comment.where('postID').equals(postID).count()
+            if (numComments == 0) {
+                let commentCursor = ''
+                if (mainStore.commentCursors[postID]) {
+                    commentCursor = mainStore.commentCursors[postID]
+                }      
+                connStore.requestComments(postID, commentCursor, 20, function() {})
+            }
         }
     }
 
@@ -789,6 +790,8 @@
                     </div>
                     <div v-if="post.unreadComments" class="newCommentIndicator">
                     </div>
+                    <div v-else-if="post.haveComments" class="haveCommentIndicator">
+                    </div>                    
                 </div>
                 <div v-if="mainStore.userID == post.userID" class="userReceiptsBox">
 
@@ -1060,6 +1063,14 @@
         border-radius: 50%;
         background-color: v-bind(primaryBlueColor);
     }
+
+    .haveCommentIndicator {
+        margin-left: 4px;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: lightgray;
+    }    
 
     .userReceiptsBox {
         display: flex;

@@ -62,13 +62,40 @@ export function useTimeformatter() {
         return { display: diffMinutes + ":" + displaySeconds, timeDiffMs: timeDiffMs }
     }
 
-    function formatTimeDateOnlyChat(seconds: number, locale: string) {
+
+    function formatTimeDateOnlyChat2(seconds: number, locale: string) {
         let result = ""
         const dt = DateTime.fromSeconds(seconds)
         const currentTime = DateTime.local()
         
         // TODAY
         if (currentTime.diff(dt, 'days').days < 1) {
+            result = t('timestampFormatter.TODAY')
+        }
+        // YESTERDAY
+        else if (currentTime.diff(dt, 'days').days < 2) {
+            result = t('timestampFormatter.YESTERDAY')
+        }
+        // Day of week: TUESDAY
+        else if (currentTime.diff(dt, 'days').days < 5) {
+            result = dt.toFormat("EEEE", { locale: locale }).toUpperCase()
+        }
+
+        // Date: localized numeric date
+        else {
+            result = dt.toFormat("D", { locale: locale }) 
+        }
+
+        return result
+    }
+
+    function formatTimeDateOnlyChat(seconds: number, locale: string) {
+        let result = ""
+        const dt = DateTime.fromSeconds(seconds)
+        const currentTime = DateTime.local()
+        
+        // TODAY
+        if (currentTime.hasSame(dt, 'day')) {
             result = t('timestampFormatter.TODAY')
         }
         // YESTERDAY
@@ -105,15 +132,36 @@ export function useTimeformatter() {
         return res
     }
 
-    function timeDiffBiggerThanOneDay(secondsOld: number, secondsNew: number) {
-        const oldTime = DateTime.fromSeconds(secondsOld)
-        const newTime = DateTime.fromSeconds(secondsNew)
-        
-        if (newTime.diff(oldTime, 'days').days < 1) {
+    function timeDiffBiggerThanOneDay(timestampInSec: number, nextTimestampInSec: number) {
+        const dt1 = DateTime.fromSeconds(timestampInSec)
+
+        const dt2 = DateTime.fromSeconds(nextTimestampInSec)
+
+
+        if (dt1.year === dt2.year && dt1.month === dt2.month && dt1.day === dt2.day) {
             return false
+        } else {
+            return true
+        }
+        
+    
+    }
+
+    function timeDiffBiggerThanOneDay2(timestampInSec: number, nextTimestampInSec: number) {
+
+
+
+        
+        const timestamp = new Date(timestampInSec*1000)
+        const nextTimestamp = new Date(nextTimestampInSec*1000)
+        
+        if (timestamp.toDateString() === nextTimestamp.toDateString()) {
+            return true
         }
         else {
-            return true
+            console.log("--> " + timestamp.toDateString())
+            console.log("==> " + nextTimestamp.toDateString())
+            return false
         }
     }
 
