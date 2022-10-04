@@ -561,14 +561,13 @@ export const useConnStore = defineStore('conn', () => {
             const message = mainStore.messageQueue[i]
             const packet = message.packet
 
-            /* temporary: send all messages for now regardless if it needs auth or not */
             // certain packets like addKey do not need authentication
-            // if (!mainStore.isPublicKeyAuthenticated && message.needAuth) {
-            //     hal.log('connStore/sendMessagesInQueue/' + i.toString() + '/not authenticated, skip: ' + packet.iq?.id)
-            //     continue
-            // }
+            if (!mainStore.isPublicKeyAuthenticated && message.needAuth) {
+                hal.log('connStore/sendMessagesInQueue/' + i.toString() + '/not authenticated, skip: ' + packet.iq?.id)
+                continue
+            }
 
-            hal.log('connStore/sendMessagesInQueue/' + i.toString() + '/send:\n' + JSON.stringify(packet) + '\n\n')
+            hal.log('connStore/sendMessagesInQueue/' + i.toString() + '/send: ' + packet.id)
  
             const encodedPacketBuf = server.Packet.encode(packet).finish()
             const buf = encodedPacketBuf.buffer.slice(encodedPacketBuf.byteOffset, encodedPacketBuf.byteLength + encodedPacketBuf.byteOffset)

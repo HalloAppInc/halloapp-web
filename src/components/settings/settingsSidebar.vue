@@ -1,16 +1,16 @@
 <script setup lang="ts">
     import { computed, ref, watch, nextTick } from 'vue'
-
+    import { storeToRefs } from 'pinia'
     import { useI18n } from 'vue-i18n'
 
-    import MainMenu from './Main.vue'
-    import HelpMenu from './Help.vue'
-    import NotificationsMenu from './Notifications.vue'
-    import PrivacyMenu from './Privacy.vue'
-    import SecurityMenu from './Security.vue'
+    import { useColorStore } from '@/stores/colorStore'
+    import { useMainStore } from '@/stores/mainStore'
 
-    import { useColorStore } from '../../stores/colorStore'
-    import { useMainStore } from '../../stores/mainStore'
+    import MainMenu from '@/components/settings/Main.vue'
+    import HelpMenu from '@/components/settings/Help.vue'
+    import NotificationsMenu from '@/components/settings/Notifications.vue'
+    import PrivacyMenu from '@/components/settings/Privacy.vue'
+    import SecurityMenu from '@/components/settings/Security.vue'
 
     const mainStore = useMainStore()
     const colorStore = useColorStore()
@@ -20,12 +20,13 @@
         useScope: 'global'
     })
 
-    const backgroundColor = computed(() => {
-        return colorStore.background
-    })
-    const boderlineColor = computed(() => {
-        return colorStore.borderline
-    })
+    const { 
+        primaryLightgray: primaryLightgrayColor,
+        background: backgroundColor,
+        borderline: borderlineColor,
+        secondaryBorder: secondaryBorderColor,
+    } = storeToRefs(colorStore)  
+
 
     const settingsSidebar = ref<HTMLDivElement>()
     const settingSidebarHeight = ref(0)
@@ -109,6 +110,6 @@
 
     overflow: hidden;
 
-    border-right: 1px solid v-bind(boderlineColor);
+    border-right: 1px solid v-bind(borderlineColor);
 }
 </style>

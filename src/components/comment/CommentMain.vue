@@ -26,6 +26,8 @@
 
     const { 
         tertiaryBg: tertiaryBgColor,
+        text: textColor,
+        secondaryBorder: secondaryBorderColor
      } = storeToRefs(colorStore)  
 
     interface Props {
@@ -47,7 +49,6 @@
 
     watch(() => props.postID, (newValue, oldValue) => {
         if (newValue != oldValue) {
-
             setupObserver()
         }
     })
@@ -74,9 +75,6 @@
                     const processedText = processText(post.value.text, post.value.mentions, truncateText, maxCharsWhenTruncated)
                     postText.value = processedText.html
                 }
-
-
-
             },
             error: error => console.error(error)
         })
@@ -109,7 +107,6 @@
                         </div>
 
                         <MediaThumbnails v-if="numMedia" class="thumbnails" :key="post.postID"
-                            
                             :type=SubjectType.FeedPost
                             :subjectID="post.groupID"
                             :contentID="post.postID"
@@ -117,9 +114,7 @@
                             :mediaBoxHeight=50>
                         </MediaThumbnails>
                                   
-
                         <div v-html="postText" class="text">
-
                         </div>
 
                         <div v-if="post" class='timestamp'>
@@ -165,26 +160,21 @@
         background-color: v-bind(tertiaryBgColor);
         padding: 5px 15px 10px 15px;
 
-        border-bottom: 1px solid rgb(232,232,232);
+        border-bottom: 1px solid v-bind(secondaryBorderColor);
 
         display: flex;
         flex-direction: row;
         gap: 0px 10px;
 
         z-index: 10; /* used to cover up the floating timestamp in chat panel */
-
-        
     }
 
-
-
     .subHeader .subHeaderBody {
-
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
         align-items: flex-start;
-
+        color: v-bind(textColor);
     }
 
     .subHeader .subHeaderBody .thumbnails {
@@ -193,6 +183,7 @@
 
     .subHeader .subHeaderBody .text {
         margin-top: 5px;
+        color: v-bind(textColor)
     }
     .subHeader .subHeaderBody .timestamp {
         margin-top: 5px;
@@ -202,11 +193,8 @@
 
     .footer {
         width: 100%;
-
         background-color: rgb(243, 243, 240);
-
         padding: 5px 10px 5px 10px;
     }
-
 
 </style>

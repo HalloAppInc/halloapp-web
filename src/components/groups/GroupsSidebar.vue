@@ -40,6 +40,7 @@
     })
 
     const { 
+        primaryLightgray: primaryLightgrayColor,
         background: backgroundColor,
         secondaryBg: secondaryBgColor,
         primaryBlue: primaryBlueColor,
@@ -111,7 +112,7 @@
     }
 
     *::-webkit-scrollbar-thumb {
-        background-color: rgb(172, 169, 169);    /* color of the scroll thumb */
+        background-color: v-bind(primaryLightgrayColor);    /* color of the scroll thumb */
     
         border: 0px solid white;  /* creates padding around scroll thumb */
     }
@@ -119,7 +120,7 @@
     .groupsSidebarWrapper {
 
         height: 100%;
-        border-right: 1px solid #b8b7b7;
+        border-right: 1px solid v-bind(secondaryBorderColor);
 
         display: flex;
         flex-direction: column;
@@ -144,8 +145,8 @@
         display: flex;
         flex-direction: horizontal;
         padding: 0px;
-        
     }
+
     .container:hover {
         /* background-color: rgb(226, 226, 226); */
         background-color: v-bind(secondaryBgHoverColor);
@@ -156,7 +157,6 @@
         /* background-color: rgb(205, 203, 203); */
         background-color: v-bind(secondaryBgSelectedColor);
     }
-
 
     .avatarContainer {
         flex: 0 0 70px;

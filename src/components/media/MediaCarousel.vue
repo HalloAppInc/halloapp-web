@@ -17,8 +17,10 @@
     })
 
     const { 
+        primaryLightgray: primaryLightgrayColor,
         background: backgroundColor,
         secondaryBg: secondaryBgColor,
+        timestamp: timestampColor
     } = storeToRefs(colorStore)  
 
     enum MediaType {
@@ -436,14 +438,9 @@
         width: 7px;
         height: 7px;
         border-radius: 50%;
-        background-color: rgba(0, 0, 0, 0.2);;
-        /* opacity: 20%; */
+        background-color: v-bind(primaryLightgrayColor);
     }
-    @media (prefers-color-scheme: dark) {
-        .mediaIndicator {
-            background-color: rgba(255, 255, 255, 0.2);
-        }
-    }
+
     .selected {
         background-color: #FF4500;
     }

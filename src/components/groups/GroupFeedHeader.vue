@@ -19,7 +19,8 @@
     const colorStore = useColorStore()
 
     const { 
-        background: backgroundColor
+        background: backgroundColor,
+        text: textColor
     } = storeToRefs(colorStore)  
 
     const hoverColor = computed(() => {

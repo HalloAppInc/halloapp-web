@@ -122,6 +122,7 @@ export interface Feed {
     linkPreview?: LinkPreview
     timestamp: number
 
+    seenState?: web.PostDisplayInfo.SeenState
     retractState?: web.PostDisplayInfo.RetractState
     unreadComments?: number
     userReceipts?: web.ReceiptInfo[]
@@ -194,10 +195,10 @@ export class HADexie extends Dexie {
     
     constructor() {
         super('myDatabase')
-        this.version(9).stores({
+        this.version(10).stores({
             messageList: '++id, fromUserID, toUserID',
             media: '++id',
-            feed: '++id, postID, userID, groupID, text, timestamp',
+            feed: '++id, postID, userID, groupID, seenState, text, timestamp',
             comment: '++id, postID, commentID, timestamp',
             group: 'groupID, name',
             chat: '++id, proto',

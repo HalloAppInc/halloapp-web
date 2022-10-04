@@ -144,7 +144,7 @@
             if (mainStore.commentCursors[postID]) {
                 commentCursor = mainStore.commentCursors[postID]
             }      
-            // connStore.requestComments(postID, commentCursor, 20, function() {})
+            connStore.requestComments(postID, commentCursor, 20, function() {})
         }
              
     }

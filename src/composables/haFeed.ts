@@ -25,9 +25,12 @@ export function useHAFeed() {
 
     async function processWebContainer(webContainer: any) {
         const feedResponse = webContainer?.feedResponse
+        const feedUpdate = webContainer?.feedUpdate
 
         if (feedResponse) { 
             processFeedResponse(feedResponse)
+        } else if (feedUpdate) {
+            processFeedUpdate(feedUpdate)
         }
     
     }
@@ -41,11 +44,7 @@ export function useHAFeed() {
         const groupInfo = feedResponse.groupDisplayInfo
 
         /* processs groups first and wait for it to finish as processItems might need to modify groups list */
-        for (let j = 0; j < groupInfo.length; j++) {
-            const info = groupInfo[j]
-            if (!info) { continue }
-            await processGroupDisplayInfo(info)
-        }        
+        await processGroupDisplayInfo(groupInfo)
 
         if (items.length < 1) { return }
 
@@ -83,16 +82,12 @@ export function useHAFeed() {
                 const item = items[i]
                 let infoIdx = postInfoList.findIndex((info: any) => info.id === item.post.id)
                 const postInfo = postInfoList[infoIdx]
-                processFeedItem(items[i], postInfo)
+                processFeedItem(items[i], postInfo, web.PostDisplayInfo.SeenState.SEEN)
                 postInfoList.splice(infoIdx, 1)
             }
         }
-        
-        for (let j = 0; j < userInfo.length; j++) {
-            const info = userInfo[j]
-            if (!info) { continue }
-            processUserDisplayInfo(info)
-        }
+
+        await processUserDisplayInfo(userInfo)
 
         /* 
          * robustness: should make all processing async/awaits and bulk insert into db,
@@ -161,14 +156,69 @@ export function useHAFeed() {
 
     }
 
+    async function processFeedUpdate(feedUpdate: any) {
+        hal.log('haFeed/processFeedUpdate: ' + JSON.stringify(feedUpdate))
+
+        const items = feedUpdate.items
+        const userInfo = feedUpdate.userDisplayInfo
+        const postInfoList = feedUpdate.postDisplayInfo
+        const groupInfo = feedUpdate.groupDisplayInfo
+
+        /* processs groups first and wait for it to finish as processItems might need to modify groups list */
+        await processGroupDisplayInfo(groupInfo)  
+
+        hal.log('haFeed/processFeedUpdate/process num items: ' + items.length)
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i]
+            const serverPost = item.post
+            const serverComment = item.comment
+
+            if (serverComment) {
+                const postID = serverComment.postId
+                const infoIdx = postInfoList.findIndex((info: any) => info.id === postID)
+                const postInfo = postInfoList[infoIdx]
+                processFeedItemComment(item, postInfo)
+                postInfoList.splice(infoIdx, 1)
+
+                modifyPostHaveCommentIfNeeded(postID)
+            }
+            else if (serverPost) {
+                const postID = item.post.id
+                const groupID = item.post.groupId
+                const infoIdx = postInfoList.findIndex((info: any) => info.id === postID)
+                const postInfo = postInfoList[infoIdx]
+                processFeedItem(item, postInfo, web.PostDisplayInfo.SeenState.UNSEEN)
+                postInfoList.splice(infoIdx, 1)
+            }
+        }
+
+        await processUserDisplayInfo(userInfo)
+    }    
+
     async function processUserDisplayInfo(userInfo: any) {
+        for (let j = 0; j < userInfo.length; j++) {
+            const info = userInfo[j]
+            if (!info) { continue }
+            processUserDisplayInfoItem(info)
+        }        
+    }
+
+    async function processUserDisplayInfoItem(userInfo: any) {
         if (!mainStore.pushnames[userInfo.uid] || mainStore.pushnames[userInfo.uid] != userInfo.contactName) {
             mainStore.pushnames[userInfo.uid] = userInfo.contactName
         }
         getAvatar(userInfo.uid, userInfo.avatarId)
     }
 
-    async function processGroupDisplayInfo(info: any) {
+    async function processGroupDisplayInfo(groupInfo: any) {
+        for (let j = 0; j < groupInfo.length; j++) {
+            const info = groupInfo[j]
+            if (!info) { continue }
+            await processGroupDisplayInfoItem(info)
+        }     
+    }
+
+    async function processGroupDisplayInfoItem(info: any) {
         const groupID = info.id
         const name = info.name
 
@@ -195,7 +245,7 @@ export function useHAFeed() {
         fetchGroupAvatar(groupID, info.avatarId)
     }    
     
-    function processFeedItem(feedItem: any, postInfo: any) {
+    function processFeedItem(feedItem: any, postInfo: any, seenState: web.PostDisplayInfo.SeenState) {
 
         const groupID = feedItem.groupId
 
@@ -211,6 +261,7 @@ export function useHAFeed() {
             postID: serverPost.id,
             userID: publisherUID,
             timestamp: serverPost.timestamp,
+            seenState: seenState,
             retractState: postInfo.retractState,
             unreadComments: postInfo.unreadComments,
         }
@@ -828,6 +879,15 @@ export function useHAFeed() {
         await db.feed.where('postID').equals(postID).modify(function(item) {
             if (!item.haveComments) {
                 item.haveComments = true
+            }
+        })
+        return        
+    }
+
+    async function modifyPostSeenStateAsUnseen(postID: string) {
+        await db.feed.where('postID').equals(postID).modify(function(item) {
+            if (!item.seenState) {
+                item.seenState = web.PostDisplayInfo.SeenState.UNSEEN
             }
         })
         return        

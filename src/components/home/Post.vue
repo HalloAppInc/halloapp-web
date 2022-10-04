@@ -65,10 +65,11 @@
     const { formatTime } = useTimeformatter()
 
     const { primaryBlue: primaryBlueColor,
+            primaryLightgray: primaryLightgrayColor,
             background: backgroundColor, 
             secondaryBg: secondaryBgColor,
             text: textColor,
-            timestamp: timestampColor 
+            timestamp: timestampColor,
     } = storeToRefs(colorStore)
        
     const { 
@@ -993,11 +994,6 @@
         user-select: text;
         color: v-bind(textColor)
     }
-    /* @media (prefers-color-scheme: dark) {
-        .postBodyContent {
-            color: rgba(255, 255, 255, 0.90)
-        }
-    } */
     .postBodyContent #readMore {
         color: v-bind(primaryBlueColor);
         cursor: pointer;
@@ -1025,12 +1021,9 @@
         font-family: "Gotham", Helvetica, "Helvetica Neue", Arial, Avenir, sans-serif;
         font-size: 13px;
         font-weight: 400;
+        color: v-bind(textColor)
     }
-    @media (prefers-color-scheme: dark) {
-        #postFooter {
-            color: rgba(255, 255, 255, 0.75)
-        }
-    }
+
     .commentButton {
         display: flex;
         flex-direction: horizontal;
@@ -1038,6 +1031,7 @@
 
         user-select: none;
         cursor: pointer;
+        
     }
     @media (pointer: fine) {
         .commentButton:hover {
@@ -1069,7 +1063,7 @@
         width: 6px;
         height: 6px;
         border-radius: 50%;
-        background-color: lightgray;
+        background-color: v-bind(primaryLightgrayColor);
     }    
 
     .userReceiptsBox {

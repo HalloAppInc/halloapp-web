@@ -5,6 +5,12 @@ export default defineComponent({
     primaryBlueLight: '#007AFF',
     primaryBlueDark: 'rgb(10, 132, 255, 1)',
 
+    primaryWhiteBlackLight: 'white',
+    primaryWhiteBlackDark: 'black',
+
+    primaryLightgrayLight: 'lightgray',
+    primaryLightgrayDark: 'rgb(109, 108, 108)',
+
     headerLight: '#f0f2f5',
     headerDark: '#202c33',
 

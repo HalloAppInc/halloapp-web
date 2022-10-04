@@ -46,7 +46,7 @@
     const avatarImageUrl = ref(mainStore.devCORSWorkaroundUrlPrefix + "https://web.halloapp.com/assets/avatar.svg")
 
     if (props.useBorder) {
-        borderCss.value = '2px solid white'
+        borderCss.value = '2px solid rgb(0, 0, 0, 0)'
     }
 
     init()
@@ -94,7 +94,7 @@
         width: v-bind(avatarHeight); 
         object-fit: contain; 
         border-radius: 50%; 
-        background-color: gray;
+        background-color: rgb(0, 0, 0, 0);
 
         border: v-bind(borderCss);
     } 

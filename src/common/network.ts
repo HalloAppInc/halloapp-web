@@ -58,7 +58,7 @@ export function network() {
         })
     
         const packet = server.Packet.create({ msg: msg })
-        hal.log('network/createWebStanzaPacket/packet:\n' + JSON.stringify(packet) + '\n\n')
+        // hal.log('network/createWebStanzaPacket/packet:\n' + JSON.stringify(packet) + '\n\n')
 
         return packet       
     }

@@ -6,7 +6,8 @@ import { useMainStore } from './mainStore';
 
 export const useColorStore = defineStore('color', {
     state: () => ({
-        // color
+        primaryBlue: colors.primaryBlueLight,
+        primaryLightgray: colors.primaryLightgrayLight,
         background: colors.backgroundLight,
         secondaryBg: colors.secondaryBgLight,
         tertiaryBg: colors.tertiaryBgLight,
@@ -15,7 +16,7 @@ export const useColorStore = defineStore('color', {
         text: colors.textLight,
         hoverText: colors.hoverTextLight,
         hoverTextBackground: colors.hoverTextBackgroundLight,
-        primaryBlue: colors.primaryBlueLight,
+        
         borderline: colors.borderlineLight,
         secondaryText: colors.secondaryTextLight,
         secondaryBgHover: colors.secondaryBgHoverLight,
@@ -61,6 +62,7 @@ export const useColorStore = defineStore('color', {
         },
 
         computeColors(mode: string) {
+            this.primaryLightgray = colors['primaryLightgray' + mode]
             this.background = colors['background' + mode]
             this.secondaryBg = colors['secondaryBg' + mode]
             this.tertiaryBg = colors['tertiaryBg' + mode]

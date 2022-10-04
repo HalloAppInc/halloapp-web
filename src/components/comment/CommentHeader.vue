@@ -6,7 +6,6 @@
     import { useMainStore } from '@/stores/mainStore'
     import { useColorStore } from '@/stores/colorStore'
 
-
     const props = defineProps(['postID'])
 
     const { t } = useI18n({
@@ -18,16 +17,11 @@
     const colorStore = useColorStore()
 
     const { 
-
         tertiaryBg: tertiaryBgColor,
-
+        text: textColor,
         icon: iconColor,
         hover: hoverColor,
-
     } = storeToRefs(colorStore)  
-
-
-
 
 </script>
 

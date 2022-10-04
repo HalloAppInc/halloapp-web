@@ -1,11 +1,16 @@
 <script setup lang="ts">
     import { ref, toRefs } from 'vue'
     import { storeToRefs } from 'pinia'
+    import { liveQuery } from 'dexie'
     import { useI18n } from 'vue-i18n'
+
+    import { db } from '@/db'
 
     import { useMainStore } from '@/stores/mainStore'
     import { useConnStore } from '@/stores/connStore'
     import { useColorStore } from '@/stores/colorStore'
+
+    import { web } from '@/proto/web.js'
 
     const mainStore = useMainStore()
     const connStore = useConnStore()
@@ -23,6 +28,34 @@
         secondaryBorder: secondaryBorderColor,
     } = storeToRefs(colorStore) 
 
+    const haveUnseenMainPosts = ref(false)
+
+    init()
+
+    async function init() {
+        setupObserver()
+    }
+
+    async function setupObserver() {
+        const observable = liveQuery (() => db.feed.where('seenState').equals(web.PostDisplayInfo.SeenState.UNSEEN).toArray())
+        const avatarSubscription = observable.subscribe({
+            next: result => {
+                if (!result) { return }
+                if (result.length == 0) {
+                    haveUnseenMainPosts.value = false 
+                    return 
+                } else {
+                    haveUnseenMainPosts.value = true
+                }
+
+
+
+            },
+            error: error => console.error(error)
+        })
+    }
+
+
 </script>
 
 <template>
@@ -34,8 +67,9 @@
                     <font-awesome-icon :icon="['fas', 'house']" />
                 </div>
                 <div class="sideIconLabel">
-                    {{ t('general.home') }}
+                    {{ t('general.home') }} 
                 </div>
+                <!-- <div v-if="haveUnseenMainPosts" class="newHomeFeedIndicator"></div> -->
             </div>
         </div>
 
@@ -139,7 +173,7 @@
         flex-direction: row;
         justify-content: flex-start;
         align-items: center;
-        gap: 5px;
+        gap: 3px;
     }
 
     .icon {
@@ -159,6 +193,17 @@
         white-space: nowrap;
         justify-self: flex-start;
     }
+
+    .newHomeFeedIndicator {
+        
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background-color: orange;
+    
+    }
+
+
 
     .version {
         margin-top: 15px;
