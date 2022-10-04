@@ -11,6 +11,7 @@ message WebContainer {
   oneof payload {
     FeedRequest feed_request = 1;
     FeedResponse feed_response = 2;
+    FeedUpdate feed_update = 3;
   }
 }
 
@@ -37,6 +38,7 @@ message GroupDisplayInfo {
   string avatar_id = 3;
   string description = 4;
   string background = 5;
+  server.ExpiryInfo expiry_info = 6;
 }
 
 message PostDisplayInfo {
@@ -102,4 +104,12 @@ message FeedItem {
     server.Comment comment = 2;
   }
   string group_id = 3;
+  int64 expiry_timestamp = 4; // Set only for post items. `-1` if item should never expire.
+}
+
+message FeedUpdate {
+  repeated FeedItem items = 1;
+  repeated UserDisplayInfo user_display_info = 2;
+  repeated PostDisplayInfo post_display_info = 3;
+  repeated GroupDisplayInfo group_display_info = 4;
 }

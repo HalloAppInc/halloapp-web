@@ -170,6 +170,7 @@ message GroupDecryptionReport {
     HISTORY_RESEND = 3;
     POST_REACTION = 4;
     COMMENT_REACTION = 5;
+    CHAT = 6;
   }
   ItemType item_type = 5;
   string original_version = 6; // at time msg id was first encountered

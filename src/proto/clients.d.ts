@@ -1,4 +1,5 @@
 import * as $protobuf from "protobufjs";
+import Long = require("long");
 /** Namespace clients. */
 export namespace clients {
 
@@ -958,6 +959,9 @@ export namespace clients {
 
         /** ChatContext chatReplyMessageSenderId */
         chatReplyMessageSenderId?: (string|null);
+
+        /** ChatContext forwardCount */
+        forwardCount?: (number|null);
     }
 
     /** Represents a ChatContext. */
@@ -983,6 +987,9 @@ export namespace clients {
 
         /** ChatContext chatReplyMessageSenderId. */
         public chatReplyMessageSenderId: string;
+
+        /** ChatContext forwardCount. */
+        public forwardCount: number;
 
         /**
          * Creates a new ChatContext instance using the specified properties.
@@ -3665,6 +3672,12 @@ export namespace clients {
 
         /** Moment image */
         image?: (clients.IImage|null);
+
+        /** Moment selfieImage */
+        selfieImage?: (clients.IImage|null);
+
+        /** Moment selfieLeading */
+        selfieLeading?: (boolean|null);
     }
 
     /** Represents a Moment. */
@@ -3678,6 +3691,12 @@ export namespace clients {
 
         /** Moment image. */
         public image?: (clients.IImage|null);
+
+        /** Moment selfieImage. */
+        public selfieImage?: (clients.IImage|null);
+
+        /** Moment selfieLeading. */
+        public selfieLeading: boolean;
 
         /**
          * Creates a new Moment instance using the specified properties.

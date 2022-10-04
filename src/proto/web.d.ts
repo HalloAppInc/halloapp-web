@@ -1,4 +1,5 @@
 import * as $protobuf from "protobufjs";
+import Long = require("long");
 /** Namespace web. */
 export namespace web {
 
@@ -10,6 +11,9 @@ export namespace web {
 
         /** WebContainer feedResponse */
         feedResponse?: (web.IFeedResponse|null);
+
+        /** WebContainer feedUpdate */
+        feedUpdate?: (web.IFeedUpdate|null);
     }
 
     /** Represents a WebContainer. */
@@ -27,8 +31,11 @@ export namespace web {
         /** WebContainer feedResponse. */
         public feedResponse?: (web.IFeedResponse|null);
 
+        /** WebContainer feedUpdate. */
+        public feedUpdate?: (web.IFeedUpdate|null);
+
         /** WebContainer payload. */
-        public payload?: ("feedRequest"|"feedResponse");
+        public payload?: ("feedRequest"|"feedResponse"|"feedUpdate");
 
         /**
          * Creates a new WebContainer instance using the specified properties.
@@ -353,6 +360,9 @@ export namespace web {
 
         /** GroupDisplayInfo background */
         background?: (string|null);
+
+        /** GroupDisplayInfo expiryInfo */
+        expiryInfo?: (server.IExpiryInfo|null);
     }
 
     /** Represents a GroupDisplayInfo. */
@@ -378,6 +388,9 @@ export namespace web {
 
         /** GroupDisplayInfo background. */
         public background: string;
+
+        /** GroupDisplayInfo expiryInfo. */
+        public expiryInfo?: (server.IExpiryInfo|null);
 
         /**
          * Creates a new GroupDisplayInfo instance using the specified properties.
@@ -904,6 +917,9 @@ export namespace web {
 
         /** FeedItem groupId */
         groupId?: (string|null);
+
+        /** FeedItem expiryTimestamp */
+        expiryTimestamp?: (number|Long|null);
     }
 
     /** Represents a FeedItem. */
@@ -923,6 +939,9 @@ export namespace web {
 
         /** FeedItem groupId. */
         public groupId: string;
+
+        /** FeedItem expiryTimestamp. */
+        public expiryTimestamp: (number|Long);
 
         /** FeedItem content. */
         public content?: ("post"|"comment");
@@ -999,6 +1018,121 @@ export namespace web {
 
         /**
          * Gets the default type url for FeedItem
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a FeedUpdate. */
+    interface IFeedUpdate {
+
+        /** FeedUpdate items */
+        items?: (web.IFeedItem[]|null);
+
+        /** FeedUpdate userDisplayInfo */
+        userDisplayInfo?: (web.IUserDisplayInfo[]|null);
+
+        /** FeedUpdate postDisplayInfo */
+        postDisplayInfo?: (web.IPostDisplayInfo[]|null);
+
+        /** FeedUpdate groupDisplayInfo */
+        groupDisplayInfo?: (web.IGroupDisplayInfo[]|null);
+    }
+
+    /** Represents a FeedUpdate. */
+    class FeedUpdate implements IFeedUpdate {
+
+        /**
+         * Constructs a new FeedUpdate.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: web.IFeedUpdate);
+
+        /** FeedUpdate items. */
+        public items: web.IFeedItem[];
+
+        /** FeedUpdate userDisplayInfo. */
+        public userDisplayInfo: web.IUserDisplayInfo[];
+
+        /** FeedUpdate postDisplayInfo. */
+        public postDisplayInfo: web.IPostDisplayInfo[];
+
+        /** FeedUpdate groupDisplayInfo. */
+        public groupDisplayInfo: web.IGroupDisplayInfo[];
+
+        /**
+         * Creates a new FeedUpdate instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns FeedUpdate instance
+         */
+        public static create(properties?: web.IFeedUpdate): web.FeedUpdate;
+
+        /**
+         * Encodes the specified FeedUpdate message. Does not implicitly {@link web.FeedUpdate.verify|verify} messages.
+         * @param message FeedUpdate message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: web.IFeedUpdate, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified FeedUpdate message, length delimited. Does not implicitly {@link web.FeedUpdate.verify|verify} messages.
+         * @param message FeedUpdate message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: web.IFeedUpdate, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a FeedUpdate message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns FeedUpdate
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): web.FeedUpdate;
+
+        /**
+         * Decodes a FeedUpdate message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns FeedUpdate
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): web.FeedUpdate;
+
+        /**
+         * Verifies a FeedUpdate message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a FeedUpdate message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns FeedUpdate
+         */
+        public static fromObject(object: { [k: string]: any }): web.FeedUpdate;
+
+        /**
+         * Creates a plain object from a FeedUpdate message. Also converts values to other types if specified.
+         * @param message FeedUpdate
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: web.FeedUpdate, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this FeedUpdate to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for FeedUpdate
          * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns The default type url
          */
@@ -4418,6 +4552,9 @@ export namespace server {
 
         /** GroupStanza groupType */
         groupType?: (server.GroupStanza.GroupType|null);
+
+        /** GroupStanza maxGroupSize */
+        maxGroupSize?: (number|Long|null);
     }
 
     /** Represents a GroupStanza. */
@@ -4467,6 +4604,9 @@ export namespace server {
 
         /** GroupStanza groupType. */
         public groupType: server.GroupStanza.GroupType;
+
+        /** GroupStanza maxGroupSize. */
+        public maxGroupSize: (number|Long);
 
         /**
          * Creates a new GroupStanza instance using the specified properties.
@@ -9939,6 +10079,125 @@ export namespace server {
         }
     }
 
+    /** Properties of a ReportUserContent. */
+    interface IReportUserContent {
+
+        /** ReportUserContent type */
+        type?: (server.ReportUserContent.Type|null);
+
+        /** ReportUserContent uid */
+        uid?: (number|Long|null);
+
+        /** ReportUserContent contentId */
+        contentId?: (string|null);
+    }
+
+    /** Represents a ReportUserContent. */
+    class ReportUserContent implements IReportUserContent {
+
+        /**
+         * Constructs a new ReportUserContent.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: server.IReportUserContent);
+
+        /** ReportUserContent type. */
+        public type: server.ReportUserContent.Type;
+
+        /** ReportUserContent uid. */
+        public uid: (number|Long);
+
+        /** ReportUserContent contentId. */
+        public contentId: string;
+
+        /**
+         * Creates a new ReportUserContent instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns ReportUserContent instance
+         */
+        public static create(properties?: server.IReportUserContent): server.ReportUserContent;
+
+        /**
+         * Encodes the specified ReportUserContent message. Does not implicitly {@link server.ReportUserContent.verify|verify} messages.
+         * @param message ReportUserContent message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: server.IReportUserContent, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified ReportUserContent message, length delimited. Does not implicitly {@link server.ReportUserContent.verify|verify} messages.
+         * @param message ReportUserContent message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: server.IReportUserContent, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a ReportUserContent message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns ReportUserContent
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): server.ReportUserContent;
+
+        /**
+         * Decodes a ReportUserContent message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns ReportUserContent
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): server.ReportUserContent;
+
+        /**
+         * Verifies a ReportUserContent message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a ReportUserContent message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns ReportUserContent
+         */
+        public static fromObject(object: { [k: string]: any }): server.ReportUserContent;
+
+        /**
+         * Creates a plain object from a ReportUserContent message. Also converts values to other types if specified.
+         * @param message ReportUserContent
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: server.ReportUserContent, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this ReportUserContent to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ReportUserContent
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    namespace ReportUserContent {
+
+        /** Type enum. */
+        enum Type {
+            UNKNOWN_TYPE = 0,
+            USER = 1,
+            POST = 2
+        }
+    }
+
     /** Properties of a WebStanza. */
     interface IWebStanza {
 
@@ -10172,7 +10431,13 @@ export namespace server {
             HOME_FEED_POST = 5,
             HOME_FEED_COMMENT = 6,
             HISTORY_RESEND = 7,
-            GROUP_HISTORY = 8
+            GROUP_HISTORY = 8,
+            CHAT_REACTION = 9,
+            GROUP_COMMENT_REACTION = 10,
+            GROUP_POST_REACTION = 11,
+            HOME_COMMENT_REACTION = 12,
+            HOME_POST_REACTION = 13,
+            GROUP_CHAT = 14
         }
     }
 
@@ -10304,6 +10569,15 @@ export namespace server {
 
         /** Iq webClientInfo */
         webClientInfo?: (server.IWebClientInfo|null);
+
+        /** Iq reportUserContent */
+        reportUserContent?: (server.IReportUserContent|null);
+
+        /** Iq toUid */
+        toUid?: (number|Long|null);
+
+        /** Iq fromUid */
+        fromUid?: (number|Long|null);
     }
 
     /** Represents an Iq. */
@@ -10441,8 +10715,17 @@ export namespace server {
         /** Iq webClientInfo. */
         public webClientInfo?: (server.IWebClientInfo|null);
 
+        /** Iq reportUserContent. */
+        public reportUserContent?: (server.IReportUserContent|null);
+
+        /** Iq toUid. */
+        public toUid: (number|Long);
+
+        /** Iq fromUid. */
+        public fromUid: (number|Long);
+
         /** Iq payload. */
-        public payload?: ("uploadMedia"|"contactList"|"uploadAvatar"|"avatar"|"avatars"|"clientMode"|"clientVersion"|"pushRegister"|"whisperKeys"|"ping"|"feedItem"|"privacyList"|"privacyLists"|"groupStanza"|"groupsStanza"|"clientLog"|"name"|"errorStanza"|"props"|"invitesRequest"|"invitesResponse"|"notificationPrefs"|"groupFeedItem"|"groupAvatar"|"deleteAccount"|"groupInviteLink"|"historyResend"|"exportData"|"contactSyncError"|"clientOtpRequest"|"clientOtpResponse"|"whisperKeysCollection"|"getCallServers"|"getCallServersResult"|"startCall"|"startCallResult"|"truncWhisperKeysCollection"|"externalSharePost"|"externalSharePostContainer"|"webClientInfo");
+        public payload?: ("uploadMedia"|"contactList"|"uploadAvatar"|"avatar"|"avatars"|"clientMode"|"clientVersion"|"pushRegister"|"whisperKeys"|"ping"|"feedItem"|"privacyList"|"privacyLists"|"groupStanza"|"groupsStanza"|"clientLog"|"name"|"errorStanza"|"props"|"invitesRequest"|"invitesResponse"|"notificationPrefs"|"groupFeedItem"|"groupAvatar"|"deleteAccount"|"groupInviteLink"|"historyResend"|"exportData"|"contactSyncError"|"clientOtpRequest"|"clientOtpResponse"|"whisperKeysCollection"|"getCallServers"|"getCallServersResult"|"startCall"|"startCallResult"|"truncWhisperKeysCollection"|"externalSharePost"|"externalSharePostContainer"|"webClientInfo"|"reportUserContent");
 
         /**
          * Creates a new Iq instance using the specified properties.
@@ -11104,6 +11387,9 @@ export namespace server {
 
         /** ChatState fromUid */
         fromUid?: (number|Long|null);
+
+        /** ChatState toUid */
+        toUid?: (number|Long|null);
     }
 
     /** Represents a ChatState. */
@@ -11126,6 +11412,9 @@ export namespace server {
 
         /** ChatState fromUid. */
         public fromUid: (number|Long);
+
+        /** ChatState toUid. */
+        public toUid: (number|Long);
 
         /**
          * Creates a new ChatState instance using the specified properties.
@@ -11228,6 +11517,12 @@ export namespace server {
 
         /** Ack timestamp */
         timestamp?: (number|Long|null);
+
+        /** Ack toUid */
+        toUid?: (number|Long|null);
+
+        /** Ack fromUid */
+        fromUid?: (number|Long|null);
     }
 
     /** Represents an Ack. */
@@ -11244,6 +11539,12 @@ export namespace server {
 
         /** Ack timestamp. */
         public timestamp: (number|Long);
+
+        /** Ack toUid. */
+        public toUid: (number|Long);
+
+        /** Ack fromUid. */
+        public fromUid: (number|Long);
 
         /**
          * Creates a new Ack instance using the specified properties.
@@ -12723,7 +13024,8 @@ export namespace server {
             COMMENT = 2,
             HISTORY_RESEND = 3,
             POST_REACTION = 4,
-            COMMENT_REACTION = 5
+            COMMENT_REACTION = 5,
+            MESSAGE = 6
         }
     }
 
@@ -17889,7 +18191,8 @@ export namespace server {
             COMMENT = 2,
             HISTORY_RESEND = 3,
             POST_REACTION = 4,
-            COMMENT_REACTION = 5
+            COMMENT_REACTION = 5,
+            CHAT = 6
         }
 
         /** Schedule enum. */

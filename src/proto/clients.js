@@ -2492,6 +2492,7 @@ export const clients = $root.clients = (() => {
          * @property {string|null} [chatReplyMessageId] ChatContext chatReplyMessageId
          * @property {number|null} [chatReplyMessageMediaIndex] ChatContext chatReplyMessageMediaIndex
          * @property {string|null} [chatReplyMessageSenderId] ChatContext chatReplyMessageSenderId
+         * @property {number|null} [forwardCount] ChatContext forwardCount
          */
 
         /**
@@ -2550,6 +2551,14 @@ export const clients = $root.clients = (() => {
         ChatContext.prototype.chatReplyMessageSenderId = "";
 
         /**
+         * ChatContext forwardCount.
+         * @member {number} forwardCount
+         * @memberof clients.ChatContext
+         * @instance
+         */
+        ChatContext.prototype.forwardCount = 0;
+
+        /**
          * Creates a new ChatContext instance using the specified properties.
          * @function create
          * @memberof clients.ChatContext
@@ -2583,6 +2592,8 @@ export const clients = $root.clients = (() => {
                 writer.uint32(/* id 4, wireType 0 =*/32).int32(message.chatReplyMessageMediaIndex);
             if (message.chatReplyMessageSenderId != null && Object.hasOwnProperty.call(message, "chatReplyMessageSenderId"))
                 writer.uint32(/* id 5, wireType 2 =*/42).string(message.chatReplyMessageSenderId);
+            if (message.forwardCount != null && Object.hasOwnProperty.call(message, "forwardCount"))
+                writer.uint32(/* id 6, wireType 0 =*/48).uint32(message.forwardCount);
             return writer;
         };
 
@@ -2637,6 +2648,10 @@ export const clients = $root.clients = (() => {
                         message.chatReplyMessageSenderId = reader.string();
                         break;
                     }
+                case 6: {
+                        message.forwardCount = reader.uint32();
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -2687,6 +2702,9 @@ export const clients = $root.clients = (() => {
             if (message.chatReplyMessageSenderId != null && message.hasOwnProperty("chatReplyMessageSenderId"))
                 if (!$util.isString(message.chatReplyMessageSenderId))
                     return "chatReplyMessageSenderId: string expected";
+            if (message.forwardCount != null && message.hasOwnProperty("forwardCount"))
+                if (!$util.isInteger(message.forwardCount))
+                    return "forwardCount: integer expected";
             return null;
         };
 
@@ -2712,6 +2730,8 @@ export const clients = $root.clients = (() => {
                 message.chatReplyMessageMediaIndex = object.chatReplyMessageMediaIndex | 0;
             if (object.chatReplyMessageSenderId != null)
                 message.chatReplyMessageSenderId = String(object.chatReplyMessageSenderId);
+            if (object.forwardCount != null)
+                message.forwardCount = object.forwardCount >>> 0;
             return message;
         };
 
@@ -2734,6 +2754,7 @@ export const clients = $root.clients = (() => {
                 object.chatReplyMessageId = "";
                 object.chatReplyMessageMediaIndex = 0;
                 object.chatReplyMessageSenderId = "";
+                object.forwardCount = 0;
             }
             if (message.feedPostId != null && message.hasOwnProperty("feedPostId"))
                 object.feedPostId = message.feedPostId;
@@ -2745,6 +2766,8 @@ export const clients = $root.clients = (() => {
                 object.chatReplyMessageMediaIndex = message.chatReplyMessageMediaIndex;
             if (message.chatReplyMessageSenderId != null && message.hasOwnProperty("chatReplyMessageSenderId"))
                 object.chatReplyMessageSenderId = message.chatReplyMessageSenderId;
+            if (message.forwardCount != null && message.hasOwnProperty("forwardCount"))
+                object.forwardCount = message.forwardCount;
             return object;
         };
 
@@ -9198,6 +9221,8 @@ export const clients = $root.clients = (() => {
          * @memberof clients
          * @interface IMoment
          * @property {clients.IImage|null} [image] Moment image
+         * @property {clients.IImage|null} [selfieImage] Moment selfieImage
+         * @property {boolean|null} [selfieLeading] Moment selfieLeading
          */
 
         /**
@@ -9222,6 +9247,22 @@ export const clients = $root.clients = (() => {
          * @instance
          */
         Moment.prototype.image = null;
+
+        /**
+         * Moment selfieImage.
+         * @member {clients.IImage|null|undefined} selfieImage
+         * @memberof clients.Moment
+         * @instance
+         */
+        Moment.prototype.selfieImage = null;
+
+        /**
+         * Moment selfieLeading.
+         * @member {boolean} selfieLeading
+         * @memberof clients.Moment
+         * @instance
+         */
+        Moment.prototype.selfieLeading = false;
 
         /**
          * Creates a new Moment instance using the specified properties.
@@ -9249,6 +9290,10 @@ export const clients = $root.clients = (() => {
                 writer = $Writer.create();
             if (message.image != null && Object.hasOwnProperty.call(message, "image"))
                 $root.clients.Image.encode(message.image, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+            if (message.selfieImage != null && Object.hasOwnProperty.call(message, "selfieImage"))
+                $root.clients.Image.encode(message.selfieImage, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+            if (message.selfieLeading != null && Object.hasOwnProperty.call(message, "selfieLeading"))
+                writer.uint32(/* id 3, wireType 0 =*/24).bool(message.selfieLeading);
             return writer;
         };
 
@@ -9285,6 +9330,14 @@ export const clients = $root.clients = (() => {
                 switch (tag >>> 3) {
                 case 1: {
                         message.image = $root.clients.Image.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 2: {
+                        message.selfieImage = $root.clients.Image.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 3: {
+                        message.selfieLeading = reader.bool();
                         break;
                     }
                 default:
@@ -9327,6 +9380,14 @@ export const clients = $root.clients = (() => {
                 if (error)
                     return "image." + error;
             }
+            if (message.selfieImage != null && message.hasOwnProperty("selfieImage")) {
+                let error = $root.clients.Image.verify(message.selfieImage);
+                if (error)
+                    return "selfieImage." + error;
+            }
+            if (message.selfieLeading != null && message.hasOwnProperty("selfieLeading"))
+                if (typeof message.selfieLeading !== "boolean")
+                    return "selfieLeading: boolean expected";
             return null;
         };
 
@@ -9347,6 +9408,13 @@ export const clients = $root.clients = (() => {
                     throw TypeError(".clients.Moment.image: object expected");
                 message.image = $root.clients.Image.fromObject(object.image);
             }
+            if (object.selfieImage != null) {
+                if (typeof object.selfieImage !== "object")
+                    throw TypeError(".clients.Moment.selfieImage: object expected");
+                message.selfieImage = $root.clients.Image.fromObject(object.selfieImage);
+            }
+            if (object.selfieLeading != null)
+                message.selfieLeading = Boolean(object.selfieLeading);
             return message;
         };
 
@@ -9363,10 +9431,17 @@ export const clients = $root.clients = (() => {
             if (!options)
                 options = {};
             let object = {};
-            if (options.defaults)
+            if (options.defaults) {
                 object.image = null;
+                object.selfieImage = null;
+                object.selfieLeading = false;
+            }
             if (message.image != null && message.hasOwnProperty("image"))
                 object.image = $root.clients.Image.toObject(message.image, options);
+            if (message.selfieImage != null && message.hasOwnProperty("selfieImage"))
+                object.selfieImage = $root.clients.Image.toObject(message.selfieImage, options);
+            if (message.selfieLeading != null && message.hasOwnProperty("selfieLeading"))
+                object.selfieLeading = message.selfieLeading;
             return object;
         };
 
