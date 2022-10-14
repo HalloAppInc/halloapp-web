@@ -1,14 +1,14 @@
 <script setup lang="ts">
-    import { ref, toRef } from 'vue'
+    import { ref } from 'vue'
     import { storeToRefs } from 'pinia'
     import { liveQuery } from 'dexie'
     import { useI18n } from 'vue-i18n'
 
-    import { useMainStore } from '../../stores/mainStore'
-    import { db } from '../../db'
-    import hal from '../../common/halogger'
+    import { useMainStore } from '@/stores/mainStore'
+    import { db } from '@/db'
+    import hal from '@/common/halogger'
 
-    import { useHAAvatar } from '../../composables/haAvatar'
+    import { useHAAvatar } from '@/composables/haAvatar'
 
     const props = defineProps({
         groupID: {

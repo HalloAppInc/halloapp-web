@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { Ref, ref, computed, nextTick, watch, onMounted, onUnmounted, onUpdated, defineEmits } from 'vue'
+    import { Ref, ref, computed, nextTick, watch, onMounted, onUnmounted, onUpdated } from 'vue'
     import { number } from '@intlify/core-base'
     import { liveQuery } from 'dexie'
     import { storeToRefs } from 'pinia'

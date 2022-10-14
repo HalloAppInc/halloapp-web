@@ -1,16 +1,16 @@
 <script setup lang="ts">
-    import { Ref, ref, toRef, watch, defineEmits} from 'vue'
+    import { Ref, ref, toRef, watch } from 'vue'
     import { storeToRefs } from 'pinia'
     import { liveQuery } from 'dexie'
     import { useI18n } from 'vue-i18n'
+
+    import { db, Post, CommonMedia, MediaType, Mention, SubjectType } from '@/db'
 
     import { useMainStore } from '@/stores/mainStore'
     import { useColorStore } from '@/stores/colorStore'
     import hal from "@/common/halogger"
 
     import { useHACommonMedia } from '@/composables/haCommonMedia'
-
-    import { db, Post, CommonMedia, MediaType, Mention, SubjectType } from '@/db'
 
     const mainStore = useMainStore()
     const colorStore = useColorStore()

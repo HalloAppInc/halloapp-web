@@ -10,7 +10,6 @@
     import { useColorStore } from '@/stores/colorStore'
 
     import MainPanel from '@/components/MainPanel.vue'
-    import Sidebar from '@/components/Sidebar.vue'
     import Sidestrip from '@/components/Sidestrip.vue'    
     import BottomNav from '@/components/BottomNav.vue'
 
@@ -82,7 +81,6 @@
         hal.log('app/init, haveInitialHandshakeCompleted: ' + mainStore.haveInitialHandshakeCompleted)
         connStore.clearMessagesInQueue()
 
-        mainStore.isConnectedToServer = false // needs to be reset on refresh
         connStore.connectToServerIfNeeded()        
     }
 

@@ -92,7 +92,7 @@ export function useHAMediaUpload() {
 
     /* Send media to server through HTTP PUT */
     async function sendMediaToAWS(file: any, putUrl: string) {
-        if (!mainStore.isConnectedToServer) { return }
+        if (!connStore.isConnectedToServer) { return }
 
         let status = -1
         let remainRetryTimes = 3
@@ -134,7 +134,7 @@ export function useHAMediaUpload() {
         let status = -1
         let recvBlob: any = {}
 
-        if (!mainStore.isConnectedToServer) { return { status, recvBlob } }
+        if (!connStore.isConnectedToServer) { return { status, recvBlob } }
 
         const request = new Request(mainStore.devCORSWorkaroundUrlPrefix + getUrl)
 
@@ -466,7 +466,7 @@ export function useHAMediaUpload() {
 
     /* Send media to server through HTTP PUT */
     async function resumableSendMediaToAWS(file: any, uploadUrl: string) {
-        if (!mainStore.isConnectedToServer) { return }
+        if (!connStore.isConnectedToServer) { return }
 
         let patchStatus = -1
         let offset: string = '0'
@@ -598,7 +598,7 @@ export function useHAMediaUpload() {
         let status = -1
         let recvBlob: any = {}
 
-        if (!mainStore.isConnectedToServer) { return { status, recvBlob } }        
+        if (!connStore.isConnectedToServer) { return { status, recvBlob } }        
 
         let remainRetryTimes = 3
         let response: any

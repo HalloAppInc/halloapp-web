@@ -28,7 +28,6 @@ export const useMainStore = defineStore('main', {
         publicKeyBase64: '',
 
         isLoggedIntoApp: false,
-        isConnectedToServer: false,
         haveAddedPublicKeyToServer: false,
 
         // isPublicKeyAuthenticated is inferred to be true once handshake complete,
@@ -127,7 +126,6 @@ export const useMainStore = defineStore('main', {
         gotoSettingsPage(page: string) {
             this.settingsPage = page
         },
-
         loginMain() {
             if (!this.isLoggedIntoApp) {
                 this.page = 'home'
@@ -165,6 +163,9 @@ export const useMainStore = defineStore('main', {
                 this.scrollToTop = ''
 
                 this.showSettings = false
+
+                this.sounds = true,
+                this.desktopAlerts = true,
 
                 // todo: might have to stop in-flight messages
 

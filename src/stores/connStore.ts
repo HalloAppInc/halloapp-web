@@ -17,7 +17,7 @@ import { db } from '@/db'
 
 export const useConnStore = defineStore('conn', () => {
 
-    const version = '34'
+    const version = '35'
     const devMode = false
     const isDebug = false
 
@@ -34,6 +34,9 @@ export const useConnStore = defineStore('conn', () => {
 
     // todo: should switch automatically to prod/test servers
     let webSocketServer = 'wss://ws-test.halloapp.net/ws'
+
+    let isConnectedToServer = false
+    let isConnectedToMobile = false
 
     let connectionTimer: any    // timer used for debouncing
     let sendMessagesTimer: any  // timer used for debouncing
@@ -69,8 +72,8 @@ export const useConnStore = defineStore('conn', () => {
     async function connectToServerIfNeeded() {
         hal.log('connStore/connectToServerIfNeeded')
 
-        if (mainStore.isConnectedToServer) {
-            hal.log('connStore/connectToServerIfNeeded/already connected: ' + mainStore.isConnectedToServer)
+        if (isConnectedToServer) {
+            hal.log('connStore/connectToServerIfNeeded/already connected: ' + isConnectedToServer)
             return
         }
 
@@ -84,7 +87,7 @@ export const useConnStore = defineStore('conn', () => {
     async function websocketOnopen(event: any) {
         hal.log('connStore/websocketOnopen')
     
-        mainStore.isConnectedToServer = true
+        isConnectedToServer = true
 
         webSocket.removeEventListener('message', handleInbound)
         webSocket.addEventListener('message', handleInbound)
@@ -101,7 +104,7 @@ export const useConnStore = defineStore('conn', () => {
 
     async function wsOncloseWillReconnect(event: any) {
         hal.log('connStore/wsOncloseWillReconnect')
-        mainStore.isConnectedToServer = false
+        isConnectedToServer = false
 
         /* try to reconnect */
         // connectToServerIfNeeded()
@@ -112,7 +115,7 @@ export const useConnStore = defineStore('conn', () => {
         fetchAbortController.value.abort()
         fetchAbortController.value = new AbortController() // once aborted, controller is consumed, need to refresh
 
-        mainStore.isConnectedToServer = false
+        isConnectedToServer = false
 
         if (isLoggingOut) {
             isLoggingOut = false
@@ -562,7 +565,7 @@ export const useConnStore = defineStore('conn', () => {
     }
 
     async function sendMessagesInQueue() {
-        if (!mainStore.isConnectedToServer) { return }
+        if (!isConnectedToServer) { return }
 
         if (isSendingMessages) {
             hal.log('connStore/sendMessagesInQueue/still sending messages, skip run')
@@ -587,7 +590,7 @@ export const useConnStore = defineStore('conn', () => {
             const encodedPacketBuf = server.Packet.encode(packet).finish()
             const buf = encodedPacketBuf.buffer.slice(encodedPacketBuf.byteOffset, encodedPacketBuf.byteLength + encodedPacketBuf.byteOffset)
             
-            if (mainStore.isConnectedToServer) {
+            if (isConnectedToServer) {
                 webSocket.send(buf)
             }
         }
@@ -691,7 +694,7 @@ export const useConnStore = defineStore('conn', () => {
         isNoiseReHandshakeCompleted.value = false
 
         /* wait to disconnect fully first as the login screen will connect right away */
-        if (mainStore.isConnectedToServer) {
+        if (isConnectedToServer) {
             isLoggingOut = true
             disconnectFromServer()
             return
@@ -706,6 +709,7 @@ export const useConnStore = defineStore('conn', () => {
         version,
         isDebug,
 
+        isConnectedToServer,
         isNoiseReHandshakeCompleted,
 
         connectToServerIfNeeded, 

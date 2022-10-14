@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { ref, toRef } from 'vue'
+    import { ref } from 'vue'
     import { storeToRefs } from 'pinia'
     import { liveQuery } from 'dexie'
     import { useI18n } from 'vue-i18n'
