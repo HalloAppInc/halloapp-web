@@ -136,6 +136,12 @@ message ContactSyncError {
 
 // Pubsub
 
+message MomentInfo {
+    int64 notification_timestamp = 1; // timestamp received from the server in the notification.
+    int64 time_taken = 2; // Time taken on the moment camera to capture the moment.
+    int64 num_takes = 3; // Number of times a moment has been captured and discarded.
+}
+
 message MediaCounters {
     int32 num_images = 1;
     int32 num_videos = 2;
@@ -173,6 +179,9 @@ message Post {
     // If set to true, the client will try and show ui design to
     // share the recently composed post externally.
     bool show_post_share_screen = 12;
+
+    // Must be set only for moments.
+    MomentInfo moment_info = 13;
 }
 
 message Comment {
@@ -909,6 +918,10 @@ message ContentMissing {
 }
 
 
+message MomentNotification {
+    int64 timestamp = 1;
+}
+
 // IQ
 
 message Iq {
@@ -963,8 +976,8 @@ message Iq {
         WebClientInfo web_client_info = 45;
         ReportUserContent report_user_content = 46;
     }
-    int64 to_uid = 29;    // only for server use
-    int64 from_uid = 30;    // only for server use
+    reserved 29;    // only for server use
+    reserved 30;    // only for server use
     reserved 15;
 }
 
@@ -1031,6 +1044,7 @@ message Msg {
         ScreenshotReceipt screenshot_receipt = 50;
         SavedReceipt saved_receipt = 51;
         GroupChatStanza group_chat_stanza = 52;
+        MomentNotification moment_notification = 53;
     }
     int32 retry_count = 21;
     int32 rerequest_count = 25;
@@ -1070,7 +1084,7 @@ message ChatState {
     }
     ThreadType thread_type = 3;
     int64 from_uid = 4;
-    int64 to_uid = 5;    // only for server use
+    reserved 5;    // only for server use
 }
 
 
@@ -1079,8 +1093,8 @@ message ChatState {
 message Ack {
     string id = 1;
     int64 timestamp = 2;
-    int64 to_uid = 3;    // only for server use
-    int64 from_uid = 4;    // only for server use
+    reserved 3;    // only for server use
+    reserved 4;    // only for server use
 }
 
 
@@ -1177,6 +1191,9 @@ message PushToken {
 message PushRegister {
     PushToken push_token = 1;
     string lang_id = 2;
+    // Time difference in seconds between the timezone and GMT.
+    // Could be positive or negative
+    int64 zoneOffset = 3;
 }
 
 message PushPref {
@@ -1238,6 +1255,7 @@ message GroupFeedRerequest {
         POST_REACTION = 4;
         COMMENT_REACTION = 5;
         MESSAGE = 6;
+        MESSAGE_REACTION = 7;
     }
     ContentType content_type = 4;
 }

@@ -3678,6 +3678,9 @@ export namespace clients {
 
         /** Moment selfieLeading */
         selfieLeading?: (boolean|null);
+
+        /** Moment location */
+        location?: (string|null);
     }
 
     /** Represents a Moment. */
@@ -3697,6 +3700,9 @@ export namespace clients {
 
         /** Moment selfieLeading. */
         public selfieLeading: boolean;
+
+        /** Moment location. */
+        public location: string;
 
         /**
          * Creates a new Moment instance using the specified properties.

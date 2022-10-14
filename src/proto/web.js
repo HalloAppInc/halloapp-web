@@ -25,6 +25,11 @@ export const web = $root.web = (() => {
          * @property {web.IFeedRequest|null} [feedRequest] WebContainer feedRequest
          * @property {web.IFeedResponse|null} [feedResponse] WebContainer feedResponse
          * @property {web.IFeedUpdate|null} [feedUpdate] WebContainer feedUpdate
+         * @property {web.IGroupRequest|null} [groupRequest] WebContainer groupRequest
+         * @property {web.IGroupResponse|null} [groupResponse] WebContainer groupResponse
+         * @property {web.IPrivacyListRequest|null} [privacyListRequest] WebContainer privacyListRequest
+         * @property {web.IPrivacyListResponse|null} [privacyListResponse] WebContainer privacyListResponse
+         * @property {web.IReceiptUpdate|null} [receiptUpdate] WebContainer receiptUpdate
          */
 
         /**
@@ -66,17 +71,57 @@ export const web = $root.web = (() => {
          */
         WebContainer.prototype.feedUpdate = null;
 
+        /**
+         * WebContainer groupRequest.
+         * @member {web.IGroupRequest|null|undefined} groupRequest
+         * @memberof web.WebContainer
+         * @instance
+         */
+        WebContainer.prototype.groupRequest = null;
+
+        /**
+         * WebContainer groupResponse.
+         * @member {web.IGroupResponse|null|undefined} groupResponse
+         * @memberof web.WebContainer
+         * @instance
+         */
+        WebContainer.prototype.groupResponse = null;
+
+        /**
+         * WebContainer privacyListRequest.
+         * @member {web.IPrivacyListRequest|null|undefined} privacyListRequest
+         * @memberof web.WebContainer
+         * @instance
+         */
+        WebContainer.prototype.privacyListRequest = null;
+
+        /**
+         * WebContainer privacyListResponse.
+         * @member {web.IPrivacyListResponse|null|undefined} privacyListResponse
+         * @memberof web.WebContainer
+         * @instance
+         */
+        WebContainer.prototype.privacyListResponse = null;
+
+        /**
+         * WebContainer receiptUpdate.
+         * @member {web.IReceiptUpdate|null|undefined} receiptUpdate
+         * @memberof web.WebContainer
+         * @instance
+         */
+        WebContainer.prototype.receiptUpdate = null;
+
         // OneOf field names bound to virtual getters and setters
         let $oneOfFields;
 
         /**
          * WebContainer payload.
-         * @member {"feedRequest"|"feedResponse"|"feedUpdate"|undefined} payload
+         * @member {"feedRequest"|"feedResponse"|"feedUpdate"|"groupRequest"|"groupResponse"|"privacyListRequest"|"privacyListResponse"|"receiptUpdate"|undefined} payload
          * @memberof web.WebContainer
          * @instance
          */
         Object.defineProperty(WebContainer.prototype, "payload", {
-            get: $util.oneOfGetter($oneOfFields = ["feedRequest", "feedResponse", "feedUpdate"]),
+            get: $util.oneOfGetter($oneOfFields = ["feedRequest", "feedResponse", "feedUpdate", "groupRequest", "groupResponse", "privacyListRequest", "privacyListResponse", "receiptUpdate"]),
             set: $util.oneOfSetter($oneOfFields)
         });
 
@@ -110,6 +155,16 @@ export const web = $root.web = (() => {
                 $root.web.FeedResponse.encode(message.feedResponse, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
             if (message.feedUpdate != null && Object.hasOwnProperty.call(message, "feedUpdate"))
                 $root.web.FeedUpdate.encode(message.feedUpdate, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+            if (message.groupRequest != null && Object.hasOwnProperty.call(message, "groupRequest"))
+                $root.web.GroupRequest.encode(message.groupRequest, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+            if (message.groupResponse != null && Object.hasOwnProperty.call(message, "groupResponse"))
+                $root.web.GroupResponse.encode(message.groupResponse, writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
+            if (message.privacyListRequest != null && Object.hasOwnProperty.call(message, "privacyListRequest"))
+                $root.web.PrivacyListRequest.encode(message.privacyListRequest, writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
+            if (message.privacyListResponse != null && Object.hasOwnProperty.call(message, "privacyListResponse"))
+                $root.web.PrivacyListResponse.encode(message.privacyListResponse, writer.uint32(/* id 7, wireType 2 =*/58).fork()).ldelim();
+            if (message.receiptUpdate != null && Object.hasOwnProperty.call(message, "receiptUpdate"))
+                $root.web.ReceiptUpdate.encode(message.receiptUpdate, writer.uint32(/* id 8, wireType 2 =*/66).fork()).ldelim();
             return writer;
         };
 
@@ -154,6 +209,26 @@ export const web = $root.web = (() => {
                     }
                 case 3: {
                         message.feedUpdate = $root.web.FeedUpdate.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 4: {
+                        message.groupRequest = $root.web.GroupRequest.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 5: {
+                        message.groupResponse = $root.web.GroupResponse.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 6: {
+                        message.privacyListRequest = $root.web.PrivacyListRequest.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 7: {
+                        message.privacyListResponse = $root.web.PrivacyListResponse.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 8: {
+                        message.receiptUpdate = $root.web.ReceiptUpdate.decode(reader, reader.uint32());
                         break;
                     }
                 default:
@@ -220,6 +295,56 @@ export const web = $root.web = (() => {
                         return "feedUpdate." + error;
                 }
             }
+            if (message.groupRequest != null && message.hasOwnProperty("groupRequest")) {
+                if (properties.payload === 1)
+                    return "payload: multiple values";
+                properties.payload = 1;
+                {
+                    let error = $root.web.GroupRequest.verify(message.groupRequest);
+                    if (error)
+                        return "groupRequest." + error;
+                }
+            }
+            if (message.groupResponse != null && message.hasOwnProperty("groupResponse")) {
+                if (properties.payload === 1)
+                    return "payload: multiple values";
+                properties.payload = 1;
+                {
+                    let error = $root.web.GroupResponse.verify(message.groupResponse);
+                    if (error)
+                        return "groupResponse." + error;
+                }
+            }
+            if (message.privacyListRequest != null && message.hasOwnProperty("privacyListRequest")) {
+                if (properties.payload === 1)
+                    return "payload: multiple values";
+                properties.payload = 1;
+                {
+                    let error = $root.web.PrivacyListRequest.verify(message.privacyListRequest);
+                    if (error)
+                        return "privacyListRequest." + error;
+                }
+            }
+            if (message.privacyListResponse != null && message.hasOwnProperty("privacyListResponse")) {
+                if (properties.payload === 1)
+                    return "payload: multiple values";
+                properties.payload = 1;
+                {
+                    let error = $root.web.PrivacyListResponse.verify(message.privacyListResponse);
+                    if (error)
+                        return "privacyListResponse." + error;
+                }
+            }
+            if (message.receiptUpdate != null && message.hasOwnProperty("receiptUpdate")) {
+                if (properties.payload === 1)
+                    return "payload: multiple values";
+                properties.payload = 1;
+                {
+                    let error = $root.web.ReceiptUpdate.verify(message.receiptUpdate);
+                    if (error)
+                        return "receiptUpdate." + error;
+                }
+            }
             return null;
         };
 
@@ -249,6 +374,31 @@ export const web = $root.web = (() => {
                 if (typeof object.feedUpdate !== "object")
                     throw TypeError(".web.WebContainer.feedUpdate: object expected");
                 message.feedUpdate = $root.web.FeedUpdate.fromObject(object.feedUpdate);
+            }
+            if (object.groupRequest != null) {
+                if (typeof object.groupRequest !== "object")
+                    throw TypeError(".web.WebContainer.groupRequest: object expected");
+                message.groupRequest = $root.web.GroupRequest.fromObject(object.groupRequest);
+            }
+            if (object.groupResponse != null) {
+                if (typeof object.groupResponse !== "object")
+                    throw TypeError(".web.WebContainer.groupResponse: object expected");
+                message.groupResponse = $root.web.GroupResponse.fromObject(object.groupResponse);
+            }
+            if (object.privacyListRequest != null) {
+                if (typeof object.privacyListRequest !== "object")
+                    throw TypeError(".web.WebContainer.privacyListRequest: object expected");
+                message.privacyListRequest = $root.web.PrivacyListRequest.fromObject(object.privacyListRequest);
+            }
+            if (object.privacyListResponse != null) {
+                if (typeof object.privacyListResponse !== "object")
+                    throw TypeError(".web.WebContainer.privacyListResponse: object expected");
+                message.privacyListResponse = $root.web.PrivacyListResponse.fromObject(object.privacyListResponse);
+            }
+            if (object.receiptUpdate != null) {
+                if (typeof object.receiptUpdate !== "object")
+                    throw TypeError(".web.WebContainer.receiptUpdate: object expected");
+                message.receiptUpdate = $root.web.ReceiptUpdate.fromObject(object.receiptUpdate);
             }
             return message;
         };
@@ -281,6 +431,31 @@ export const web = $root.web = (() => {
                 if (options.oneofs)
                     object.payload = "feedUpdate";
             }
+            if (message.groupRequest != null && message.hasOwnProperty("groupRequest")) {
+                object.groupRequest = $root.web.GroupRequest.toObject(message.groupRequest, options);
+                if (options.oneofs)
+                    object.payload = "groupRequest";
+            }
+            if (message.groupResponse != null && message.hasOwnProperty("groupResponse")) {
+                object.groupResponse = $root.web.GroupResponse.toObject(message.groupResponse, options);
+                if (options.oneofs)
+                    object.payload = "groupResponse";
+            }
+            if (message.privacyListRequest != null && message.hasOwnProperty("privacyListRequest")) {
+                object.privacyListRequest = $root.web.PrivacyListRequest.toObject(message.privacyListRequest, options);
+                if (options.oneofs)
+                    object.payload = "privacyListRequest";
+            }
+            if (message.privacyListResponse != null && message.hasOwnProperty("privacyListResponse")) {
+                object.privacyListResponse = $root.web.PrivacyListResponse.toObject(message.privacyListResponse, options);
+                if (options.oneofs)
+                    object.payload = "privacyListResponse";
+            }
+            if (message.receiptUpdate != null && message.hasOwnProperty("receiptUpdate")) {
+                object.receiptUpdate = $root.web.ReceiptUpdate.toObject(message.receiptUpdate, options);
+                if (options.oneofs)
+                    object.payload = "receiptUpdate";
+            }
             return object;
         };
 
@@ -311,6 +486,238 @@ export const web = $root.web = (() => {
         };
 
         return WebContainer;
+    })();
+
+    web.ConnectionInfo = (function() {
+
+        /**
+         * Properties of a ConnectionInfo.
+         * @memberof web
+         * @interface IConnectionInfo
+         * @property {string|null} [version] ConnectionInfo version
+         * @property {web.IUserDisplayInfo|null} [user] ConnectionInfo user
+         */
+
+        /**
+         * Constructs a new ConnectionInfo.
+         * @memberof web
+         * @classdesc Represents a ConnectionInfo.
+         * @implements IConnectionInfo
+         * @constructor
+         * @param {web.IConnectionInfo=} [properties] Properties to set
+         */
+        function ConnectionInfo(properties) {
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * ConnectionInfo version.
+         * @member {string} version
+         * @memberof web.ConnectionInfo
+         * @instance
+         */
+        ConnectionInfo.prototype.version = "";
+
+        /**
+         * ConnectionInfo user.
+         * @member {web.IUserDisplayInfo|null|undefined} user
+         * @memberof web.ConnectionInfo
+         * @instance
+         */
+        ConnectionInfo.prototype.user = null;
+
+        /**
+         * Creates a new ConnectionInfo instance using the specified properties.
+         * @function create
+         * @memberof web.ConnectionInfo
+         * @static
+         * @param {web.IConnectionInfo=} [properties] Properties to set
+         * @returns {web.ConnectionInfo} ConnectionInfo instance
+         */
+        ConnectionInfo.create = function create(properties) {
+            return new ConnectionInfo(properties);
+        };
+
+        /**
+         * Encodes the specified ConnectionInfo message. Does not implicitly {@link web.ConnectionInfo.verify|verify} messages.
+         * @function encode
+         * @memberof web.ConnectionInfo
+         * @static
+         * @param {web.IConnectionInfo} message ConnectionInfo message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        ConnectionInfo.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.version != null && Object.hasOwnProperty.call(message, "version"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.version);
+            if (message.user != null && Object.hasOwnProperty.call(message, "user"))
+                $root.web.UserDisplayInfo.encode(message.user, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+            return writer;
+        };
+
+        /**
+         * Encodes the specified ConnectionInfo message, length delimited. Does not implicitly {@link web.ConnectionInfo.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof web.ConnectionInfo
+         * @static
+         * @param {web.IConnectionInfo} message ConnectionInfo message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        ConnectionInfo.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a ConnectionInfo message from the specified reader or buffer.
+         * @function decode
+         * @memberof web.ConnectionInfo
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {web.ConnectionInfo} ConnectionInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        ConnectionInfo.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.web.ConnectionInfo();
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1: {
+                        message.version = reader.string();
+                        break;
+                    }
+                case 2: {
+                        message.user = $root.web.UserDisplayInfo.decode(reader, reader.uint32());
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a ConnectionInfo message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof web.ConnectionInfo
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {web.ConnectionInfo} ConnectionInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        ConnectionInfo.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a ConnectionInfo message.
+         * @function verify
+         * @memberof web.ConnectionInfo
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        ConnectionInfo.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.version != null && message.hasOwnProperty("version"))
+                if (!$util.isString(message.version))
+                    return "version: string expected";
+            if (message.user != null && message.hasOwnProperty("user")) {
+                let error = $root.web.UserDisplayInfo.verify(message.user);
+                if (error)
+                    return "user." + error;
+            }
+            return null;
+        };
+
+        /**
+         * Creates a ConnectionInfo message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof web.ConnectionInfo
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {web.ConnectionInfo} ConnectionInfo
+         */
+        ConnectionInfo.fromObject = function fromObject(object) {
+            if (object instanceof $root.web.ConnectionInfo)
+                return object;
+            let message = new $root.web.ConnectionInfo();
+            if (object.version != null)
+                message.version = String(object.version);
+            if (object.user != null) {
+                if (typeof object.user !== "object")
+                    throw TypeError(".web.ConnectionInfo.user: object expected");
+                message.user = $root.web.UserDisplayInfo.fromObject(object.user);
+            }
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a ConnectionInfo message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof web.ConnectionInfo
+         * @static
+         * @param {web.ConnectionInfo} message ConnectionInfo
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        ConnectionInfo.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            let object = {};
+            if (options.defaults) {
+                object.version = "";
+                object.user = null;
+            }
+            if (message.version != null && message.hasOwnProperty("version"))
+                object.version = message.version;
+            if (message.user != null && message.hasOwnProperty("user"))
+                object.user = $root.web.UserDisplayInfo.toObject(message.user, options);
+            return object;
+        };
+
+        /**
+         * Converts this ConnectionInfo to JSON.
+         * @function toJSON
+         * @memberof web.ConnectionInfo
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        ConnectionInfo.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for ConnectionInfo
+         * @function getTypeUrl
+         * @memberof web.ConnectionInfo
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        ConnectionInfo.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/web.ConnectionInfo";
+        };
+
+        return ConnectionInfo;
     })();
 
     web.ReceiptInfo = (function() {
@@ -3247,6 +3654,1147 @@ export const web = $root.web = (() => {
         };
 
         return FeedUpdate;
+    })();
+
+    web.GroupRequest = (function() {
+
+        /**
+         * Properties of a GroupRequest.
+         * @memberof web
+         * @interface IGroupRequest
+         * @property {string|null} [id] GroupRequest id
+         */
+
+        /**
+         * Constructs a new GroupRequest.
+         * @memberof web
+         * @classdesc Represents a GroupRequest.
+         * @implements IGroupRequest
+         * @constructor
+         * @param {web.IGroupRequest=} [properties] Properties to set
+         */
+        function GroupRequest(properties) {
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * GroupRequest id.
+         * @member {string} id
+         * @memberof web.GroupRequest
+         * @instance
+         */
+        GroupRequest.prototype.id = "";
+
+        /**
+         * Creates a new GroupRequest instance using the specified properties.
+         * @function create
+         * @memberof web.GroupRequest
+         * @static
+         * @param {web.IGroupRequest=} [properties] Properties to set
+         * @returns {web.GroupRequest} GroupRequest instance
+         */
+        GroupRequest.create = function create(properties) {
+            return new GroupRequest(properties);
+        };
+
+        /**
+         * Encodes the specified GroupRequest message. Does not implicitly {@link web.GroupRequest.verify|verify} messages.
+         * @function encode
+         * @memberof web.GroupRequest
+         * @static
+         * @param {web.IGroupRequest} message GroupRequest message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        GroupRequest.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.id);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified GroupRequest message, length delimited. Does not implicitly {@link web.GroupRequest.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof web.GroupRequest
+         * @static
+         * @param {web.IGroupRequest} message GroupRequest message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        GroupRequest.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a GroupRequest message from the specified reader or buffer.
+         * @function decode
+         * @memberof web.GroupRequest
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {web.GroupRequest} GroupRequest
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        GroupRequest.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.web.GroupRequest();
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1: {
+                        message.id = reader.string();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a GroupRequest message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof web.GroupRequest
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {web.GroupRequest} GroupRequest
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        GroupRequest.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a GroupRequest message.
+         * @function verify
+         * @memberof web.GroupRequest
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        GroupRequest.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.id != null && message.hasOwnProperty("id"))
+                if (!$util.isString(message.id))
+                    return "id: string expected";
+            return null;
+        };
+
+        /**
+         * Creates a GroupRequest message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof web.GroupRequest
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {web.GroupRequest} GroupRequest
+         */
+        GroupRequest.fromObject = function fromObject(object) {
+            if (object instanceof $root.web.GroupRequest)
+                return object;
+            let message = new $root.web.GroupRequest();
+            if (object.id != null)
+                message.id = String(object.id);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a GroupRequest message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof web.GroupRequest
+         * @static
+         * @param {web.GroupRequest} message GroupRequest
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        GroupRequest.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            let object = {};
+            if (options.defaults)
+                object.id = "";
+            if (message.id != null && message.hasOwnProperty("id"))
+                object.id = message.id;
+            return object;
+        };
+
+        /**
+         * Converts this GroupRequest to JSON.
+         * @function toJSON
+         * @memberof web.GroupRequest
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        GroupRequest.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for GroupRequest
+         * @function getTypeUrl
+         * @memberof web.GroupRequest
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        GroupRequest.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/web.GroupRequest";
+        };
+
+        return GroupRequest;
+    })();
+
+    web.GroupResponse = (function() {
+
+        /**
+         * Properties of a GroupResponse.
+         * @memberof web
+         * @interface IGroupResponse
+         * @property {string|null} [id] GroupResponse id
+         * @property {Array.<web.IGroupDisplayInfo>|null} [groups] GroupResponse groups
+         */
+
+        /**
+         * Constructs a new GroupResponse.
+         * @memberof web
+         * @classdesc Represents a GroupResponse.
+         * @implements IGroupResponse
+         * @constructor
+         * @param {web.IGroupResponse=} [properties] Properties to set
+         */
+        function GroupResponse(properties) {
+            this.groups = [];
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * GroupResponse id.
+         * @member {string} id
+         * @memberof web.GroupResponse
+         * @instance
+         */
+        GroupResponse.prototype.id = "";
+
+        /**
+         * GroupResponse groups.
+         * @member {Array.<web.IGroupDisplayInfo>} groups
+         * @memberof web.GroupResponse
+         * @instance
+         */
+        GroupResponse.prototype.groups = $util.emptyArray;
+
+        /**
+         * Creates a new GroupResponse instance using the specified properties.
+         * @function create
+         * @memberof web.GroupResponse
+         * @static
+         * @param {web.IGroupResponse=} [properties] Properties to set
+         * @returns {web.GroupResponse} GroupResponse instance
+         */
+        GroupResponse.create = function create(properties) {
+            return new GroupResponse(properties);
+        };
+
+        /**
+         * Encodes the specified GroupResponse message. Does not implicitly {@link web.GroupResponse.verify|verify} messages.
+         * @function encode
+         * @memberof web.GroupResponse
+         * @static
+         * @param {web.IGroupResponse} message GroupResponse message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        GroupResponse.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.id);
+            if (message.groups != null && message.groups.length)
+                for (let i = 0; i < message.groups.length; ++i)
+                    $root.web.GroupDisplayInfo.encode(message.groups[i], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+            return writer;
+        };
+
+        /**
+         * Encodes the specified GroupResponse message, length delimited. Does not implicitly {@link web.GroupResponse.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof web.GroupResponse
+         * @static
+         * @param {web.IGroupResponse} message GroupResponse message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        GroupResponse.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a GroupResponse message from the specified reader or buffer.
+         * @function decode
+         * @memberof web.GroupResponse
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {web.GroupResponse} GroupResponse
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        GroupResponse.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.web.GroupResponse();
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1: {
+                        message.id = reader.string();
+                        break;
+                    }
+                case 2: {
+                        if (!(message.groups && message.groups.length))
+                            message.groups = [];
+                        message.groups.push($root.web.GroupDisplayInfo.decode(reader, reader.uint32()));
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a GroupResponse message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof web.GroupResponse
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {web.GroupResponse} GroupResponse
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        GroupResponse.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a GroupResponse message.
+         * @function verify
+         * @memberof web.GroupResponse
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        GroupResponse.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.id != null && message.hasOwnProperty("id"))
+                if (!$util.isString(message.id))
+                    return "id: string expected";
+            if (message.groups != null && message.hasOwnProperty("groups")) {
+                if (!Array.isArray(message.groups))
+                    return "groups: array expected";
+                for (let i = 0; i < message.groups.length; ++i) {
+                    let error = $root.web.GroupDisplayInfo.verify(message.groups[i]);
+                    if (error)
+                        return "groups." + error;
+                }
+            }
+            return null;
+        };
+
+        /**
+         * Creates a GroupResponse message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof web.GroupResponse
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {web.GroupResponse} GroupResponse
+         */
+        GroupResponse.fromObject = function fromObject(object) {
+            if (object instanceof $root.web.GroupResponse)
+                return object;
+            let message = new $root.web.GroupResponse();
+            if (object.id != null)
+                message.id = String(object.id);
+            if (object.groups) {
+                if (!Array.isArray(object.groups))
+                    throw TypeError(".web.GroupResponse.groups: array expected");
+                message.groups = [];
+                for (let i = 0; i < object.groups.length; ++i) {
+                    if (typeof object.groups[i] !== "object")
+                        throw TypeError(".web.GroupResponse.groups: object expected");
+                    message.groups[i] = $root.web.GroupDisplayInfo.fromObject(object.groups[i]);
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a GroupResponse message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof web.GroupResponse
+         * @static
+         * @param {web.GroupResponse} message GroupResponse
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        GroupResponse.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            let object = {};
+            if (options.arrays || options.defaults)
+                object.groups = [];
+            if (options.defaults)
+                object.id = "";
+            if (message.id != null && message.hasOwnProperty("id"))
+                object.id = message.id;
+            if (message.groups && message.groups.length) {
+                object.groups = [];
+                for (let j = 0; j < message.groups.length; ++j)
+                    object.groups[j] = $root.web.GroupDisplayInfo.toObject(message.groups[j], options);
+            }
+            return object;
+        };
+
+        /**
+         * Converts this GroupResponse to JSON.
+         * @function toJSON
+         * @memberof web.GroupResponse
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        GroupResponse.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for GroupResponse
+         * @function getTypeUrl
+         * @memberof web.GroupResponse
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        GroupResponse.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/web.GroupResponse";
+        };
+
+        return GroupResponse;
+    })();
+
+    web.PrivacyListRequest = (function() {
+
+        /**
+         * Properties of a PrivacyListRequest.
+         * @memberof web
+         * @interface IPrivacyListRequest
+         * @property {string|null} [id] PrivacyListRequest id
+         */
+
+        /**
+         * Constructs a new PrivacyListRequest.
+         * @memberof web
+         * @classdesc Represents a PrivacyListRequest.
+         * @implements IPrivacyListRequest
+         * @constructor
+         * @param {web.IPrivacyListRequest=} [properties] Properties to set
+         */
+        function PrivacyListRequest(properties) {
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * PrivacyListRequest id.
+         * @member {string} id
+         * @memberof web.PrivacyListRequest
+         * @instance
+         */
+        PrivacyListRequest.prototype.id = "";
+
+        /**
+         * Creates a new PrivacyListRequest instance using the specified properties.
+         * @function create
+         * @memberof web.PrivacyListRequest
+         * @static
+         * @param {web.IPrivacyListRequest=} [properties] Properties to set
+         * @returns {web.PrivacyListRequest} PrivacyListRequest instance
+         */
+        PrivacyListRequest.create = function create(properties) {
+            return new PrivacyListRequest(properties);
+        };
+
+        /**
+         * Encodes the specified PrivacyListRequest message. Does not implicitly {@link web.PrivacyListRequest.verify|verify} messages.
+         * @function encode
+         * @memberof web.PrivacyListRequest
+         * @static
+         * @param {web.IPrivacyListRequest} message PrivacyListRequest message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        PrivacyListRequest.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.id);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified PrivacyListRequest message, length delimited. Does not implicitly {@link web.PrivacyListRequest.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof web.PrivacyListRequest
+         * @static
+         * @param {web.IPrivacyListRequest} message PrivacyListRequest message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        PrivacyListRequest.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a PrivacyListRequest message from the specified reader or buffer.
+         * @function decode
+         * @memberof web.PrivacyListRequest
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {web.PrivacyListRequest} PrivacyListRequest
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        PrivacyListRequest.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.web.PrivacyListRequest();
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1: {
+                        message.id = reader.string();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a PrivacyListRequest message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof web.PrivacyListRequest
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {web.PrivacyListRequest} PrivacyListRequest
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        PrivacyListRequest.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a PrivacyListRequest message.
+         * @function verify
+         * @memberof web.PrivacyListRequest
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        PrivacyListRequest.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.id != null && message.hasOwnProperty("id"))
+                if (!$util.isString(message.id))
+                    return "id: string expected";
+            return null;
+        };
+
+        /**
+         * Creates a PrivacyListRequest message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof web.PrivacyListRequest
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {web.PrivacyListRequest} PrivacyListRequest
+         */
+        PrivacyListRequest.fromObject = function fromObject(object) {
+            if (object instanceof $root.web.PrivacyListRequest)
+                return object;
+            let message = new $root.web.PrivacyListRequest();
+            if (object.id != null)
+                message.id = String(object.id);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a PrivacyListRequest message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof web.PrivacyListRequest
+         * @static
+         * @param {web.PrivacyListRequest} message PrivacyListRequest
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        PrivacyListRequest.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            let object = {};
+            if (options.defaults)
+                object.id = "";
+            if (message.id != null && message.hasOwnProperty("id"))
+                object.id = message.id;
+            return object;
+        };
+
+        /**
+         * Converts this PrivacyListRequest to JSON.
+         * @function toJSON
+         * @memberof web.PrivacyListRequest
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        PrivacyListRequest.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for PrivacyListRequest
+         * @function getTypeUrl
+         * @memberof web.PrivacyListRequest
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        PrivacyListRequest.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/web.PrivacyListRequest";
+        };
+
+        return PrivacyListRequest;
+    })();
+
+    web.PrivacyListResponse = (function() {
+
+        /**
+         * Properties of a PrivacyListResponse.
+         * @memberof web
+         * @interface IPrivacyListResponse
+         * @property {string|null} [id] PrivacyListResponse id
+         * @property {server.IPrivacyLists|null} [privacyLists] PrivacyListResponse privacyLists
+         */
+
+        /**
+         * Constructs a new PrivacyListResponse.
+         * @memberof web
+         * @classdesc Represents a PrivacyListResponse.
+         * @implements IPrivacyListResponse
+         * @constructor
+         * @param {web.IPrivacyListResponse=} [properties] Properties to set
+         */
+        function PrivacyListResponse(properties) {
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * PrivacyListResponse id.
+         * @member {string} id
+         * @memberof web.PrivacyListResponse
+         * @instance
+         */
+        PrivacyListResponse.prototype.id = "";
+
+        /**
+         * PrivacyListResponse privacyLists.
+         * @member {server.IPrivacyLists|null|undefined} privacyLists
+         * @memberof web.PrivacyListResponse
+         * @instance
+         */
+        PrivacyListResponse.prototype.privacyLists = null;
+
+        /**
+         * Creates a new PrivacyListResponse instance using the specified properties.
+         * @function create
+         * @memberof web.PrivacyListResponse
+         * @static
+         * @param {web.IPrivacyListResponse=} [properties] Properties to set
+         * @returns {web.PrivacyListResponse} PrivacyListResponse instance
+         */
+        PrivacyListResponse.create = function create(properties) {
+            return new PrivacyListResponse(properties);
+        };
+
+        /**
+         * Encodes the specified PrivacyListResponse message. Does not implicitly {@link web.PrivacyListResponse.verify|verify} messages.
+         * @function encode
+         * @memberof web.PrivacyListResponse
+         * @static
+         * @param {web.IPrivacyListResponse} message PrivacyListResponse message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        PrivacyListResponse.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.id);
+            if (message.privacyLists != null && Object.hasOwnProperty.call(message, "privacyLists"))
+                $root.server.PrivacyLists.encode(message.privacyLists, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+            return writer;
+        };
+
+        /**
+         * Encodes the specified PrivacyListResponse message, length delimited. Does not implicitly {@link web.PrivacyListResponse.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof web.PrivacyListResponse
+         * @static
+         * @param {web.IPrivacyListResponse} message PrivacyListResponse message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        PrivacyListResponse.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a PrivacyListResponse message from the specified reader or buffer.
+         * @function decode
+         * @memberof web.PrivacyListResponse
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {web.PrivacyListResponse} PrivacyListResponse
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        PrivacyListResponse.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.web.PrivacyListResponse();
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1: {
+                        message.id = reader.string();
+                        break;
+                    }
+                case 2: {
+                        message.privacyLists = $root.server.PrivacyLists.decode(reader, reader.uint32());
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a PrivacyListResponse message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof web.PrivacyListResponse
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {web.PrivacyListResponse} PrivacyListResponse
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        PrivacyListResponse.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a PrivacyListResponse message.
+         * @function verify
+         * @memberof web.PrivacyListResponse
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        PrivacyListResponse.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.id != null && message.hasOwnProperty("id"))
+                if (!$util.isString(message.id))
+                    return "id: string expected";
+            if (message.privacyLists != null && message.hasOwnProperty("privacyLists")) {
+                let error = $root.server.PrivacyLists.verify(message.privacyLists);
+                if (error)
+                    return "privacyLists." + error;
+            }
+            return null;
+        };
+
+        /**
+         * Creates a PrivacyListResponse message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof web.PrivacyListResponse
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {web.PrivacyListResponse} PrivacyListResponse
+         */
+        PrivacyListResponse.fromObject = function fromObject(object) {
+            if (object instanceof $root.web.PrivacyListResponse)
+                return object;
+            let message = new $root.web.PrivacyListResponse();
+            if (object.id != null)
+                message.id = String(object.id);
+            if (object.privacyLists != null) {
+                if (typeof object.privacyLists !== "object")
+                    throw TypeError(".web.PrivacyListResponse.privacyLists: object expected");
+                message.privacyLists = $root.server.PrivacyLists.fromObject(object.privacyLists);
+            }
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a PrivacyListResponse message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof web.PrivacyListResponse
+         * @static
+         * @param {web.PrivacyListResponse} message PrivacyListResponse
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        PrivacyListResponse.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            let object = {};
+            if (options.defaults) {
+                object.id = "";
+                object.privacyLists = null;
+            }
+            if (message.id != null && message.hasOwnProperty("id"))
+                object.id = message.id;
+            if (message.privacyLists != null && message.hasOwnProperty("privacyLists"))
+                object.privacyLists = $root.server.PrivacyLists.toObject(message.privacyLists, options);
+            return object;
+        };
+
+        /**
+         * Converts this PrivacyListResponse to JSON.
+         * @function toJSON
+         * @memberof web.PrivacyListResponse
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        PrivacyListResponse.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for PrivacyListResponse
+         * @function getTypeUrl
+         * @memberof web.PrivacyListResponse
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        PrivacyListResponse.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/web.PrivacyListResponse";
+        };
+
+        return PrivacyListResponse;
+    })();
+
+    web.ReceiptUpdate = (function() {
+
+        /**
+         * Properties of a ReceiptUpdate.
+         * @memberof web
+         * @interface IReceiptUpdate
+         * @property {string|null} [id] ReceiptUpdate id
+         * @property {string|null} [contentId] ReceiptUpdate contentId
+         * @property {web.IReceiptInfo|null} [receipt] ReceiptUpdate receipt
+         */
+
+        /**
+         * Constructs a new ReceiptUpdate.
+         * @memberof web
+         * @classdesc Represents a ReceiptUpdate.
+         * @implements IReceiptUpdate
+         * @constructor
+         * @param {web.IReceiptUpdate=} [properties] Properties to set
+         */
+        function ReceiptUpdate(properties) {
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * ReceiptUpdate id.
+         * @member {string} id
+         * @memberof web.ReceiptUpdate
+         * @instance
+         */
+        ReceiptUpdate.prototype.id = "";
+
+        /**
+         * ReceiptUpdate contentId.
+         * @member {string} contentId
+         * @memberof web.ReceiptUpdate
+         * @instance
+         */
+        ReceiptUpdate.prototype.contentId = "";
+
+        /**
+         * ReceiptUpdate receipt.
+         * @member {web.IReceiptInfo|null|undefined} receipt
+         * @memberof web.ReceiptUpdate
+         * @instance
+         */
+        ReceiptUpdate.prototype.receipt = null;
+
+        /**
+         * Creates a new ReceiptUpdate instance using the specified properties.
+         * @function create
+         * @memberof web.ReceiptUpdate
+         * @static
+         * @param {web.IReceiptUpdate=} [properties] Properties to set
+         * @returns {web.ReceiptUpdate} ReceiptUpdate instance
+         */
+        ReceiptUpdate.create = function create(properties) {
+            return new ReceiptUpdate(properties);
+        };
+
+        /**
+         * Encodes the specified ReceiptUpdate message. Does not implicitly {@link web.ReceiptUpdate.verify|verify} messages.
+         * @function encode
+         * @memberof web.ReceiptUpdate
+         * @static
+         * @param {web.IReceiptUpdate} message ReceiptUpdate message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        ReceiptUpdate.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.id);
+            if (message.contentId != null && Object.hasOwnProperty.call(message, "contentId"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.contentId);
+            if (message.receipt != null && Object.hasOwnProperty.call(message, "receipt"))
+                $root.web.ReceiptInfo.encode(message.receipt, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+            return writer;
+        };
+
+        /**
+         * Encodes the specified ReceiptUpdate message, length delimited. Does not implicitly {@link web.ReceiptUpdate.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof web.ReceiptUpdate
+         * @static
+         * @param {web.IReceiptUpdate} message ReceiptUpdate message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        ReceiptUpdate.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a ReceiptUpdate message from the specified reader or buffer.
+         * @function decode
+         * @memberof web.ReceiptUpdate
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {web.ReceiptUpdate} ReceiptUpdate
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        ReceiptUpdate.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.web.ReceiptUpdate();
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1: {
+                        message.id = reader.string();
+                        break;
+                    }
+                case 2: {
+                        message.contentId = reader.string();
+                        break;
+                    }
+                case 3: {
+                        message.receipt = $root.web.ReceiptInfo.decode(reader, reader.uint32());
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a ReceiptUpdate message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof web.ReceiptUpdate
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {web.ReceiptUpdate} ReceiptUpdate
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        ReceiptUpdate.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a ReceiptUpdate message.
+         * @function verify
+         * @memberof web.ReceiptUpdate
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        ReceiptUpdate.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.id != null && message.hasOwnProperty("id"))
+                if (!$util.isString(message.id))
+                    return "id: string expected";
+            if (message.contentId != null && message.hasOwnProperty("contentId"))
+                if (!$util.isString(message.contentId))
+                    return "contentId: string expected";
+            if (message.receipt != null && message.hasOwnProperty("receipt")) {
+                let error = $root.web.ReceiptInfo.verify(message.receipt);
+                if (error)
+                    return "receipt." + error;
+            }
+            return null;
+        };
+
+        /**
+         * Creates a ReceiptUpdate message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof web.ReceiptUpdate
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {web.ReceiptUpdate} ReceiptUpdate
+         */
+        ReceiptUpdate.fromObject = function fromObject(object) {
+            if (object instanceof $root.web.ReceiptUpdate)
+                return object;
+            let message = new $root.web.ReceiptUpdate();
+            if (object.id != null)
+                message.id = String(object.id);
+            if (object.contentId != null)
+                message.contentId = String(object.contentId);
+            if (object.receipt != null) {
+                if (typeof object.receipt !== "object")
+                    throw TypeError(".web.ReceiptUpdate.receipt: object expected");
+                message.receipt = $root.web.ReceiptInfo.fromObject(object.receipt);
+            }
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a ReceiptUpdate message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof web.ReceiptUpdate
+         * @static
+         * @param {web.ReceiptUpdate} message ReceiptUpdate
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        ReceiptUpdate.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            let object = {};
+            if (options.defaults) {
+                object.id = "";
+                object.contentId = "";
+                object.receipt = null;
+            }
+            if (message.id != null && message.hasOwnProperty("id"))
+                object.id = message.id;
+            if (message.contentId != null && message.hasOwnProperty("contentId"))
+                object.contentId = message.contentId;
+            if (message.receipt != null && message.hasOwnProperty("receipt"))
+                object.receipt = $root.web.ReceiptInfo.toObject(message.receipt, options);
+            return object;
+        };
+
+        /**
+         * Converts this ReceiptUpdate to JSON.
+         * @function toJSON
+         * @memberof web.ReceiptUpdate
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        ReceiptUpdate.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for ReceiptUpdate
+         * @function getTypeUrl
+         * @memberof web.ReceiptUpdate
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        ReceiptUpdate.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/web.ReceiptUpdate";
+        };
+
+        return ReceiptUpdate;
     })();
 
     return web;
@@ -7322,6 +8870,298 @@ export const server = $root.server = (() => {
         return ContactSyncError;
     })();
 
+    server.MomentInfo = (function() {
+
+        /**
+         * Properties of a MomentInfo.
+         * @memberof server
+         * @interface IMomentInfo
+         * @property {number|Long|null} [notificationTimestamp] MomentInfo notificationTimestamp
+         * @property {number|Long|null} [timeTaken] MomentInfo timeTaken
+         * @property {number|Long|null} [numTakes] MomentInfo numTakes
+         */
+
+        /**
+         * Constructs a new MomentInfo.
+         * @memberof server
+         * @classdesc Represents a MomentInfo.
+         * @implements IMomentInfo
+         * @constructor
+         * @param {server.IMomentInfo=} [properties] Properties to set
+         */
+        function MomentInfo(properties) {
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * MomentInfo notificationTimestamp.
+         * @member {number|Long} notificationTimestamp
+         * @memberof server.MomentInfo
+         * @instance
+         */
+        MomentInfo.prototype.notificationTimestamp = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+
+        /**
+         * MomentInfo timeTaken.
+         * @member {number|Long} timeTaken
+         * @memberof server.MomentInfo
+         * @instance
+         */
+        MomentInfo.prototype.timeTaken = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+
+        /**
+         * MomentInfo numTakes.
+         * @member {number|Long} numTakes
+         * @memberof server.MomentInfo
+         * @instance
+         */
+        MomentInfo.prototype.numTakes = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+
+        /**
+         * Creates a new MomentInfo instance using the specified properties.
+         * @function create
+         * @memberof server.MomentInfo
+         * @static
+         * @param {server.IMomentInfo=} [properties] Properties to set
+         * @returns {server.MomentInfo} MomentInfo instance
+         */
+        MomentInfo.create = function create(properties) {
+            return new MomentInfo(properties);
+        };
+
+        /**
+         * Encodes the specified MomentInfo message. Does not implicitly {@link server.MomentInfo.verify|verify} messages.
+         * @function encode
+         * @memberof server.MomentInfo
+         * @static
+         * @param {server.IMomentInfo} message MomentInfo message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        MomentInfo.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.notificationTimestamp != null && Object.hasOwnProperty.call(message, "notificationTimestamp"))
+                writer.uint32(/* id 1, wireType 0 =*/8).int64(message.notificationTimestamp);
+            if (message.timeTaken != null && Object.hasOwnProperty.call(message, "timeTaken"))
+                writer.uint32(/* id 2, wireType 0 =*/16).int64(message.timeTaken);
+            if (message.numTakes != null && Object.hasOwnProperty.call(message, "numTakes"))
+                writer.uint32(/* id 3, wireType 0 =*/24).int64(message.numTakes);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified MomentInfo message, length delimited. Does not implicitly {@link server.MomentInfo.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof server.MomentInfo
+         * @static
+         * @param {server.IMomentInfo} message MomentInfo message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        MomentInfo.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a MomentInfo message from the specified reader or buffer.
+         * @function decode
+         * @memberof server.MomentInfo
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {server.MomentInfo} MomentInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        MomentInfo.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.server.MomentInfo();
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1: {
+                        message.notificationTimestamp = reader.int64();
+                        break;
+                    }
+                case 2: {
+                        message.timeTaken = reader.int64();
+                        break;
+                    }
+                case 3: {
+                        message.numTakes = reader.int64();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a MomentInfo message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof server.MomentInfo
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {server.MomentInfo} MomentInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        MomentInfo.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a MomentInfo message.
+         * @function verify
+         * @memberof server.MomentInfo
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        MomentInfo.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.notificationTimestamp != null && message.hasOwnProperty("notificationTimestamp"))
+                if (!$util.isInteger(message.notificationTimestamp) && !(message.notificationTimestamp && $util.isInteger(message.notificationTimestamp.low) && $util.isInteger(message.notificationTimestamp.high)))
+                    return "notificationTimestamp: integer|Long expected";
+            if (message.timeTaken != null && message.hasOwnProperty("timeTaken"))
+                if (!$util.isInteger(message.timeTaken) && !(message.timeTaken && $util.isInteger(message.timeTaken.low) && $util.isInteger(message.timeTaken.high)))
+                    return "timeTaken: integer|Long expected";
+            if (message.numTakes != null && message.hasOwnProperty("numTakes"))
+                if (!$util.isInteger(message.numTakes) && !(message.numTakes && $util.isInteger(message.numTakes.low) && $util.isInteger(message.numTakes.high)))
+                    return "numTakes: integer|Long expected";
+            return null;
+        };
+
+        /**
+         * Creates a MomentInfo message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof server.MomentInfo
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {server.MomentInfo} MomentInfo
+         */
+        MomentInfo.fromObject = function fromObject(object) {
+            if (object instanceof $root.server.MomentInfo)
+                return object;
+            let message = new $root.server.MomentInfo();
+            if (object.notificationTimestamp != null)
+                if ($util.Long)
+                    (message.notificationTimestamp = $util.Long.fromValue(object.notificationTimestamp)).unsigned = false;
+                else if (typeof object.notificationTimestamp === "string")
+                    message.notificationTimestamp = parseInt(object.notificationTimestamp, 10);
+                else if (typeof object.notificationTimestamp === "number")
+                    message.notificationTimestamp = object.notificationTimestamp;
+                else if (typeof object.notificationTimestamp === "object")
+                    message.notificationTimestamp = new $util.LongBits(object.notificationTimestamp.low >>> 0, object.notificationTimestamp.high >>> 0).toNumber();
+            if (object.timeTaken != null)
+                if ($util.Long)
+                    (message.timeTaken = $util.Long.fromValue(object.timeTaken)).unsigned = false;
+                else if (typeof object.timeTaken === "string")
+                    message.timeTaken = parseInt(object.timeTaken, 10);
+                else if (typeof object.timeTaken === "number")
+                    message.timeTaken = object.timeTaken;
+                else if (typeof object.timeTaken === "object")
+                    message.timeTaken = new $util.LongBits(object.timeTaken.low >>> 0, object.timeTaken.high >>> 0).toNumber();
+            if (object.numTakes != null)
+                if ($util.Long)
+                    (message.numTakes = $util.Long.fromValue(object.numTakes)).unsigned = false;
+                else if (typeof object.numTakes === "string")
+                    message.numTakes = parseInt(object.numTakes, 10);
+                else if (typeof object.numTakes === "number")
+                    message.numTakes = object.numTakes;
+                else if (typeof object.numTakes === "object")
+                    message.numTakes = new $util.LongBits(object.numTakes.low >>> 0, object.numTakes.high >>> 0).toNumber();
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a MomentInfo message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof server.MomentInfo
+         * @static
+         * @param {server.MomentInfo} message MomentInfo
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        MomentInfo.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            let object = {};
+            if (options.defaults) {
+                if ($util.Long) {
+                    let long = new $util.Long(0, 0, false);
+                    object.notificationTimestamp = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.notificationTimestamp = options.longs === String ? "0" : 0;
+                if ($util.Long) {
+                    let long = new $util.Long(0, 0, false);
+                    object.timeTaken = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.timeTaken = options.longs === String ? "0" : 0;
+                if ($util.Long) {
+                    let long = new $util.Long(0, 0, false);
+                    object.numTakes = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.numTakes = options.longs === String ? "0" : 0;
+            }
+            if (message.notificationTimestamp != null && message.hasOwnProperty("notificationTimestamp"))
+                if (typeof message.notificationTimestamp === "number")
+                    object.notificationTimestamp = options.longs === String ? String(message.notificationTimestamp) : message.notificationTimestamp;
+                else
+                    object.notificationTimestamp = options.longs === String ? $util.Long.prototype.toString.call(message.notificationTimestamp) : options.longs === Number ? new $util.LongBits(message.notificationTimestamp.low >>> 0, message.notificationTimestamp.high >>> 0).toNumber() : message.notificationTimestamp;
+            if (message.timeTaken != null && message.hasOwnProperty("timeTaken"))
+                if (typeof message.timeTaken === "number")
+                    object.timeTaken = options.longs === String ? String(message.timeTaken) : message.timeTaken;
+                else
+                    object.timeTaken = options.longs === String ? $util.Long.prototype.toString.call(message.timeTaken) : options.longs === Number ? new $util.LongBits(message.timeTaken.low >>> 0, message.timeTaken.high >>> 0).toNumber() : message.timeTaken;
+            if (message.numTakes != null && message.hasOwnProperty("numTakes"))
+                if (typeof message.numTakes === "number")
+                    object.numTakes = options.longs === String ? String(message.numTakes) : message.numTakes;
+                else
+                    object.numTakes = options.longs === String ? $util.Long.prototype.toString.call(message.numTakes) : options.longs === Number ? new $util.LongBits(message.numTakes.low >>> 0, message.numTakes.high >>> 0).toNumber() : message.numTakes;
+            return object;
+        };
+
+        /**
+         * Converts this MomentInfo to JSON.
+         * @function toJSON
+         * @memberof server.MomentInfo
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        MomentInfo.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for MomentInfo
+         * @function getTypeUrl
+         * @memberof server.MomentInfo
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        MomentInfo.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/server.MomentInfo";
+        };
+
+        return MomentInfo;
+    })();
+
     server.MediaCounters = (function() {
 
         /**
@@ -7891,6 +9731,7 @@ export const server = $root.server = (() => {
          * @property {string|null} [psaTag] Post psaTag
          * @property {number|Long|null} [momentUnlockUid] Post momentUnlockUid
          * @property {boolean|null} [showPostShareScreen] Post showPostShareScreen
+         * @property {server.IMomentInfo|null} [momentInfo] Post momentInfo
          */
 
         /**
@@ -8005,6 +9846,14 @@ export const server = $root.server = (() => {
         Post.prototype.showPostShareScreen = false;
 
         /**
+         * Post momentInfo.
+         * @member {server.IMomentInfo|null|undefined} momentInfo
+         * @memberof server.Post
+         * @instance
+         */
+        Post.prototype.momentInfo = null;
+
+        /**
          * Creates a new Post instance using the specified properties.
          * @function create
          * @memberof server.Post
@@ -8052,6 +9901,8 @@ export const server = $root.server = (() => {
                 writer.uint32(/* id 11, wireType 0 =*/88).int64(message.momentUnlockUid);
             if (message.showPostShareScreen != null && Object.hasOwnProperty.call(message, "showPostShareScreen"))
                 writer.uint32(/* id 12, wireType 0 =*/96).bool(message.showPostShareScreen);
+            if (message.momentInfo != null && Object.hasOwnProperty.call(message, "momentInfo"))
+                $root.server.MomentInfo.encode(message.momentInfo, writer.uint32(/* id 13, wireType 2 =*/106).fork()).ldelim();
             return writer;
         };
 
@@ -8134,6 +9985,10 @@ export const server = $root.server = (() => {
                         message.showPostShareScreen = reader.bool();
                         break;
                     }
+                case 13: {
+                        message.momentInfo = $root.server.MomentInfo.decode(reader, reader.uint32());
+                        break;
+                    }
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -8214,6 +10069,11 @@ export const server = $root.server = (() => {
             if (message.showPostShareScreen != null && message.hasOwnProperty("showPostShareScreen"))
                 if (typeof message.showPostShareScreen !== "boolean")
                     return "showPostShareScreen: boolean expected";
+            if (message.momentInfo != null && message.hasOwnProperty("momentInfo")) {
+                let error = $root.server.MomentInfo.verify(message.momentInfo);
+                if (error)
+                    return "momentInfo." + error;
+            }
             return null;
         };
 
@@ -8300,6 +10160,11 @@ export const server = $root.server = (() => {
                     message.momentUnlockUid = new $util.LongBits(object.momentUnlockUid.low >>> 0, object.momentUnlockUid.high >>> 0).toNumber();
             if (object.showPostShareScreen != null)
                 message.showPostShareScreen = Boolean(object.showPostShareScreen);
+            if (object.momentInfo != null) {
+                if (typeof object.momentInfo !== "object")
+                    throw TypeError(".server.Post.momentInfo: object expected");
+                message.momentInfo = $root.server.MomentInfo.fromObject(object.momentInfo);
+            }
             return message;
         };
 
@@ -8353,6 +10218,7 @@ export const server = $root.server = (() => {
                 } else
                     object.momentUnlockUid = options.longs === String ? "0" : 0;
                 object.showPostShareScreen = false;
+                object.momentInfo = null;
             }
             if (message.id != null && message.hasOwnProperty("id"))
                 object.id = message.id;
@@ -8387,6 +10253,8 @@ export const server = $root.server = (() => {
                     object.momentUnlockUid = options.longs === String ? $util.Long.prototype.toString.call(message.momentUnlockUid) : options.longs === Number ? new $util.LongBits(message.momentUnlockUid.low >>> 0, message.momentUnlockUid.high >>> 0).toNumber() : message.momentUnlockUid;
             if (message.showPostShareScreen != null && message.hasOwnProperty("showPostShareScreen"))
                 object.showPostShareScreen = message.showPostShareScreen;
+            if (message.momentInfo != null && message.hasOwnProperty("momentInfo"))
+                object.momentInfo = $root.server.MomentInfo.toObject(message.momentInfo, options);
             return object;
         };
 
@@ -28265,6 +30133,223 @@ export const server = $root.server = (() => {
         return ContentMissing;
     })();
 
+    server.MomentNotification = (function() {
+
+        /**
+         * Properties of a MomentNotification.
+         * @memberof server
+         * @interface IMomentNotification
+         * @property {number|Long|null} [timestamp] MomentNotification timestamp
+         */
+
+        /**
+         * Constructs a new MomentNotification.
+         * @memberof server
+         * @classdesc Represents a MomentNotification.
+         * @implements IMomentNotification
+         * @constructor
+         * @param {server.IMomentNotification=} [properties] Properties to set
+         */
+        function MomentNotification(properties) {
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * MomentNotification timestamp.
+         * @member {number|Long} timestamp
+         * @memberof server.MomentNotification
+         * @instance
+         */
+        MomentNotification.prototype.timestamp = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+
+        /**
+         * Creates a new MomentNotification instance using the specified properties.
+         * @function create
+         * @memberof server.MomentNotification
+         * @static
+         * @param {server.IMomentNotification=} [properties] Properties to set
+         * @returns {server.MomentNotification} MomentNotification instance
+         */
+        MomentNotification.create = function create(properties) {
+            return new MomentNotification(properties);
+        };
+
+        /**
+         * Encodes the specified MomentNotification message. Does not implicitly {@link server.MomentNotification.verify|verify} messages.
+         * @function encode
+         * @memberof server.MomentNotification
+         * @static
+         * @param {server.IMomentNotification} message MomentNotification message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        MomentNotification.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.timestamp != null && Object.hasOwnProperty.call(message, "timestamp"))
+                writer.uint32(/* id 1, wireType 0 =*/8).int64(message.timestamp);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified MomentNotification message, length delimited. Does not implicitly {@link server.MomentNotification.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof server.MomentNotification
+         * @static
+         * @param {server.IMomentNotification} message MomentNotification message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        MomentNotification.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a MomentNotification message from the specified reader or buffer.
+         * @function decode
+         * @memberof server.MomentNotification
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {server.MomentNotification} MomentNotification
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        MomentNotification.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.server.MomentNotification();
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1: {
+                        message.timestamp = reader.int64();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a MomentNotification message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof server.MomentNotification
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {server.MomentNotification} MomentNotification
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        MomentNotification.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a MomentNotification message.
+         * @function verify
+         * @memberof server.MomentNotification
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        MomentNotification.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.timestamp != null && message.hasOwnProperty("timestamp"))
+                if (!$util.isInteger(message.timestamp) && !(message.timestamp && $util.isInteger(message.timestamp.low) && $util.isInteger(message.timestamp.high)))
+                    return "timestamp: integer|Long expected";
+            return null;
+        };
+
+        /**
+         * Creates a MomentNotification message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof server.MomentNotification
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {server.MomentNotification} MomentNotification
+         */
+        MomentNotification.fromObject = function fromObject(object) {
+            if (object instanceof $root.server.MomentNotification)
+                return object;
+            let message = new $root.server.MomentNotification();
+            if (object.timestamp != null)
+                if ($util.Long)
+                    (message.timestamp = $util.Long.fromValue(object.timestamp)).unsigned = false;
+                else if (typeof object.timestamp === "string")
+                    message.timestamp = parseInt(object.timestamp, 10);
+                else if (typeof object.timestamp === "number")
+                    message.timestamp = object.timestamp;
+                else if (typeof object.timestamp === "object")
+                    message.timestamp = new $util.LongBits(object.timestamp.low >>> 0, object.timestamp.high >>> 0).toNumber();
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a MomentNotification message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof server.MomentNotification
+         * @static
+         * @param {server.MomentNotification} message MomentNotification
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        MomentNotification.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            let object = {};
+            if (options.defaults)
+                if ($util.Long) {
+                    let long = new $util.Long(0, 0, false);
+                    object.timestamp = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.timestamp = options.longs === String ? "0" : 0;
+            if (message.timestamp != null && message.hasOwnProperty("timestamp"))
+                if (typeof message.timestamp === "number")
+                    object.timestamp = options.longs === String ? String(message.timestamp) : message.timestamp;
+                else
+                    object.timestamp = options.longs === String ? $util.Long.prototype.toString.call(message.timestamp) : options.longs === Number ? new $util.LongBits(message.timestamp.low >>> 0, message.timestamp.high >>> 0).toNumber() : message.timestamp;
+            return object;
+        };
+
+        /**
+         * Converts this MomentNotification to JSON.
+         * @function toJSON
+         * @memberof server.MomentNotification
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        MomentNotification.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for MomentNotification
+         * @function getTypeUrl
+         * @memberof server.MomentNotification
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        MomentNotification.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/server.MomentNotification";
+        };
+
+        return MomentNotification;
+    })();
+
     server.Iq = (function() {
 
         /**
@@ -28314,8 +30399,6 @@ export const server = $root.server = (() => {
          * @property {server.IExternalSharePostContainer|null} [externalSharePostContainer] Iq externalSharePostContainer
          * @property {server.IWebClientInfo|null} [webClientInfo] Iq webClientInfo
          * @property {server.IReportUserContent|null} [reportUserContent] Iq reportUserContent
-         * @property {number|Long|null} [toUid] Iq toUid
-         * @property {number|Long|null} [fromUid] Iq fromUid
          */
 
         /**
@@ -28677,22 +30760,6 @@ export const server = $root.server = (() => {
          */
         Iq.prototype.reportUserContent = null;
 
-        /**
-         * Iq toUid.
-         * @member {number|Long} toUid
-         * @memberof server.Iq
-         * @instance
-         */
-        Iq.prototype.toUid = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
-
-        /**
-         * Iq fromUid.
-         * @member {number|Long} fromUid
-         * @memberof server.Iq
-         * @instance
-         */
-        Iq.prototype.fromUid = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
-
         // OneOf field names bound to virtual getters and setters
         let $oneOfFields;
 
@@ -28785,10 +30852,6 @@ export const server = $root.server = (() => {
                 $root.server.UploadGroupAvatar.encode(message.groupAvatar, writer.uint32(/* id 27, wireType 2 =*/218).fork()).ldelim();
             if (message.deleteAccount != null && Object.hasOwnProperty.call(message, "deleteAccount"))
                 $root.server.DeleteAccount.encode(message.deleteAccount, writer.uint32(/* id 28, wireType 2 =*/226).fork()).ldelim();
-            if (message.toUid != null && Object.hasOwnProperty.call(message, "toUid"))
-                writer.uint32(/* id 29, wireType 0 =*/232).int64(message.toUid);
-            if (message.fromUid != null && Object.hasOwnProperty.call(message, "fromUid"))
-                writer.uint32(/* id 30, wireType 0 =*/240).int64(message.fromUid);
             if (message.groupInviteLink != null && Object.hasOwnProperty.call(message, "groupInviteLink"))
                 $root.server.GroupInviteLink.encode(message.groupInviteLink, writer.uint32(/* id 31, wireType 2 =*/250).fork()).ldelim();
             if (message.historyResend != null && Object.hasOwnProperty.call(message, "historyResend"))
@@ -29025,14 +31088,6 @@ export const server = $root.server = (() => {
                     }
                 case 46: {
                         message.reportUserContent = $root.server.ReportUserContent.decode(reader, reader.uint32());
-                        break;
-                    }
-                case 29: {
-                        message.toUid = reader.int64();
-                        break;
-                    }
-                case 30: {
-                        message.fromUid = reader.int64();
                         break;
                     }
                 default:
@@ -29492,12 +31547,6 @@ export const server = $root.server = (() => {
                         return "reportUserContent." + error;
                 }
             }
-            if (message.toUid != null && message.hasOwnProperty("toUid"))
-                if (!$util.isInteger(message.toUid) && !(message.toUid && $util.isInteger(message.toUid.low) && $util.isInteger(message.toUid.high)))
-                    return "toUid: integer|Long expected";
-            if (message.fromUid != null && message.hasOwnProperty("fromUid"))
-                if (!$util.isInteger(message.fromUid) && !(message.fromUid && $util.isInteger(message.fromUid.low) && $util.isInteger(message.fromUid.high)))
-                    return "fromUid: integer|Long expected";
             return null;
         };
 
@@ -29744,24 +31793,6 @@ export const server = $root.server = (() => {
                     throw TypeError(".server.Iq.reportUserContent: object expected");
                 message.reportUserContent = $root.server.ReportUserContent.fromObject(object.reportUserContent);
             }
-            if (object.toUid != null)
-                if ($util.Long)
-                    (message.toUid = $util.Long.fromValue(object.toUid)).unsigned = false;
-                else if (typeof object.toUid === "string")
-                    message.toUid = parseInt(object.toUid, 10);
-                else if (typeof object.toUid === "number")
-                    message.toUid = object.toUid;
-                else if (typeof object.toUid === "object")
-                    message.toUid = new $util.LongBits(object.toUid.low >>> 0, object.toUid.high >>> 0).toNumber();
-            if (object.fromUid != null)
-                if ($util.Long)
-                    (message.fromUid = $util.Long.fromValue(object.fromUid)).unsigned = false;
-                else if (typeof object.fromUid === "string")
-                    message.fromUid = parseInt(object.fromUid, 10);
-                else if (typeof object.fromUid === "number")
-                    message.fromUid = object.fromUid;
-                else if (typeof object.fromUid === "object")
-                    message.fromUid = new $util.LongBits(object.fromUid.low >>> 0, object.fromUid.high >>> 0).toNumber();
             return message;
         };
 
@@ -29781,16 +31812,6 @@ export const server = $root.server = (() => {
             if (options.defaults) {
                 object.id = "";
                 object.type = options.enums === String ? "GET" : 0;
-                if ($util.Long) {
-                    let long = new $util.Long(0, 0, false);
-                    object.toUid = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                } else
-                    object.toUid = options.longs === String ? "0" : 0;
-                if ($util.Long) {
-                    let long = new $util.Long(0, 0, false);
-                    object.fromUid = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                } else
-                    object.fromUid = options.longs === String ? "0" : 0;
             }
             if (message.id != null && message.hasOwnProperty("id"))
                 object.id = message.id;
@@ -29921,16 +31942,6 @@ export const server = $root.server = (() => {
                 if (options.oneofs)
                     object.payload = "deleteAccount";
             }
-            if (message.toUid != null && message.hasOwnProperty("toUid"))
-                if (typeof message.toUid === "number")
-                    object.toUid = options.longs === String ? String(message.toUid) : message.toUid;
-                else
-                    object.toUid = options.longs === String ? $util.Long.prototype.toString.call(message.toUid) : options.longs === Number ? new $util.LongBits(message.toUid.low >>> 0, message.toUid.high >>> 0).toNumber() : message.toUid;
-            if (message.fromUid != null && message.hasOwnProperty("fromUid"))
-                if (typeof message.fromUid === "number")
-                    object.fromUid = options.longs === String ? String(message.fromUid) : message.fromUid;
-                else
-                    object.fromUid = options.longs === String ? $util.Long.prototype.toString.call(message.fromUid) : options.longs === Number ? new $util.LongBits(message.fromUid.low >>> 0, message.fromUid.high >>> 0).toNumber() : message.fromUid;
             if (message.groupInviteLink != null && message.hasOwnProperty("groupInviteLink")) {
                 object.groupInviteLink = $root.server.GroupInviteLink.toObject(message.groupInviteLink, options);
                 if (options.oneofs)
@@ -30117,6 +32128,7 @@ export const server = $root.server = (() => {
          * @property {server.IScreenshotReceipt|null} [screenshotReceipt] Msg screenshotReceipt
          * @property {server.ISavedReceipt|null} [savedReceipt] Msg savedReceipt
          * @property {server.IGroupChatStanza|null} [groupChatStanza] Msg groupChatStanza
+         * @property {server.IMomentNotification|null} [momentNotification] Msg momentNotification
          * @property {number|null} [retryCount] Msg retryCount
          * @property {number|null} [rerequestCount] Msg rerequestCount
          */
@@ -30537,6 +32549,14 @@ export const server = $root.server = (() => {
         Msg.prototype.groupChatStanza = null;
 
         /**
+         * Msg momentNotification.
+         * @member {server.IMomentNotification|null|undefined} momentNotification
+         * @memberof server.Msg
+         * @instance
+         */
+        Msg.prototype.momentNotification = null;
+
+        /**
          * Msg retryCount.
          * @member {number} retryCount
          * @memberof server.Msg
@@ -30557,12 +32577,12 @@ export const server = $root.server = (() => {
 
         /**
          * Msg payload.
-         * @member {"contactList"|"avatar"|"whisperKeys"|"seenReceipt"|"deliveryReceipt"|"chatStanza"|"feedItem"|"feedItems"|"contactHash"|"groupStanza"|"groupChat"|"name"|"errorStanza"|"groupchatRetract"|"chatRetract"|"groupFeedItem"|"rerequest"|"silentChatStanza"|"groupFeedItems"|"endOfQueue"|"inviteeNotice"|"groupFeedRerequest"|"historyResend"|"playedReceipt"|"requestLogs"|"wakeup"|"homeFeedRerequest"|"incomingCall"|"callRinging"|"answerCall"|"endCall"|"iceCandidate"|"marketingAlert"|"iceRestartOffer"|"iceRestartAnswer"|"groupFeedHistory"|"preAnswerCall"|"holdCall"|"muteCall"|"incomingCallPush"|"callSdp"|"webStanza"|"contentMissing"|"screenshotReceipt"|"savedReceipt"|"groupChatStanza"|undefined} payload
+         * @member {"contactList"|"avatar"|"whisperKeys"|"seenReceipt"|"deliveryReceipt"|"chatStanza"|"feedItem"|"feedItems"|"contactHash"|"groupStanza"|"groupChat"|"name"|"errorStanza"|"groupchatRetract"|"chatRetract"|"groupFeedItem"|"rerequest"|"silentChatStanza"|"groupFeedItems"|"endOfQueue"|"inviteeNotice"|"groupFeedRerequest"|"historyResend"|"playedReceipt"|"requestLogs"|"wakeup"|"homeFeedRerequest"|"incomingCall"|"callRinging"|"answerCall"|"endCall"|"iceCandidate"|"marketingAlert"|"iceRestartOffer"|"iceRestartAnswer"|"groupFeedHistory"|"preAnswerCall"|"holdCall"|"muteCall"|"incomingCallPush"|"callSdp"|"webStanza"|"contentMissing"|"screenshotReceipt"|"savedReceipt"|"groupChatStanza"|"momentNotification"|undefined} payload
          * @memberof server.Msg
          * @instance
          */
         Object.defineProperty(Msg.prototype, "payload", {
-            get: $util.oneOfGetter($oneOfFields = ["contactList", "avatar", "whisperKeys", "seenReceipt", "deliveryReceipt", "chatStanza", "feedItem", "feedItems", "contactHash", "groupStanza", "groupChat", "name", "errorStanza", "groupchatRetract", "chatRetract", "groupFeedItem", "rerequest", "silentChatStanza", "groupFeedItems", "endOfQueue", "inviteeNotice", "groupFeedRerequest", "historyResend", "playedReceipt", "requestLogs", "wakeup", "homeFeedRerequest", "incomingCall", "callRinging", "answerCall", "endCall", "iceCandidate", "marketingAlert", "iceRestartOffer", "iceRestartAnswer", "groupFeedHistory", "preAnswerCall", "holdCall", "muteCall", "incomingCallPush", "callSdp", "webStanza", "contentMissing", "screenshotReceipt", "savedReceipt", "groupChatStanza"]),
+            get: $util.oneOfGetter($oneOfFields = ["contactList", "avatar", "whisperKeys", "seenReceipt", "deliveryReceipt", "chatStanza", "feedItem", "feedItems", "contactHash", "groupStanza", "groupChat", "name", "errorStanza", "groupchatRetract", "chatRetract", "groupFeedItem", "rerequest", "silentChatStanza", "groupFeedItems", "endOfQueue", "inviteeNotice", "groupFeedRerequest", "historyResend", "playedReceipt", "requestLogs", "wakeup", "homeFeedRerequest", "incomingCall", "callRinging", "answerCall", "endCall", "iceCandidate", "marketingAlert", "iceRestartOffer", "iceRestartAnswer", "groupFeedHistory", "preAnswerCall", "holdCall", "muteCall", "incomingCallPush", "callSdp", "webStanza", "contentMissing", "screenshotReceipt", "savedReceipt", "groupChatStanza", "momentNotification"]),
             set: $util.oneOfSetter($oneOfFields)
         });
 
@@ -30694,6 +32714,8 @@ export const server = $root.server = (() => {
                 $root.server.SavedReceipt.encode(message.savedReceipt, writer.uint32(/* id 51, wireType 2 =*/410).fork()).ldelim();
             if (message.groupChatStanza != null && Object.hasOwnProperty.call(message, "groupChatStanza"))
                 $root.server.GroupChatStanza.encode(message.groupChatStanza, writer.uint32(/* id 52, wireType 2 =*/418).fork()).ldelim();
+            if (message.momentNotification != null && Object.hasOwnProperty.call(message, "momentNotification"))
+                $root.server.MomentNotification.encode(message.momentNotification, writer.uint32(/* id 53, wireType 2 =*/426).fork()).ldelim();
             return writer;
         };
 
@@ -30926,6 +32948,10 @@ export const server = $root.server = (() => {
                     }
                 case 52: {
                         message.groupChatStanza = $root.server.GroupChatStanza.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 53: {
+                        message.momentNotification = $root.server.MomentNotification.decode(reader, reader.uint32());
                         break;
                     }
                 case 21: {
@@ -31451,6 +33477,16 @@ export const server = $root.server = (() => {
                         return "groupChatStanza." + error;
                 }
             }
+            if (message.momentNotification != null && message.hasOwnProperty("momentNotification")) {
+                if (properties.payload === 1)
+                    return "payload: multiple values";
+                properties.payload = 1;
+                {
+                    let error = $root.server.MomentNotification.verify(message.momentNotification);
+                    if (error)
+                        return "momentNotification." + error;
+                }
+            }
             if (message.retryCount != null && message.hasOwnProperty("retryCount"))
                 if (!$util.isInteger(message.retryCount))
                     return "retryCount: integer expected";
@@ -31754,6 +33790,11 @@ export const server = $root.server = (() => {
                     throw TypeError(".server.Msg.groupChatStanza: object expected");
                 message.groupChatStanza = $root.server.GroupChatStanza.fromObject(object.groupChatStanza);
             }
+            if (object.momentNotification != null) {
+                if (typeof object.momentNotification !== "object")
+                    throw TypeError(".server.Msg.momentNotification: object expected");
+                message.momentNotification = $root.server.MomentNotification.fromObject(object.momentNotification);
+            }
             if (object.retryCount != null)
                 message.retryCount = object.retryCount | 0;
             if (object.rerequestCount != null)
@@ -32037,6 +34078,11 @@ export const server = $root.server = (() => {
                 object.groupChatStanza = $root.server.GroupChatStanza.toObject(message.groupChatStanza, options);
                 if (options.oneofs)
                     object.payload = "groupChatStanza";
+            }
+            if (message.momentNotification != null && message.hasOwnProperty("momentNotification")) {
+                object.momentNotification = $root.server.MomentNotification.toObject(message.momentNotification, options);
+                if (options.oneofs)
+                    object.payload = "momentNotification";
             }
             return object;
         };
@@ -32524,7 +34570,6 @@ export const server = $root.server = (() => {
          * @property {string|null} [threadId] ChatState threadId
          * @property {server.ChatState.ThreadType|null} [threadType] ChatState threadType
          * @property {number|Long|null} [fromUid] ChatState fromUid
-         * @property {number|Long|null} [toUid] ChatState toUid
          */
 
         /**
@@ -32575,14 +34620,6 @@ export const server = $root.server = (() => {
         ChatState.prototype.fromUid = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
 
         /**
-         * ChatState toUid.
-         * @member {number|Long} toUid
-         * @memberof server.ChatState
-         * @instance
-         */
-        ChatState.prototype.toUid = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
-
-        /**
          * Creates a new ChatState instance using the specified properties.
          * @function create
          * @memberof server.ChatState
@@ -32614,8 +34651,6 @@ export const server = $root.server = (() => {
                 writer.uint32(/* id 3, wireType 0 =*/24).int32(message.threadType);
             if (message.fromUid != null && Object.hasOwnProperty.call(message, "fromUid"))
                 writer.uint32(/* id 4, wireType 0 =*/32).int64(message.fromUid);
-            if (message.toUid != null && Object.hasOwnProperty.call(message, "toUid"))
-                writer.uint32(/* id 5, wireType 0 =*/40).int64(message.toUid);
             return writer;
         };
 
@@ -32664,10 +34699,6 @@ export const server = $root.server = (() => {
                     }
                 case 4: {
                         message.fromUid = reader.int64();
-                        break;
-                    }
-                case 5: {
-                        message.toUid = reader.int64();
                         break;
                     }
                 default:
@@ -32727,9 +34758,6 @@ export const server = $root.server = (() => {
             if (message.fromUid != null && message.hasOwnProperty("fromUid"))
                 if (!$util.isInteger(message.fromUid) && !(message.fromUid && $util.isInteger(message.fromUid.low) && $util.isInteger(message.fromUid.high)))
                     return "fromUid: integer|Long expected";
-            if (message.toUid != null && message.hasOwnProperty("toUid"))
-                if (!$util.isInteger(message.toUid) && !(message.toUid && $util.isInteger(message.toUid.low) && $util.isInteger(message.toUid.high)))
-                    return "toUid: integer|Long expected";
             return null;
         };
 
@@ -32788,15 +34816,6 @@ export const server = $root.server = (() => {
                     message.fromUid = object.fromUid;
                 else if (typeof object.fromUid === "object")
                     message.fromUid = new $util.LongBits(object.fromUid.low >>> 0, object.fromUid.high >>> 0).toNumber();
-            if (object.toUid != null)
-                if ($util.Long)
-                    (message.toUid = $util.Long.fromValue(object.toUid)).unsigned = false;
-                else if (typeof object.toUid === "string")
-                    message.toUid = parseInt(object.toUid, 10);
-                else if (typeof object.toUid === "number")
-                    message.toUid = object.toUid;
-                else if (typeof object.toUid === "object")
-                    message.toUid = new $util.LongBits(object.toUid.low >>> 0, object.toUid.high >>> 0).toNumber();
             return message;
         };
 
@@ -32822,11 +34841,6 @@ export const server = $root.server = (() => {
                     object.fromUid = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
                 } else
                     object.fromUid = options.longs === String ? "0" : 0;
-                if ($util.Long) {
-                    let long = new $util.Long(0, 0, false);
-                    object.toUid = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                } else
-                    object.toUid = options.longs === String ? "0" : 0;
             }
             if (message.type != null && message.hasOwnProperty("type"))
                 object.type = options.enums === String ? $root.server.ChatState.Type[message.type] === undefined ? message.type : $root.server.ChatState.Type[message.type] : message.type;
@@ -32839,11 +34853,6 @@ export const server = $root.server = (() => {
                     object.fromUid = options.longs === String ? String(message.fromUid) : message.fromUid;
                 else
                     object.fromUid = options.longs === String ? $util.Long.prototype.toString.call(message.fromUid) : options.longs === Number ? new $util.LongBits(message.fromUid.low >>> 0, message.fromUid.high >>> 0).toNumber() : message.fromUid;
-            if (message.toUid != null && message.hasOwnProperty("toUid"))
-                if (typeof message.toUid === "number")
-                    object.toUid = options.longs === String ? String(message.toUid) : message.toUid;
-                else
-                    object.toUid = options.longs === String ? $util.Long.prototype.toString.call(message.toUid) : options.longs === Number ? new $util.LongBits(message.toUid.low >>> 0, message.toUid.high >>> 0).toNumber() : message.toUid;
             return object;
         };
 
@@ -32912,8 +34921,6 @@ export const server = $root.server = (() => {
          * @interface IAck
          * @property {string|null} [id] Ack id
          * @property {number|Long|null} [timestamp] Ack timestamp
-         * @property {number|Long|null} [toUid] Ack toUid
-         * @property {number|Long|null} [fromUid] Ack fromUid
          */
 
         /**
@@ -32948,22 +34955,6 @@ export const server = $root.server = (() => {
         Ack.prototype.timestamp = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
 
         /**
-         * Ack toUid.
-         * @member {number|Long} toUid
-         * @memberof server.Ack
-         * @instance
-         */
-        Ack.prototype.toUid = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
-
-        /**
-         * Ack fromUid.
-         * @member {number|Long} fromUid
-         * @memberof server.Ack
-         * @instance
-         */
-        Ack.prototype.fromUid = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
-
-        /**
          * Creates a new Ack instance using the specified properties.
          * @function create
          * @memberof server.Ack
@@ -32991,10 +34982,6 @@ export const server = $root.server = (() => {
                 writer.uint32(/* id 1, wireType 2 =*/10).string(message.id);
             if (message.timestamp != null && Object.hasOwnProperty.call(message, "timestamp"))
                 writer.uint32(/* id 2, wireType 0 =*/16).int64(message.timestamp);
-            if (message.toUid != null && Object.hasOwnProperty.call(message, "toUid"))
-                writer.uint32(/* id 3, wireType 0 =*/24).int64(message.toUid);
-            if (message.fromUid != null && Object.hasOwnProperty.call(message, "fromUid"))
-                writer.uint32(/* id 4, wireType 0 =*/32).int64(message.fromUid);
             return writer;
         };
 
@@ -33035,14 +35022,6 @@ export const server = $root.server = (() => {
                     }
                 case 2: {
                         message.timestamp = reader.int64();
-                        break;
-                    }
-                case 3: {
-                        message.toUid = reader.int64();
-                        break;
-                    }
-                case 4: {
-                        message.fromUid = reader.int64();
                         break;
                     }
                 default:
@@ -33086,12 +35065,6 @@ export const server = $root.server = (() => {
             if (message.timestamp != null && message.hasOwnProperty("timestamp"))
                 if (!$util.isInteger(message.timestamp) && !(message.timestamp && $util.isInteger(message.timestamp.low) && $util.isInteger(message.timestamp.high)))
                     return "timestamp: integer|Long expected";
-            if (message.toUid != null && message.hasOwnProperty("toUid"))
-                if (!$util.isInteger(message.toUid) && !(message.toUid && $util.isInteger(message.toUid.low) && $util.isInteger(message.toUid.high)))
-                    return "toUid: integer|Long expected";
-            if (message.fromUid != null && message.hasOwnProperty("fromUid"))
-                if (!$util.isInteger(message.fromUid) && !(message.fromUid && $util.isInteger(message.fromUid.low) && $util.isInteger(message.fromUid.high)))
-                    return "fromUid: integer|Long expected";
             return null;
         };
 
@@ -33118,24 +35091,6 @@ export const server = $root.server = (() => {
                     message.timestamp = object.timestamp;
                 else if (typeof object.timestamp === "object")
                     message.timestamp = new $util.LongBits(object.timestamp.low >>> 0, object.timestamp.high >>> 0).toNumber();
-            if (object.toUid != null)
-                if ($util.Long)
-                    (message.toUid = $util.Long.fromValue(object.toUid)).unsigned = false;
-                else if (typeof object.toUid === "string")
-                    message.toUid = parseInt(object.toUid, 10);
-                else if (typeof object.toUid === "number")
-                    message.toUid = object.toUid;
-                else if (typeof object.toUid === "object")
-                    message.toUid = new $util.LongBits(object.toUid.low >>> 0, object.toUid.high >>> 0).toNumber();
-            if (object.fromUid != null)
-                if ($util.Long)
-                    (message.fromUid = $util.Long.fromValue(object.fromUid)).unsigned = false;
-                else if (typeof object.fromUid === "string")
-                    message.fromUid = parseInt(object.fromUid, 10);
-                else if (typeof object.fromUid === "number")
-                    message.fromUid = object.fromUid;
-                else if (typeof object.fromUid === "object")
-                    message.fromUid = new $util.LongBits(object.fromUid.low >>> 0, object.fromUid.high >>> 0).toNumber();
             return message;
         };
 
@@ -33159,16 +35114,6 @@ export const server = $root.server = (() => {
                     object.timestamp = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
                 } else
                     object.timestamp = options.longs === String ? "0" : 0;
-                if ($util.Long) {
-                    let long = new $util.Long(0, 0, false);
-                    object.toUid = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                } else
-                    object.toUid = options.longs === String ? "0" : 0;
-                if ($util.Long) {
-                    let long = new $util.Long(0, 0, false);
-                    object.fromUid = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                } else
-                    object.fromUid = options.longs === String ? "0" : 0;
             }
             if (message.id != null && message.hasOwnProperty("id"))
                 object.id = message.id;
@@ -33177,16 +35122,6 @@ export const server = $root.server = (() => {
                     object.timestamp = options.longs === String ? String(message.timestamp) : message.timestamp;
                 else
                     object.timestamp = options.longs === String ? $util.Long.prototype.toString.call(message.timestamp) : options.longs === Number ? new $util.LongBits(message.timestamp.low >>> 0, message.timestamp.high >>> 0).toNumber() : message.timestamp;
-            if (message.toUid != null && message.hasOwnProperty("toUid"))
-                if (typeof message.toUid === "number")
-                    object.toUid = options.longs === String ? String(message.toUid) : message.toUid;
-                else
-                    object.toUid = options.longs === String ? $util.Long.prototype.toString.call(message.toUid) : options.longs === Number ? new $util.LongBits(message.toUid.low >>> 0, message.toUid.high >>> 0).toNumber() : message.toUid;
-            if (message.fromUid != null && message.hasOwnProperty("fromUid"))
-                if (typeof message.fromUid === "number")
-                    object.fromUid = options.longs === String ? String(message.fromUid) : message.fromUid;
-                else
-                    object.fromUid = options.longs === String ? $util.Long.prototype.toString.call(message.fromUid) : options.longs === Number ? new $util.LongBits(message.fromUid.low >>> 0, message.fromUid.high >>> 0).toNumber() : message.fromUid;
             return object;
         };
 
@@ -35352,6 +37287,7 @@ export const server = $root.server = (() => {
          * @interface IPushRegister
          * @property {server.IPushToken|null} [pushToken] PushRegister pushToken
          * @property {string|null} [langId] PushRegister langId
+         * @property {number|Long|null} [zoneOffset] PushRegister zoneOffset
          */
 
         /**
@@ -35386,6 +37322,14 @@ export const server = $root.server = (() => {
         PushRegister.prototype.langId = "";
 
         /**
+         * PushRegister zoneOffset.
+         * @member {number|Long} zoneOffset
+         * @memberof server.PushRegister
+         * @instance
+         */
+        PushRegister.prototype.zoneOffset = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+
+        /**
          * Creates a new PushRegister instance using the specified properties.
          * @function create
          * @memberof server.PushRegister
@@ -35413,6 +37357,8 @@ export const server = $root.server = (() => {
                 $root.server.PushToken.encode(message.pushToken, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
             if (message.langId != null && Object.hasOwnProperty.call(message, "langId"))
                 writer.uint32(/* id 2, wireType 2 =*/18).string(message.langId);
+            if (message.zoneOffset != null && Object.hasOwnProperty.call(message, "zoneOffset"))
+                writer.uint32(/* id 3, wireType 0 =*/24).int64(message.zoneOffset);
             return writer;
         };
 
@@ -35453,6 +37399,10 @@ export const server = $root.server = (() => {
                     }
                 case 2: {
                         message.langId = reader.string();
+                        break;
+                    }
+                case 3: {
+                        message.zoneOffset = reader.int64();
                         break;
                     }
                 default:
@@ -35498,6 +37448,9 @@ export const server = $root.server = (() => {
             if (message.langId != null && message.hasOwnProperty("langId"))
                 if (!$util.isString(message.langId))
                     return "langId: string expected";
+            if (message.zoneOffset != null && message.hasOwnProperty("zoneOffset"))
+                if (!$util.isInteger(message.zoneOffset) && !(message.zoneOffset && $util.isInteger(message.zoneOffset.low) && $util.isInteger(message.zoneOffset.high)))
+                    return "zoneOffset: integer|Long expected";
             return null;
         };
 
@@ -35520,6 +37473,15 @@ export const server = $root.server = (() => {
             }
             if (object.langId != null)
                 message.langId = String(object.langId);
+            if (object.zoneOffset != null)
+                if ($util.Long)
+                    (message.zoneOffset = $util.Long.fromValue(object.zoneOffset)).unsigned = false;
+                else if (typeof object.zoneOffset === "string")
+                    message.zoneOffset = parseInt(object.zoneOffset, 10);
+                else if (typeof object.zoneOffset === "number")
+                    message.zoneOffset = object.zoneOffset;
+                else if (typeof object.zoneOffset === "object")
+                    message.zoneOffset = new $util.LongBits(object.zoneOffset.low >>> 0, object.zoneOffset.high >>> 0).toNumber();
             return message;
         };
 
@@ -35539,11 +37501,21 @@ export const server = $root.server = (() => {
             if (options.defaults) {
                 object.pushToken = null;
                 object.langId = "";
+                if ($util.Long) {
+                    let long = new $util.Long(0, 0, false);
+                    object.zoneOffset = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
+                } else
+                    object.zoneOffset = options.longs === String ? "0" : 0;
             }
             if (message.pushToken != null && message.hasOwnProperty("pushToken"))
                 object.pushToken = $root.server.PushToken.toObject(message.pushToken, options);
             if (message.langId != null && message.hasOwnProperty("langId"))
                 object.langId = message.langId;
+            if (message.zoneOffset != null && message.hasOwnProperty("zoneOffset"))
+                if (typeof message.zoneOffset === "number")
+                    object.zoneOffset = options.longs === String ? String(message.zoneOffset) : message.zoneOffset;
+                else
+                    object.zoneOffset = options.longs === String ? $util.Long.prototype.toString.call(message.zoneOffset) : options.longs === Number ? new $util.LongBits(message.zoneOffset.low >>> 0, message.zoneOffset.high >>> 0).toNumber() : message.zoneOffset;
             return object;
         };
 
@@ -36705,6 +38677,7 @@ export const server = $root.server = (() => {
                 case 4:
                 case 5:
                 case 6:
+                case 7:
                     break;
                 }
             return null;
@@ -36776,6 +38749,10 @@ export const server = $root.server = (() => {
             case "MESSAGE":
             case 6:
                 message.contentType = 6;
+                break;
+            case "MESSAGE_REACTION":
+            case 7:
+                message.contentType = 7;
                 break;
             }
             return message;
@@ -36862,6 +38839,7 @@ export const server = $root.server = (() => {
          * @property {number} POST_REACTION=4 POST_REACTION value
          * @property {number} COMMENT_REACTION=5 COMMENT_REACTION value
          * @property {number} MESSAGE=6 MESSAGE value
+         * @property {number} MESSAGE_REACTION=7 MESSAGE_REACTION value
          */
         GroupFeedRerequest.ContentType = (function() {
             const valuesById = {}, values = Object.create(valuesById);
@@ -36872,6 +38850,7 @@ export const server = $root.server = (() => {
             values[valuesById[4] = "POST_REACTION"] = 4;
             values[valuesById[5] = "COMMENT_REACTION"] = 5;
             values[valuesById[6] = "MESSAGE"] = 6;
+            values[valuesById[7] = "MESSAGE_REACTION"] = 7;
             return values;
         })();
 
@@ -46816,6 +48795,7 @@ export const server = $root.server = (() => {
          * @property {server.IFabAction|null} [fabAction] EventData fabAction
          * @property {server.IGroupHistoryReport|null} [groupHistoryReport] EventData groupHistoryReport
          * @property {server.IHomeDecryptionReport|null} [homeDecryptionReport] EventData homeDecryptionReport
+         * @property {server.IInviteRequestResult|null} [inviteRequestResult] EventData inviteRequestResult
          */
 
         /**
@@ -46969,17 +48949,25 @@ export const server = $root.server = (() => {
          */
         EventData.prototype.homeDecryptionReport = null;
 
+        /**
+         * EventData inviteRequestResult.
+         * @member {server.IInviteRequestResult|null|undefined} inviteRequestResult
+         * @memberof server.EventData
+         * @instance
+         */
+        EventData.prototype.inviteRequestResult = null;
+
         // OneOf field names bound to virtual getters and setters
         let $oneOfFields;
 
         /**
          * EventData edata.
-         * @member {"mediaUpload"|"mediaDownload"|"mediaComposeLoad"|"pushReceived"|"decryptionReport"|"permissions"|"mediaObjectDownload"|"groupDecryptionReport"|"call"|"fabAction"|"groupHistoryReport"|"homeDecryptionReport"|undefined} edata
+         * @member {"mediaUpload"|"mediaDownload"|"mediaComposeLoad"|"pushReceived"|"decryptionReport"|"permissions"|"mediaObjectDownload"|"groupDecryptionReport"|"call"|"fabAction"|"groupHistoryReport"|"homeDecryptionReport"|"inviteRequestResult"|undefined} edata
          * @memberof server.EventData
          * @instance
          */
         Object.defineProperty(EventData.prototype, "edata", {
-            get: $util.oneOfGetter($oneOfFields = ["mediaUpload", "mediaDownload", "mediaComposeLoad", "pushReceived", "decryptionReport", "permissions", "mediaObjectDownload", "groupDecryptionReport", "call", "fabAction", "groupHistoryReport", "homeDecryptionReport"]),
+            get: $util.oneOfGetter($oneOfFields = ["mediaUpload", "mediaDownload", "mediaComposeLoad", "pushReceived", "decryptionReport", "permissions", "mediaObjectDownload", "groupDecryptionReport", "call", "fabAction", "groupHistoryReport", "homeDecryptionReport", "inviteRequestResult"]),
             set: $util.oneOfSetter($oneOfFields)
         });
 
@@ -47041,6 +49029,8 @@ export const server = $root.server = (() => {
                 $root.server.GroupHistoryReport.encode(message.groupHistoryReport, writer.uint32(/* id 20, wireType 2 =*/162).fork()).ldelim();
             if (message.homeDecryptionReport != null && Object.hasOwnProperty.call(message, "homeDecryptionReport"))
                 $root.server.HomeDecryptionReport.encode(message.homeDecryptionReport, writer.uint32(/* id 21, wireType 2 =*/170).fork()).ldelim();
+            if (message.inviteRequestResult != null && Object.hasOwnProperty.call(message, "inviteRequestResult"))
+                $root.server.InviteRequestResult.encode(message.inviteRequestResult, writer.uint32(/* id 22, wireType 2 =*/178).fork()).ldelim();
             return writer;
         };
 
@@ -47141,6 +49131,10 @@ export const server = $root.server = (() => {
                     }
                 case 21: {
                         message.homeDecryptionReport = $root.server.HomeDecryptionReport.decode(reader, reader.uint32());
+                        break;
+                    }
+                case 22: {
+                        message.inviteRequestResult = $root.server.InviteRequestResult.decode(reader, reader.uint32());
                         break;
                     }
                 default:
@@ -47318,6 +49312,16 @@ export const server = $root.server = (() => {
                         return "homeDecryptionReport." + error;
                 }
             }
+            if (message.inviteRequestResult != null && message.hasOwnProperty("inviteRequestResult")) {
+                if (properties.edata === 1)
+                    return "edata: multiple values";
+                properties.edata = 1;
+                {
+                    let error = $root.server.InviteRequestResult.verify(message.inviteRequestResult);
+                    if (error)
+                        return "inviteRequestResult." + error;
+                }
+            }
             return null;
         };
 
@@ -47435,6 +49439,11 @@ export const server = $root.server = (() => {
                     throw TypeError(".server.EventData.homeDecryptionReport: object expected");
                 message.homeDecryptionReport = $root.server.HomeDecryptionReport.fromObject(object.homeDecryptionReport);
             }
+            if (object.inviteRequestResult != null) {
+                if (typeof object.inviteRequestResult !== "object")
+                    throw TypeError(".server.EventData.inviteRequestResult: object expected");
+                message.inviteRequestResult = $root.server.InviteRequestResult.fromObject(object.inviteRequestResult);
+            }
             return message;
         };
 
@@ -47541,6 +49550,11 @@ export const server = $root.server = (() => {
                 object.homeDecryptionReport = $root.server.HomeDecryptionReport.toObject(message.homeDecryptionReport, options);
                 if (options.oneofs)
                     object.edata = "homeDecryptionReport";
+            }
+            if (message.inviteRequestResult != null && message.hasOwnProperty("inviteRequestResult")) {
+                object.inviteRequestResult = $root.server.InviteRequestResult.toObject(message.inviteRequestResult, options);
+                if (options.oneofs)
+                    object.edata = "inviteRequestResult";
             }
             return object;
         };
@@ -50548,6 +52562,7 @@ export const server = $root.server = (() => {
                 case 4:
                 case 5:
                 case 6:
+                case 7:
                     break;
                 }
             if (message.originalVersion != null && message.hasOwnProperty("originalVersion"))
@@ -50654,6 +52669,10 @@ export const server = $root.server = (() => {
             case "CHAT":
             case 6:
                 message.itemType = 6;
+                break;
+            case "CHAT_REACTION":
+            case 7:
+                message.itemType = 7;
                 break;
             }
             if (object.originalVersion != null)
@@ -50807,6 +52826,7 @@ export const server = $root.server = (() => {
          * @property {number} POST_REACTION=4 POST_REACTION value
          * @property {number} COMMENT_REACTION=5 COMMENT_REACTION value
          * @property {number} CHAT=6 CHAT value
+         * @property {number} CHAT_REACTION=7 CHAT_REACTION value
          */
         GroupDecryptionReport.ItemType = (function() {
             const valuesById = {}, values = Object.create(valuesById);
@@ -50817,6 +52837,7 @@ export const server = $root.server = (() => {
             values[valuesById[4] = "POST_REACTION"] = 4;
             values[valuesById[5] = "COMMENT_REACTION"] = 5;
             values[valuesById[6] = "CHAT"] = 6;
+            values[valuesById[7] = "CHAT_REACTION"] = 7;
             return values;
         })();
 
@@ -55179,6 +57200,280 @@ export const server = $root.server = (() => {
         })();
 
         return FabAction;
+    })();
+
+    server.InviteRequestResult = (function() {
+
+        /**
+         * Properties of an InviteRequestResult.
+         * @memberof server
+         * @interface IInviteRequestResult
+         * @property {server.InviteRequestResult.Type|null} [type] InviteRequestResult type
+         * @property {string|null} [invitedPhone] InviteRequestResult invitedPhone
+         */
+
+        /**
+         * Constructs a new InviteRequestResult.
+         * @memberof server
+         * @classdesc Represents an InviteRequestResult.
+         * @implements IInviteRequestResult
+         * @constructor
+         * @param {server.IInviteRequestResult=} [properties] Properties to set
+         */
+        function InviteRequestResult(properties) {
+            if (properties)
+                for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * InviteRequestResult type.
+         * @member {server.InviteRequestResult.Type} type
+         * @memberof server.InviteRequestResult
+         * @instance
+         */
+        InviteRequestResult.prototype.type = 0;
+
+        /**
+         * InviteRequestResult invitedPhone.
+         * @member {string} invitedPhone
+         * @memberof server.InviteRequestResult
+         * @instance
+         */
+        InviteRequestResult.prototype.invitedPhone = "";
+
+        /**
+         * Creates a new InviteRequestResult instance using the specified properties.
+         * @function create
+         * @memberof server.InviteRequestResult
+         * @static
+         * @param {server.IInviteRequestResult=} [properties] Properties to set
+         * @returns {server.InviteRequestResult} InviteRequestResult instance
+         */
+        InviteRequestResult.create = function create(properties) {
+            return new InviteRequestResult(properties);
+        };
+
+        /**
+         * Encodes the specified InviteRequestResult message. Does not implicitly {@link server.InviteRequestResult.verify|verify} messages.
+         * @function encode
+         * @memberof server.InviteRequestResult
+         * @static
+         * @param {server.IInviteRequestResult} message InviteRequestResult message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        InviteRequestResult.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.type != null && Object.hasOwnProperty.call(message, "type"))
+                writer.uint32(/* id 1, wireType 0 =*/8).int32(message.type);
+            if (message.invitedPhone != null && Object.hasOwnProperty.call(message, "invitedPhone"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.invitedPhone);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified InviteRequestResult message, length delimited. Does not implicitly {@link server.InviteRequestResult.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof server.InviteRequestResult
+         * @static
+         * @param {server.IInviteRequestResult} message InviteRequestResult message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        InviteRequestResult.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes an InviteRequestResult message from the specified reader or buffer.
+         * @function decode
+         * @memberof server.InviteRequestResult
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {server.InviteRequestResult} InviteRequestResult
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        InviteRequestResult.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            let end = length === undefined ? reader.len : reader.pos + length, message = new $root.server.InviteRequestResult();
+            while (reader.pos < end) {
+                let tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1: {
+                        message.type = reader.int32();
+                        break;
+                    }
+                case 2: {
+                        message.invitedPhone = reader.string();
+                        break;
+                    }
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes an InviteRequestResult message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof server.InviteRequestResult
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {server.InviteRequestResult} InviteRequestResult
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        InviteRequestResult.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies an InviteRequestResult message.
+         * @function verify
+         * @memberof server.InviteRequestResult
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        InviteRequestResult.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.type != null && message.hasOwnProperty("type"))
+                switch (message.type) {
+                default:
+                    return "type: enum value expected";
+                case 0:
+                case 1:
+                case 2:
+                case 3:
+                    break;
+                }
+            if (message.invitedPhone != null && message.hasOwnProperty("invitedPhone"))
+                if (!$util.isString(message.invitedPhone))
+                    return "invitedPhone: string expected";
+            return null;
+        };
+
+        /**
+         * Creates an InviteRequestResult message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof server.InviteRequestResult
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {server.InviteRequestResult} InviteRequestResult
+         */
+        InviteRequestResult.fromObject = function fromObject(object) {
+            if (object instanceof $root.server.InviteRequestResult)
+                return object;
+            let message = new $root.server.InviteRequestResult();
+            switch (object.type) {
+            default:
+                if (typeof object.type === "number") {
+                    message.type = object.type;
+                    break;
+                }
+                break;
+            case "UNKNOWN":
+            case 0:
+                message.type = 0;
+                break;
+            case "CANCELLED":
+            case 1:
+                message.type = 1;
+                break;
+            case "SENT":
+            case 2:
+                message.type = 2;
+                break;
+            case "FAILED":
+            case 3:
+                message.type = 3;
+                break;
+            }
+            if (object.invitedPhone != null)
+                message.invitedPhone = String(object.invitedPhone);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from an InviteRequestResult message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof server.InviteRequestResult
+         * @static
+         * @param {server.InviteRequestResult} message InviteRequestResult
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        InviteRequestResult.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            let object = {};
+            if (options.defaults) {
+                object.type = options.enums === String ? "UNKNOWN" : 0;
+                object.invitedPhone = "";
+            }
+            if (message.type != null && message.hasOwnProperty("type"))
+                object.type = options.enums === String ? $root.server.InviteRequestResult.Type[message.type] === undefined ? message.type : $root.server.InviteRequestResult.Type[message.type] : message.type;
+            if (message.invitedPhone != null && message.hasOwnProperty("invitedPhone"))
+                object.invitedPhone = message.invitedPhone;
+            return object;
+        };
+
+        /**
+         * Converts this InviteRequestResult to JSON.
+         * @function toJSON
+         * @memberof server.InviteRequestResult
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        InviteRequestResult.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for InviteRequestResult
+         * @function getTypeUrl
+         * @memberof server.InviteRequestResult
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        InviteRequestResult.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/server.InviteRequestResult";
+        };
+
+        /**
+         * Type enum.
+         * @name server.InviteRequestResult.Type
+         * @enum {number}
+         * @property {number} UNKNOWN=0 UNKNOWN value
+         * @property {number} CANCELLED=1 CANCELLED value
+         * @property {number} SENT=2 SENT value
+         * @property {number} FAILED=3 FAILED value
+         */
+        InviteRequestResult.Type = (function() {
+            const valuesById = {}, values = Object.create(valuesById);
+            values[valuesById[0] = "UNKNOWN"] = 0;
+            values[valuesById[1] = "CANCELLED"] = 1;
+            values[valuesById[2] = "SENT"] = 2;
+            values[valuesById[3] = "FAILED"] = 3;
+            return values;
+        })();
+
+        return InviteRequestResult;
     })();
 
     return server;

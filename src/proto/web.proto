@@ -12,7 +12,18 @@ message WebContainer {
     FeedRequest feed_request = 1;
     FeedResponse feed_response = 2;
     FeedUpdate feed_update = 3;
+    GroupRequest group_request = 4;
+    GroupResponse group_response = 5;
+    PrivacyListRequest privacy_list_request = 6;
+    PrivacyListResponse privacy_list_response = 7;
+    ReceiptUpdate receipt_update = 8;
   }
+}
+
+// ConnectionInfo is included as message payload during Noise handshake.
+message ConnectionInfo {
+  string version = 1;
+  UserDisplayInfo user = 2;
 }
 
 message ReceiptInfo {
@@ -112,4 +123,28 @@ message FeedUpdate {
   repeated UserDisplayInfo user_display_info = 2;
   repeated PostDisplayInfo post_display_info = 3;
   repeated GroupDisplayInfo group_display_info = 4;
+}
+
+message GroupRequest {
+  string id = 1;
+}
+
+message GroupResponse {
+  string id = 1;
+  repeated GroupDisplayInfo groups = 2;
+}
+
+message PrivacyListRequest {
+  string id = 1;
+}
+
+message PrivacyListResponse {
+  string id = 1;
+  server.PrivacyLists privacy_lists = 2;
+}
+
+message ReceiptUpdate {
+  string id = 1;
+  string content_id = 2;
+  ReceiptInfo receipt = 3;
 }

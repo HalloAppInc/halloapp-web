@@ -9223,6 +9223,7 @@ export const clients = $root.clients = (() => {
          * @property {clients.IImage|null} [image] Moment image
          * @property {clients.IImage|null} [selfieImage] Moment selfieImage
          * @property {boolean|null} [selfieLeading] Moment selfieLeading
+         * @property {string|null} [location] Moment location
          */
 
         /**
@@ -9265,6 +9266,14 @@ export const clients = $root.clients = (() => {
         Moment.prototype.selfieLeading = false;
 
         /**
+         * Moment location.
+         * @member {string} location
+         * @memberof clients.Moment
+         * @instance
+         */
+        Moment.prototype.location = "";
+
+        /**
          * Creates a new Moment instance using the specified properties.
          * @function create
          * @memberof clients.Moment
@@ -9294,6 +9303,8 @@ export const clients = $root.clients = (() => {
                 $root.clients.Image.encode(message.selfieImage, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
             if (message.selfieLeading != null && Object.hasOwnProperty.call(message, "selfieLeading"))
                 writer.uint32(/* id 3, wireType 0 =*/24).bool(message.selfieLeading);
+            if (message.location != null && Object.hasOwnProperty.call(message, "location"))
+                writer.uint32(/* id 4, wireType 2 =*/34).string(message.location);
             return writer;
         };
 
@@ -9338,6 +9349,10 @@ export const clients = $root.clients = (() => {
                     }
                 case 3: {
                         message.selfieLeading = reader.bool();
+                        break;
+                    }
+                case 4: {
+                        message.location = reader.string();
                         break;
                     }
                 default:
@@ -9388,6 +9403,9 @@ export const clients = $root.clients = (() => {
             if (message.selfieLeading != null && message.hasOwnProperty("selfieLeading"))
                 if (typeof message.selfieLeading !== "boolean")
                     return "selfieLeading: boolean expected";
+            if (message.location != null && message.hasOwnProperty("location"))
+                if (!$util.isString(message.location))
+                    return "location: string expected";
             return null;
         };
 
@@ -9415,6 +9433,8 @@ export const clients = $root.clients = (() => {
             }
             if (object.selfieLeading != null)
                 message.selfieLeading = Boolean(object.selfieLeading);
+            if (object.location != null)
+                message.location = String(object.location);
             return message;
         };
 
@@ -9435,6 +9455,7 @@ export const clients = $root.clients = (() => {
                 object.image = null;
                 object.selfieImage = null;
                 object.selfieLeading = false;
+                object.location = "";
             }
             if (message.image != null && message.hasOwnProperty("image"))
                 object.image = $root.clients.Image.toObject(message.image, options);
@@ -9442,6 +9463,8 @@ export const clients = $root.clients = (() => {
                 object.selfieImage = $root.clients.Image.toObject(message.selfieImage, options);
             if (message.selfieLeading != null && message.hasOwnProperty("selfieLeading"))
                 object.selfieLeading = message.selfieLeading;
+            if (message.location != null && message.hasOwnProperty("location"))
+                object.location = message.location;
             return object;
         };
 
