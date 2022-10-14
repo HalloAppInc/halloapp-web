@@ -14,11 +14,12 @@
     import { useHADatabase } from '@/composables/haDb'
     import { useHAText } from '@/composables/haText'
 
-    import Popup from './Popup.vue'
-    import Quote from './Quote.vue'
-    import FullScreener from './FullScreener.vue'
-    import MediaCollage from './MediaCollage.vue'
-    import Notification from './Notification.vue'
+    import Popup from '@/components/chats/Popup.vue'
+    import Quote from '@/components/msg/Quote.vue'
+    import FullScreener from '@/components/media/FullScreener.vue'
+    import Notification from '@/components/chats/Notification.vue'
+
+    import MediaCollage from '@/components/media/MediaCollage.vue'
 
 
     const colorStore = useColorStore()

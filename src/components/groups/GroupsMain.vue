@@ -30,18 +30,18 @@
 
     function commentsClick() {
         
-        mainStore.showSidebar = !mainStore.showSidebar
+        mainStore.showGroupsSidebar = !mainStore.showGroupsSidebar
     }
 
     function toggleSidebar() {
         feedRef.value?.closeCommentsPanel()
-        mainStore.showSidebar = !mainStore.showSidebar
+        mainStore.showGroupsSidebar = !mainStore.showGroupsSidebar
     }
 
     init()
 
     function init() {
-        mainStore.showSidebar = true
+        mainStore.showGroupsSidebar = true
     }
 
 </script>

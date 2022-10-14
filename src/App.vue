@@ -41,7 +41,7 @@
 
     const sideBarWidth: ComputedRef<string> = computed((): string => {
         let widthPercent = '30%'
-        if (mainStore.page == 'home' || !mainStore.showSidebar) {
+        if (['home', 'groups'].includes(mainStore.page)) {
             widthPercent = '0%'
             return widthPercent
         } 
@@ -193,9 +193,9 @@
         </div>
 
         <!-- <div id="Sidebar" :class="[{'animateSlide': mainStore.page == 'groups'}]"> -->
-        <div id="Sidebar" :class="[{'animateSlide': mainStore.animateSidebar}]">
+        <!-- <div id="Sidebar" :class="[{'animateSlide': mainStore.animateSidebar}]">
             <Sidebar/>
-        </div>
+        </div> -->
 
         <div id="MainPanel">
             <MainPanel/>
@@ -204,6 +204,9 @@
         <div v-if='showBottomNav' id="BottomNav">
             <BottomNav/>
         </div>
+
+        <!-- <div v-if="!mainStore.isConnectedToServer" class="notification">Lost connection to server</div>
+        <div v-if="!mainStore.isPublicKeyAuthenticated" class="notification">Lost connection to mobile</div> -->
 
     </div>
 
@@ -312,8 +315,6 @@
         overflow: auto;  
     }
 
-
-
     #signInWrapperHeader {
         margin-top: 20px;
         width: 80%;
@@ -385,6 +386,8 @@
     }
 
     #MainWrapper {
+        position: relative;
+
         width: 100%;
         height: 100%;
 
@@ -399,10 +402,9 @@
     }
 
     #Sidebar {
-        background-color: white;
+        background-color: v-bind(backgroundColor);
         flex: 0 0 v-bind(sideBarWidth);
         overflow: hidden;
-        
     }
 
     .animateSlide {
@@ -437,6 +439,18 @@
 
     #Settings {
         display: flex;
+    }
+
+    .notification {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        z-index: 10;
+        padding: 10px 30px 10px 30px;
+        border-radius: 10px;
+        color: white;
+        font-weight: bold;
+        background-color: red;
     }
 
 </style>

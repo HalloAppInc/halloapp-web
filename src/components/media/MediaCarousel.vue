@@ -1,15 +1,22 @@
 <script setup lang="ts">
-    import { Ref, ref, toRef } from 'vue'
+    import { Ref, ref, toRef, watch, defineEmits} from 'vue'
     import { storeToRefs } from 'pinia'
     import { liveQuery } from 'dexie'
     import { useI18n } from 'vue-i18n'
 
+    import { useMainStore } from '@/stores/mainStore'
     import { useColorStore } from '@/stores/colorStore'
     import hal from "@/common/halogger"
 
-    import { db, Feed, PostMedia, PostMediaType, Mention } from '@/db'
+    import { useHACommonMedia } from '@/composables/haCommonMedia'
 
+    import { db, Post, CommonMedia, MediaType, Mention, SubjectType } from '@/db'
+
+    const mainStore = useMainStore()
     const colorStore = useColorStore()
+
+    const { getCommonMedia, fetchCommonMedia
+    } = useHACommonMedia()
 
     const { t } = useI18n({
         inheritLocale: true,
@@ -17,83 +24,157 @@
     })
 
     const { 
+        primaryBlue: primaryBlueColor,
         primaryLightgray: primaryLightgrayColor,
+        primaryWhiteBlack: primaryWhiteBlackColor,
         background: backgroundColor,
         secondaryBg: secondaryBgColor,
-        timestamp: timestampColor
     } = storeToRefs(colorStore)  
 
-    enum MediaType {
-        Image,
-        Video
-    }
-    interface Media {
-        type?: PostMediaType;
-        mediaBlob?: any;
-        width: number;
-        height: number;
-        margin: number;
-        lengthMins?: String;
-        lengthSeconds?: String;
-        isReady: boolean;
-    }
+    const emit = defineEmits<{
+        (e: 'clickPrevious'): void
+        (e: 'clickNext'): void
+        (e: 'selectMedia', index: number): void
+        (e: 'openMedia', mediaList: any, idx: number, contentID: string): void
+    }>()
 
-    const props = defineProps({
-        isMobile: {
-            type: Boolean,
-            required: true
-        },
-        isSafari: {
-            type: Boolean,
-            required: true
-        },
-        postID: {
-            type: String,
-            required: true
-        },    
-        isAlbum: {
-            type: Boolean,
-            required: true
-        },
-        album: {
-            type: Object,
-            required: true
-        },
-        showPreviewImage: {
-            type: Boolean,
-            required: true
-        },
-        previewImageSrc: {
-            type: String,
-            required: true
-        },
-        mediaBoxWidth: {
-            type: Number,
-            required: true
-        },
-        mediaBoxHeight: {
-            type: Number,
-            required: true
-        }
-    })
+    interface Props {
+        type: SubjectType,
+        subjectID: string,
+        contentID: string,
+        showPreviewImage: boolean,
+        previewImageSrc: string,
+        postWidth: number,
+        selectedMediaIndex: number,
+       
+    }
+    const props = defineProps<Props>()
 
-    const isMobile          = toRef(props, 'isMobile')
-    const isSafari          = toRef(props, 'isSafari')
-    const isAlbum           = toRef(props, 'isAlbum')
-    const album             = toRef(props, 'album')
     const showPreviewImage  = toRef(props, 'showPreviewImage')
     const previewImageSrc   = toRef(props, 'previewImageSrc')
-    const mediaBoxWidth     = toRef(props, 'mediaBoxWidth')
-    const mediaBoxHeight    = toRef(props, 'mediaBoxHeight')
+    const selectedMedia     = toRef(props, 'selectedMediaIndex')
+
+    const mediaBoxWidth = ref(200)  // set to minimize box expanding/shrinking when loaded, 300 seems too much
+    const mediaBoxHeight = ref(200) // set to minimize box expanding/shrinking when loaded, 400 seems too much
 
     const $postMediaContainer = ref(null)
     const $mediaCarousel = ref(null)
 
-    let isDragStarted = false   // indicate mousedown or touchstart
+    let isDragStarted = false // indicate mousedown or touchstart
     let dragStartX = 0
     let dragStartY = 0
 
-    const selectedMedia = ref(0)
+    let preventClick = false // used to prevent going into fullscreen (click) after dragging
+
+    const listData: Ref<any[]> = ref([])
+
+    init()
+
+    async function init() {
+
+        const mediaList = await getCommonMedia(props.type, props.subjectID, props.contentID)
+
+        if (!mediaList) { 
+            mediaBoxHeight.value = 0
+            return 
+        }
+
+        listData.value = mediaList
+        await makeList()
+
+        const needWatching = await fetchCommonMedia(props.type, mediaList)
+
+        if (needWatching) {   
+            setupObserver()
+        }
+
+    }
+
+    async function setupObserver() {
+        const observable = liveQuery (() => db.commonMedia.where('contentID').equals(props.contentID).and((commonMed) => {
+            return commonMed.subjectID == props.subjectID && commonMed.type == props.type
+        }).toArray())
+
+        const subscription = observable.subscribe({
+            next: async result => {
+                if (!result) { return }
+                if (result.length == 0) { return }
+                
+                listData.value = result
+
+                await makeList()
+
+            },
+            error: error => console.error(error)
+        })
+    }
+
+    async function makeList() {
+        setMediaSizes(listData)
+        // todo: optimize by not redo-ing the entire list
+        for (let i = 0; i < listData.value.length; i++) {
+            const med = listData.value[i]
+            if (!med.previewImage) { continue }
+            if (med.previewImageUrl) { continue }
+            const previewImageUrl = URL.createObjectURL(med.previewImage)
+            med.previewImageUrl = previewImageUrl
+        }
+
+    }
+
+    function setMediaSizes(mediaList: any) {
+        if (!mediaList) { return }
+
+        const defaultRatio = 0.75 // 3/4 width/height portrait ratio
+
+        mediaBoxWidth.value = props.postWidth // media carousel single slide width
+        mediaBoxHeight.value = mediaBoxWidth.value/defaultRatio
+
+        const maxBoxWidth = mediaBoxWidth.value - 50 // width of media inside album
+        const maxBoxHeight = maxBoxWidth/defaultRatio 
+
+        let tallestMediaItemHeight = 0
+
+        for (const [index, mediaItem] of mediaList.value.entries()) {
+            let mediaItemWidth = mediaItem.width
+            let mediaItemHeight = mediaItem.height
+
+            /* most of the time the item height or width will be greater */
+            if (mediaItemHeight > maxBoxHeight || mediaItemWidth > maxBoxWidth) {
+
+                const mediaItemRatio = mediaItemWidth/mediaItemHeight
+
+                /* item is wider, scale by max width */
+                if (mediaItemRatio > defaultRatio) {
+                    mediaItemWidth = maxBoxWidth
+                    mediaItemHeight = mediaItemWidth/mediaItemRatio
+                } 
+    
+                /* scale by max height */
+                else {
+                    mediaItemHeight = maxBoxHeight
+                    mediaItemWidth = mediaItemHeight*mediaItemRatio
+                }
+            }
+
+            /* add margins so carousel have some spacing between slides */
+            const mediaItemMargin = props.postWidth - mediaItemWidth
+
+            mediaItem.margin = mediaItemMargin
+            mediaItem.width = mediaItemWidth
+            mediaItem.height = mediaItemHeight
+
+            if (mediaItemHeight > tallestMediaItemHeight) {
+                tallestMediaItemHeight = mediaItemHeight
+            }
+        }
+
+        /* set carousel slide height shorter if the tallest media is shorter than the default */
+        if (tallestMediaItemHeight < mediaBoxHeight.value) {
+            mediaBoxHeight.value = tallestMediaItemHeight
+        }
+    }
+    
 
     function videoLoaded(event: Event, index: number) {
         const vid = (event.target as HTMLVideoElement)
@@ -106,9 +187,14 @@
         carousel.style.transition = "transform 0.25s"
 
         if (selectedMedia.value <= 0) { return }
-        selectedMedia.value -= 1
 
-        const moveX = (-mediaBoxWidth.value) * selectedMedia.value
+        const previous = selectedMedia.value - 1
+        const moveX = (-mediaBoxWidth.value) * previous
+
+        emit('clickPrevious')
+        // selectedMedia.value -= 1
+
+        // const moveX = (-mediaBoxWidth.value) * selectedMedia.value
         carousel.style.transform = "translateX(" + moveX + "px)"
     }
 
@@ -117,12 +203,17 @@
         const carousel = $mediaCarousel.value as HTMLElement
         carousel.style.transition = "transform 0.25s"    
 
-        if (selectedMedia.value >= (props.album.length - 1) ) { 
+        if (selectedMedia.value >= (listData.value.length - 1) ) { 
             return 
         }
-        selectedMedia.value += 1
 
-        const moveX = (-mediaBoxWidth.value) * selectedMedia.value
+        const next = selectedMedia.value + 1
+        const moveX = (-mediaBoxWidth.value) * next
+
+        emit('clickNext')
+        // selectedMedia.value += 1
+
+        // const moveX = (-mediaBoxWidth.value) * selectedMedia.value
         carousel.style.transform = "translateX(" + moveX + "px)"
     }
 
@@ -154,6 +245,10 @@
         const clientX = drag.clientX
 
         const diffX = clientX - dragStartX
+
+        if (Math.abs(diffX) > 10) {
+            preventClick = true
+        }
 
         if (!dragThrottled) {    
             dragCarousel(diffX)  
@@ -204,7 +299,7 @@
         const carousel = $mediaCarousel.value as HTMLElement
 
         const leftEdgeOfCarousel = 0
-        const rightEdgeOfCarousel = (-mediaBoxWidth.value)*(props.album.length - 1)
+        const rightEdgeOfCarousel = (-mediaBoxWidth.value)*(listData.value.length - 1)
 
         const moveX = (-mediaBoxWidth.value)*(selectedMedia.value) + diffX
 
@@ -218,13 +313,13 @@
         let minDiff = 5
 
         // Desktop Safari needs transition to be < 0.15s for smooth drags, minDiff 3 helps
-        if (isSafari.value) {
+        if (mainStore.isSafari) {
             transition = "transform 0.10s"
             minDiff = 3
         }
 
         // Mobile Safari needs transition set to none for smooth drags, minDiff 0 helps
-        if (isMobile.value) {
+        if (mainStore.isMobile) {
             transition = "none"
             minDiff = 0       
         }
@@ -241,6 +336,7 @@
     }
 
     function stopCarouselDrag(clientX: number) {
+    
         if (!isDragStarted) { return }
         isDragStarted = false
 
@@ -251,27 +347,50 @@
 
         const threshold = mediaBoxWidth.value*0.25 /* should be < 0.3 for easier swiping */
 
+        let moveToSelectedMedia = selectedMedia.value
+
         if (diffX < -threshold) {
-            if (selectedMedia.value >= (props.album.length - 1) ) { 
-                selectedMedia.value = props.album.length - 1
+            if (selectedMedia.value >= (listData.value.length - 1) ) { 
+                // selectedMedia.value = listData.value.length - 1
+                moveToSelectedMedia = listData.value.length - 1
             } else {
-                selectedMedia.value += 1
+                moveToSelectedMedia += 1
+                // selectedMedia.value += 1
             }
         } else if (diffX > threshold) {
             if (selectedMedia.value <= 0) { 
-                selectedMedia.value = 0 
+                // selectedMedia.value = 0 
+                moveToSelectedMedia = 0
+                
             } else {
-                selectedMedia.value -= 1
+                moveToSelectedMedia -= 1
+               
+                // selectedMedia.value -= 1
             }
         }
 
-        const moveX = (-mediaBoxWidth.value) * selectedMedia.value
+        if (moveToSelectedMedia != selectedMedia.value) {
+            emit('selectMedia', moveToSelectedMedia)
+        }
+
+        const moveX = (-mediaBoxWidth.value) * moveToSelectedMedia
         carousel.style.transition = "transform 0.35s ease-out"
         carousel.style.transform = "translateX(" + moveX + "px)"
 
         dragStartX = 0
         dragStartY = 0
     }
+
+    watch(() => props.selectedMediaIndex, (newValue, oldValue) => {
+        if (newValue != oldValue) {
+            if (!$mediaCarousel.value) { return }
+            const carousel = $mediaCarousel.value as HTMLElement    
+
+            const moveX = (-mediaBoxWidth.value) * newValue
+            carousel.style.transition = "transform 0.35s ease-out"
+            carousel.style.transform = "translateX(" + moveX + "px)"
+        }
+    })
 
     function mouseUp(event: Event) {
         const drag = (event as DragEvent)
@@ -286,68 +405,102 @@
         stopCarouselDrag(clientX)
     }
 
+    function clickCapture(event: any) {
+        if (preventClick) {
+            event.stopPropagation();
+            preventClick = false
+        }
+    }
+
 </script>
 
 <template>
+    
+    <div class="mediaCarouselWrapper">
+        <div id="postMediaContainer" ref="$postMediaContainer"
+            @mousedown="mouseDown" 
+            @mousemove="mouseMove" 
+            @mouseup="mouseUp" @mouseleave="mouseUp"
+            @touchstart="touchStart"
+            @touchmove="touchMove"
+            @touchend="touchEnd" @touchcancel="touchEnd"
+            @click.capture="clickCapture">
 
-    <div id="postMediaContainer" ref="$postMediaContainer"
-        @mousedown="mouseDown" 
-        @mousemove="mouseMove" 
-        @mouseup="mouseUp" @mouseleave="mouseUp"
-        @touchstart="touchStart"
-        @touchmove="touchMove"
-        @touchend="touchEnd" @touchcancel="touchEnd">
+            <div v-if="listData.length > 0" class="mediaCarousel" ref="$mediaCarousel">
 
-        <div v-if="isAlbum" class="mediaCarousel" ref="$mediaCarousel">
+                <div v-for="(item, index) in listData" :key="item.contentID" class="mediaBox">
 
-            <div v-for="(item, index) in props.album" :key="item.postID" class="mediaBox">
+                    <div v-if='item.isCodecH265' class='mediaLoaderBox'>
+                        <div :class="['mediaErrorMsg']">{{ t('post.noH265VideoSupportText') }}</div>
+                    </div>
 
-                <div v-if='item.errorMsg' class='mediaLoaderBox'>
-                    <div :class="['mediaErrorMsg']">{{ item.errorMsg }}</div>
+                    <div v-else-if="!item.previewImageUrl" class="mediaLoaderBox">
+                        <div class="loader"></div>
+                    </div>
+                    
+                    <img v-else-if="item.mediaType == MediaType.Image" class="postImage" 
+                        :src="item.previewImageUrl" :width="item.width" :height="item.height" 
+                        :style="'margin-left: ' + item.margin + 'px; margin-right: ' + item.margin + 'px;'"
+                        @click="$emit('openMedia', listData, index, props.contentID)"
+                        alt="Post Image">
+
+
+                    <img v-else-if="item.mediaType == MediaType.Video" class="postImage" 
+                        :src="item.previewImageUrl" :width="item.width" :height="item.height" 
+                        :style="'margin-left: ' + item.margin + 'px; margin-right: ' + item.margin + 'px;'"
+                        @click="$emit('openMedia', listData, index, props.contentID)"
+                        alt="Video Preview Image">
+
+
+                    <div v-if='item.mediaType == MediaType.Video' class='playIconContainer'>
+                        <div class="playCircle">
+                            <div class="playIcon">
+                                <font-awesome-icon :icon="['fas', 'play']" size='xl' />
+                            </div>
+                        </div>
+                    </div>
+
+                    
+                    <!-- <video v-else-if="item.mediaType == MediaType.Video" class="postVideo" 
+                        :width="item.width" :height="item.height"
+                        :style="'margin-left: ' + item.margin + 'px; margin-right: ' + item.margin + 'px;'" 
+                        preload="metadata" @loadedmetadata="videoLoaded($event, index)" playsinline controls controlsList="">
+                        <source v-if="item.blobUrl" :src="item.blobUrl" type="video/mp4">
+                        <p>{{ t('mediaCarousel.noVideoSupportText') }}</p>
+                    </video> -->
+
                 </div>
-
-                <div v-else-if="!item.isReady" class="mediaLoaderBox">
-                    <div class="loader"></div>
-                </div>
-                
-                <img v-else-if="item.type == PostMediaType.Image" class="postImage" :src="item.mediaBlob" :width="item.width" :height="item.height" 
-                    :style="'margin-left: ' + item.margin + 'px; margin-right: ' + item.margin + 'px;'" 
-                    alt="Post Image">
-
-                <video v-else-if="item.type == PostMediaType.Video" class="postVideo" 
-                    :width="item.width" :height="item.height"
-                    :style="'margin-left: ' + item.margin + 'px; margin-right: ' + item.margin + 'px;'" 
-                    preload="metadata" @loadedmetadata="videoLoaded($event, parseInt(index))" playsinline controls controlsList="">
-                    <source v-if="item.mediaBlob" :src="item.mediaBlob" type="video/mp4">
-                    <p>{{ t('mediaCarousel.noVideoSupportText') }}</p>
-                </video>
-
-                <!-- <div v-if="item.type == MediaType.Video" class="mediaLength">
-                    {{ item.lengthMins }}:{{ item.lengthSeconds }}
-                </div> -->
-
             </div>
+            
+            <img v-else-if="showPreviewImage" id="previewImage" :src="previewImageSrc" alt="Link Preview">
+
+            <button v-if="!mainStore.isMobile && (selectedMedia != 0)" class="carouselButton carouselButtonPrevious" @click="clickPrevious">
+                <font-awesome-icon :icon="['fas', 'chevron-left']" />
+            </button>
+            <button v-if="!mainStore.isMobile && (selectedMedia < listData.length - 1)" class="carouselButton carouselButtonNext" @click="clickNext">
+                <font-awesome-icon :icon="['fas', 'chevron-right']" />
+            </button>     
+
         </div>
-        
-        <img v-else-if="showPreviewImage" id="previewImage" :src="previewImageSrc" alt="Link Preview">
 
-        <button v-if="!isMobile && (selectedMedia != 0)" class="carouselButton carouselButtonPrevious" @click="clickPrevious">
-            <font-awesome-icon :icon="['fas', 'chevron-left']" />
-        </button>
-        <button v-if="!isMobile && (selectedMedia < album.length - 1)" class="carouselButton carouselButtonNext" @click="clickNext">
-            <font-awesome-icon :icon="['fas', 'chevron-right']" />
-        </button>     
-
-    </div>
-
-    <div v-if="isAlbum && album.length > 1" id="mediaIndicatorBox">
-        <div v-for="(media, index) in album" :class="['mediaIndicator', {selected: parseInt(index) == selectedMedia}]">
+        <div v-if="listData.length > 1" class="mediaIndicatorBox">
+            <div v-for="(media, index) in listData" :class="['mediaIndicator', {selected: index == selectedMedia}]"
+                @click="emit('selectMedia', index)">
+            </div>
         </div>
     </div>
 
 </template>
 
 <style scoped>
+
+    .mediaCarouselWrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+    }
 
     #postMediaContainer {
         position: relative;
@@ -425,7 +578,7 @@
         border-radius: 10px 0px 0px 10px;
     }
 
-    #mediaIndicatorBox {
+    .mediaIndicatorBox {
         text-align: center;
         padding: 10px;
         display: flex;
@@ -439,6 +592,10 @@
         height: 7px;
         border-radius: 50%;
         background-color: v-bind(primaryLightgrayColor);
+    }
+    .mediaIndicator:hover {
+        background-color: v-bind(primaryBlueColor);
+        cursor: pointer;
     }
 
     .selected {
@@ -469,6 +626,8 @@
         flex-direction: horizontal;
         justify-content: center;
         align-items: center;
+
+        z-index: 1; /* need to be higher than video play button */
     }
     .mediaErrorMsg {
         text-align: center;
@@ -484,6 +643,46 @@
         width: 40px;
         height: 40px;
         animation: spin 2s linear infinite;
+    }
+
+    .playIconContainer {
+        position: absolute;
+        width: fit-content;
+        height: fit-content;
+        left: 50%;
+        bottom: 50%;
+
+        transform: translate(-50%, 50%);
+
+        color: v-bind(primaryWhiteBlackColor);
+    }
+
+    .playIconContainer .playCircle {
+        position: absolute;
+        width: fit-content;
+        height: fit-content;
+        left: 50%;
+        bottom: 50%;
+
+        transform: translate(-50%, 50%);
+        width: 70px;
+        height: 70px;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        
+        border-radius: 50%;
+    }
+
+    .playIconContainer .playIcon {
+        position: absolute;
+        width: fit-content;
+        height: fit-content;
+        left: 50%;
+        bottom: 50%;
+
+        transform: translate(-50%, 50%);
+        
+        border-radius: 50%;
     }
 
     @keyframes spin {

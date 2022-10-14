@@ -4,7 +4,7 @@
     import { liveQuery } from 'dexie'
     import { useI18n } from 'vue-i18n'
 
-    import { db, Group, PostMediaType } from '@/db'
+    import { db, Group, MediaType } from '@/db'
 
     import { useMainStore } from '@/stores/mainStore'
     import { useColorStore } from '@/stores/colorStore'
@@ -26,7 +26,6 @@
     const feedObservable = liveQuery (() => db.group.reverse().sortBy('lastChangeTimestamp'))
     const subscription = feedObservable.subscribe({
         next: result => { 
-            // console.log('homeMain/feedObservable: ', JSON.stringify(result))
             if (result) {
                 listData.value = result
             }
@@ -84,10 +83,10 @@
                         </div>
                     </div>
                     <div class="contentBody" >
-                        <div v-if="value.lastContentMediaType == PostMediaType.Image" class="iconBox" >
+                        <div v-if="value.lastContentMediaType == MediaType.Image" class="iconBox" >
                             <font-awesome-icon :icon="['fas', 'image']" />
                         </div>
-                        <div v-else-if="value.lastContentMediaType == PostMediaType.Video" class="iconBox" >
+                        <div v-else-if="value.lastContentMediaType == MediaType.Video" class="iconBox" >
                             <font-awesome-icon :icon="['fas', 'video']" />
                         </div>
                         <div :class="['text', {'paddingLeft': value.lastContentMediaType != 0}]" v-html="value.lastContent">

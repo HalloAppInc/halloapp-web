@@ -3,7 +3,7 @@
     import { liveQuery } from 'dexie'
     import { storeToRefs } from 'pinia'
 
-    import { db, Feed } from '@/db'
+    import { db, Post } from '@/db'
 
     import { useMainStore } from '@/stores/mainStore'
     import { useConnStore } from '@/stores/connStore'
@@ -11,7 +11,7 @@
 
     import hal from '@/common/halogger'
 
-    import Post from '@/components/home/Post.vue'
+    import PostComponent from '@/components/feed/Post.vue'
     import Comment from '@/components/comment/CommentMain.vue'
     
     const mainStore = useMainStore()
@@ -31,8 +31,8 @@
         background: backgroundColor
     } = storeToRefs(colorStore)  
 
-    const dbListData: Ref<Feed[]> = ref([])
-    const listData: Ref<Feed[]> = ref([])
+    const dbListData: Ref<Post[]> = ref([])
+    const listData: Ref<Post[]> = ref([])
     const count = ref(5)
 
     const inViewPostID = ref('')
@@ -42,10 +42,10 @@
     const content = ref<HTMLElement | null>(null)
     let handleScrollTimer: any
 
-    let feedObservable: any
+    let postObservable: any
 
     if (props.atMainFeed) {
-        feedObservable = liveQuery (() => db.feed
+        postObservable = liveQuery (() => db.post
             .reverse()
             .sortBy('timestamp')
         )
@@ -53,15 +53,13 @@
 
         const groupId = props.groupID
 
-        feedObservable = liveQuery (() => db.feed.where('groupID').equals(groupId)
+        postObservable = liveQuery (() => db.post.where('groupID').equals(groupId)
             .reverse()
             .sortBy('timestamp')
         )
-
-
     }
 
-    const subscription = feedObservable.subscribe({
+    const subscription = postObservable.subscribe({
         next: (result: any) => { 
             if (result) {
                 dbListData.value = result
@@ -94,10 +92,32 @@
             }
         }
 
-        
     })
 
+    const showNewPostsButton = ref(false)
+
     function makeList() {
+
+        if (!content) { return }
+
+        // if (content.value) {
+
+        //     if (content.value.scrollTop > 200) {
+
+        //         const dbLatestItem = dbListData.value[0]
+        //         const latestItem = listData.value[0]
+
+        //         if (dbLatestItem.timestamp > latestItem.timestamp) {
+        //             showNewPostsButton.value = true
+        //             return
+        //         }
+
+        //     }
+            
+        // }
+
+
+
         if (dbListData.value.length > count.value) {
             listData.value = dbListData.value.slice(0, count.value)
         } else {
@@ -110,6 +130,8 @@
     }
 
     function openCommentsIfNeeded(postID: string) {
+
+        mainStore.triggerFirstInteraction()
 
         /* comments panel already opened */
         if (showComments.value) {
@@ -225,6 +247,12 @@
             makeList()
         }
 
+        /* handle new posts that have come in */
+        if (element.scrollTop < 200 && showNewPostsButton.value) {
+            makeList()
+            showNewPostsButton.value = false
+        }
+
         savedScrollTop = element.scrollTop
 
     }
@@ -258,13 +286,23 @@
 
     <div class="feedWrapper">
         
+        <!-- new posts button -->
+        <transition name='newPostsButton'>
+            <div class='newPostsButton' v-show='showNewPostsButton' @click="scrollToTop()">
+                <div class="newPostsText">
+                    New Posts
+                </div>
+                
+            </div>
+        </transition>
+
         <div class="listBox" ref='content' @scroll='handleScroll()'>
 
             <slot name="header"></slot>
 
             <div v-for="value in listData" class="container">
                 <!-- data-ha-postID is used only for detecting post while scrolling -->
-                <Post
+                <PostComponent
                     :post="value"
                     :postID="value.postID"
                     userID="value.userID"
@@ -274,7 +312,7 @@
                     
                     :key="value.postID"
                     > 
-                </Post>
+                </PostComponent>
             </div>
         </div>
     
@@ -303,6 +341,7 @@
     }
 
     .feedWrapper {
+        position: relative;
         width: 100%;
         height: 100%;
 
@@ -324,6 +363,37 @@
         transition: flex 300ms ease-in-out;
     }
 
+    .newPostsButton {
+        position: absolute;
+
+        margin-left: auto;
+        margin-right: auto;
+        left: 0;
+        right: 0;
+        text-align: center;
+ 
+        top: 75px;
+        
+        z-index: 4;
+
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+    }
+
+    .newPostsButton:hover {
+        cursor: pointer;
+    }
+
+    .newPostsButton .newPostsText {
+        padding: 10px 20px 10px 20px;
+        border-radius: 30px;
+        
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+        background-color: rgb(172, 169, 169, 0.5);
+    }
+
     .header {
         position: sticky;
         top: 0px;
@@ -340,6 +410,15 @@
         overflow-y: auto;
         overflow-x: hidden;
         transition: 1s all ease-in-out;
+    }
+
+    .newPostsButton-enter-active, .newPostsButton-leave-active {
+        transition: all 0.5s ease
+    }
+
+    .newPostsButton-enter-from, .newPostsButton-leave-to {
+        transform: scale(0.1);
+        opacity: 0;
     }
 
 </style>

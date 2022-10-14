@@ -5,7 +5,15 @@
 
     import { db, Feed, CommonMedia, SubjectType, MediaType } from '@/db'
 
+    import { useColorStore } from '@/stores/colorStore'
+
     import { useHACommonMedia } from '@/composables/haCommonMedia'
+
+    const colorStore = useColorStore()
+
+    const { 
+        primaryWhiteBlack: primaryWhiteBlackColor,
+    } = storeToRefs(colorStore)      
 
     const { fetchCommonMedia
     } = useHACommonMedia()
@@ -117,9 +125,15 @@
 
             <div v-if="firstMedia" :class="['imgBigContainer', { 'blur': !firstMedia.previewImage }]" @click="$emit('openMedia', mediaList, 0, props.contentID)">
                 <img class="image" :src='firstMedia.previewImageBlobUrl' :width='firstMedia.width' :height='firstMedia.height' />
-                <div v-if='firstMedia.mediaType == MediaType.Video' class='iconContainer'>
-                    <font-awesome-icon :icon="['fas', 'play']" size='2x' />
+
+                <div v-if='firstMedia.mediaType == MediaType.Video' class='playIconContainer'>
+                    <div class="playCircle">
+                        <div class="playIcon">
+                            <font-awesome-icon :icon="['fas', 'play']" size='xl' />
+                        </div>
+                    </div>
                 </div>
+
             </div>
 
         </div>
@@ -340,6 +354,46 @@
         transform: translate(-50%, 50%);
 
         color: gainsboro;
+    }
+
+    .playIconContainer {
+        position: absolute;
+        width: fit-content;
+        height: fit-content;
+        left: 50%;
+        bottom: 50%;
+
+        transform: translate(-50%, 50%);
+
+        color: v-bind(primaryWhiteBlackColor);
+    }
+
+    .playIconContainer .playCircle {
+        position: absolute;
+        width: fit-content;
+        height: fit-content;
+        left: 50%;
+        bottom: 50%;
+
+        transform: translate(-50%, 50%);
+        width: 70px;
+        height: 70px;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        
+        border-radius: 50%;
+    }
+
+    .playIconContainer .playIcon {
+        position: absolute;
+        width: fit-content;
+        height: fit-content;
+        left: 50%;
+        bottom: 50%;
+
+        transform: translate(-50%, 50%);
+        
+        border-radius: 50%;
     }
 
     .blur {

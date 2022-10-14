@@ -8,78 +8,58 @@
     import { useColorStore } from '@/stores/colorStore'
     import hal from "@/common/halogger"
 
-    import { db, PostMediaType, SubjectType } from '@/db'
+    import { db, SubjectType, MediaType } from '@/db'
 
     import { useHAFeed } from '@/composables/haFeed'
     import { useHACommonMedia } from '@/composables/haCommonMedia'
     
-    const { getPostMedia, getCommonMediaList } = useHAFeed()
-
-    const { fetchCommonMedia
-    } = useHACommonMedia()
-
-
     const mainStore = useMainStore()
     const colorStore = useColorStore()
 
-    const { t } = useI18n({
-        inheritLocale: true,
-        useScope: 'global'
-    })
+    const { getCommonMedia, fetchCommonMedia
+    } = useHACommonMedia()
+
+    const { t } = useI18n({ inheritLocale: true, useScope: 'global' })
 
     const { 
-        background: backgroundColor,
+        primaryWhiteBlack: primaryWhiteBlackColor,
         secondaryBg: secondaryBgColor,
     } = storeToRefs(colorStore)  
 
-    enum MediaType {
-        Image,
-        Video
-    }
-    interface Media {
-        type?: PostMediaType;
-        mediaBlob?: any;
-        width: number;
-        height: number;
-        margin: number;
-        lengthMins?: String;
-        lengthSeconds?: String;
-        isReady: boolean;
-    }
-
     interface Props {
         type: SubjectType,
-        subjectID?: string | undefined,
+        subjectID: string,
         contentID: string,
         mediaBoxWidth: number,
         mediaBoxHeight: number,
     }
     const props = defineProps<Props>()
 
-
     const mediaBoxWidth     = toRef(props, 'mediaBoxWidth')
     const mediaBoxHeight    = toRef(props, 'mediaBoxHeight')
 
-
     const listData: Ref<any[]> = ref([])
-
 
     const $postMediaContainer = ref(null)
     const $mediaCarousel = ref(null)
+
+    const selectedMedia = ref(0)
 
     let isDragStarted = false   // indicate mousedown or touchstart
     let dragStartX = 0
     let dragStartY = 0
 
-    const selectedMedia = ref(0)
-
-
     init()
 
     async function init() {
 
-        // const mediaList = await getCommonMediaList(props.type, props.subjectID, props.contentID)
-        const mediaList = await getPostMedia(props.contentID)
+        const mediaList = await getCommonMedia(props.type, props.subjectID, props.contentID)
+
+        if (mediaList) {
+            listData.value = mediaList
+            makeList
+        }
+
         if (!mediaList) { return }
         const needWatching = await fetchCommonMedia(props.type, mediaList)
         if (needWatching) {
@@ -88,11 +68,11 @@
     }
 
     async function setupObserver() {
-        // const observable = liveQuery (() => db.commonMedia.where('contentID').equals(props.contentID).and((commonMed) => {
-        //     return commonMed.subjectID == props.subjectID && commonMed.type == props.type
-        // }).toArray())
-        const observable = liveQuery (() => db.postMedia.where('postID').equals(props.contentID).toArray())
-
+        const observable = liveQuery (() => db.commonMedia.where('contentID').equals(props.contentID).and((commonMed) => {
+            const subjectID = props.subjectID ? props.subjectID : ''
+            return commonMed.subjectID == subjectID && commonMed.type == props.type
+        }).toArray())
+  
         const subscription = observable.subscribe({
             next: result => {
                 if (!result) { return }
@@ -100,24 +80,23 @@
 
                 listData.value = result
 
-                for (let i = 0; i < listData.value.length; i++) {
-                    
-                    const med = listData.value[i]
-                    if (!med.blob) { continue }
-                    if (med.blobUrl) { continue }
-                    const blobUrl = URL.createObjectURL(med.blob)
-                    med.blobUrl = blobUrl
-                }
-
- 
-
+                makeList()
 
             },
             error: error => console.error(error)
         })
     }
 
-
+    async function makeList() {
+        for (let i = 0; i < listData.value.length; i++) {
+                    
+            const med = listData.value[i]
+            if (!med.blob) { continue }
+            if (med.previewImageBlobUrl) { continue }
+            const previewImageBlobUrl = URL.createObjectURL(med.previewImage)
+            med.previewImageBlobUrl = previewImageBlobUrl
+        }
+    }
 
     function videoLoaded(event: Event, index: number) {
         const vid = (event.target as HTMLVideoElement)
@@ -237,6 +216,16 @@
 
         /* no need for dragging since all the thumbnails fit */
         if (parentParentWidth > carousel.offsetWidth) {
+
+            /* special case where user has dragged carousel already and then expands window, bring carousel back to full view */
+            const computedStyle = window.getComputedStyle(carousel)
+            const cssMatrix = new WebKitCSSMatrix(computedStyle.transform)
+            const currentTranslateX = cssMatrix.m41
+
+            if (currentTranslateX != 0) {
+                carousel.style.transform = "translateX(0px)"
+            }
+
             return
         }
 
@@ -365,33 +354,30 @@
 
         <div class="mediaCarousel" ref="$mediaCarousel">
 
-            <div v-for="(item, index) in listData" :key="item.postID" class="mediaBox">
+            <div v-for="(item, index) in listData" :key="item.contentID" class="mediaBox">
 
-                <div v-if='item.errorMsg' class='mediaLoaderBox'>
-                    <div :class="['mediaErrorMsg']">{{ item.errorMsg }}</div>
+                <div v-if='item.isCodecH265' class='mediaLoaderBox'>
+                    
                 </div>
 
-                <div v-else-if="!item.blob" class="mediaLoaderBox">
+                <div v-else-if="!item.previewImageBlobUrl" class="mediaLoaderBox">
                     <div class="loader"></div>
                 </div>
                 
 
 
-                <img v-else-if="item.type == PostMediaType.Image" class="postImage" :src="item.blobUrl" :width="mediaBoxWidth" :height="mediaBoxHeight" 
-                   
+                <img v-else class="postImage" :src="item.previewImageBlobUrl" :width="mediaBoxWidth" :height="mediaBoxHeight" 
+                    @click="$emit('openMedia', listData, index, props.contentID)"
                     alt="Post Image">
 
-                <video v-else-if="item.type == PostMediaType.Video" class="postVideo" 
-                    :width="item.width" :height="item.height" 
-                    :style="'margin-left: ' + item.margin + 'px; margin-right: ' + item.margin + 'px;'" 
-                    preload="metadata" @loadedmetadata="videoLoaded($event, index)" playsinline controls controlsList="">
-                    <source v-if="item.mediaBlob" :src="item.mediaBlob" type="video/mp4">
-                    <p>{{ t('mediaCarousel.noVideoSupportText') }}</p>
-                </video>
 
-                <!-- <div v-if="item.type == MediaType.Video" class="mediaLength">
-                    {{ item.lengthMins }}:{{ item.lengthSeconds }}
-                </div> -->
+                <div v-if='item.mediaType == MediaType.Video' class='playIconContainer'>
+                    <div class="playCircle">
+                        <div class="playIcon">
+                            <font-awesome-icon :icon="['fas', 'play']" size='2xs' />
+                        </div>
+                    </div>
+                </div>
 
             </div>
         </div>
@@ -444,6 +430,7 @@
     }
 
     .mediaCarousel .mediaBox {
+        position: relative;
         margin-right: 5px;
 
         /* width: v-bind(mediaBoxWidth + 'px');
@@ -534,10 +521,50 @@
         border: 3px solid #f3f3f3;
         border-top: 3px solid #3498db;
         border-radius: 50%;
-        width: 40px;
-        height: 40px;
+        width: 30px;
+        height: 30px;
         animation: spin 2s linear infinite;
     }
+
+    .playIconContainer {
+        position: absolute;
+        width: fit-content;
+        height: fit-content;
+        left: 50%;
+        bottom: 50%;
+
+        transform: translate(-50%, 50%);
+
+        color: v-bind(primaryWhiteBlackColor);
+    }
+
+    .playIconContainer .playCircle {
+        position: absolute;
+        width: fit-content;
+        height: fit-content;
+        left: 50%;
+        bottom: 50%;
+
+        transform: translate(-50%, 50%);
+        width: 25px;
+        height: 25px;
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
+        
+        border-radius: 50%;
+    }
+
+    .playIconContainer .playIcon {
+        position: absolute;
+        width: fit-content;
+        height: fit-content;
+        left: 50%;
+        bottom: 50%;
+
+        transform: translate(-50%, 50%);
+
+        border-radius: 50%;
+    }    
 
     @keyframes spin {
         0% { transform: rotate(0deg); }

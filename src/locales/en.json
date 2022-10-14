@@ -76,7 +76,7 @@
         "messageDeleted": "Message deleted"
     },
     "timestampFormatter": {
-        "TODAY" : "TODAY",
-        "YESTERDAY" : "YESTERDAY"
+        "today" : "Today",
+        "yesterday" : "Yesterday"
     }
 }

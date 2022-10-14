@@ -3,13 +3,16 @@ import { Dexie, liveQuery } from 'dexie'
 import { useMainStore } from '@/stores/mainStore.js'
 import { useConnStore } from '@/stores/connStore.js'
 
-import { db, SubjectType, Feed, PostMedia, PostMediaType, MediaType, Comment, CommonMedia, LinkPreview, CommonMediaLinkPreview, Mention, Group } from '@/db'
+import {    db, 
+            Post, Comment, Group, Mention, CommonMediaLinkPreview,
+            CommonMedia, SubjectType, MediaType } from '@/db'
 
 import { clients } from '@/proto/clients.js'
 import { web } from '@/proto/web.js'
 
 import { useHAAvatar } from '@/composables/haAvatar'
 import { useHAText } from '@/composables/haText'
+import { useHACommonMedia } from '@/composables/haCommonMedia'
 
 import hal from '@/common/halogger'
 import { type } from 'os'
@@ -21,6 +24,7 @@ export function useHAFeed() {
     
     const { getAvatar, fetchGroupAvatar } = useHAAvatar()
     const { processText } = useHAText()
+    const { insertCommonMedia } = useHACommonMedia()
 
 
     async function processWebContainer(webContainer: any) {
@@ -82,7 +86,7 @@ export function useHAFeed() {
                 const item = items[i]
                 let infoIdx = postInfoList.findIndex((info: any) => info.id === item.post.id)
                 const postInfo = postInfoList[infoIdx]
-                processFeedItem(items[i], postInfo, web.PostDisplayInfo.SeenState.SEEN)
+                processFeedItem(items[i], postInfo)
                 postInfoList.splice(infoIdx, 1)
             }
         }
@@ -114,7 +118,7 @@ export function useHAFeed() {
                     /* record nextCursor as there's more items */
                     if (feedResponse.nextCursor) {
                         mainStore.mainFeedNextCursor = feedResponse.nextCursor
-                        const numDBItems = await db.feed.count()
+                        const numDBItems = await db.post.count()
 
                         /* if there's less than x feed items, fill it */
                         if (numDBItems < 5) {
@@ -157,7 +161,7 @@ export function useHAFeed() {
     }
 
     async function processFeedUpdate(feedUpdate: any) {
-        hal.log('haFeed/processFeedUpdate: ' + JSON.stringify(feedUpdate))
+        // hal.log('haFeed/processFeedUpdate: ' + JSON.stringify(feedUpdate))
 
         const items = feedUpdate.items
         const userInfo = feedUpdate.userDisplayInfo
@@ -183,11 +187,11 @@ export function useHAFeed() {
                 modifyPostHaveCommentIfNeeded(postID)
             }
             else if (serverPost) {
+
                 const postID = item.post.id
-                const groupID = item.post.groupId
                 const infoIdx = postInfoList.findIndex((info: any) => info.id === postID)
                 const postInfo = postInfoList[infoIdx]
-                processFeedItem(item, postInfo, web.PostDisplayInfo.SeenState.UNSEEN)
+                processFeedItem(item, postInfo)
                 postInfoList.splice(infoIdx, 1)
             }
         }
@@ -222,7 +226,7 @@ export function useHAFeed() {
         const groupID = info.id
         const name = info.name
 
-        const dbGroupsList = await db.feed.where('groupID').equals(groupID).toArray()
+        const dbGroupsList = await db.post.where('groupID').equals(groupID).toArray()
         
         if (dbGroupsList.length == 0) {
             
@@ -245,7 +249,7 @@ export function useHAFeed() {
         fetchGroupAvatar(groupID, info.avatarId)
     }    
     
-    function processFeedItem(feedItem: any, postInfo: any, seenState: web.PostDisplayInfo.SeenState) {
+    function processFeedItem(feedItem: any, postInfo: any) {
 
         const groupID = feedItem.groupId
 
@@ -257,11 +261,12 @@ export function useHAFeed() {
         // console.log("haFeed/processServerPost/serverPost: ")
         // console.dir(serverPost)
 
-        let postObject: Feed = { 
+        let postObject: Post = { 
             postID: serverPost.id,
             userID: publisherUID,
             timestamp: serverPost.timestamp,
-            seenState: seenState,
+            seenState: postInfo.seenState,
+            transferState: postInfo.transferState,
             retractState: postInfo.retractState,
             unreadComments: postInfo.unreadComments,
         }
@@ -270,8 +275,14 @@ export function useHAFeed() {
             postObject.userReceipts = postInfo.userReceipts
         }
 
-        let postMediaArr: PostMedia[] = []
-        
+        if (groupID) {
+            postObject.groupID = groupID
+        }
+
+        if (publisherUID) {
+            postObject.userID = publisherUID
+        }
+
         const payloadBinArr = serverPost.payload
         if (!payloadBinArr) { return }
         const postContainer = decodeToPostContainer(payloadBinArr)
@@ -280,15 +291,15 @@ export function useHAFeed() {
         // console.dir(postContainer)
     
         if (!postContainer) { return }
-    
-        if (groupID) {
-            postObject.groupID = groupID
+        if (postContainer.moment) {
+            hal.log('haFeed/processFeedItem/postContainer is a moment, skip')
+            return
         }
+    
+        const subjectID = postObject.groupID ? postObject.groupID : ''
 
-        if (publisherUID) {
-            postObject.userID = publisherUID
-        }
-    
+        let commonMediaArr: CommonMedia[] = []
+
         let text = ''
         let isTextPost = false
         let isTextPostTextOnly = false
@@ -308,7 +319,7 @@ export function useHAFeed() {
         if (postContainer.voiceNote) {
             isVoiceNote = true
 
-            const voiceNoteMedia = processVoiceNote(postObject.postID, postContainer.voiceNote)
+            const voiceNoteMedia = processCommonMediaVoiceNote(SubjectType.FeedPost, subjectID, postObject.postID, postContainer.voiceNote)
             if (voiceNoteMedia) {
                 postObject.voiceNote = voiceNoteMedia
             }
@@ -331,9 +342,11 @@ export function useHAFeed() {
                     if (mediaInfo.image && mediaInfo.image.width && mediaInfo.image.height) {
                         const encryptedResourceInfo = mediaInfo.image.img
                         if (encryptedResourceInfo?.encryptionKey && encryptedResourceInfo?.ciphertextHash && encryptedResourceInfo?.downloadUrl) {
-                            let postMedia: PostMedia = {
-                                postID: postObject.postID,
-                                type: PostMediaType.Image,
+                            let commonMedia: CommonMedia = {
+                                type: SubjectType.FeedPost,
+                                subjectID: subjectID,
+                                contentID: postObject.postID,
+                                mediaType: MediaType.Image,
                                 order: index,
                                 width: mediaInfo.image.width,
                                 height: mediaInfo.image.height,
@@ -341,16 +354,18 @@ export function useHAFeed() {
                                 hash: encryptedResourceInfo.ciphertextHash,
                                 downloadURL: encryptedResourceInfo.downloadUrl,
                             }
-                            postMediaArr.push(postMedia)
+                            commonMediaArr.push(commonMedia)
                         }
                     }
     
                     else if (mediaInfo.video && mediaInfo.video.width && mediaInfo.video.height) {
                         const encryptedResourceInfo = mediaInfo.video.video
                         if (encryptedResourceInfo?.encryptionKey && encryptedResourceInfo?.ciphertextHash && encryptedResourceInfo?.downloadUrl) {
-                            let postMedia: PostMedia = {
-                                postID: postObject.postID,
-                                type: PostMediaType.Video,
+                            let commonMedia: CommonMedia = {
+                                type: SubjectType.FeedPost,
+                                subjectID: subjectID,
+                                contentID: postObject.postID,
+                                mediaType: MediaType.Video,
                                 order: index,
                                 width: mediaInfo.video.width,
                                 height: mediaInfo.video.height,
@@ -365,16 +380,16 @@ export function useHAFeed() {
                                 const chunkSize = mediaInfo.video.streamingInfo?.chunkSize
                                 const blobSize = mediaInfo.video.streamingInfo?.blobSize
                                 if (chunkSize) {
-                                    postMedia.chunkSize = chunkSize                             
+                                    commonMedia.chunkSize = chunkSize                             
                                 }
                                 if (blobSize) {
-                                    postMedia.blobSize = blobSize
+                                    commonMedia.blobSize = blobSize
                                 }    
                                 if (blobVersion) {
-                                    postMedia.blobVersion = blobVersion
+                                    commonMedia.blobVersion = blobVersion
                                 }   
                             }
-                            postMediaArr.push(postMedia)
+                            commonMediaArr.push(commonMedia)
                         }
                     }                
                 }
@@ -384,7 +399,7 @@ export function useHAFeed() {
             if (postContainer.album?.voiceNote) {
                 isVoiceNote = true
             
-                const voiceNoteMedia = processVoiceNote(postObject.postID, postContainer.album.voiceNote)
+                const voiceNoteMedia = processCommonMediaVoiceNote(SubjectType.FeedPost, subjectID, postObject.postID, postContainer.album.voiceNote)
                 if (voiceNoteMedia) {
                     postObject.voiceNote = voiceNoteMedia
                 }
@@ -398,13 +413,9 @@ export function useHAFeed() {
                 postContainer.text.link.preview[0] &&
                 postContainer.text.link.preview[0].img
                 ) {
-                    const previewImage = postContainer.text.link.preview[0]
-                    const media = previewImage.img
-
-                    const linkPreview = processLinkPreview(postObject.postID, postContainer.text.link)
+                    const linkPreview = processCommonMediaLinkPreview(SubjectType.FeedPost, subjectID, postObject.postID, postContainer.text.link)
                     if (linkPreview) {
                         postObject.linkPreview = linkPreview
-
                     }
 
             } else {
@@ -428,18 +439,17 @@ export function useHAFeed() {
         /* only modify groups list if the post is not deleted */
         if (groupID && postObject.retractState != web.PostDisplayInfo.RetractState.RETRACTED) {
          
-            let mediaType: PostMediaType = 0
-            if (postMediaArr.length > 0) {
-                const firstMedia = postMediaArr[0]
-                mediaType = firstMedia.type
+            let mediaType: MediaType = 0
+            if (commonMediaArr.length > 0) {
+                const firstMedia = commonMediaArr[0]
+                mediaType = firstMedia.mediaType
             }
 
             modifyGroupIfNeeded(postObject, mediaType, isVoiceNote)
         }
 
-        insertPostIfNotExist(postObject)
-        insertPostMedia(postObject.postID, postMediaArr)
-
+        insertOrModifyPost(postObject)
+        insertCommonMedia(SubjectType.FeedPost, subjectID, postObject.postID, commonMediaArr)
     }
 
     
@@ -595,7 +605,7 @@ export function useHAFeed() {
                     const previewImage = commentContainer.text.link.preview[0]
                     const media = previewImage.img
 
-                    const linkPreview = processCommonMediaLinkPreview(SubjectType.Comment, commentObject.commentID, commentContainer.text.link)
+                    const linkPreview = processCommonMediaLinkPreview(SubjectType.Comment, commentObject.postID, commentObject.commentID, commentContainer.text.link)
                     if (linkPreview) {
                         commentObject.linkPreview = linkPreview
                     }
@@ -615,40 +625,14 @@ export function useHAFeed() {
             commentObject.mentions = processMentions(commentMentions)
         }
 
-        console.log('haFeed/processFeedItemComment/commnentObject: ')
-        console.dir(commentObject)
+        // console.log('haFeed/processFeedItemComment/commnentObject: ')
+        // console.dir(commentObject)
 
         insertComment(commentObject)
         insertCommonMedia(SubjectType.Comment, commentObject.postID, commentObject.commentID, commonMediaArr)
     }
 
-    function processLinkPreview(postID: string, linkPreview: any) {
-
-        let linkPreviewObject: LinkPreview = {
-            url: linkPreview.url,
-            title: linkPreview.title,
-            description: linkPreview.description
-        }
-        const linkPreviewMedia = linkPreview.preview[0]
-
-        const encryptedResourceInfo = linkPreviewMedia.img
-        if (encryptedResourceInfo?.encryptionKey && encryptedResourceInfo?.ciphertextHash && encryptedResourceInfo?.downloadUrl) {
-            let postMedia: PostMedia = {
-                postID: postID,
-                type: PostMediaType.Image,
-                order: 0,
-                width: linkPreviewMedia.width,
-                height: linkPreviewMedia.height,
-                key: encryptedResourceInfo.encryptionKey,
-                hash: encryptedResourceInfo.ciphertextHash,
-                downloadURL: encryptedResourceInfo.downloadUrl,
-            }
-            linkPreviewObject.preview = postMedia
-        }
-        return linkPreviewObject        
-    }
-
-    function processCommonMediaLinkPreview(type: SubjectType, contentID: string, linkPreview: any) {
+    function processCommonMediaLinkPreview(type: SubjectType, subjectID: string, contentID: string, linkPreview: any) {
 
         let linkPreviewObject: CommonMediaLinkPreview = {
             url: linkPreview.url,
@@ -661,7 +645,7 @@ export function useHAFeed() {
         if (encryptedResourceInfo?.encryptionKey && encryptedResourceInfo?.ciphertextHash && encryptedResourceInfo?.downloadUrl) {
             let commonMedia: CommonMedia = {
                 type: type,
-                subjectID: '', // todo: this needs to be assigned
+                subjectID: subjectID, // todo: this needs to be assigned
                 contentID: contentID,
                 mediaType: MediaType.Image,
                 order: 0,
@@ -674,24 +658,6 @@ export function useHAFeed() {
             linkPreviewObject.preview = commonMedia
         }
         return linkPreviewObject        
-    }
-
-    function processVoiceNote(postID: string, voiceNote: any) {
-        const encryptedResourceInfo = voiceNote.audio
-        if (encryptedResourceInfo?.encryptionKey && encryptedResourceInfo?.ciphertextHash && encryptedResourceInfo?.downloadUrl) {
-            let postMedia: PostMedia = {
-                postID: postID,
-                type: PostMediaType.Audio,
-                order: 0,
-                width: 0,
-                height: 0,
-                key: encryptedResourceInfo.encryptionKey,
-                hash: encryptedResourceInfo.ciphertextHash,
-                downloadURL: encryptedResourceInfo.downloadUrl,
-            }
-            return postMedia
-        }
-        return undefined
     }
 
     function processCommonMediaVoiceNote(type: SubjectType, subjectID: string, contentID: string, voiceNote: any) {
@@ -729,7 +695,9 @@ export function useHAFeed() {
         return arr
     }
 
-    async function modifyGroupIfNeeded(post: any, mediaType: PostMediaType, isVoiceNote: boolean) {
+    /* db functions */
+
+    async function modifyGroupIfNeeded(post: any, mediaType: MediaType, isVoiceNote: boolean) {
 
 
         await db.group.where('groupID').equals(post.groupID).modify(group => {
@@ -745,7 +713,7 @@ export function useHAFeed() {
                     group.lastContent = processedText.html
                 }
 
-                // todo: figure out if voicenote display is actually neeede
+                // todo: figure out if voicenote display is actually needed
 
             }
 
@@ -756,22 +724,44 @@ export function useHAFeed() {
                     
     }
 
-    async function insertPostIfNotExist(post: any) {
-
+    async function insertOrModifyPost(post: any) {
         const postID = post.postID
-        const dbFeedsList = await db.feed.where('postID').equals(postID).toArray()
+        const dbPost = await db.post.where('postID').equals(postID).first()
         
-        if (dbFeedsList.length == 0) {
+        if (!dbPost) {
+
+            /* 
+             * If the post does not exist, there's no need to show it as deleted
+             * Even more so for Moments, in which web does not support yet and does not want to show deleted moments
+             */
+            if (post.retractState == web.PostDisplayInfo.RetractState.RETRACTED) { return }
+
             try {
-                const id = await db.feed.put(post)
-                // hal.log('haFeed/insertPostIfNotExist/db/put/inserting: ' + post.postID)
+                await db.post.put(post)
+                // hal.log('haFeed/insertOrModifyPost/db/put/inserted: ' + post.postID)
             } catch (error) {
-                hal.log('haFeed/insertPostIfNotExist/db/put/error ' + error)
+                hal.log('haFeed/insertOrModifyPost/db/put/error ' + error)
             }
-        } else {
-            hal.log('haFeed/insertPostIfNotExist/exit/post already in db: ' + post.postID)
+            return
+        } 
+
+        hal.log('haFeed/insertOrModifyPost/post exists: ' + post.postID)
+        if (post.seenState != dbPost.seenState || 
+            post.transferState != dbPost.transferState ||
+            post.retractState != dbPost.retractState) {
+
+            await db.post.where('postID').equals(postID).modify(function(item) {
+                if (item.seenState != post.seenState) {
+                    item.seenState = post.seenState
+                }
+                if (item.transferState != post.transferState) {
+                    item.transferState = post.transferState
+                }
+                if (item.retractState != post.retractState) {
+                    item.retractState = post.retractState
+                }                
+            })
         }
-        
     }
 
     async function insertComment(comment: Comment) {
@@ -782,7 +772,7 @@ export function useHAFeed() {
         if (dbCommentsList.length == 0) {
             try {
                 const id = await db.comment.put(comment)
-                hal.log('haFeed/insertComment/post: ' + comment.postID + ', comment: ' + comment.commentID)
+                hal.log('haFeed/insertComment/post: ' + comment.postID + ', comment: ' + comment.commentID, ', text: ' + comment.text)
             } catch (error) {
                 hal.log('haFeed/insertComment/post: ' + comment.postID + ', ' + 'error: ' + error)
             }
@@ -807,76 +797,8 @@ export function useHAFeed() {
         return result
     }
 
-    async function insertPostMedia(postID: string, postMediaArr: any) {
-        if (postMediaArr.length < 1) { 
-            return 
-        }
-        const dbPostMediaList = await db.postMedia.where('postID').equals(postID).toArray()
-        
-        if (dbPostMediaList.length == 0) {
-            for (let i = 0; i < postMediaArr.length; i++) {
-                let postMedia = postMediaArr[i]
-                
-                try {
-                    const id = await db.postMedia.put(postMedia)
-                } catch (error) {
-                    hal.log('homeMain/insertPostMedia/db/put/error ' + error)
-                    if (!handleDbError(error).continue) {
-                        return
-                    }
-                }
-            }
-
-        } else {
-            // hal.log('homeMain/processPostContainer/exit/postObject already in db \n' + JSON.stringify(post) + '\n\n')
-        }       
-        return 
-    }
-
-    async function insertCommonMedia(type: SubjectType, subjectID: string, contentID: string, commonMediaArr: any) {
-        if (commonMediaArr.length < 1) { 
-            return 
-        }
-
-        const dbCommonMediaList = await getCommonMediaList(type, subjectID, contentID)
-        
-        if (!dbCommonMediaList) {
-            for (let i = 0; i < commonMediaArr.length; i++) {
-                let media = commonMediaArr[i]
-                
-                try {
-                    const id = await db.commonMedia.put(media)
-                } catch (error) {
-                    hal.log('haFeed/insertCommonMedia/db/put/error ' + error)
-                }
-            }
-
-        } else {
-            // hal.log('haFeed/insertCommonMedia/exit/bbject already in db')
-        }       
-        return 
-    }    
-
-    async function getCommonMediaList(type: SubjectType, subjectID: string, contentID: string) {
-        const arr = await db.commonMedia.where('contentID').equals(contentID).and((commonMed) => {
-            return commonMed.subjectID == subjectID && commonMed.type == type
-        }).toArray()
-        if (!arr || arr.length == 0) {
-            return undefined
-        }
-        return arr
-    }
-
-    async function getPostMedia(postID: string) {
-        const arr = await db.postMedia.where('postID').equals(postID).toArray()
-        if (!arr || arr.length == 0) {
-            return undefined
-        }
-        return arr
-    }
-
     async function modifyPostHaveCommentIfNeeded(postID: string) {
-        await db.feed.where('postID').equals(postID).modify(function(item) {
+        await db.post.where('postID').equals(postID).modify(function(item) {
             if (!item.haveComments) {
                 item.haveComments = true
             }
@@ -884,51 +806,15 @@ export function useHAFeed() {
         return        
     }
 
-    async function modifyPostSeenStateAsUnseen(postID: string) {
-        await db.feed.where('postID').equals(postID).modify(function(item) {
-            if (!item.seenState) {
-                item.seenState = web.PostDisplayInfo.SeenState.UNSEEN
-            }
-        })
-        return        
-    }
-
-    async function modifyPostMedia(postID: string, order: number, blob: Blob) {
-        await db.postMedia.where('postID').equals(postID).and((postMedia) => {
-            return postMedia.order == order
-        }).modify({
-            blob: blob
-        })
-        return        
-    }
-
-    async function modifyPostVoiceNote(postID: string, blob: Blob) {
-        await db.feed.where('postID').equals(postID).modify(function(item) {
-            if (item.voiceNote) {
-                item.voiceNote.blob = blob
-            }
-        })
-        return        
-    }    
-    
-    async function modifyPostLinkPreviewMedia(postID: string, blob: Blob) {
-        await db.feed.where('postID').equals(postID).modify(function(item) {
-            if (item.linkPreview?.preview) {
-                item.linkPreview.preview.blob = blob
-            }
-        })
-        return        
-    }   
-
-    async function setPostMediaIsCodecH265(postID: string, order: number, isCodecH265: boolean) {
-        await db.postMedia.where('postID').equals(postID).and((postMedia) => {
-            return postMedia.order == order
-        }).modify({
-            isCodecH265: isCodecH265
-        })
+    // async function setPostMediaIsCodecH265(postID: string, order: number, isCodecH265: boolean) {
+    //     await db.postMedia.where('postID').equals(postID).and((postMedia) => {
+    //         return postMedia.order == order
+    //     }).modify({
+    //         isCodecH265: isCodecH265
+    //     })
         
-        return        
-    }
+    //     return        
+    // }
 
     async function insertGroup(group: any) {
 
@@ -985,8 +871,5 @@ export function useHAFeed() {
         processWebContainer, 
         getComment,
         getComments,
-        getCommonMediaList, getPostMedia,  
-        modifyPostMedia, modifyPostVoiceNote, modifyPostLinkPreviewMedia,
-        setPostMediaIsCodecH265 
     }
 }

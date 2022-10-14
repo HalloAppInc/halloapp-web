@@ -56,20 +56,20 @@ export default defineComponent({
     iconLight: 'black',
     iconDark: '#FFFFFF',
 
-    wraperLight: 'rgba(255, 255, 255, 0.7)',
-    wraperDark: 'rgba(25, 25, 25, 0.7)',
+    wrapperLight: 'rgba(255, 255, 255, 0.7)',
+    wrapperDark: 'rgba(25, 25, 25, 0.7)',
 
     shadowLight: 'rgba(100, 100, 100, 0.3)',
     shadowDark: 'rgba(0, 0, 0, 0.3)',
 
     outBoundMsgBubbleLight: '#FFF5D6',
-    outBoundMsgBubbleDark: '#111b21',
-
-    timeBubbleLight: '#FFEBAE',
-    timeBubbleDark: '#111b21',
+    outBoundMsgBubbleDark: '#192b36',
 
     inBoundMsgBubbleLight: '#FFFFFF',
     inBoundMsgBubbleDark: '#2a3942',
+
+    timeBubbleLight: 'white',
+    timeBubbleDark: 'black',
 
     timestampLight: 'rgba(0, 0, 0, 0.5)',
     timestampDark: 'rgba(255, 255, 255, 0.5)',

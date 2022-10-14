@@ -8,6 +8,7 @@ export const useColorStore = defineStore('color', {
     state: () => ({
         primaryBlue: colors.primaryBlueLight,
         primaryLightgray: colors.primaryLightgrayLight,
+        primaryWhiteBlack: colors.primaryWhiteBlackLight,
         background: colors.backgroundLight,
         secondaryBg: colors.secondaryBgLight,
         tertiaryBg: colors.tertiaryBgLight,
@@ -23,7 +24,7 @@ export const useColorStore = defineStore('color', {
         secondaryBgSelected: colors.secondaryBgSelectedLight,
         secondaryBorder: colors.secondaryBorderLight,
         icon: colors.iconLight,
-        wraper: colors.wraperLight,
+        wrapper: colors.wrapperLight,
         shadow: colors.shadowLight,
         line: colors.lineLight,
         chatBox: colors.chatBox,
@@ -63,6 +64,7 @@ export const useColorStore = defineStore('color', {
 
         computeColors(mode: string) {
             this.primaryLightgray = colors['primaryLightgray' + mode]
+            this.primaryWhiteBlack = colors['primaryWhiteBlack' + mode]
             this.background = colors['background' + mode]
             this.secondaryBg = colors['secondaryBg' + mode]
             this.tertiaryBg = colors['tertiaryBg' + mode]
@@ -78,7 +80,7 @@ export const useColorStore = defineStore('color', {
             this.borderline = colors['borderline' + mode]
             this.secondaryBorder = colors['secondaryBorder' + mode]
             this.icon = colors['icon' + mode]
-            this.wraper = colors['wraper' + mode]
+            this.wrapper = colors['wrapper' + mode]
             this.shadow = colors['shadow' + mode]
             this.line = colors['line' + mode]
             this.chatBox = colors['chatBox' + mode]

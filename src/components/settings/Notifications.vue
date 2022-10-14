@@ -67,7 +67,7 @@ const headerColor = computed(() => {
                         <div class='iconContainer'>
                             <input type='checkbox' id='sounds' v-model='mainStore.sounds'>
                         </div>
-                        <div class='textContainer' @click=''>
+                        <div class='textContainer' @click='mainStore.sounds = !mainStore.sounds'>
                             <div class='contentTextBody'>
                                 {{ t('notifications.sounds') }}
                             </div>
@@ -78,7 +78,7 @@ const headerColor = computed(() => {
                         <div class='iconContainer'>
                             <input type='checkbox' id='desktopAlerts' v-model='mainStore.desktopAlerts'>
                         </div>
-                        <div class='textContainer' @click=''>
+                        <div class='textContainer' @click='mainStore.desktopAlerts = !mainStore.desktopAlerts'>
                             <div class='contentTextBody'>
                                 {{ t('notifications.desktopAlerts') }}
                             </div>

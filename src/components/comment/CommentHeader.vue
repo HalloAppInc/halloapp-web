@@ -1,12 +1,22 @@
 <script setup lang="ts">
-    import { ref, computed } from 'vue'
+    import { ref, computed, toRef, watch } from 'vue'
     import { useI18n } from 'vue-i18n'
     import { storeToRefs } from 'pinia'
 
     import { useMainStore } from '@/stores/mainStore'
     import { useColorStore } from '@/stores/colorStore'
 
-    const props = defineProps(['postID'])
+    import Avatar from '@/components/media/Avatar.vue'
+
+    interface Props {
+        groupID: string,
+        postID: string,
+        userID: number,
+        showFullTitles?: boolean
+    }
+    const props = defineProps<Props>()
+
+    const refShowfullTitles = toRef(props, 'showFullTitles')
 
     const { t } = useI18n({
         inheritLocale: true,
@@ -16,12 +26,23 @@
     const mainStore = useMainStore()
     const colorStore = useColorStore()
 
-    const { 
+    const {
+        primaryBlue: primaryBlueColor,
         tertiaryBg: tertiaryBgColor,
         text: textColor,
         icon: iconColor,
         hover: hoverColor,
     } = storeToRefs(colorStore)  
+
+    const flexJustifyContent = ref('space-between')
+
+    watch(refShowfullTitles, () => {
+        if (refShowfullTitles.value) {
+            flexJustifyContent.value = 'flex-start'
+        } else {
+            flexJustifyContent.value = 'space-between'
+        }
+    })
 
 </script>
 
@@ -35,14 +56,27 @@
                 <div class='iconShadow'>
                     <font-awesome-icon v-if='!mainStore.isMobile' :icon="['fas', 'xmark']" style="font-size: 25px;"/>
                     <font-awesome-icon v-else :icon="['fas', 'angle-left']" style="font-size: 25px;"/>
+                </div>    
+            </div>
+
+            <div v-show="refShowfullTitles" class="nameContainer">
+                <Avatar :userID="userID" :width="30" :key="groupID"></Avatar>
+                <div class="userName">
+                    {{ mainStore.pushnames[userID] }}
+                </div>
+                <div v-if="props.groupID" class="groupIndicator">
+                    <font-awesome-icon :icon="['fas', 'caret-right']" size='sm' class="groupIndicatorIcon"/>
+                </div>
+                <div v-if="props.groupID" class="groupName" @click="mainStore.gotoGroup(groupID)">
+                    {{ mainStore.groupnames[groupID] }}
                 </div>
             </div>
-            
-            <div class='titleContainer'>
+
+            <div v-if="!refShowfullTitles" class='titleContainer'>
                 Comments
             </div>
 
-            <div class='iconContainer'>
+            <div v-if="!refShowfullTitles" class='iconContainer'>
             </div>
 
         </div>
@@ -63,16 +97,47 @@
     .container {
         display: flex;
         flex-direction: row;
-        justify-content: space-between;
+        /* justify-content: space-between; */
+        justify-content: v-bind(flexJustifyContent);
+        align-items: center;
     }
 
-    .leftGutter {
-        flex: 0 0 10px;
+    .container .nameContainer {
+        font-family: "Gotham", Helvetica, "Helvetica Neue", Arial, Avenir, sans-serif;
+        font-size: 14px;
+
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
+
+        animation: fadeIn 0.5s linear;
+        
     }
 
-    .rightGutter {
-        flex: 0 0 10px;
+    .container .nameContainer .userName {
+        margin-left: 10px;
+    }    
+    .container .nameContainer .groupIndicator {
+        margin-left: 5px;
+        color: lightgray;
+        text-align: bottom;
     }
+    .container .nameContainer .groupIndicator .groupIndicatorIcon {
+        margin-bottom: -1px;
+    }
+
+    .container .nameContainer .groupName {
+        
+        margin-left: 5px;
+        display: inline-block; /* this breaks the block to the next line when it's too long to fit */
+        cursor: pointer;
+    }
+
+    .container .groupName:hover {
+        color: v-bind(primaryBlueColor);
+    }    
+
 
     .avatarContainer {
         flex: 0 0 70px;
@@ -130,5 +195,19 @@
         height: 30px;
         margin: 10px 30px;
     }
+
+    @keyframes fadeIn {
+        0% { opacity: 0; }
+        100% { opacity: 1; }
+    } 
+
+    @keyframes fadeOut {
+        0% {
+            opacity: 1;
+        }
+        100% {
+            opacity: 0;
+        }
+    }    
 
 </style>

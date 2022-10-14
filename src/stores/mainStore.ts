@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
-import hal from '../common/halogger'
-import { db } from '../db'
+
+import hal from '@/common/halogger'
+import { db } from '@/db'
+import { useConnStore } from '@/stores/connStore'
 
 export const useMainStore = defineStore('main', {
     persist: {
@@ -43,6 +45,9 @@ export const useMainStore = defineStore('main', {
         pushnumbers: <any>{},
         groupnames: <any>{},
 
+        shownNotifications: <any>{},
+        shownNotificationsArr: [] as string[],      // used mainly for fast clean up of shownNotifications
+
         showSidebar: true,
         animateSidebar: false,
 
@@ -51,6 +56,11 @@ export const useMainStore = defineStore('main', {
         settingsPage: '',
         scrollToTop: '',
         mobileNavlessPanel: '',
+
+        showGroupsSidebar: true,
+        showGroupsCommentsPanel: false,
+
+        showSettings: false,
 
         mainFeedHeadPostID: '',
         mainFeedHeadPostTimestamp: 0,
@@ -61,8 +71,8 @@ export const useMainStore = defineStore('main', {
         groupFeedCursors: <any>{},
         commentCursors: <any>{}, // keys are postIDs
 
-        sounds: false,
-        desktopAlerts: false,
+        sounds: true,
+        desktopAlerts: true,
 
         test: false, // test for upload&download, reload database
 
@@ -76,6 +86,48 @@ export const useMainStore = defineStore('main', {
     getters: {
     },
     actions: {
+        /* first user interactions include 'clicking' to go to any page, opening comments, opening fullscreener */
+        triggerFirstInteraction() {
+            const connStore = useConnStore()
+            if (!connStore.isUserFirstClickCompleted) {
+                hal.log('mainStore/first user interaction recorded')
+                connStore.isUserFirstClickCompleted = true 
+            }
+        },
+        gotoPage(page: string) {
+            hal.log('mainStore/gotoPage: ' + page)
+            this.triggerFirstInteraction()
+            if (page == this.page) {
+                if (page == 'groups') {
+                    this.scrollToTop = this.groupsPageGroupID
+                } else {
+                    this.scrollToTop = page
+                }
+            } else { 
+                this.page = page
+            }
+            
+            this.showSettings = false
+        },
+        gotoGroup(groupID?: string) {
+            if (!groupID) return
+            this.selectGroup(groupID)
+            this.gotoPage('groups')
+        },
+        selectGroup(groupID?: string) {
+            hal.log('mainStore/selectGroup: ' + groupID)
+            if (!groupID) return
+            this.groupsPageGroupID = groupID
+        },
+        toggleSettings() {
+            this.triggerFirstInteraction()
+
+            this.showSettings = !this.showSettings
+        },
+        gotoSettingsPage(page: string) {
+            this.settingsPage = page
+        },
+
         loginMain() {
             if (!this.isLoggedIntoApp) {
                 this.page = 'home'
@@ -84,7 +136,6 @@ export const useMainStore = defineStore('main', {
             }
         },
         logoutMain() {
-
             // deletes the entire db and re-opens it
             // todo: make sure all other dbs like chat is also deleted, test to see if delete/re-open is fast enough
             db.delete().then(() => {
@@ -113,6 +164,8 @@ export const useMainStore = defineStore('main', {
                 this.settingsPage = ''
                 this.scrollToTop = ''
 
+                this.showSettings = false
+
                 // todo: might have to stop in-flight messages
 
                 this.messageQueue.splice(0, this.messageQueue.length) // clear messages
@@ -131,48 +184,15 @@ export const useMainStore = defineStore('main', {
                 }
                 for (const prop of Object.getOwnPropertyNames(this.commentCursors)) {
                     delete this.commentCursors[prop]
-                }                
+                }
+                for (const prop of Object.getOwnPropertyNames(this.shownNotifications)) {
+                    delete this.shownNotifications[prop]
+                }
+                this.shownNotificationsArr.splice(0, this.shownNotificationsArr.length)
 
                 hal.log('mainStore/logged out')
                 db.open() 
             })
-        },
-        gotoPage(page: string) {
-            if (page == this.page) {
-                if (page == 'groups') {
-                    this.scrollToTop = this.groupsPageGroupID
-                } else {
-                    this.scrollToTop = page
-                }
-            } else { 
-                this.page = page
-            }
-
-            /* wait 1s before activating so users flicking between tabs won't see the animation */
-            if (page == 'groups') {
-                setTimeout(this.activateSidebarAnimation, 1000)
-            } else {
-                this.showSidebar = true
-                this.animateSidebar = false
-            }
-        },
-        activateSidebarAnimation() {
-            if (this.page == 'groups') {
-                this.animateSidebar = true
-            }
-        },
-        gotoGroup(groupID?: string) {
-            if (!groupID) return
-            this.selectGroup(groupID)
-            this.gotoPage('groups')
-            
-        },
-        selectGroup(groupID?: string) {
-            if (!groupID) return
-            this.groupsPageGroupID = groupID
-        },
-        gotoSettingsPage(page: string) {
-            this.settingsPage = page
-        }
+        }        
     },
 })

@@ -66,8 +66,8 @@ const backgroundColor = computed(() => {
 const textColor = computed(() => {
     return colorStore.text
 })
-const wraperColor = computed(() => {
-    return colorStore.wraper
+const wrapperColor = computed(() => {
+    return colorStore.wrapper
 })
 const shadowColor = computed(() => {
     return colorStore.shadow
@@ -179,7 +179,7 @@ function closeMenu(emitEventName: any = undefined, emitEventData: any = undefine
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: v-bind(wraperColor);
+    background-color: v-bind(wrapperColor);
     display: table;
 }
 

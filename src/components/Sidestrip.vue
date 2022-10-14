@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { ref, toRefs } from 'vue'
+    import { Ref, ref } from 'vue'
     import { storeToRefs } from 'pinia'
     import { liveQuery } from 'dexie'
     import { useI18n } from 'vue-i18n'
@@ -12,9 +12,14 @@
 
     import { web } from '@/proto/web.js'
 
+    import notificationSound from '@/assets/notification.mp3'
+
+    import { Howl } from 'howler'
+
     const mainStore = useMainStore()
     const connStore = useConnStore()
     const colorStore = useColorStore()
+
 
     const { t } = useI18n({
         inheritLocale: true,
@@ -28,7 +33,10 @@
         secondaryBorder: secondaryBorderColor,
     } = storeToRefs(colorStore) 
 
-    const haveUnseenMainPosts = ref(false)
+    const haveUnseenPosts = ref(false)
+    const numUnseenMainPosts = ref(0)
+    const unseenGroupsMap: Ref<any> = ref({})
+    const numUnseenGroups = ref(0)
 
     init()
 
@@ -37,17 +45,41 @@
     }
 
     async function setupObserver() {
-        const observable = liveQuery (() => db.feed.where('seenState').equals(web.PostDisplayInfo.SeenState.UNSEEN).toArray())
+        const observable = liveQuery (() => db.post.where('seenState').equals(web.PostDisplayInfo.SeenState.UNSEEN).toArray())
         const avatarSubscription = observable.subscribe({
             next: result => {
                 if (!result) { return }
-                if (result.length == 0) {
-                    haveUnseenMainPosts.value = false 
-                    return 
-                } else {
-                    haveUnseenMainPosts.value = true
+                
+                haveUnseenPosts.value = false
+                numUnseenMainPosts.value = 0
+                unseenGroupsMap.value = {}
+                numUnseenGroups.value = 0
+
+                for (let i = 0; i < result.length; i++) {
+                    const item = result[i]
+
+                    if (item.groupID) {
+                        if (!unseenGroupsMap.value[item.groupID]) {
+                            unseenGroupsMap.value[item.groupID] = 1
+                        } else {
+                            unseenGroupsMap.value[item.groupID]++
+                        }
+                    } else {
+                        numUnseenMainPosts.value++
+                    }
+
+                    processNotification(item)
                 }
 
+                numUnseenGroups.value = Object.keys(unseenGroupsMap.value).length
+
+                if (numUnseenMainPosts.value || numUnseenGroups.value) {
+                    /* 
+                     * this flag might need to be changed to work more like iOS where it's false any time the user
+                     * goes to the top of the main feed, even when there are still unseen posts
+                     */
+                    haveUnseenPosts.value = true
+                }
 
 
             },
@@ -55,6 +87,80 @@
         })
     }
 
+    async function processNotification(item: any) {
+        if (Notification.permission === 'granted') {
+
+            const id = item.postID // todo: there might be other notifications beside posts
+
+            if (id in mainStore.shownNotifications) { return }
+
+            /* 
+                record notification even if it's not shown due to visiblity, 
+                because that would mean the user have the client opened and actually
+                have seen the post
+            */
+            mainStore.shownNotifications[id] = {'seen': 'yes'}
+            mainStore.shownNotificationsArr.push(id)
+
+            /* clean up */
+            if (mainStore.shownNotificationsArr.length >= 2000) {
+                for (let i = 0; i <= 1000; i++) {
+                    const key = mainStore.shownNotificationsArr.pop()
+                    if (!key) continue
+                    delete mainStore.shownNotifications[key]
+                }
+            }
+
+            /* do not notify if user have the tab open */
+            if (document.visibilityState === 'visible') { return }
+
+            if (connStore.isUserFirstClickCompleted && mainStore.sounds) {
+      
+                let sound = new Howl({
+                    src: [notificationSound]
+                })
+
+                sound.play()
+            }
+
+            if (mainStore.desktopAlerts) {
+
+                let notification = new Notification(
+                    'HalloApp', {
+                        badge: 'https://web.halloapp.com/assets/images/favicon.ico',
+                        body: 'New post!',
+                        icon: 'https://web.halloapp.com/assets/images/favicon.ico',
+                        // image: 'https://web.halloapp.com/assets/images/test.jpg',
+                    }
+                )
+                notification.onclick = function() {
+                    window.focus()
+                }
+            }
+
+        }
+
+        // ask the user for permission
+        else if (Notification.permission !== 'denied') {
+            
+            Notification.requestPermission().then(function (permission) {
+                // user accepts
+                if (permission === 'granted') {
+            
+                    let notification = new Notification(
+                        'HalloApp', {
+                            badge: 'https://web.halloapp.com/assets/images/favicon.ico',
+                            body: 'New post!',
+                            icon: 'https://web.halloapp.com/assets/images/favicon.ico',
+                            // image: 'https://web.halloapp.com/assets/images/test.jpg',
+                        }
+                    )
+
+                }
+            })
+        }
+
+    }
 
 </script>
 
@@ -69,7 +175,7 @@
                 <div class="sideIconLabel">
                     {{ t('general.home') }} 
                 </div>
-                <!-- <div v-if="haveUnseenMainPosts" class="newHomeFeedIndicator"></div> -->
+                <div v-if="haveUnseenPosts" class="newHomeFeedIndicator"></div>
             </div>
         </div>
 
@@ -77,6 +183,7 @@
             <div :class="['sideIcon', {selected: mainStore.page == 'groups'}]" @click='mainStore.gotoPage("groups")'>
                 <div class="icon">
                     <font-awesome-icon :icon="['fas', 'user-group']" />
+                    <div v-if="numUnseenGroups" class="unreadGroup">{{ numUnseenGroups }}</div>
                 </div>
                 <div class="sideIconLabel">
                     {{ t('general.groups') }}
@@ -95,8 +202,8 @@
             </div>
         </div> -->
         
-        <div class="sideIconWrapper sideIconWrapperTop">
-            <div :class="['sideIcon', {selected: mainStore.page == 'settings'}]" @click='mainStore.gotoPage("settings")'>
+        <div class="sideIconWrapper sideIconWrapperTop" style="margin-top: 15px;">
+            <div :class="['sideIcon', {}]" @click='mainStore.toggleSettings()'>
                 <div class="icon">
                     <font-awesome-icon :icon="['fas', 'gear']" />
                 </div>
@@ -177,10 +284,32 @@
     }
 
     .icon {
+        position: relative;
+
         flex: 0 0 30%;
         justify-self: center;
         text-align: center;
     }
+
+    .unreadGroup {
+        position: absolute;
+        top: -8px;
+        right: -5px;
+
+        
+        padding: 0px 3px 0px 3px;
+  
+        text-align: center;
+       
+        border-radius: 99999px;
+        background-color:orangered;
+        border:none;
+        color:white;
+        font-size: 11px;
+        
+
+    }
+
 
     .sideIcon:hover {
         /* color: v-bind(primaryBlue); */

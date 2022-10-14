@@ -1,11 +1,39 @@
 import Autolinker from 'autolinker'
 import GraphemeSplitter from 'grapheme-splitter'
-import halogger from '../common/halogger'
+import hal from '../common/halogger'
 
 export function useHAText() {
 
-    function strReplaceAt (text: string, index: number, replacement: string) {
-        return text.substring(0, index) + replacement + text.substring(index + 1)
+    function processText(
+        text: any, mentions: any, 
+        truncateText: boolean = false, maxCharsWhenTruncated: number = 100, 
+        forInputBox: boolean = false) {
+
+        let isTruncated: boolean = false
+
+        const textWithMentions = populateTextWithMentions(text, mentions)
+        const decoratedTextWithLinks = decorateTextWithLinks(textWithMentions)
+        let textToBeSanitized = decorateTextWithMarkdownPlaceholders(decoratedTextWithLinks)
+       
+        let maxCharsAllowed: number = 5000
+
+        if (truncateText) {
+            maxCharsAllowed = maxCharsWhenTruncated
+        }
+
+        let truncatedText = truncateTextIfNeeded(textToBeSanitized, maxCharsAllowed)
+        if (truncatedText.isTruncated) {
+            isTruncated = true
+            truncatedText.text += '...'
+        }
+
+        textToBeSanitized = truncatedText.text
+
+        const santizedHtml = sanitizeHtml(textToBeSanitized)
+        const html = forInputBox ? 
+                    populateTextWithHtmlForInputBox(santizedHtml) : 
+                    populateTextWithHtml(santizedHtml)
+        return { html: html, isTruncated: isTruncated }
     }
 
     function populateTextWithMentions(text: string, mentions: any) {
@@ -29,10 +57,35 @@ export function useHAText() {
         return result
     }
 
-    function strReplaceCharAt(str: any, index: any, subStr: any) {
-        if (index > str.length - 1) { return str }
-        return str.substring(0, index) + subStr + str.substring(index + 1)
-    }
+    function decorateTextWithLinks(text: string) {
+        const autolinker = new Autolinker({
+            stripPrefix: false,
+            urls: {
+                schemeMatches: true,
+                wwwMatches: true,
+                tldMatches: true
+            },
+            stripTrailingSlash: false,
+            replaceFn: function (match) {
+                let tag = new Autolinker.HtmlTag({
+                    tagName: '[[a]]',
+                    attrs: { 'href': match.getAnchorHref(), 'target': '_blank', 'rel': 'noopener noreferrer' },
+                    innerHtml: match.getMatchedText()
+                })
+                return tag
+            }
+        })
+
+        /* looks for links, phone numbers, and emails */
+        let textWithAutoLinkerLinks = autolinker.link(text)
+
+        /* convert <[[a]] to [[a]] since AutoLinker custom tags always have '<' */
+        let textWithHALinks = textWithAutoLinkerLinks
+            .replaceAll('<[[a]]', '[[a]]')
+            .replaceAll('</[[a]]>', '[[/a]]')
+
+        return textWithHALinks
+    }    
 
     function decorateTextWithMarkdownPlaceholders(text: any) {
         let result = ''
@@ -61,10 +114,32 @@ export function useHAText() {
                     } 
                 }
 
+            /* skip all markdown text inside links */
+            } else if (Grapheme == '[' && ((i + 4) < GraphemesList.length)) { // check for [ first to save some compute cycles
+
+                const openStr = GraphemesList.slice(i, i + 5).join('')
+                const openingLinkTag = '[[a]]'
+
+                if (openStr == openingLinkTag) {
+
+                    while ((i + 5) < GraphemesList.length) {
+                        const closeStr = GraphemesList.slice(i, i + 6).join('')
+                        const closingLinkTag = '[[/a]]'
+
+                        if (closeStr == closingLinkTag) {
+                            break
+                        }
+
+                        result += GraphemesList[i]
+                        i++
+                    }
+                }  
+
             /* skip all markdown text inside mentions */
             } else if (Grapheme == '[' && ((i + 5) < GraphemesList.length)) { // check for [ first to save some compute cycles
 
                 const openStr = GraphemesList.slice(i, i + 6).join('')
+                hal.log('--> openStr mention: ' + openStr + ' ' + i)
                 const openingMentionTag = '[[am]]'
 
                 if (openStr == openingMentionTag) {
@@ -141,36 +216,6 @@ export function useHAText() {
         return result
     }
 
-    function decorateTextWithLinks(text: string) {
-        const autolinker = new Autolinker({
-            stripPrefix: false,
-            urls: {
-                schemeMatches: true,
-                wwwMatches: true,
-                tldMatches: true
-            },
-            stripTrailingSlash: false,
-            replaceFn: function (match) {
-                let tag = new Autolinker.HtmlTag({
-                    tagName: '[[a]]',
-                    attrs: { 'href': match.getAnchorHref(), 'target': '_blank', 'rel': 'noopener noreferrer' },
-                    innerHtml: match.getMatchedText()
-                })
-                return tag
-            }
-        })
-
-        /* looks for links, phone numbers, and emails */
-        let textWithAutoLinkerLinks = autolinker.link(text)
-
-        /* convert <[[a]] to [[a]] since AutoLinker custom tags always have '<' */
-        let textWithHALinks = textWithAutoLinkerLinks
-            .replaceAll('<[[a]]', '[[a]]')
-            .replaceAll('</[[a]]>', '[[/a]]')
-
-        return textWithHALinks
-    }
-
     function truncateTextIfNeeded(text: string, maxCharacters: number) {
         let charCount = 0
         let isTruncated = false
@@ -245,12 +290,6 @@ export function useHAText() {
         return { text: truncatedText, isTruncated: isTruncated, countedChars: charCount }
     }
 
-    function sanitizeHtml(text: string) {
-        let element = document.createElement('div')
-        element.textContent = text // prefer textContent over innerText, more standardardized and doesn't change newlines to <br>
-        return element.innerHTML
-    }
-
     function populateTextWithHtml(text: string) {
         var result = text
             .replaceAll('\n', '<br>')
@@ -289,34 +328,20 @@ export function useHAText() {
         return result
     }
 
-    function processText(text: any, mentions: any, truncateText: boolean = false, 
-            maxCharsWhenTruncated: number = 100, forInputBox: boolean = false) {
-        let isTruncated: boolean = false
-
-        const textWithMentions = populateTextWithMentions(text, mentions)
-        const decoratedTextWithMarkdown = decorateTextWithMarkdownPlaceholders(textWithMentions)
-        let textToBeSanitized = decorateTextWithLinks(decoratedTextWithMarkdown)
-
-        let maxCharsAllowed: number = 5000
-
-        if (truncateText) {
-            maxCharsAllowed = maxCharsWhenTruncated
-        }
-
-        let truncatedText = truncateTextIfNeeded(textToBeSanitized, maxCharsAllowed)
-        if (truncatedText.isTruncated) {
-            isTruncated = true
-            truncatedText.text += '...'
-        }
-
-        textToBeSanitized = truncatedText.text
-
-        const santizedHtml = sanitizeHtml(textToBeSanitized)
-        const html = forInputBox ? 
-                    populateTextWithHtmlForInputBox(santizedHtml) : 
-                    populateTextWithHtml(santizedHtml)
-        return { html: html, isTruncated: isTruncated }
+    function sanitizeHtml(text: string) {
+        let element = document.createElement('div')
+        element.textContent = text // prefer textContent over innerText, more standardardized and doesn't change newlines to <br>
+        return element.innerHTML
     }
+
+    function strReplaceAt (text: string, index: number, replacement: string) {
+        return text.substring(0, index) + replacement + text.substring(index + 1)
+    }
+
+    function strReplaceCharAt(str: any, index: any, subStr: any) {
+        if (index > str.length - 1) { return str }
+        return str.substring(0, index) + subStr + str.substring(index + 1)
+    }    
 
     return { processText }
 }

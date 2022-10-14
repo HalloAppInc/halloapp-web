@@ -2,14 +2,14 @@
     import { PropType, Ref, ref, toRef } from "vue"
     import { storeToRefs } from 'pinia'
     import { liveQuery } from "dexie"
-
-    import hal from "../../common/halogger"
-
-    import { useMainStore } from '../../stores/mainStore'
-    import { useColorStore } from '../../stores/colorStore'
-
-    import { Feed, PostMediaType, LinkPreview } from '../../db'
     import { useI18n } from 'vue-i18n'
+
+    import hal from "@/common/halogger"
+
+    import { useMainStore } from '@/stores/mainStore'
+    import { useColorStore } from '@/stores/colorStore'
+
+    import { LinkPreview } from '@/db'
 
     const props = defineProps({
         post: {
@@ -60,26 +60,26 @@
     const host = url.host
     const pathname = url.pathname
     
-    const showLargeImage = ref(false)
-    if (pathname.length > 1) {
-        showLargeImage.value = true
-    }
-
-
-  
-    const width = props.linkPreview?.preview?.width
-    const height = props.linkPreview?.preview?.height
-
-
-
     const previewHeight = ref(mediaBoxWidth.value*0.60)
     const imageWidth = ref(previewHeight.value*0.70)
     const imageHeight = ref(previewHeight.value*0.70)
 
+    const width = props.linkPreview?.preview?.width
+    const height = props.linkPreview?.preview?.height
+
+    const showLargeImage = ref(false)
+
+    // if (pathname.length > 1) {
+    //     showLargeImage.value = false
+    // }
+
+    if (width > height) {
+        showLargeImage.value = true
+    }    
+
     if (showLargeImage.value) {
         imageWidth.value = mediaBoxWidth.value + 10 // + 10 to account for padding
     }
-
 
 </script>
 
@@ -176,7 +176,7 @@
         display: -webkit-box;
         overflow: hidden;
         text-overflow: ellipsis;
-        -webkit-line-clamp: 3;
+        -webkit-line-clamp: 5;
         -webkit-box-orient: vertical;       
     }        
 

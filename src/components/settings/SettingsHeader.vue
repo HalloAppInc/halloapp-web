@@ -1,14 +1,12 @@
 <script setup lang="ts">
     import { ref, computed } from 'vue'
-    import { storeToRefs } from 'pinia'
     import { useI18n } from 'vue-i18n'
+    import { storeToRefs } from 'pinia'
 
     import { useMainStore } from '@/stores/mainStore'
     import { useColorStore } from '@/stores/colorStore'
 
-    import GroupAvatar from '@/components/media/GroupAvatar.vue'
-
-    const props = defineProps(['title'])
+    const props = defineProps(['postID'])
 
     const { t } = useI18n({
         inheritLocale: true,
@@ -19,37 +17,32 @@
     const colorStore = useColorStore()
 
     const { 
-        background: backgroundColor,
-        text: textColor
+        tertiaryBg: tertiaryBgColor,
+        text: textColor,
+        icon: iconColor,
+        hover: hoverColor,
     } = storeToRefs(colorStore)  
 
-    const hoverColor = computed(() => {
-        return colorStore.hover
-    })
-
-    const iconColor = computed(() => {
-        return colorStore.icon
-    })
 </script>
 
 <template>
 
-    <div class='groupHeader'>
+    <div class="settingsHeader">
 
         <div class='container'>
            
-            <div v-if="!mainStore.showGroupsSidebar" class='iconContainer' @click="$emit('toggleSidebar')">
+            <div class='iconContainer' @click="mainStore.showSettings = false;">
                 <div class='iconShadow'>
-                    <font-awesome-icon :icon="['fas', 'angle-left']" style="font-size: 25px;"/>
+                    <font-awesome-icon v-if='!mainStore.isMobile' :icon="['fas', 'xmark']" style="font-size: 25px;"/>
+                    <font-awesome-icon v-else :icon="['fas', 'angle-left']" style="font-size: 25px;"/>
                 </div>
             </div>
-           
-            <div class="avatarContainer">
-                <GroupAvatar v-if="mainStore.groupsPageGroupID" :groupID="mainStore.groupsPageGroupID" :width="30"></GroupAvatar>
-            </div>           
+            
+            <div class='titleContainer'>
+                Settings
+            </div>
 
-            <div v-if="mainStore.groupsPageGroupID" class='titleContainer'>
-                {{ mainStore.groupnames[mainStore.groupsPageGroupID] }}
+            <div class='iconContainer'>
             </div>
 
         </div>
@@ -59,21 +52,18 @@
 
 <style scoped>
 
-    .groupHeader {
-        position: sticky;
-        top: 0px;
-        width: 100%;
-        height: 50px;
-        background-color: v-bind(backgroundColor);
-        z-index: 2;
+    .settingsHeader {
+        overflow-y: auto;
+        overflow-x: hidden;
+        
+        height: 100%;
+        
     }
 
     .container {
-        height: 50px;
         display: flex;
         flex-direction: row;
-        justify-content: flex-start;
-        align-items: center;
+        justify-content: space-between;
     }
 
     .leftGutter {
@@ -84,9 +74,22 @@
         flex: 0 0 10px;
     }
 
+    .avatarContainer {
+        flex: 0 0 70px;
+        padding: 5px 0px 5px 0px;
+    }
+
+    .avatar {
+        width: 40px;
+        height: 40px;
+
+        background-color: lightgray;
+        border-radius: 50%;
+    }
+
     .iconContainer {
-        flex: 0 0 50px;
-        
+        flex: 0 0 70px;
+        padding: 5px 0px 5px 0px;
         color: v-bind(iconColor);
 
         display: flex;
@@ -109,18 +112,6 @@
 
     .iconShadow:hover {
         background-color: v-bind(hoverColor);
-    }
-
-    .avatarContainer {
-        padding-top: 5px;
-        padding-left: 15px;
-        flex: 0 0 65px;
-    }
-
-    .avatar {
-
-        background-color: lightgray;
-        border-radius: 50%;
     }
 
     .titleContainer {

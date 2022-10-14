@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { Ref, ref, computed, nextTick, watch, onMounted, onUnmounted, onUpdated } from 'vue'
+    import { Ref, ref, computed, nextTick, watch, onMounted, onUnmounted, onUpdated, defineEmits } from 'vue'
     import { number } from '@intlify/core-base'
     import { liveQuery } from 'dexie'
     import { storeToRefs } from 'pinia'
@@ -20,18 +20,17 @@
     import { useHAMediaResize } from '@/composables/haMediaResize'
     import { useHADatabase } from '@/composables/haDb'
     import { useHAText } from '@/composables/haText'
-    import { useHAFeed } from '@/composables/haFeed'
+    import { useHACommonMedia } from '@/composables/haCommonMedia'
     
     import Popup from '@/components/chats/Popup.vue'
-    import Quote from '@/components/chats/Quote.vue'
-    import FullScreener from '@/components/chats/FullScreener.vue'
-    import MediaCollage from '@/components/chats/MediaCollage.vue'
+    import Quote from '@/components/msg/Quote.vue'
+    import MsgLinkPreview from '@/components/msg/MsgLinkPreview.vue'
+    
+    import FullScreener from '@/components/media/FullScreener.vue'
+    import MediaCollage from '@/components/media/MediaCollage.vue'
     import Notification from '@/components/chats/Notification.vue'
 
-
-    import { useHACommonMedia } from '@/composables/haCommonMedia'
-
-    const { fetchVoiceNote
+    const { getCommonMedia, fetchVoiceNote
     } = useHACommonMedia()    
 
     const mainStore = useMainStore()
@@ -52,9 +51,7 @@
             loadMessageList, notifyWhenChanged, getMedia, 
             getContactByName, getContacts } = useHADatabase()
 
-    const { getCommonMediaList } = useHAFeed()
-    
-
+    const emit = defineEmits<{(e: 'scrolled', scrollTop: number): void}>()
 
     interface Props {
         type: SubjectType,
@@ -73,7 +70,7 @@
 
         // const groupId = props.groupID
 
-        // msgObservable = liveQuery (() => db.feed.where('groupID').equals(groupId)
+        // msgObservable = liveQuery (() => db.post.where('groupID').equals(groupId)
         //     .reverse()
         //     .sortBy('timestamp')
         // )
@@ -95,17 +92,13 @@
     const dbListData: Ref<any[]> = ref([])
     const listData: Ref<any[]> = ref([])    
         
-
     const commonMediaLists = ref({} as any) // contain arrays of commonMedia per data item
 
-
     const isInitialized = ref(false)
-
 
     async function makeList() {
 
         listData.value = await processDBCommentList(dbListData, count.value) as any
-
 
         for (const element of listData.value) {
         
@@ -116,7 +109,7 @@
 
                     const num = await db.commonMedia.toArray()
 
-                    const mediaArr = await getCommonMediaList(SubjectType.Comment, props.subjectID, element.commentID)
+                    const mediaArr = await getCommonMedia(SubjectType.Comment, props.subjectID, element.commentID)
                     if (mediaArr) {
                         commonMediaLists.value[element.commentID] = mediaArr
 
@@ -134,6 +127,12 @@
             // })
             
         }
+
+        /* don't scroll to the bottom if user has scrolled up */
+        if (!showJumpDownButton.value) {
+            gotoBottom('smooth')
+        }
+
     }
 
 
@@ -159,6 +158,7 @@
     const selectMediaList = ref()
     const selectMediaIdx = ref()
     const selectMediaContentID = ref()
+    
     const menuTimestamp = ref('')
     const quoteMessage = ref({})
     const NotificationQueue: Ref<string[]> = ref([])
@@ -244,13 +244,9 @@
             listLength = numMsgToShow
         }
 
- 
-      
         for(let i = 0; i < listLength; i++) {
             const message = messageListFromDB.value[i]
     
-      
-
             let time = formatTimeChat(message.timestamp, locale.value as string)
             let type = (message.userID == mainStore.userID) ? 'outBound' : 'inBound'
             // not delete
@@ -265,7 +261,6 @@
                 //         message.quotedMessage = quotedMessage
                 //     }
                 // }
-
             }
 
             if (message.voiceNote) {
@@ -273,42 +268,37 @@
                 const voiceNoteBlob = await fetchVoiceNote(props.type, message.voiceNote) as any
 
                 if (voiceNoteBlob) {
-    
                     message.voiceNoteBlobUrl = URL.createObjectURL(voiceNoteBlob)
                 }
             }
             
             result.unshift(message)
 
-
-        /* add timestamp bubbles */
-        if (messageListFromDB.value[i+1]) {
-            const msgTimestamp = message.timestamp
-            const nextMsgTimestamp = messageListFromDB.value[i+1].timestamp
-            
-            if (msgTimestamp && nextMsgTimestamp 
-                && timeDiffBiggerThanOneDay(msgTimestamp, nextMsgTimestamp)) {
-                result.unshift({
-                    'type': 'timestamp',
-                    'unixTimestamp': msgTimestamp,
-                    'timestamp': formatTimeDateOnlyChat(msgTimestamp, locale.value as string),
-                })
-    
-            }
-        }
-        /* add timestamp to the last of the messages */ 
-        else {
-            if (message.timestamp) {
-                result.unshift({
-                    'type': 'timestamp',
-                    'timestamp': formatTimeDateOnlyChat(message.timestamp, locale.value as string),
-                })
+            /* add timestamp bubbles */
+            if (messageListFromDB.value[i+1]) {
+                const msgTimestamp = message.timestamp
+                const nextMsgTimestamp = messageListFromDB.value[i+1].timestamp
                 
-            }                
-        }
-
-
-
+                if (msgTimestamp && nextMsgTimestamp 
+                    && timeDiffBiggerThanOneDay(msgTimestamp, nextMsgTimestamp)) {
+                    result.unshift({
+                        'type': 'timestamp',
+                        'unixTimestamp': msgTimestamp,
+                        'timestamp': formatTimeDateOnlyChat(msgTimestamp, locale.value as string),
+                    })
+        
+                }
+            }
+            /* add timestamp to the last of the messages */ 
+            else {
+                if (message.timestamp) {
+                    result.unshift({
+                        'type': 'timestamp',
+                        'timestamp': formatTimeDateOnlyChat(message.timestamp, locale.value as string),
+                    })
+                    
+                }                
+            }
 
         }
         return result
@@ -362,12 +352,9 @@
     }
 
     function handleScroll() {
-        
         clearTimeout(handleScrollTimer)
         handleScrollTimer = setTimeout(debouncedHandleScroll, 15) // 15 seems the best but can be tinkered with
     }
-
-
 
     // when scroll the scroll bar get the scroll bar's current height
     // get the value of timestamp of the msg bubble at current floating timestamp's height
@@ -434,12 +421,7 @@
             showJumpDownButton.value = false
         }
 
-
-        /* fetch more posts before user gets to the end of their feed */
         let element = content.value
-        // const scrolled = element.scrollHeight - element.scrollTop
-        // const nearEnd = element.clientHeight * 3 // 2 screens up
-        // if (scrolled < nearEnd) {
 
         if (element.scrollTop < 100) {
             
@@ -460,9 +442,10 @@
 
             count.value += 10
             makeList()
-        } 
+        }
 
-
+        /* emit event so commentHeader knows to change title display */
+        emit('scrolled', element.scrollTop)
     }
 
     // jump to bottom
@@ -557,10 +540,10 @@
 
     let shouldScrollToBottom = true
 
+    /* used for first load, scroll to bottom */
     onUpdated(() => {
         
         if (shouldScrollToBottom) {
-        
             gotoBottom('auto')
         }
         
@@ -714,6 +697,10 @@
                         <Quote :type="props.type" :subjectID="props.subjectID" :contentID='value.parentCommentID' />
                     </div>
 
+                    <div v-else-if='value.linkPreview' class='chatReplyContainer'>
+                        <MsgLinkPreview :type="props.type" :subjectID="props.subjectID" :contentID='value.commentID' />
+                    </div>
+
                     <!-- media -->
                     <div v-if='commonMediaLists && commonMediaLists[value.commentID]' class='mediaContainer' >
                         <MediaCollage  
@@ -770,6 +757,9 @@
                         <Quote :type="props.type" :subjectID="props.subjectID" :contentID='value.parentCommentID' />
                     </div>
 
+                    <div v-else-if='value.linkPreview' class='chatReplyContainer'>
+                        <MsgLinkPreview :type="props.type" :subjectID="props.subjectID" :contentID='value.commentID' />
+                    </div>
 
                     <div v-if='commonMediaLists && commonMediaLists[value.commentID]' 
                         class='mediaContainer'>
@@ -794,7 +784,7 @@
                     <div class='chatTextContainer'>
                         <!-- show message content -->
                         <!-- <span v-html='value.text' :class='value.font' @click="gotoChatWith($event)"></span> -->
-                        <span v-html='value.text' @click="gotoChatWith($event)">
+                        <span v-html='processText(value.text, value.mentions, false).html' @click="gotoChatWith($event)">
                         </span>
                     </div>
 
@@ -903,7 +893,7 @@
         :type="props.type"
         :subjectID="props.subjectID"
         :contentID="selectMediaContentID"
-        :selectMediaIndex='selectMediaIdx'
+        :selectedMediaIndex='selectMediaIdx'
         :selectMediaList='selectMediaList' />
 
     <!-- notification -->
@@ -912,16 +902,6 @@
 </template>
 
 <style scoped>
-    /* animation for button */
-    .button-enter-active, .button-leave-active {
-        transition: all 0.5s ease
-    }
-
-    .button-enter-from, .button-leave-to {
-        transform: scale(0.1);
-        opacity: 0;
-    }
-
     *::-webkit-scrollbar {
         width: 10px;
     }
@@ -1002,17 +982,6 @@
         border: 0.5px solid rgba(0, 0, 0, 0.1);
     }
 
-    @keyframes fade {
-
-        10% {
-            filter: invert(25%);
-        }
-
-        90% {
-            filter: invert(25%);
-        }
-    }
-
     .chatBubbleAnimation {
         opacity: 1;
         animation: fade 2s linear;
@@ -1026,7 +995,7 @@
     .chatBubbleInBound {
         left: 10px;
         max-width: 60%;
-        min-width: 10%;
+        min-width: 65px; /* can't be less than 65 */
         background: v-bind(inBoundMsgBubbleColor);
         overflow-x: hidden;
     }
@@ -1034,16 +1003,17 @@
     .chatBubbleoutBound {
         right: 10px;
         max-width: 60%;
-        min-width: 10%;
+        min-width: 65px; /* can't be less than 65 */
         background: v-bind(outBoundMsgBubbleColor);
         overflow-x: hidden;
     }
 
     .chatBubbleTime {
+        padding: 0px 5px;
         background: v-bind(timeBubbleColor);
         border: 0.5px solid rgba(101, 61, 61, 0.2);
         box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.1);
-        border-radius: 7px;
+        border-radius: 15px;
         width: fit-content;
         margin: 10px 0px 0px 0px;
     }
@@ -1143,7 +1113,7 @@
     .timestampBig {
         white-space: nowrap;
         width: fit-content;
-        font-size: small;
+        font-size: 12px;
         color: v-bind(timestampColor);
     }
 
@@ -1355,4 +1325,24 @@
     .closeIcon:hover {
         cursor: pointer;
     }
+
+    /* animation for button */
+    .button-enter-active, .button-leave-active {
+        transition: all 0.5s ease
+    }
+
+    .button-enter-from, .button-leave-to {
+        transform: scale(0.1);
+        opacity: 0;
+    }
+
+    @keyframes fade {
+        10% {
+            filter: invert(25%);
+        }
+        90% {
+            filter: invert(25%);
+        }
+    }
+
 </style>

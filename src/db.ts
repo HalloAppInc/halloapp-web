@@ -45,6 +45,7 @@ export interface CommonMediaLinkPreview {
     preview?: CommonMedia
 }
 
+/* obsolete, will delete after some versions after 34 */
 export enum PostMediaType {
     Unknown = 0,
     Image = 1,
@@ -52,6 +53,7 @@ export enum PostMediaType {
     Audio = 3
 }
 
+/* obsolete, will delete after some versions after 34 */
 export interface PostMedia {
     id?: number
     postID?: string
@@ -112,7 +114,6 @@ export interface CommonMedia {
 }
 
 export interface Feed {
-    id?: number
     postID: string
     userID: number
     groupID?: string
@@ -123,7 +124,29 @@ export interface Feed {
     timestamp: number
 
     seenState?: web.PostDisplayInfo.SeenState
+    transferState?: web.PostDisplayInfo.TransferState
     retractState?: web.PostDisplayInfo.RetractState
+
+    unreadComments?: number
+    userReceipts?: web.ReceiptInfo[]
+
+    haveComments?: boolean
+}
+
+export interface Post {
+    postID: string
+    userID: number
+    groupID?: string
+    voiceNote?: CommonMedia
+    text?: string
+    mentions?: Mention[]
+    linkPreview?: CommonMediaLinkPreview
+    timestamp: number
+
+    seenState?: web.PostDisplayInfo.SeenState
+    transferState?: web.PostDisplayInfo.TransferState
+    retractState?: web.PostDisplayInfo.RetractState
+
     unreadComments?: number
     userReceipts?: web.ReceiptInfo[]
 
@@ -131,10 +154,9 @@ export interface Feed {
 }
 
 export interface Comment {
-    id?: number
+    commentID: string
     postID: string
     type: server.Comment.CommentType
-    commentID: string
     userID: number
     parentCommentID?: string
     timestamp: number
@@ -152,7 +174,7 @@ export interface Group {
     description?: string
     background?: string
     lastContent?: string
-    lastContentMediaType?: PostMediaType
+    lastContentMediaType?: MediaType
     lastChangeTimestamp: number
 }
 
@@ -181,32 +203,42 @@ export interface GroupAvatar {
 
 export class HADexie extends Dexie {
 
-    messageList!: Table<MessageList>
-    media!: Table<Media>
-    feed!: Table<Feed>
+    post!: Table<Post>
     comment!: Table<Comment>
     group!: Table<Group>
-    chat!: Table<Chat>
-    postMedia!: Table<PostMedia>
+    
     commonMedia!: Table<CommonMedia>
-    contact!: Table<Contact>
+    
     avatar!: Table<Avatar>
     groupAvatar!: Table<GroupAvatar>
+
+    feed!: Table<Feed>
+    postMedia!: Table<PostMedia>
+
+    messageList!: Table<MessageList>
+    media!: Table<Media>
+    contact!: Table<Contact>
+    chat!: Table<Chat>
     
     constructor() {
         super('myDatabase')
-        this.version(10).stores({
+        this.version(12).stores({
+            post: 'postID, userID, groupID, seenState, text, timestamp',
+            comment: 'commentID, postID, timestamp',
+            group: 'groupID, name',
+            
+            commonMedia: '++id, contentID, subjectID, type',
+            
+            avatar: 'userID',
+            groupAvatar: 'groupID',
+
+            feed: 'postID, userID, groupID, seenState, text, timestamp',
+            postMedia: '++id, postID, order',
+
             messageList: '++id, fromUserID, toUserID',
             media: '++id',
-            feed: '++id, postID, userID, groupID, seenState, text, timestamp',
-            comment: '++id, postID, commentID, timestamp',
-            group: 'groupID, name',
-            chat: '++id, proto',
-            postMedia: '++id, postID, order',
-            commonMedia: '++id, contentID, subjectID, type',
             contact: '++id, userName, userID',
-            avatar: 'userID',
-            groupAvatar: 'groupID'
+            chat: '++id, proto',
         })
     }
     

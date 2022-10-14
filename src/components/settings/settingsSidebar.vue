@@ -6,7 +6,7 @@
     import { useColorStore } from '@/stores/colorStore'
     import { useMainStore } from '@/stores/mainStore'
 
-    import MainMenu from '@/components/settings/Main.vue'
+    import MainMenu from '@/components/settings/Settings.vue'
     import HelpMenu from '@/components/settings/Help.vue'
     import NotificationsMenu from '@/components/settings/Notifications.vue'
     import PrivacyMenu from '@/components/settings/Privacy.vue'
@@ -23,10 +23,10 @@
     const { 
         primaryLightgray: primaryLightgrayColor,
         background: backgroundColor,
+        secondaryBg: secondaryBgColor,
         borderline: borderlineColor,
         secondaryBorder: secondaryBorderColor,
     } = storeToRefs(colorStore)  
-
 
     const settingsSidebar = ref<HTMLDivElement>()
     const settingSidebarHeight = ref(0)
@@ -46,70 +46,69 @@
                 settingSidebarHeight.value = settingsSidebar.value ? settingsSidebar.value.clientHeight : 0
         }).observe(settingsSidebar.value!)
     })
-    </script>
+</script>
 
-
-    <template>
-        <Transition name='settings'>
-            <div class="wrapper" ref='settingsSidebar'>
-                <MainMenu />
-                <PrivacyMenu />
-                <NotificationsMenu />
-                <HelpMenu />
-                <SecurityMenu />
-            </div>  
-        </Transition>
-    </template>
+<template>
+    <Transition name='settings'>
+        <div class="settingsSidebarWrapper" ref='settingsSidebar'>
+            <MainMenu />
+            <PrivacyMenu />
+            <NotificationsMenu />
+            <HelpMenu />
+            <SecurityMenu />
+        </div>  
+    </Transition>
+</template>
 
 <style scoped>
-.settings-enter-active {
-    transition: all 0.15s;
-}
+    *::-webkit-scrollbar {
+        width: 5px;
+    }
 
-.settings-leave-active {
-    transition: all 0.3s ease-in-out;
-}
+    *::-webkit-scrollbar-track {
+        background: white;      /* color of the tracking area */
+    }
 
-.settings-enter-from {
-    transform: translateX(-200px);
-    opacity: 0;
-}
+    *::-webkit-scrollbar-thumb {
+        background-color: rgb(172, 169, 169);       /* color of the scroll thumb */
 
-.settings-leave-from {
-    transform: translateY(v-bind(offsetTop + 'px'));
-    opacity: 1;
-}
+        border: 0px solid white;        /* creates padding around scroll thumb */
+    }
 
-.settings-leave-to {
-    transform: translateY(v-bind(offsetTop + 'px')) translateX(-200px);
-    opacity: 0;
-}
+    .settingsSidebarWrapper {
+        background-color: v-bind(primaryLightgrayColor);
 
-*::-webkit-scrollbar {
-    width: 5px;
-}
+        height: 100%;
 
-*::-webkit-scrollbar-track {
-    background: white;      /* color of the tracking area */
-}
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
 
-*::-webkit-scrollbar-thumb {
-    background-color: rgb(172, 169, 169);       /* color of the scroll thumb */
+        overflow: hidden;
 
-    border: 0px solid white;        /* creates padding around scroll thumb */
-}
+        border-right: 1px solid v-bind(borderlineColor);
+    }
 
-.wrapper {
-    background-color: v-bind(backgroundColor);
+    .settings-enter-active {
+        transition: all 0.15s;
+    }
 
-    height: 100%;
+    .settings-leave-active {
+        transition: all 0.3s ease-in-out;
+    }
 
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
+    .settings-enter-from {
+        transform: translateX(-200px);
+        opacity: 0;
+    }
 
-    overflow: hidden;
+    .settings-leave-from {
+        transform: translateY(v-bind(offsetTop + 'px'));
+        opacity: 1;
+    }
 
-    border-right: 1px solid v-bind(borderlineColor);
-}
+    .settings-leave-to {
+        transform: translateY(v-bind(offsetTop + 'px')) translateX(-200px);
+        opacity: 0;
+    }    
 </style>

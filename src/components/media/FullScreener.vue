@@ -1,49 +1,60 @@
 <script setup lang="ts">
-    import { Ref, ref, toRefs, computed, onMounted, onUnmounted, watch } from 'vue'
+    import { Ref, ref, toRef, toRefs, computed, onMounted, onUnmounted, watch, defineEmits } from 'vue'
+    import { storeToRefs } from 'pinia'
     import { liveQuery } from 'dexie'
 
+    import { useMainStore } from '@/stores/mainStore'
     import { useColorStore } from '@/stores/colorStore'
 
-    import { db, Feed, CommonMedia, SubjectType, MediaType } from '@/db'
+    import { db, CommonMedia, SubjectType, MediaType } from '@/db'
 
     import { useHAMediaResize } from '@/composables/haMediaResize'
     import { useHACommonMedia } from '@/composables/haCommonMedia'
 
-
+    const mainStore = useMainStore()
     const colorStore = useColorStore()
 
-    const { fetchCommonMedia
-    } = useHACommonMedia()
+    const { getCommonMedia, fetchCommonMedia } = useHACommonMedia()
     const { setPreviewMediaSizes } = useHAMediaResize()
 
+    const props = defineProps(['type', 'subjectID', 'contentID', 'showFullScreener', 'selectedMediaIndex', 'selectMediaList'])
 
-    const props = defineProps(['type', 'subjectID', 'contentID', 'showFullScreener', 'selectMediaIndex', 'selectMediaList'])
-   
+    const selectMediaIdx = toRef(props, 'selectedMediaIndex')
+    
+    const { 
+        primaryWhiteBlack: primaryWhiteBlackColor,
+        background: backgroundColor,
+        shadow: shadowColor,
+        icon: iconColor,
+        wrapper: wrapperColor,
+    } = storeToRefs(colorStore)      
+
+    const emit = defineEmits<{
+        (e: 'clickPrevious'): void
+        (e: 'clickNext'): void
+        (e: 'selectMedia', index: number): void
+    }>()
 
     init()
 
     async function init() {
-        console.log("init")
         if (!props.selectMediaList) { return }
-        const needWatching = await fetchCommonMedia(props.type, props.selectMediaList)
 
+        const list = await getCommonMedia(props.type, props.subjectID, props.contentID)
+
+        const needWatching = await fetchCommonMedia(props.type, props.selectMediaList)
 
         if (needWatching) {
             setupObserver()
         } else {
+            if (list) {
+                dbListData.value = list
+            }
             makeList()
         }
     }
 
-
     async function setupObserver() {
-
-        console.log("setupObserver")
-        console.log("selectMediaIndex: " + props.selectMediaIndex)
-        console.log("show: " + props.showFullScreener.value)
-        console.log("contentID: " + props.contentID)
-        console.log("subjectID: " + props.subjectID)
-        console.log("type: " + props.type)
 
         const observable = liveQuery (() => db.commonMedia.where('contentID').equals(props.contentID).and((commonMed) => {
             return commonMed.subjectID == props.subjectID && commonMed.type == props.type
@@ -53,17 +64,12 @@
                 if (!result) { return }
                 if (result.length == 0) { return }
 
-                console.log("---> observed change")
-        
                 dbListData.value = result
                 makeList()
             },
             error: error => console.error(error)
         })
     }
-
-    // delect media's idx in mediaUrlList
-    const selectMediaIdx = ref(-1)
 
     const dbListData: Ref<any[]> = ref([])
     const mediaUrlList: Ref<any[]> = ref([])
@@ -74,17 +80,16 @@
         if (!dbListData) { return }
         let list = dbListData
   
-        // find media from message list and build a new array for media
-      
         for (let i = 0; i < list.value.length; i++) {
-            console.log('iterate: ' + i)
             let media = list.value[i]
             let res = setPreviewMediaSizes(media)
 
             let item: any = {
-                'type': media.mediaType,
-                'width': res?.mediaItemWidth,
-                'height': res?.mediaItemHeight,
+                'mediaType': media.mediaType,
+                'width': media.width,
+                'height': media.height,
+                'previewWidth': res?.mediaItemWidth,
+                'previewHeight': res?.mediaItemHeight,
             }
 
             if (media) {
@@ -100,117 +105,16 @@
                         item.previewImageBlobUrl = previewImageBlobUrl
                     }
                 } 
-
             }
-
             result.push(item)
-
         }
 
         mediaUrlList.value = result
-        console.log('end result: ')
-        console.log(' props.selectMediaIndex.value ' +  props.selectMediaIndex)
-        console.log('selectMediaIdx ' + selectMediaIdx.value)
-
-
-        selectMediaIdx.value = props.selectMediaIndex
-        
-
-        console.dir(mediaUrlList.value)
     }
     
-    // const mediaUrlList2 = computed(() => {
-    //     console.log("---> computed change")
-        
-    //     const result: any = []
-    //     if (!refSelectMediaList) { return result }
-    //     let list = refSelectMediaList
-  
-    //     // find media from message list and build a new array for media
-    //     let needToFetchMedia = false
-    //     for (let i = 0; i < list.value.length; i++) {
-    //         let media = list.value[i]
-    //         let res = setPreviewMediaSizes(media)
-
-    //         let item: any = {
-    //             'type': media.mediaType,
-    //             'width': res?.mediaItemWidth,
-    //             'height': res?.mediaItemHeight,
-    //         }
-
-    //         if (media) {
-    //             if (media.blob) {
-    //                 const blobUrl = URL.createObjectURL(media.blob)
-    //                 if (blobUrl) { 
-    //                     item.blobUrl = blobUrl
-    //                 }
-    //             }
-    //             if (media.previewImage) {
-    //                 const previewImageBlobUrl = URL.createObjectURL(media.previewImage)
-    //                 if (previewImageBlobUrl) { 
-    //                     item.previewImageBlobUrl = previewImageBlobUrl
-    //                 }
-    //             } else {
-    //                 needToFetchMedia = true
-    //             }
-
-    //         }
-
-
-    //         result.push(item)
-
-    //         if (needToFetchMedia) {
-    //             fetchCommonMedia(props.type, refSelectMediaList.value)
-    //         }
-
-
-    //         if (refSelectMediaIndex) {
-    //             selectMediaIdx.value = refSelectMediaIndex.value
-    //         }
-    //     }
-
-
-
-    //     return result
-    // })
-
-    const backgroundColor = computed(() => {
-        return colorStore.background
-    })
-    const wraperColor = computed(() => {
-        return colorStore.wraper
-    })
-    const shadowColor = computed(() => {
-        return colorStore.shadow
-    })
-    const iconColor = computed(() => {
-        return colorStore.icon
-    })
-    const hoverColor = computed(() => {
-        return colorStore.hover
-    })
-
-    function setVideoSrc(selectMediaIdx: number) {
+    function setVideoSrc(index: number) {
         let targetElement = document.getElementById('videoFullScreener') as HTMLVideoElement
-        targetElement.src = mediaUrlList.value[selectMediaIdx].blobUrl + "#t=1.0"
-    }
-
-    function lastMedia() {
-        if (selectMediaIdx.value > 0) {
-            selectMediaIdx.value -= 1
-            if (mediaUrlList.value[selectMediaIdx.value].type == MediaType.Video) {
-                setVideoSrc(selectMediaIdx.value)
-            }
-        }
-    }
-
-    function nextMedia() {
-        if (selectMediaIdx.value < mediaUrlList.value.length - 1) {
-            selectMediaIdx.value += 1
-            if (mediaUrlList.value[selectMediaIdx.value].type == MediaType.Video) {
-                setVideoSrc(selectMediaIdx.value)
-            }
-        }
+        targetElement.src = mediaUrlList.value[index].blobUrl + "#t=1.0"
     }
 
     function openBigImg(idx: number) {
@@ -230,26 +134,24 @@
         }        
     }    
 
-
     onMounted(() => {
         document.addEventListener("keydown", closeFullScreenerOnEscape)
     })    
 
     onUnmounted(() => {
-        document.addEventListener("keydown", closeFullScreenerOnEscape)
-    })   
-
+        document.removeEventListener("click", closeFullScreener)
+    })
 
 </script>
 
 <template>
 
-    <div v-if='props.showFullScreener.value' class='fullScreenerMask'>
+    <div v-if='props.showFullScreener.value' class='fullScreenerMask' @click="closeFullScreener">
         <div class='wrapper'>
 
             <!-- close icon -->
             <div class='closeIconContainer'>
-                <div class='iconContainer' @click='closeFullScreener'>
+                <div class='iconContainer' @click='closeFullScreener' @click.stop>
                     <font-awesome-icon :icon="['fas', 'xmark']" size='2xl' />
                 </div>
             </div>
@@ -261,34 +163,41 @@
                 </div>
             </div> -->
 
-            <!-- image box: show the image -->
             <div class='content'>
+
+                <div v-if='mediaUrlList && mediaUrlList[selectMediaIdx] && mediaUrlList[selectMediaIdx].blobUrl && mediaUrlList[selectMediaIdx].mediaType == MediaType.Image' 
+                    class='imgContainer'
+                    @click.stop>
+                    <img :src='mediaUrlList[selectMediaIdx].blobUrl' draggable="false"/>
+                </div>
+
+                <div v-if='mediaUrlList && mediaUrlList[selectMediaIdx] && mediaUrlList[selectMediaIdx].blobUrl && mediaUrlList[selectMediaIdx].mediaType == MediaType.Video' 
+                    class='videoContainer' 
+                    
+                    @click.stop>
+                    <video id='videoFullScreener' :key="selectMediaIdx"
+                        :width='mediaUrlList[selectMediaIdx].width' 
+                        controls draggable="false">
+                        <source :src='mediaUrlList[selectMediaIdx].blobUrl + "#t=1.0"'>
+                    </video>
+                </div>
+
 
                 <div v-if="mediaUrlList.length > 1" class='leftArrowIconContainer'>
                     <div class='iconContainer' :class='{ iconContainerForbidden: selectMediaIdx == 0 }'
-                        @mousedown='lastMedia()'>
+                        @click="emit('clickPrevious')"
+                        @click.stop>
                         <div class='iconShadow' :class='{ iconShadowFrbidden: selectMediaIdx == 0 }'>
                             <font-awesome-icon :icon="['fas', 'angle-left']" size='lg' />
                         </div>
                     </div>
                 </div>
-                
-                <div v-if='mediaUrlList && mediaUrlList[selectMediaIdx] && mediaUrlList[selectMediaIdx].blobUrl && mediaUrlList[selectMediaIdx].type == MediaType.Image' 
-                    class='imgContainer'>
-                    <img :src='mediaUrlList[selectMediaIdx].blobUrl' />
-                </div>
-
-                <div v-if='mediaUrlList && mediaUrlList[selectMediaIdx] && mediaUrlList[selectMediaIdx].blobUrl && mediaUrlList[selectMediaIdx].type == MediaType.Video' 
-                    class='videoContainer' >
-                    <video controls id='videoFullScreener'>
-                        <source :src='mediaUrlList[selectMediaIdx].blobUrl + "#t=1.0"'>
-                    </video>
-                </div>
 
                 <div v-if="mediaUrlList.length > 1" class='rightArrowIconContainer'>
                     <div class='iconContainer'
                         :class='{ iconContainerForbidden: selectMediaIdx == mediaUrlList.length - 1 }'
-                        @mousedown='nextMedia()'>
+                        @click="emit('clickNext')" 
+                        @click.stop>
                         <div class='iconShadow'
                             :class='{ iconShadowFrbidden: selectMediaIdx == mediaUrlList.length - 1 }'>
                             <font-awesome-icon :icon="['fas', 'angle-right']" size='lg' />
@@ -298,24 +207,31 @@
                 
             </div>
 
-            <div class='footer'>
+            <div class="footer">
                 <!-- media preview and add more media -->
-                <div class='mediaTray'>
-                    <div v-if="mediaUrlList.length > 1" class='smallPreviewContainer'>
-                        <div class='squareContainer' v-for='(value, idx) in mediaUrlList'
-                            @click='openBigImg(idx)'
-                            :class="{ 'selected': idx == selectMediaIdx }">
+                <div class='mediaTray' @click.stop>
+                    <div v-if="mediaUrlList.length > 1" class="smallPreviewContainer">
+                        <div v-for='(value, index) in mediaUrlList' class="squareContainer" 
+                            :class="{ 'selected': index == selectMediaIdx }"
+                            @click="emit('selectMedia', index)">
 
-                            <div v-if='value.type == MediaType.Image && value.previewImageBlobUrl' class='imgSmallContainer'>
-                                <img class='imgSmall' :width='value.width' :height='value.height' :src='value.previewImageBlobUrl' />
+                            <div v-if='value.previewImageBlobUrl' class="imgSmallContainer">
+                                <img class="imgSmall" :width='value.previewWidth' :height='value.previewHeight' 
+                                    :src='value.previewImageBlobUrl' 
+                                    draggable="false"/>
+
+
                             </div>
 
-                            <div v-else-if='value.type == MediaType.Video' class='imgSmallContainer'>
-                                <img class='imgSmall' :width='value.width' :height='value.height' :src='value.previewImageBlobUrl' />
-                                <!-- <video :width='value.width' :height='value.height'>
-                                    <source :src='value.previewImageBlobUrl + "#t=1.0"'>
-                                </video> -->
+
+                            <div v-if='value.mediaType == MediaType.Video' class='playIconContainer'>
+                                <div class="playCircle">
+                                    <div class="playIcon">
+                                        <font-awesome-icon :icon="['fas', 'play']" size='2xs' />
+                                    </div>
+                                </div>
                             </div>
+
 
                         </div>
                     </div>
@@ -330,14 +246,14 @@
 <style scoped>
     .fullScreenerMask {
         position: fixed;
-        z-index: 10;
+        z-index: 20;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        background-color: v-bind(wraperColor);
+        backdrop-filter: blur(30px);
+        -webkit-backdrop-filter: blur(30px);
+        background-color: v-bind(wrapperColor);
         display: table;
     }
 
@@ -472,6 +388,8 @@
     }
 
     .mediaTray {
+        padding-left: 20px;
+        padding-right: 20px;
         height: 100px;
         display: flex;
         flex-direction: row;
@@ -492,6 +410,7 @@
     }
 
     .squareContainer {
+        position: relative;
         user-select: none;
         z-index: 2;
         width: 50px;
@@ -529,4 +448,47 @@
     .selected {
         outline: 3px solid #1E90FF;
     }
+
+
+    .playIconContainer {
+        position: absolute;
+        width: fit-content;
+        height: fit-content;
+        left: 50%;
+        bottom: 50%;
+
+        transform: translate(-50%, 50%);
+
+        color: v-bind(primaryWhiteBlackColor);
+        z-index: 10;
+    }
+
+    .playIconContainer .playCircle {
+        position: absolute;
+        width: fit-content;
+        height: fit-content;
+        left: 50%;
+        bottom: 50%;
+
+        transform: translate(-50%, 50%);
+        width: 25px;
+        height: 25px;
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
+        
+        border-radius: 50%;
+    }
+
+    .playIconContainer .playIcon {
+        position: absolute;
+        width: fit-content;
+        height: fit-content;
+        left: 50%;
+        bottom: 50%;
+
+        transform: translate(-50%, 50%);
+
+        border-radius: 50%;
+    }    
+
 </style>

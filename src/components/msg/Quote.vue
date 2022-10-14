@@ -110,12 +110,12 @@
     //     return result
     // })
 
-    const textColor = computed(() => {
-        return colorStore.text
-    })
-    const iconColor = computed(() => {
-        return colorStore.icon
-    })
+    const { 
+        primaryWhiteBlack: primaryWhiteBlackColor,
+        text: textColor,
+        icon: iconColor,
+    } = storeToRefs(colorStore)  
+
 </script>
 
 <template>
@@ -126,6 +126,15 @@
 
         <div class='attachMediaContainer' v-if='quotedMedia.previewImageBlobUrl'>
             <img class='imgSmall' :src='quotedMedia.previewImageBlobUrl' :height='quotedMedia.height' :width='quotedMedia.width'/>
+
+            <div v-if='quotedMedia.mediaType == MediaType.Video' class='playIconContainer'>
+                <div class="playCircle">
+                    <div class="playIcon">
+                        <font-awesome-icon :icon="['fas', 'play']" size='2xs' />
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <div class='quoteMessageContainer'>
@@ -169,7 +178,6 @@
     .quoteContainer {
         height: fit-content;
         background-color: rgb(0, 0, 0, 0.05);
-        border-left: 5px solid #6495ED;
         border-radius: 5px;
 
         display: flex;
@@ -251,4 +259,45 @@
         overflow-wrap: anywhere;
         white-space: normal;
     }
+
+    .playIconContainer {
+        position: absolute;
+        width: fit-content;
+        height: fit-content;
+        left: 35%;
+        bottom: 55%;
+
+        transform: translate(-50%, 50%);
+
+        color: v-bind(primaryWhiteBlackColor);
+    }
+
+    .playIconContainer .playCircle {
+        position: absolute;
+        width: fit-content;
+        height: fit-content;
+        left: 50%;
+        bottom: 50%;
+
+        transform: translate(-50%, 50%);
+        width: 25px;
+        height: 25px;
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
+        
+        border-radius: 50%;
+    }
+
+    .playIconContainer .playIcon {
+        position: absolute;
+        width: fit-content;
+        height: fit-content;
+        left: 50%;
+        bottom: 50%;
+
+        transform: translate(-50%, 50%);
+
+        border-radius: 50%;
+    }    
+
 </style>

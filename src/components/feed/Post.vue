@@ -10,13 +10,12 @@
     import { useConnStore } from '@/stores/connStore'
     import { useColorStore } from '@/stores/colorStore'
 
-    import { db, Feed, PostMediaType } from '@/db'
+    import { db, SubjectType, Post, MediaType, CommonMedia } from '@/db'
 
-    import { clients } from "@/proto/clients.js"
     import { web } from "@/proto/web.js"
 
     import { useHACrypto } from '@/composables/haCrypto'
-    import { useHAFeed } from '@/composables/haFeed'
+    import { useHACommonMedia } from '@/composables/haCommonMedia'
     import { useHAText } from '@/composables/haText'
     import { useTimeformatter } from '@/composables/timeformatter'
 
@@ -25,25 +24,10 @@
     import Avatar from '@/components/media/Avatar.vue'
     import MediaCarousel from '@/components/media/MediaCarousel.vue'
     import LinkPreview from '@/components/media/LinkPreview.vue'
-
-    enum MediaType {
-        Image,
-        Video
-    }
-    interface Media {
-        type?: PostMediaType;
-        mediaBlob?: any;
-        width: number;
-        height: number;
-        margin: number;
-        lengthMins?: String;
-        lengthSeconds?: String;
-        isReady: boolean;
-        errorMsg?: String;
-    }
+    import FullScreener from '@/components/media/FullScreener.vue'
 
     interface Props {
-        post: Feed,
+        post: Post,
         postID: string,
         atMainFeed: boolean
     }
@@ -73,10 +57,10 @@
     } = storeToRefs(colorStore)
        
     const { 
-        getPostMedia,
-        modifyPostMedia, modifyPostVoiceNote, modifyPostLinkPreviewMedia, 
-        setPostMediaIsCodecH265 
-    } = useHAFeed()
+        getCommonMedia, fetchCommonMedia,
+        modifyCommonMedia, modifyCommonMediaIsCodecH265,
+        modifyPostVoiceNote, modifyPostLinkPreviewMedia
+    } = useHACommonMedia()
 
     const imageInfo         = Base64.fromBase64("SGFsbG9BcHAgaW1hZ2U=")
     const videoInfo         = Base64.fromBase64("SGFsbG9BcHAgdmlkZW8=") 
@@ -90,7 +74,7 @@
     const postTimestamp = ref("")
 
     const isAlbum = ref(false)
-    const album: Ref<Media[]> = ref([])
+    const commonMedia: Ref<CommonMedia[]> = ref([])
 
     const mediaBoxWidth = ref(300)
     const mediaBoxHeight = ref(400)
@@ -108,44 +92,29 @@
 
     const userReceipts: Ref<web.ReceiptInfo[]> = ref([])
 
+    const subjectID = ref(props.post.groupID ? props.post.groupID : '')
+
+    /* fullscreener */
+    const showFullScreener = ref({ 'value': false })
+    const selectMediaList = ref()
+    const selectedMediaIndex = ref(0)
+    const selectMediaContentID = ref()
+
+
     setPostSize()
     processPost(props.post)
 
-    const postObservable = liveQuery (() => db.postMedia.where('postID').equals(props.postID).toArray())
-    const postSubscription = postObservable.subscribe({
+
+    const mediaObservable = liveQuery (() => db.commonMedia.where('contentID').equals(props.postID).toArray())
+    const mediaSubscription = mediaObservable.subscribe({
         next: resultList => { 
-
-            /* only update when there's an error or recently downloaded media */
-            for (let i = 0; i < resultList.length; i++) {
-                const result = resultList[i]
-
-                const albumItem = album.value[result.order]
-
-                if (!albumItem) { continue }
-
-
-                if (!albumItem.errorMsg) {
-
-                    if (result.isCodecH265) {
-                        albumItem.errorMsg = t('post.noH265VideoSupportText')
-                    }
-
-                }
-
-                if (!result.blob) { continue }
-
-                if (!albumItem.isReady) {
-                    const object = URL.createObjectURL(result.blob)
-                    albumItem.mediaBlob = object
-                    albumItem.isReady = true
-                }
-            }
+            commonMedia.value = resultList
         },
         error: error => console.error(error)
     })
 
     onBeforeUnmount(() => {
-        postSubscription.unsubscribe()
+        mediaSubscription.unsubscribe()
     })
 
     async function getMediaBlob(info: any, media: any) {
@@ -266,7 +235,7 @@
 
                     const combine = combineBinaryArrays(saveToDB)
                     const bb = new Blob([combine], {type: "video/mp4"})
-                    modifyPostMedia(media.postID, media.order, bb)
+                    modifyCommonMedia(media.type, media.subjectID, media.contentID, media.order, bb)
 
                 } else {
                     hal.log('fetchAndDecryptStream/done/error')
@@ -338,7 +307,7 @@
                     const codecType = track.codec
                     if (codecType.substring(0, 4) == 'hvc1') {
                         hal.prod('setupStreamingMediaSource/video/streaming/can not play h265 video: ' + track.codec)
-                        setPostMediaIsCodecH265(media.postID, media.order, true)
+                        modifyCommonMediaIsCodecH265(media.type, media.subjectID, media.contentID, media.order, true)
                     }
                 }
 
@@ -407,7 +376,7 @@
         }
     }
 
-    async function processPost(post: Feed) {
+    async function processPost(post: Post) {
         const postID = post.postID
 
         let isVoiceNote = false
@@ -420,122 +389,10 @@
 
         postTimestamp.value = formatTime(post.timestamp, locale.value as string)
 
-        const postMedia = await getPostMedia(postID)
-
-        if (postMedia) {
+        const dbCommonMedia = await getCommonMedia(SubjectType.FeedPost, subjectID.value, postID)
+        if (dbCommonMedia) {
+            commonMedia.value = dbCommonMedia
             isAlbum.value = true
-            setMediaSizes(postMedia)
-    
-            for (const [index, mediaInfo] of postMedia.entries()) {
-                
-                if (mediaInfo.isCodecH265) {
-                    album.value[index].errorMsg = t('post.noH265VideoSupportText')
-                }
-
-                if (mediaInfo.type == PostMediaType.Image) {
-
-                    let mediaBlob: Blob | undefined
-
-                    if (mediaInfo.blob) {
-                        
-                        mediaBlob = mediaInfo.blob
-                    } else {
-                        
-                        mediaBlob = await getMediaBlob(imageInfo, mediaInfo)
-                        if (mediaBlob) {
-                            modifyPostMedia(props.post.postID, index, mediaBlob)
-                        }
-
-                    }
-
-                    if (mediaBlob) {
-                        const object = URL.createObjectURL(mediaBlob)
-                        album.value[index].mediaBlob = object
-                        album.value[index].isReady = true
-                    }
-                }
-
-                if (mediaInfo.type == PostMediaType.Video) {
-
-                    let mediaBlob: Blob | undefined
-
-                        if (mediaInfo.blob) {
-                        mediaBlob = mediaInfo.blob
-
-                        const object = URL.createObjectURL(mediaBlob)
-                        album.value[index].mediaBlob = object
-                        album.value[index].isReady = true
-
-                    } else {
-                        const chunkSize = mediaInfo.chunkSize
-                        if (chunkSize) {
-                            
-
-                            // MediaSource is not supported on iOS yet
-                            if ('MediaSource' in window) {
-                                hal.log('processPostContainer/video/stream/stream via mediaSource')
-                                const mediaSource = new MediaSource()
-                                const mediaSourceUrl = URL.createObjectURL(mediaSource)
-                                const blobSize = mediaInfo.blobSize
-                                setupStreamingMediaSource(mediaSource, mediaInfo, videoInfo, blobSize, chunkSize)
-
-                                album.value[index].mediaBlob = mediaSourceUrl
-
-                                
-                            } else {
-                                
-                                mediaBlob = await getChunkedMediaBlob(mediaInfo, videoInfo, chunkSize)
-                                const mediaBlobUrl = URL.createObjectURL(mediaBlob)
-                                album.value[index].mediaBlob = mediaBlobUrl
-
-                                modifyPostMedia(props.post.postID, index, mediaBlob)
-
-                            }
-
-                            album.value[index].isReady = true                                               
-                        } else {
-
-                            mediaBlob = await getMediaBlob(videoInfo, mediaInfo)
-                            if (mediaBlob) {
-
-
-                                /* todo: check if this is needed */
-                                /* h265 video is not supported on desktop browsers except for Safari */
-                                // if (!mainStore.isMobile && !mainStore.isSafari) {
-                                    // let mp4box = MP4Box.createFile()
-                                    // mp4box.onReady = function(info: any) {
-                                    //     info.tracks.forEach(function(track: any) {
-                                    //         const codecType = track.codec.substring(0, 4)
-                                    //         if (codecType == 'hvc1') {
-                                    //             hal.prod('processPostContainer/video/non-streaming/can not play h265 video: ' + track.codec)
-                                    //             // album.value[index].errorMsg = t('post.noH265VideoSupportText')
-
-                                    //             setPostMediaIsCodecH265(props.post.postID, index, true)
-                                    //         }
-                                    //     })
-                                    // }
-                                
-                                    /* 
-                                    * nb: mp4box has a bug that does not process h265 files properly
-                                    * filed: https://github.com/gpac/mp4box.js/issues/283 
-                                    */
-                                    // let mediaBuffer: any = mediaBlob.arrayBuffer()
-                                    // mediaBuffer.fileStart = 0
-                                    // mp4box.appendBuffer(mediaBuffer)
-                                    // mp4box.flush()
-                                // }
-
-
-                                const mediaBlobUrl = URL.createObjectURL(mediaBlob)
-                                album.value[index].mediaBlob = mediaBlobUrl
-                                album.value[index].isReady = true    
-                                
-                                modifyPostMedia(postID, index, mediaBlob)
-                            }
-                        }
-                    }
-                }                
-            }
         }
 
         /* voiceNote */
@@ -565,7 +422,7 @@
         }
 
         /* link preview */
-        if (post.text && !postMedia) {
+        if (post.linkPreview && commonMedia.value.length == 0) {
             /* if media for link preview exists */
             if (post.linkPreview?.preview) {
                     const linkPreviewMedia = post.linkPreview.preview
@@ -581,7 +438,6 @@
                         }
                     }
 
-               
                     if (mediaBlob) {
                         previewImageSrc.value = URL.createObjectURL(mediaBlob)
                         showPreviewImage.value = true
@@ -613,7 +469,7 @@
                 let commentCursor = ''
                 if (mainStore.commentCursors[postID]) {
                     commentCursor = mainStore.commentCursors[postID]
-                }      
+                }
                 connStore.requestComments(postID, commentCursor, 20, function() {})
             }
         }
@@ -642,58 +498,6 @@
         }
     }
 
-    function setMediaSizes(mediaList: any) {
-        if (!mediaList) { return }
-
-        const defaultRatio = 0.75 // 3/4 width/height portrait ratio
-
-        mediaBoxWidth.value = postWidth.value // media carousel single slide width
-        mediaBoxHeight.value = mediaBoxWidth.value/defaultRatio
-
-        const maxBoxWidth = mediaBoxWidth.value - 50 // width of media inside album
-        const maxBoxHeight = maxBoxWidth/defaultRatio 
-
-        let tallestMediaItemHeight = 0
-
-        for (const [index, mediaItem] of mediaList.entries()) {
-            let mediaItemWidth = mediaItem.width
-            let mediaItemHeight = mediaItem.height
-
-            /* 99% of the time the item height or width will be greater */
-            if (mediaItemHeight > maxBoxHeight || mediaItemWidth > maxBoxWidth) {
-
-                const mediaItemRatio = mediaItemWidth/mediaItemHeight
-
-                /* item is wider, scale by max width */
-                if (mediaItemRatio > defaultRatio) {
-                    mediaItemWidth = maxBoxWidth
-                    mediaItemHeight = mediaItemWidth/mediaItemRatio
-                } 
-    
-                /* scale by max height */
-                else {
-                    mediaItemHeight = maxBoxHeight
-                    mediaItemWidth = mediaItemHeight*mediaItemRatio
-                }
-            }
-
-            /* add margins so carousel have some spacing between slides */
-            const mediaItemMargin = postWidth.value - mediaItemWidth
-
-            const mediaObj: Media = { type: mediaItem.type, width: mediaItemWidth, height: mediaItemHeight, margin: mediaItemMargin, isReady: false }
-            album.value[index] = mediaObj
-
-            if (mediaItemHeight > tallestMediaItemHeight) {
-                tallestMediaItemHeight = mediaItemHeight
-            }
-        }
-
-        /* set carousel slide height shorter if the tallest media is shorter than the default */
-        if (tallestMediaItemHeight < mediaBoxHeight.value) {
-            mediaBoxHeight.value = tallestMediaItemHeight
-        }
-    }
-
     function processPostText(text: string, mentions: any, truncateText: boolean = true, isTextPostTextOnly: boolean) {
         // rough estimate of 330 chars for 12 lines and 110 for 3 lines
         const maxCharsWhenTruncatedForTextOnlyPost: number = 330
@@ -714,117 +518,165 @@
         } 
     }
 
+    function openMedia(mediaList: any, idx: number, contentID: string) {
+        mainStore.triggerFirstInteraction()
+
+        selectMediaList.value = mediaList
+        selectedMediaIndex.value = idx
+        selectMediaContentID.value = contentID
+        // go to fullscreener
+        showFullScreener.value.value = true
+    }
+
+    function clickPrevious() {
+        if (selectedMediaIndex.value > 0) {
+            selectedMediaIndex.value -= 1
+        }
+    }
+
+    function clickNext() {
+        if (selectedMediaIndex.value < commonMedia.value.length - 1) {
+            selectedMediaIndex.value += 1
+        }
+    }
+
+    function selectMedia(index: number) {
+        if (index < 0) {
+            selectedMediaIndex.value = 0
+        } else if (index > commonMedia.value.length) {
+            selectedMediaIndex.value = commonMedia.value.length - 1
+        } else {
+            selectedMediaIndex.value = index
+        }
+    }
+
 </script>
 
 <template>
 
-    <!-- post row -->
-    <div v-if="!isDeleted" class="postRow">
+    <div>
+        <div v-if="!isDeleted" class="postRow">
 
-        <div :class="['post']">
+            <div :class="['post']">
 
-            <!-- postHeader row -->
-            <div id="postHeader">
-                <Avatar :userID="props.post.userID" :width="45"></Avatar>
-                <div id="nameBox">
-                    <div class="name">
-                        {{ mainStore.pushnames[props.post.userID] }}
-                        <span v-if="connStore.devMode" class="devPostID">{{ connStore.devMode }} {{ props.post.postID }}</span>
-                        <span v-if="atMainFeed && props.post.groupID" class="groupIndicator">
-                            <font-awesome-icon :icon="['fas', 'caret-right']" size='sm' class="groupIndicatorIcon"/>
+                <!-- postHeader row -->
+                <div id="postHeader">
+                    <Avatar :userID="props.post.userID" :width="45"></Avatar>
+                    <div id="nameBox">
+                        <div class="name">
+                            {{ mainStore.pushnames[props.post.userID] }}
+                            <span v-if="connStore.devMode" class="devPostID">{{ connStore.devMode }} {{ props.post.postID }}</span>
+                            <span v-if="atMainFeed && props.post.groupID" class="groupIndicator">
+                                <font-awesome-icon :icon="['fas', 'caret-right']" size='sm' class="groupIndicatorIcon"/>
+                            </span>
+                            <span v-if="atMainFeed && props.post.groupID" class="groupName" @click="mainStore.gotoGroup(props.post.groupID)">
+                                {{ mainStore.groupnames[props.post.groupID] }}
+                            </span>
+                        </div>
+                        <div class="time">
+                            {{ postTimestamp }}
+                        </div>
+                    </div>
+                </div>
+
+                <MediaCarousel v-if="!showPreviewImage"
+                    :type="SubjectType.FeedPost"
+                    :subjectID="subjectID"
+                    :contentID="post.postID"
+                    :showPreviewImage="showPreviewImage"
+                    :previewImageSrc="previewImageSrc"
+                    :postWidth="postWidth"
+                    :selectedMediaIndex="selectedMediaIndex"
+                    @openMedia='openMedia'
+                    @clickPrevious="clickPrevious"
+                    @clickNext="clickNext"
+                    @selectMedia="selectMedia"
+                    >
+                </MediaCarousel>
+
+                <div :class="['postBody']">
+                    <div :class="['postBodyContent', { textOnlySize: isTextPostTextOnly }]">
+                    
+                        <audio v-if="showVoiceNote" autobuffer="autobuffer" ref="$postVoiceNote" id="postVoiceNote" preload="metadata" controls controlsList="nodownload">
+                            <source :src="postVoiceNoteSrc" type="audio/mpeg">
+                            <p>{{ t('post.noAudioSupportText') }}</p>
+                        </audio>   
+
+                        <span v-else v-html="bodyContent">
                         </span>
-                        <span v-if="atMainFeed && props.post.groupID" class="groupName" @click="mainStore.gotoGroup(props.post.groupID)">
-                            {{ mainStore.groupnames[props.post.groupID] }}
+                        <span v-if="isTruncatedText" id="readMore" @click="expandText">
+                            {{ t('post.more') }}
                         </span>
-                    </div>
-                    <div class="time">
-                        {{ postTimestamp }}
+
                     </div>
                 </div>
-            </div>
 
-            <MediaCarousel v-if="!showPreviewImage"
-                :isMobile="mainStore.isMobile"
-                :isSafari="mainStore.isSafari"
-                :postID="post.postID"
-                :isAlbum="isAlbum"
-                :album="album"
-                :showPreviewImage="showPreviewImage"
-                :previewImageSrc="previewImageSrc"
-                :mediaBoxWidth="mediaBoxWidth"
-                :mediaBoxHeight="mediaBoxHeight">
-            </MediaCarousel>
+                <LinkPreview v-if="showPreviewImage && post.linkPreview"
+                    :post="post"
+                    :linkPreview="post.linkPreview"
+                    :postID="post.postID"
+                    :showPreviewImage="showPreviewImage"
+                    :previewImageSrc="previewImageSrc"
+                    :mediaBoxWidth="mediaBoxWidth"
+                    :mediaBoxHeight="mediaBoxHeight">
+                </LinkPreview>
 
-            <div :class="['postBody']">
-                <div :class="['postBodyContent', { textOnlySize: isTextPostTextOnly }]">
-                   
-                    <audio v-if="showVoiceNote" autobuffer="autobuffer" ref="$postVoiceNote" id="postVoiceNote" preload="metadata" controls controlsList="nodownload">
-                        <source :src="postVoiceNoteSrc" type="audio/mpeg">
-                        <p>{{ t('post.noAudioSupportText') }}</p>
-                    </audio>   
+                <!-- postFooter row -->
+                <div id="postFooter">
+                    <div class="commentButton" @click="$emit('commentsClick')">
+                        <img class="commentIcon" src="https://d1efjkqerxchlh.cloudfront.net/es/assets/Comment.png" alt="Comment Icon">
+                        <div>
+                            {{ t('post.comment') }}
+                        </div>
+                        <div v-if="post.unreadComments" class="newCommentIndicator">
+                        </div>
+                        <div v-else-if="post.haveComments" class="haveCommentIndicator">
+                        </div>                    
+                    </div>
+                    <div v-if="mainStore.userID == post.userID" class="userReceiptsBox">
 
-                    <span v-else v-html="bodyContent">
-                    </span>
-                    <span v-if="isTruncatedText" id="readMore" @click="expandText">
-                        {{ t('post.more') }}
-                    </span>
+                        <div v-for='(value, idx) in userReceipts' 
+                            class="userReceiptsAvatar" :style="{ 'z-index': (idx*-1 + 100) }">
+                    
+                            <Avatar :style="{ 'margin-right': '-8px' }"
+                                :userID="(value.uid as number)" :width="20" :useBorder=true>
+                            </Avatar>
+                        </div>
 
+                    </div>
+                    <!-- <div id="replyButton" @click="">
+                        <img id="replyIcon" src="https://d1efjkqerxchlh.cloudfront.net/es/assets/Reply.png" alt="Reply Icon">
+                        <div>
+                            {{ t('post.replyPrivately') }}
+                        </div>
+                    </div> -->
                 </div>
-            </div>
 
-            <LinkPreview v-if="showPreviewImage && post.linkPreview"
-                :post="post"
-                :linkPreview="post.linkPreview"
-                :postID="post.postID"
-                :showPreviewImage="showPreviewImage"
-                :previewImageSrc="previewImageSrc"
-                :mediaBoxWidth="mediaBoxWidth"
-                :mediaBoxHeight="mediaBoxHeight">
-            </LinkPreview>
-
-            <!-- postFooter row -->
-            <div id="postFooter">
-                <div class="commentButton" @click="$emit('commentsClick')">
-                    <img class="commentIcon" src="https://d1efjkqerxchlh.cloudfront.net/es/assets/Comment.png" alt="Comment Icon">
-                    <div>
-                        {{ t('post.comment') }}
-                    </div>
-                    <div v-if="post.unreadComments" class="newCommentIndicator">
-                    </div>
-                    <div v-else-if="post.haveComments" class="haveCommentIndicator">
-                    </div>                    
-                </div>
-                <div v-if="mainStore.userID == post.userID" class="userReceiptsBox">
-
-                    <div v-for='(value, idx) in userReceipts' 
-                        class="userReceiptsAvatar" :style="{ 'z-index': (idx*-1 + 100) }">
-                
-                        <Avatar :style="{ 'margin-right': '-6px' }"
-                            :userID="(value.uid as number)" :width="20" :useBorder=true>
-                        </Avatar>
-                    </div>
-
-                </div>
-                <!-- <div id="replyButton" @click="">
-                    <img id="replyIcon" src="https://d1efjkqerxchlh.cloudfront.net/es/assets/Reply.png" alt="Reply Icon">
-                    <div>
-                        {{ t('post.replyPrivately') }}
-                    </div>
-                </div> -->
-            </div>
-
-        </div>
-    </div>
-
-    <div v-else class="postRow">
-        <div class="deletedPost">
-            <div v-if="props.post.userID == mainStore.userID">
-                You deleted your post
-            </div>
-            <div v-else>
-                {{ mainStore.pushnames[props.post.userID] }} deleted their post
             </div>
         </div>
+
+        <div v-else class="postRow">
+            <div class="deletedPost">
+                <div v-if="props.post.userID == mainStore.userID">
+                    You deleted your post
+                </div>
+                <div v-else>
+                    {{ mainStore.pushnames[props.post.userID] }} deleted their post
+                </div>
+            </div>
+        </div>
+
+        <FullScreener v-if="selectMediaContentID && selectMediaList" :key="selectMediaContentID"
+            :showFullScreener='showFullScreener'
+            :type="SubjectType.FeedPost"
+            :subjectID="subjectID"
+            :contentID="selectMediaContentID"
+            :selectedMediaIndex="selectedMediaIndex"
+            :selectMediaList='selectMediaList' 
+            @clickPrevious="clickPrevious"
+            @clickNext="clickNext"
+            @selectMedia="selectMedia"
+            />
     </div>
 
 </template>

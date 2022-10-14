@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import { Dexie } from 'dexie'
 import { useI18n } from 'vue-i18n'
 import { Base64 } from 'js-base64'
 import MP4Box from 'mp4box'
@@ -27,34 +28,6 @@ export function useHACommonMedia() {
             isUint8ArrayEqual, combineBinaryArrays 
     } = useHACrypto()
 
-    async function fetchVoiceNote(type: SubjectType, voiceNote: any) {
-  
-        let mediaBlob: Blob | undefined
-        
-        if (voiceNote.mediaType == MediaType.Audio) {
-
-            if (voiceNote.blob) {
-                
-                mediaBlob = voiceNote.blob
-            } else {
-
-            
-                mediaBlob = await fetchMediaBlob(voiceNoteInfo, voiceNote)
-                if (mediaBlob) {
-                    /* voicenotes are stored directly with their subjects and not in the commonMedia table */
-                    if (voiceNote.type == SubjectType.Comment) {
-                        modifyCommentVoiceNote(voiceNote.subjectID, voiceNote.contentID, mediaBlob)
-                    }
-                }
-
-            }
-
-        }
-
-        return mediaBlob
-
-    }  
-
     async function fetchCommonMedia(type: SubjectType, mediaList: any) {
         // hal.log("fetchCommonMedia")
 
@@ -64,130 +37,111 @@ export function useHACommonMedia() {
         
         for (let [index, mediaInfo] of mediaList.entries()) {
 
-            if (mediaInfo.isCodecH265) {
-                // album.value[index].errorMsg = t('post.noH265VideoSupportText')
-            }
-
             if (mediaInfo.mediaType == MediaType.Image) {
+                
+                if (mediaInfo.previewImage) { continue } 
+
+                result.needWatching = true
 
                 let mediaBlob: Blob | undefined
 
-                if (mediaInfo.blob) {
-                    
-                    mediaBlob = mediaInfo.blob
-                } else {
+                mediaBlob = await fetchMediaBlob(imageInfo, mediaInfo)
 
-                    result.needWatching = true
-                    
-                    mediaBlob = await fetchMediaBlob(imageInfo, mediaInfo)
-                    if (mediaBlob) {
-                        // todo: preview image can be much smaller and less resolution
-                        const previewImageBlob = mediaBlob
-                        modifyCommonMedia(mediaInfo.type, mediaInfo.subjectID, mediaInfo.contentID, index, mediaBlob, previewImageBlob)
-                    }
+                if (mediaBlob) {
 
+                    // todo: preview image can be much smaller and less resolution
+                    const previewImageBlob = mediaBlob
+                    modifyCommonMedia(mediaInfo.type, mediaInfo.subjectID, mediaInfo.contentID, index, mediaBlob, previewImageBlob)
                 }
-
             }
 
             if (mediaInfo.mediaType == MediaType.Video) {
+                
+                if (mediaInfo.previewImage) { continue } 
+
                 let mediaBlob: Blob | undefined
+                
+                result.needWatching = true
 
-                if (mediaInfo.previewImage) {
-                    hal.log("fetchCommonMedia/video/already in db")
-                    mediaBlob = mediaInfo.blob
+                const chunkSize = mediaInfo.chunkSize
+                if (chunkSize) {
+                    hal.log("fetchCommonMedia/video/fetch streaming")
+                    
 
+                    // MediaSource is not supported on iOS yet
+                    // if ('MediaSource' in window) {
+                    //     hal.log('processPostContainer/video/stream/stream via mediaSource')
+                    //     const mediaSource = new MediaSource()
+                    //     const mediaSourceUrl = URL.createObjectURL(mediaSource)
+                    //     const blobSize = mediaInfo.blobSize
+                    //     setupStreamingMediaSource(mediaInfo.type, mediaInfo.subjectID, mediaInfo.contentID, mediaSource, mediaInfo, videoInfo, blobSize, chunkSize)
+
+                    // } else {
+                        
+                        mediaBlob = await getChunkedMediaBlob(mediaInfo, videoInfo, chunkSize)
+
+                        const previewImageBlob = await grabPreviewFromVideo(mediaBlob)
+                        modifyCommonMedia(mediaInfo.type, mediaInfo.subjectID, mediaInfo.contentID, index, mediaBlob, previewImageBlob as Blob)
+
+                    // }
+                                            
                 } else {
-                    result.needWatching = true
+                    hal.log("fetchCommonMedia/video/fetch entire media")
 
-                    const chunkSize = mediaInfo.chunkSize
-                    if (chunkSize) {
-                        hal.log("fetchCommonMedia/video/fetch streaming")
-                        
+                    mediaBlob = await fetchMediaBlob(videoInfo, mediaInfo)
+                    if (mediaBlob) {
 
-                        // MediaSource is not supported on iOS yet
-                        if ('MediaSource' in window) {
-                            hal.log('processPostContainer/video/stream/stream via mediaSource')
-                            const mediaSource = new MediaSource()
-                            const mediaSourceUrl = URL.createObjectURL(mediaSource)
-                            const blobSize = mediaInfo.blobSize
-                            setupStreamingMediaSource(mediaInfo.type, mediaInfo.subjectID, mediaInfo.contentID, mediaSource, mediaInfo, videoInfo, blobSize, chunkSize)
+                        /* todo: check if this is needed */
+                        /* h265 video is not supported on desktop browsers except for Safari */
+                        // if (!mainStore.isMobile && !mainStore.isSafari) {
+                            // let mp4box = MP4Box.createFile()
+                            // mp4box.onReady = function(info: any) {
+                            //     info.tracks.forEach(function(track: any) {
+                            //         const codecType = track.codec.substring(0, 4)
+                            //         if (codecType == 'hvc1') {
+                            //             hal.prod('processPostContainer/video/non-streaming/can not play h265 video: ' + track.codec)
+                            //             // album.value[index].errorMsg = t('post.noH265VideoSupportText')
 
-                        } else {
-                            
-                            mediaBlob = await getChunkedMediaBlob(mediaInfo, videoInfo, chunkSize)
-
-                            const previewImageBlob = await grabPreviewFromVideo(mediaBlob)
-                            modifyCommonMedia(mediaInfo.type, mediaInfo.subjectID, mediaInfo.contentID, index, mediaBlob, previewImageBlob as Blob)
-
-                        }
-                                             
-                    } else {
-                        hal.log("fetchCommonMedia/video/fetch entire media")
-
-                        mediaBlob = await fetchMediaBlob(videoInfo, mediaInfo)
-                        if (mediaBlob) {
-
-                            /* todo: check if this is needed */
-                            /* h265 video is not supported on desktop browsers except for Safari */
-                            // if (!mainStore.isMobile && !mainStore.isSafari) {
-                                // let mp4box = MP4Box.createFile()
-                                // mp4box.onReady = function(info: any) {
-                                //     info.tracks.forEach(function(track: any) {
-                                //         const codecType = track.codec.substring(0, 4)
-                                //         if (codecType == 'hvc1') {
-                                //             hal.prod('processPostContainer/video/non-streaming/can not play h265 video: ' + track.codec)
-                                //             // album.value[index].errorMsg = t('post.noH265VideoSupportText')
-
-                                //             setPostMediaIsCodecH265(props.post.postID, index, true)
-                                //         }
-                                //     })
-                                // }
-                            
-                                /* 
-                                * nb: mp4box has a bug that does not process h265 files properly
-                                * filed: https://github.com/gpac/mp4box.js/issues/283 
-                                */
-                                // let mediaBuffer: any = mediaBlob.arrayBuffer()
-                                // mediaBuffer.fileStart = 0
-                                // mp4box.appendBuffer(mediaBuffer)
-                                // mp4box.flush()
+                            //             setPostMediaIsCodecH265(props.post.postID, index, true)
+                            //         }
+                            //     })
                             // }
-
-
-                            // const mediaBlobUrl = URL.createObjectURL(mediaBlob)
-                            // album.value[index].mediaBlob = mediaBlobUrl
-                            // album.value[index].isReady = true    
-                            
-                            const previewImageBlob = await grabPreviewFromVideo(mediaBlob)
-                            
-                            modifyCommonMedia(mediaInfo.type, mediaInfo.subjectID, mediaInfo.contentID, index, mediaBlob, previewImageBlob as Blob)
                         
-                        }
+                            /* 
+                            * nb: mp4box has a bug that does not process h265 files properly
+                            * filed: https://github.com/gpac/mp4box.js/issues/283 
+                            */
+                            // let mediaBuffer: any = mediaBlob.arrayBuffer()
+                            // mediaBuffer.fileStart = 0
+                            // mp4box.appendBuffer(mediaBuffer)
+                            // mp4box.flush()
+                        // }
+
+
+                        // const mediaBlobUrl = URL.createObjectURL(mediaBlob)
+                        // album.value[index].mediaBlob = mediaBlobUrl
+                        // album.value[index].isReady = true    
+                        
+                        const previewImageBlob = await grabPreviewFromVideo(mediaBlob)
+                        
+                        modifyCommonMedia(mediaInfo.type, mediaInfo.subjectID, mediaInfo.contentID, index, mediaBlob, previewImageBlob as Blob)
+                    
                     }
                 }
+                
             }       
             
-            
             if (mediaInfo.mediaType == MediaType.Audio) {
-
+                if (mediaInfo.blob) { continue }
+                result.needWatching = true
                 let mediaBlob: Blob | undefined
 
-                if (mediaInfo.blob) {
-                    
-                    mediaBlob = mediaInfo.blob
-                } else {
-
-                    result.needWatching = true
-                    
-                    mediaBlob = await fetchMediaBlob(voiceNoteInfo, mediaInfo)
-                    if (mediaBlob) {
-                        /* voicenotes are stored directly with their subjects and not in the commonMedia table */
-                        if (mediaInfo.type == SubjectType.Comment) {
-                            modifyCommentVoiceNote(mediaInfo.subjectID, mediaInfo.contentID, mediaBlob)
-                        }
+                mediaBlob = await fetchMediaBlob(voiceNoteInfo, mediaInfo)
+                if (mediaBlob) {
+                    /* voicenotes are stored directly with their subjects and not in the commonMedia table */
+                    if (mediaInfo.type == SubjectType.Comment) {
+                        modifyCommentVoiceNote(mediaInfo.subjectID, mediaInfo.contentID, mediaBlob)
                     }
-
                 }
 
             }
@@ -196,6 +150,54 @@ export function useHACommonMedia() {
 
         return result
     }    
+    
+    async function fetchVoiceNote(type: SubjectType, voiceNote: any) {
+  
+        let mediaBlob: Blob | undefined
+        
+        if (voiceNote.mediaType == MediaType.Audio) {
+
+            if (voiceNote.blob) {
+                mediaBlob = voiceNote.blob
+            } else {
+
+                mediaBlob = await fetchMediaBlob(voiceNoteInfo, voiceNote)
+                if (mediaBlob) {
+                    /* voicenotes are stored directly with their subjects and not in the commonMedia table */
+                    if (voiceNote.type == SubjectType.Comment) {
+                        modifyCommentVoiceNote(voiceNote.subjectID, voiceNote.contentID, mediaBlob)
+                    }
+                }
+            }
+
+        }
+
+        return mediaBlob
+    }  
+
+    async function fetchLinkPreviewMedia(type: SubjectType, linkPreviewMedia: any) {
+  
+        let mediaBlob: Blob | undefined
+        
+        if (linkPreviewMedia.mediaType == MediaType.Image) {
+
+            if (linkPreviewMedia.blob) {
+                mediaBlob = linkPreviewMedia.blob
+            } else {
+
+                mediaBlob = await fetchMediaBlob(imageInfo, linkPreviewMedia)
+                if (mediaBlob) {
+                    /* link preview media are stored directly with their subjects and not in the commonMedia table */
+                    if (linkPreviewMedia.type == SubjectType.Comment) {
+                        modifyCommentLinkPreviewMedia(linkPreviewMedia.subjectID, linkPreviewMedia.contentID, mediaBlob)
+                    }
+                }
+            }
+
+        }
+
+        return mediaBlob
+    }      
     
     async function fetchMediaBlob(info: any, media: any) {
         const ciphertextHash = media.hash
@@ -372,7 +374,7 @@ export function useHACommonMedia() {
                     const codecType = track.codec
                     if (codecType.substring(0, 4) == 'hvc1') {
                         hal.prod('setupStreamingMediaSource/video/streaming/can not play h265 video: ' + track.codec)
-                        setCommonMediaIsCodecH265(type, subjectID, contentID, media.order, true)
+                        modifyCommonMediaIsCodecH265(type, subjectID, contentID, media.order, true)
                     }
                 }
 
@@ -472,7 +474,6 @@ export function useHACommonMedia() {
         return new Blob([combinedBinArr])
     }
 
-
     async function grabPreviewFromVideo(blob: Blob) {
         return new Promise(function(resolve, reject) {
 
@@ -522,27 +523,63 @@ export function useHACommonMedia() {
 
     /* db */
 
-    async function modifyCommentVoiceNote(subjectID: string, commentID: string, blob: Blob) {
-        await db.comment.where('commentID').equals(commentID).modify(function(item) {
-            if (item.postID == subjectID) {
-                if (item.voiceNote) {
-                    item.voiceNote.blob = blob
+    async function getCommonMedia(type: SubjectType, subjectID: string, contentID: string) {
+        const arr = await db.commonMedia.where('contentID').equals(contentID).and((commonMed) => {
+            return commonMed.subjectID == subjectID && commonMed.type == type
+        }).toArray()
+
+        if (!arr || arr.length == 0) {
+            return undefined
+        }
+        return arr
+    }
+
+    async function insertCommonMedia_old(type: SubjectType, subjectID: string, contentID: string, commonMediaArr: any) {
+        if (commonMediaArr.length < 1) { 
+            return 
+        }
+
+        const dbCommonMedia = await getCommonMedia(type, subjectID, contentID)
+        
+        if (!dbCommonMedia) {
+            for (let i = 0; i < commonMediaArr.length; i++) {
+                let media = commonMediaArr[i]
+                
+                try {
+                    const id = await db.commonMedia.put(media)
+                    hal.log('haFeed/insertCommonMedia/put/' + media.order + '/' + media.contentID)
+                } catch (error) {
+                    hal.log('haFeed/insertCommonMedia/db/put/error ' + error)
                 }
             }
-        })
-        return        
+
+        } else {
+            // hal.log('haFeed/insertCommonMedia/exit/bbject already in db')
+        }       
+        return 
     }    
 
-    async function modifyPostVoiceNote(postID: string, blob: Blob) {
-        await db.feed.where('postID').equals(postID).modify(function(item) {
-            if (item.voiceNote) {
-                item.voiceNote.blob = blob
-            }
-        })
-        return        
+    async function insertCommonMedia(type: SubjectType, subjectID: string, contentID: string, commonMediaArr: any) {
+        if (commonMediaArr.length < 1) { 
+            return 
+        }
+
+        const dbCommonMedia = await getCommonMedia(type, subjectID, contentID)
+        
+        if (!dbCommonMedia) {
+
+            db.commonMedia.bulkPut(commonMediaArr).then(function(lastKey) {
+                // hal.log('haFeed/insertCommonMedia/bulkPut/success')
+            }).catch(Dexie.BulkError, function (e) {
+                hal.log('haFeed/insertCommonMedia/bulkPut/error ' + e)
+            })
+
+        } else {
+            // hal.log('haFeed/insertCommonMedia/exit/bbject already in db')
+        }       
+        return 
     }    
 
-    
     async function modifyCommonMedia(type: SubjectType, subjectID: string, contentID: string, order: number, blob: Blob, previewImage?: Blob) {
         if (!db.isOpen()) { return }
         
@@ -557,7 +594,7 @@ export function useHACommonMedia() {
         return        
     }
 
-    async function setCommonMediaIsCodecH265(type: SubjectType, subjectID: string, contentID: string, order: number, isCodecH265: boolean) {
+    async function modifyCommonMediaIsCodecH265(type: SubjectType, subjectID: string, contentID: string, order: number, isCodecH265: boolean) {
         if (!db.isOpen()) { return }
         await db.commonMedia.where('contentID').equals(contentID).and((commonMed) => {
             return commonMed.subjectID == subjectID && commonMed.type == type && commonMed.order == order
@@ -568,5 +605,59 @@ export function useHACommonMedia() {
         return        
     }
 
-    return { fetchCommonMedia, fetchVoiceNote }
+    /* table specific functions */
+    async function modifyPostLinkPreviewMedia(postID: string, blob: Blob) {
+        await db.post.where('postID').equals(postID).modify(function(item) {
+            if (item.linkPreview?.preview) {
+                item.linkPreview.preview.blob = blob
+            }
+        })
+        return        
+    }     
+
+    async function modifyPostVoiceNote(postID: string, blob: Blob) {
+        await db.post.where('postID').equals(postID).modify(function(item) {
+            if (item.voiceNote) {
+                item.voiceNote.blob = blob
+            }
+        })
+        return        
+    } 
+
+    async function modifyCommentLinkPreviewMedia(subjectID: string, commentID: string, blob: Blob) {
+        await db.comment.where('commentID').equals(commentID).modify(function(item) {
+            if (item.postID == subjectID) {
+                if (item.linkPreview?.preview) {
+                    item.linkPreview.preview.blob = blob
+                }
+            }
+        })
+        return        
+    }    
+  
+    async function modifyCommentVoiceNote(subjectID: string, commentID: string, blob: Blob) {
+        await db.comment.where('commentID').equals(commentID).modify(function(item) {
+            if (item.postID == subjectID) {
+                if (item.voiceNote) {
+                    item.voiceNote.blob = blob
+                }
+            }
+        })
+        return        
+    }    
+
+
+
+    return {
+        fetchCommonMedia, 
+        fetchVoiceNote,
+        fetchLinkPreviewMedia,
+
+        getCommonMedia,
+        insertCommonMedia,
+        modifyCommonMedia, modifyCommonMediaIsCodecH265,
+
+        modifyPostVoiceNote, modifyPostLinkPreviewMedia
+
+        }
 }

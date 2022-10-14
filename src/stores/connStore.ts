@@ -3,20 +3,21 @@ import { defineStore } from 'pinia'
 import createNoise from 'noise-c.wasm'
 import { Base64 } from 'js-base64'
 
-import { useMainStore } from './mainStore'
-import { network } from '../common/network'
+import { useMainStore } from '@/stores/mainStore'
 
-import { server } from '../proto/server.js'
-import { web } from '../proto/web.js'
+import { server } from '@/proto/server.js'
+import { web } from '@/proto/web.js'
 
-import hacrypto from '../common/hacrypto'
-import hal from '../common/halogger'
+import { network } from '@/common/network'
+import hacrypto from '@/common/hacrypto'
+import hal from '@/common/halogger'
 
-import { useHAFeed } from '../composables/haFeed'
+import { useHAFeed } from '@/composables/haFeed'
+import { db } from '@/db'
 
 export const useConnStore = defineStore('conn', () => {
 
-    const version = '33'
+    const version = '34'
     const devMode = false
     const isDebug = false
 
@@ -50,7 +51,21 @@ export const useConnStore = defineStore('conn', () => {
     let cipherStateReceive: any
     const isNoiseReHandshakeCompleted = ref(false)
 
+    /* 
+     * audio is not allowed to be played (browsers AutoPlay policy) until the user have clicked on something per refresh,
+     * so we keep track of the user's first click
+     */
+    let isUserFirstClickCompleted = false
 
+    logoutIfOld()
+
+    async function logoutIfOld() {
+        const oldItems = await db.feed.count()
+        if (oldItems && oldItems > 0) {
+            logout()
+        }
+    }
+    
     async function connectToServerIfNeeded() {
         hal.log('connStore/connectToServerIfNeeded')
 
@@ -704,6 +719,8 @@ export const useConnStore = defineStore('conn', () => {
         clearMessagesInQueue,
 
         fetchAbortController,
+
+        isUserFirstClickCompleted,
 
         requestFeedItems,
         requestGroupFeedItems,

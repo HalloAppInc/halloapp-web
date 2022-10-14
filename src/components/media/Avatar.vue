@@ -5,11 +5,13 @@
     import { useI18n } from 'vue-i18n'
 
     import { useMainStore } from '@/stores/mainStore'
+    import { useColorStore } from '@/stores/colorStore'
+
     import { db } from '@/db'
     import hal from '@/common/halogger'
 
     import { useHAAvatar } from '@/composables/haAvatar'
-
+    
     const props = defineProps({
         userID: {
             type: Number,
@@ -33,20 +35,28 @@
         inheritLocale: true,
         useScope: 'global'
     })
-
+    
     const mainStore = useMainStore()
+    const colorStore = useColorStore()
 
     const { getAvatar } = useHAAvatar()
+
+    const { 
+
+        primaryWhiteBlack: primaryWhiteBlackColor,
+
+    } = storeToRefs(colorStore)  
+
 
     const avatarWidth = props.width.toString() + 'px'
     const avatarHeight = props.width.toString() + 'px'
 
-    const borderCss = ref('0px')
+    const borderWidth = ref('0px')
 
     const avatarImageUrl = ref(mainStore.devCORSWorkaroundUrlPrefix + "https://web.halloapp.com/assets/avatar.svg")
 
     if (props.useBorder) {
-        borderCss.value = '2px solid rgb(0, 0, 0, 0)'
+        borderWidth.value = '2px'
     }
 
     init()
@@ -79,11 +89,17 @@
         })
     }
 
+    async function open() {
+        if (mainStore.userID == props.userID) {
+            mainStore.toggleSettings()
+        }
+    }
+
 </script>
 
 <template>
 
-    <img class="avatarImage" crossorigin="" :src="avatarImageUrl" alt="Avatar"/>
+    <img class="avatarImage" crossorigin="" :src="avatarImageUrl" alt="Avatar" @click="open()"/>
 
 </template>
 
@@ -96,7 +112,8 @@
         border-radius: 50%; 
         background-color: rgb(0, 0, 0, 0);
 
-        border: v-bind(borderCss);
+        border: 2px solid v-bind(primaryWhiteBlackColor);
+        border-width: v-bind(borderWidth);
     } 
 
 </style>
