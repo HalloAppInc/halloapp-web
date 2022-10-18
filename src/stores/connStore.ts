@@ -129,7 +129,7 @@ export const useConnStore = defineStore('conn', () => {
     }
 
     async function wsCloseWillReconnect(event: any) {
-        hal.log('connStore/wsOncloseWillReconnect ' + event)
+        hal.log('connStore/wsCloseWillReconnect ' + event)
         isConnectedToServer.value = false
 
         /* try to reconnect */

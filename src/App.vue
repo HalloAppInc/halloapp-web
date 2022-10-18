@@ -290,7 +290,11 @@
             <BottomNav/>
         </div>
 
-        <div v-if="showNotConnectedToServer" class="noServerConnectionBanner">Lost connection to server</div>
+        <div v-if="showNotConnectedToServer" class="noServerConnectionBanner">
+            <span>Lost connection, please check if you have internet connectivity</span><br/>
+            <span class="manualRetry" @click="connStore.connectToServerIfNeeded()"><br/>Click here to retry now</span>
+        </div>
+
         <div v-else-if="showNotConnectedToMobile" class="noMobileConnectionBanner">
             <span>Lost connection, please open HalloApp on your mobile device</span><br/>
             <span v-if="showMobileReconnectCountdown && noiseReconnectHandshakeRetries < 20">Will retry again in {{ connectToMobileCountdown }}<br/></span>
@@ -539,7 +543,7 @@
     .noServerConnectionBanner {
         position: absolute;
         top: 20px;
-        left: 30px;
+        right: 30px;
         z-index: 10;
         padding: 10px 15px 10px 15px;
         border-radius: 5px;
