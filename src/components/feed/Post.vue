@@ -462,16 +462,16 @@
             userReceipts.value = props.post.userReceipts.slice(0, 3)
         }
 
-        /* preemptively request comments for the post */
+        /* 
+         * preemptively request comments for the post, before user even clicks on comments
+         * so that the comment screen have less flicker
+         */
         if (!isDeleted.value) {
-            const numComments = await db.comment.where('postID').equals(postID).count()
-            if (numComments == 0) {
-                let commentCursor = ''
-                if (mainStore.commentCursors[postID]) {
-                    commentCursor = mainStore.commentCursors[postID]
-                }
-                connStore.requestComments(postID, commentCursor, 20, function() {})
+            let commentCursor = ''
+            if (mainStore.commentCursors[postID]) {
+                commentCursor = mainStore.commentCursors[postID]
             }
+            connStore.requestComments(postID, commentCursor, 20, function() {})            
         }
     }
 

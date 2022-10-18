@@ -12,7 +12,7 @@
 
     import { web } from '@/proto/web.js'
 
-    import notificationSound from '@/assets/notification.mp3'
+    import notificationSound from '@/assets/send.mp3'
 
     import { Howl } from 'howler'
 

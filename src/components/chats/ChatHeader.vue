@@ -61,7 +61,7 @@
     function getChatInfo() {
         getContactByUserID(mainStore.chatID)
         .then(res => {
-            hal.log('ChatHeader/getChatInfo/', res)
+            // hal.log('ChatHeader/getChatInfo/', res)
             chatName.value = res?.userName
             chatInformation.value = 'Online'
         })

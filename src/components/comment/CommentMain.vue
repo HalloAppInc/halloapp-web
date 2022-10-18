@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { Ref, ref, toRef, computed, watch } from 'vue'
+    import { Ref, ref, toRef, computed, watch, onActivated } from 'vue'
     import { liveQuery } from "dexie"
     import { useI18n } from 'vue-i18n'
     import { storeToRefs } from 'pinia'
@@ -55,6 +55,8 @@
     const selectedMediaIndex = ref()
     const selectMediaContentID = ref()
 
+    let savedScrollTop = 0 // store scroll position
+
     function openMedia(mediaList: any, idx: number, contentID: string) {
         console.log("commentMain/openMedia " + idx)
         console.dir(mediaList)
@@ -94,6 +96,7 @@
     watch(() => props.postID, (newValue, oldValue) => {
         if (newValue != oldValue) {
             setupObserver()
+            showFullHeaderTitles.value = false
         }
     })
 
@@ -141,6 +144,8 @@
         } else {
             showFullHeaderTitles.value = false
         }
+
+        savedScrollTop = scrollTop
     }
 
 </script>
@@ -148,16 +153,16 @@
 <template>
 
     <!-- nb: root nodes are affected by scoped styles from parent -->
-    <div class="commentMainWrapper">
+    <div v-if="post" class="commentMainWrapper">
 
-        <div v-if="post" class="header">
+        <div class="header">
             <CommentHeader 
                 :groupID="post.groupID ? post.groupID : ''" :postID="postID" :userID="post.userID"
                 :showFullTitles="showFullHeaderTitles"
                 @backClick="$emit('backClick')"/>
         </div>
 
-        <MsgPanel v-if="post" :type="SubjectType.Comment" :subjectID="post.postID" :key="post.postID"
+        <MsgPanel :type="SubjectType.Comment" :subjectID="post.postID" :key="post.postID"
             @scrolled="handleScrolled">
 
             <template v-slot:subHeader>
@@ -166,7 +171,7 @@
                         <Avatar :userID="post.userID" :width="30" :key="post.userID"></Avatar>
                     </div>
                     <div class='subHeaderBody'>
-                        <div v-if="post">
+                        <div>
                             {{ mainStore.pushnames[post.userID] }}
 
                             <span v-if="post.groupID" class="groupIndicator">
@@ -199,7 +204,7 @@
 
                         </div>                        
 
-                        <div v-if="post" class='timestamp'>
+                        <div class='timestamp'>
                             {{ formatTime(post.timestamp, locale as string) }}
                         </div>
                     </div>

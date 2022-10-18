@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { Ref, ref, computed, nextTick, watch, onMounted, onUnmounted, onUpdated } from 'vue'
+    import { Ref, ref, computed, nextTick, watch, onMounted, onUnmounted, onUpdated, onActivated } from 'vue'
     import { number } from '@intlify/core-base'
     import { liveQuery } from 'dexie'
     import { storeToRefs } from 'pinia'
@@ -130,11 +130,13 @@
 
         /* don't scroll to the bottom if user has scrolled up */
         if (!showJumpDownButton.value) {
-            gotoBottom('smooth')
+            gotoBottom('auto')
         }
 
     }
 
+
+    
 
     const menu = ref<HTMLElement | null>(null)
     const content = ref<HTMLElement | null>(null)
@@ -176,6 +178,13 @@
             return 0
         }
     })
+
+    onActivated(() => {
+        if (!content.value) { return }
+        let element = content.value
+        element.scrollTop = savedScrollTop
+    })
+
 
     // listen to msg list, when a new msg comes in, scroll to the bottom
     // watch(messageNumber, (newVal, oldVal) => {
@@ -446,7 +455,11 @@
 
         /* emit event so commentHeader knows to change title display */
         emit('scrolled', element.scrollTop)
+
+        savedScrollTop = element.scrollTop
     }
+
+    let savedScrollTop = 0 // store scroll position
 
     // jump to bottom
     function gotoBottom(type: ScrollBehavior | undefined) {

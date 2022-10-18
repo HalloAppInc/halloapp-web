@@ -35,7 +35,7 @@
     const listData: Ref<Post[]> = ref([])
     const count = ref(5)
 
-    const inViewPostID = ref('')
+    const inViewPostID: Ref<string | undefined> = ref()
 
     let savedScrollTop = 0 // store scroll position
 
@@ -185,7 +185,7 @@
             mainStore.mobileNavlessPanel = 'comments'
         } 
         else {
-            inViewPostID.value = ''
+            inViewPostID.value = undefined
 
             closeCommentsPanel()
         }
@@ -316,8 +316,10 @@
             </div>
         </div>
     
-        <div v-if="showComments" class="comments">
-            <Comment :postID='inViewPostID' @backClick="commentsBackClick"></Comment>
+        <div v-if="inViewPostID" v-show="showComments" class="comments">
+            <keep-alive>
+                <Comment :postID="inViewPostID" @backClick="commentsBackClick" :key="inViewPostID"></Comment>
+            </keep-alive>
         </div>
     
     </div>

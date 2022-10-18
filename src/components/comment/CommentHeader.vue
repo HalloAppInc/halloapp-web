@@ -85,7 +85,6 @@
 </template>
 
 <style scoped>
-
     .commentHeader {
         overflow-y: auto;
         overflow-x: hidden;
@@ -112,7 +111,6 @@
         align-items: center;
 
         animation: fadeIn 0.5s linear;
-        
     }
 
     .container .nameContainer .userName {
@@ -128,7 +126,6 @@
     }
 
     .container .nameContainer .groupName {
-        
         margin-left: 5px;
         display: inline-block; /* this breaks the block to the next line when it's too long to fit */
         cursor: pointer;
@@ -137,7 +134,6 @@
     .container .groupName:hover {
         color: v-bind(primaryBlueColor);
     }    
-
 
     .avatarContainer {
         flex: 0 0 70px;

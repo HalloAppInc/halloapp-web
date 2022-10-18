@@ -772,7 +772,7 @@ export function useHAFeed() {
         if (dbCommentsList.length == 0) {
             try {
                 const id = await db.comment.put(comment)
-                hal.log('haFeed/insertComment/post: ' + comment.postID + ', comment: ' + comment.commentID, ', text: ' + comment.text)
+                hal.log('haFeed/insertComment/post: ' + comment.postID + ', comment: ' + comment.commentID)
             } catch (error) {
                 hal.log('haFeed/insertComment/post: ' + comment.postID + ', ' + 'error: ' + error)
             }

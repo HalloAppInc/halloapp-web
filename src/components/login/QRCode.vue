@@ -61,6 +61,8 @@
                 showCountdown.value = false
             } else {
                 countdown.value = formattedTimer.display
+
+                // show countdown after two minutes, to not introduce anxiety for users
                 if (formattedTimer.timeDiffMs <= (2*60000)) {
                     showCountdown.value = true
                 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { ref, ComputedRef, computed } from 'vue'
+    import { ref, ComputedRef, computed, watch, onMounted } from 'vue'
     import { storeToRefs } from 'pinia'
     import { useI18n } from 'vue-i18n'
 
@@ -15,6 +15,10 @@
 
     import QRCode from '@/components/login/QRCode.vue'
 
+    import { useTimeformatter } from '@/composables/timeformatter'
+
+    const { formatTimer } = useTimeformatter()
+
     const { t } = useI18n({
         inheritLocale: true,
         useScope: 'global'
@@ -29,7 +33,10 @@
     } = storeToRefs(mainStore)  
 
     const { 
-        isNoiseReHandshakeCompleted,
+        isConnectedToServer,
+        isConnectedToMobile,
+        nextTimeToConnectToMobile,
+        noiseReconnectHandshakeRetries,
     } = storeToRefs(connStore)  
 
     const { 
@@ -37,6 +44,86 @@
         primaryBlue: primaryBlueColor,
         text: textColor,
     } = storeToRefs(colorStore)  
+
+    const showNotConnectedToServer = ref(false)
+    const showNotConnectedToMobile = ref(false)
+    const showMobileReconnectCountdown = ref(false)
+    const connectToMobileCountdown = ref('')
+    let serverConnectionTimeoutID: any
+    let mobileConnectionTimeoutID: any
+
+    onMounted(() => {
+        waitBeforeShowingLostConnection()
+        waitBeforeShowingLostMobileConnection()
+    })
+
+    function waitBeforeShowingLostConnection() {
+        clearTimeout(serverConnectionTimeoutID)
+        serverConnectionTimeoutID = setTimeout(function () {
+            if (!isConnectedToServer.value) {
+                showNotConnectedToServer.value = true
+            }
+        }, 10000)
+    }
+
+    function waitBeforeShowingLostMobileConnection() {
+        clearTimeout(mobileConnectionTimeoutID)
+        mobileConnectionTimeoutID = setTimeout(function () {
+            if (!isConnectedToMobile.value) {
+                showNotConnectedToMobile.value = true
+            }
+        }, 6000) // 5 seconds is too little
+    }
+
+    function waitBeforeShowingMobileRetryCountdown() {
+        setTimeout(function () {
+            if (!isConnectedToMobile.value) {
+                setCountdown(nextTimeToConnectToMobile.value)
+                showMobileReconnectCountdown.value = true
+            }
+        }, 6000)
+    }    
+
+    function setCountdown(countDownDate: number) {
+        connectToMobileCountdown.value = formatTimer(countDownDate).display // run once first so re-runs won't show 00:00
+
+        let countdownInterval = setInterval(function() {
+            const formattedTimer = formatTimer(countDownDate)
+            if (formattedTimer.timeDiffMs <= 1000) {
+                clearInterval(countdownInterval)
+                showMobileReconnectCountdown.value = false
+            } else {
+                connectToMobileCountdown.value = formattedTimer.display
+                showMobileReconnectCountdown.value = true
+            }
+        }, 750)
+    }
+
+
+    watch(isConnectedToServer, (newVal, oldVal) => {
+        if (newVal == false) {
+            waitBeforeShowingLostConnection()
+        } else {
+            clearTimeout(serverConnectionTimeoutID)
+            showNotConnectedToServer.value = false
+        }
+    })    
+    
+    watch(isConnectedToMobile, (newVal, oldVal) => {
+        if (newVal == false) {
+            waitBeforeShowingLostMobileConnection()
+        } else {
+            clearTimeout(mobileConnectionTimeoutID)
+            showNotConnectedToMobile.value = false
+        }
+    })
+
+    watch(nextTimeToConnectToMobile, (newVal, oldVal) => {
+        if (newVal != 0) {
+            // give the web client a few seconds to connect before showing the next countdown
+            waitBeforeShowingMobileRetryCountdown()
+        }
+    })       
 
     const sideBarWidth: ComputedRef<string> = computed((): string => {
         let widthPercent = '30%'
@@ -78,7 +165,7 @@
     init()
 
     async function init() {
-        hal.log('app/init, haveInitialHandshakeCompleted: ' + mainStore.haveInitialHandshakeCompleted)
+        hal.log('app/init')
         connStore.clearMessagesInQueue()
 
         connStore.connectToServerIfNeeded()        
@@ -203,8 +290,13 @@
             <BottomNav/>
         </div>
 
-        <!-- <div v-if="!mainStore.isConnectedToServer" class="notification">Lost connection to server</div>
-        <div v-if="!mainStore.isPublicKeyAuthenticated" class="notification">Lost connection to mobile</div> -->
+        <div v-if="showNotConnectedToServer" class="noServerConnectionBanner">Lost connection to server</div>
+        <div v-else-if="showNotConnectedToMobile" class="noMobileConnectionBanner">
+            <span>Lost connection, please open HalloApp on your mobile device</span><br/>
+            <span v-if="showMobileReconnectCountdown && noiseReconnectHandshakeRetries < 20">Will retry again in {{ connectToMobileCountdown }}<br/></span>
+            <span v-else-if="noiseReconnectHandshakeRetries < 20">Trying to connect...<br/></span>
+            <span class="manualRetry" @click="connStore.connectToMobile()"><br/>Click here to retry now</span>
+        </div>
 
     </div>
 
@@ -435,20 +527,41 @@
         }
     }
 
+    .manualRetry:hover {
+        cursor: pointer;
+        color: v-bind(primaryBlueColor);
+    }
+
     #Settings {
         display: flex;
     }
 
-    .notification {
+    .noServerConnectionBanner {
         position: absolute;
         top: 20px;
-        left: 20px;
+        left: 30px;
         z-index: 10;
-        padding: 10px 30px 10px 30px;
-        border-radius: 10px;
+        padding: 10px 15px 10px 15px;
+        border-radius: 5px;
         color: white;
         font-weight: bold;
+        font-size: 14px;
         background-color: red;
+        opacity: 0.8;
     }
+
+    .noMobileConnectionBanner {
+        position: absolute;
+        top: 20px;
+        right: 30px;
+        z-index: 10;
+        padding: 10px 15px 10px 15px;
+        border-radius: 5px;
+        color: white;
+        font-weight: bold;
+        font-size: 14px;
+        background-color: orange;
+        opacity: 0.8;
+    }    
 
 </style>
