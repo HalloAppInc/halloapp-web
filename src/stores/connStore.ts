@@ -41,7 +41,7 @@ export const useConnStore = defineStore('conn', () => {
      // so we keep track of the user's first click
     const isUserFirstClickCompleted = ref(false)
 
-    const version = '35'
+    const version = '36'
     const devMode = false
     const isDebug = false
 
@@ -288,6 +288,10 @@ export const useConnStore = defineStore('conn', () => {
             const noiseMessage = webStanza?.noiseMessage
 
             if (noiseMessage) {
+
+                if (noise == undefined) {
+                    noise = await initNoise()
+                }
 
                 if (!mainStore.haveInitialHandshakeCompleted) {
 

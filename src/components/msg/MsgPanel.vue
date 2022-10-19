@@ -256,12 +256,12 @@
         for(let i = 0; i < listLength; i++) {
             const message = messageListFromDB.value[i]
     
-            let time = formatTimeChat(message.timestamp, locale.value as string)
+            let formattedTime = formatTimeChat(message.timestamp, locale.value as string)
             let type = (message.userID == mainStore.userID) ? 'outBound' : 'inBound'
             // not delete
             if ( message.text != undefined) {
-                let text = processText(message.text, message.mentions).html
-                let resMsg = appendSpaceForMsgInfo(text, time, type == 'outBound')
+                let textHtml = processText(message.text, message.mentions).html
+                let resMsg = appendSpaceForMsgInfo(textHtml, formattedTime, type == 'outBound')
 
                 // let quotedMessage
                 // if (message.parentCommentID) {
@@ -270,6 +270,11 @@
                 //         message.quotedMessage = quotedMessage
                 //     }
                 // }
+
+                message.textHtml = textHtml
+                message.textFont = resMsg[1]
+            
+                message.formattedTime = formattedTime
             }
 
             if (message.voiceNote) {
@@ -284,7 +289,7 @@
             result.unshift(message)
 
             /* add timestamp bubbles */
-            if (messageListFromDB.value[i+1]) {
+            if (messageListFromDB.value[i + 1]) {
                 const msgTimestamp = message.timestamp
                 const nextMsgTimestamp = messageListFromDB.value[i+1].timestamp
                 
@@ -685,12 +690,12 @@
     <div class='msgPanelContent' ref='content' @scroll='handleScroll()'>
         <slot name="subHeader"></slot>
         <!-- chat msg -->
-        <div v-if="isInitialized && listData.length > 0" class='containerChat' v-for='(value, idx) in listData'>
+        <div v-if="isInitialized && listData.length > 0" v-for='(value, idx) in listData' class="containerChat">
 
             <!-- inbound msg -->
             <div v-if="value.type != 'timestamp' && value.userID != mainStore.userID" class='contentTextBody contentTextBodyInBound'
                 :class="idx == 0 || (idx != 0 && listData[idx - 1].userID == mainStore.userID) ? 'chatBubbleBigMargin' : 'chatBubbleSmallMargin'">
-                <div class='chatBubble chatBubbleInBound' :id='"messageBubble" + value.commentID'>
+                <div class="chatBubble chatBubbleInBound" :id="'messageBubble' + value.commentID">
 
                     <!-- toggler -->
                     <div class='menuToggler menuTogglerInBound'>
@@ -734,17 +739,16 @@
                     <!-- text -->
                     <!-- <div class='chatTextContainer' :class='{ bigChatTextContainer: value.font == "onlyEmoji" }'> -->
                     <div class='chatTextContainer'>
-                        <!-- show message content -->
-                        <!-- <span v-html='value.text' :class='value.font'> -->
-                        <span v-html='processText(value.text, value.mentions, false).html'>
+                        <span v-html='value.textHtml' :class='value.textFont'>
                         </span>
+                         <!-- <span v-html='processText(value.text, value.mentions, false).html'> -->
                     </div>                    
 
                     <!-- timestamp -->
                     <div class='msgInfoContainer' v-if='value.timestamp'>
                         <div class='msgInfoContent'>
                             <div class='timestamp' :data-msg-timestamp='value.timestamp'>
-                                {{ formatTimeChat(value.timestamp, locale as string) }}
+                                {{ value.formattedTime }}
                             </div>
                         </div>
                     </div>
@@ -797,7 +801,7 @@
                     <div class='chatTextContainer'>
                         <!-- show message content -->
                         <!-- <span v-html='value.text' :class='value.font' @click="gotoChatWith($event)"></span> -->
-                        <span v-html='processText(value.text, value.mentions, false).html' @click="gotoChatWith($event)">
+                        <span v-html='value.textHtml' :class='value.textFont' @click="gotoChatWith($event)">
                         </span>
                     </div>
 
@@ -805,7 +809,7 @@
                     <div class='msgInfoContainer' v-if='value.timestamp'>
                         <div class='msgInfoContent'>
                             <div class='timestamp' :data-msg-timestamp='value.timestamp'>
-                                {{ formatTimeChat(value.timestamp, locale as string) }}
+                                {{ value.formattedTime }}
                             </div>
                             <!-- <div class='iconContainer' :class='value.sendToAWS ? "blueIcon" : "grayIcon"'>
                                 <font-awesome-icon :icon="['fas', 'check-double']" size='xs' />
@@ -1074,7 +1078,7 @@
     }
 
     .onlyEmoji {
-        font-size: xx-large;
+        font-size: 30px;
     }
 
     .deletedMessage {

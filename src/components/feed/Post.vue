@@ -445,16 +445,20 @@
                         mediaBoxWidth.value = postWidth.value - 30
                         mediaBoxHeight.value = 250
                     }
-            } else {
-                isTextPostTextOnly.value = true
-                mediaBoxWidth.value = postWidth.value - 30
-                mediaBoxHeight.value = 0
             }
         }
 
         /* process text after checking if it's text only */
-        if (props.post.text) {            
-            bodyContent.value = processPostText(props.post.text, post.mentions, true, isTextPostTextOnly.value)
+        if (props.post.text) {         
+            
+            if (commonMedia.value.length == 0 && !post.linkPreview) {
+                isTextPostTextOnly.value = true
+                mediaBoxWidth.value = postWidth.value - 30
+                mediaBoxHeight.value = 0
+            }
+
+            const truncateText = true  
+            bodyContent.value = processPostText(props.post.text, post.mentions, truncateText, isTextPostTextOnly.value)
         }
 
         /* user receipts */
@@ -499,6 +503,9 @@
     }
 
     function processPostText(text: string, mentions: any, truncateText: boolean = true, isTextPostTextOnly: boolean) {
+        console.log("processPostText: " + text)
+        console.log("processPostText: " + truncateText + ' ' + isTextPostTextOnly)
+        
         // rough estimate of 330 chars for 12 lines and 110 for 3 lines
         const maxCharsWhenTruncatedForTextOnlyPost: number = 330
         let maxCharsWhenTruncated: number = 110
@@ -514,7 +521,8 @@
 
     function expandText() {
         if (props.post.text) {
-            bodyContent.value = processPostText(props.post.text, props.post.mentions, false, isTextPostTextOnly.value)
+            const truncateText = false
+            bodyContent.value = processPostText(props.post.text, props.post.mentions, truncateText, isTextPostTextOnly.value)
         } 
     }
 

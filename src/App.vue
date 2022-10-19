@@ -3,7 +3,7 @@
     import { storeToRefs } from 'pinia'
     import { useI18n } from 'vue-i18n'
 
-    import hal from './common/halogger'
+    import hal from '@/common/halogger'
 
     import { useMainStore } from '@/stores/mainStore'
     import { useConnStore } from '@/stores/connStore'
@@ -16,8 +16,10 @@
     import QRCode from '@/components/login/QRCode.vue'
 
     import { useTimeformatter } from '@/composables/timeformatter'
+    import { useHALog } from '@/composables/haLog'
 
     const { formatTimer } = useTimeformatter()
+    // const { log: hall } = useHALog()
 
     const { t } = useI18n({
         inheritLocale: true,
