@@ -502,10 +502,7 @@
         }
     }
 
-    function processPostText(text: string, mentions: any, truncateText: boolean = true, isTextPostTextOnly: boolean) {
-        console.log("processPostText: " + text)
-        console.log("processPostText: " + truncateText + ' ' + isTextPostTextOnly)
-        
+    function processPostText(text: string, mentions: any, truncateText: boolean = true, isTextPostTextOnly: boolean) {        
         // rough estimate of 330 chars for 12 lines and 110 for 3 lines
         const maxCharsWhenTruncatedForTextOnlyPost: number = 330
         let maxCharsWhenTruncated: number = 110

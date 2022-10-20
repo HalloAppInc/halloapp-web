@@ -21,6 +21,7 @@ export const useMainStore = defineStore('main', {
         isMobile: false,
         isIOS: false,
         isAndroid: false,
+        isChrome: false,
         isSafari: false, // mobile Safari and desktop Safari
         isFirefox: false,
 
@@ -81,6 +82,8 @@ export const useMainStore = defineStore('main', {
         chatID: '',
 
         inputArea: '',
+
+        savedLogs: [] as string[],
     }),
     getters: {
     },

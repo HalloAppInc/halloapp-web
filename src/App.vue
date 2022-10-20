@@ -3,8 +3,6 @@
     import { storeToRefs } from 'pinia'
     import { useI18n } from 'vue-i18n'
 
-    import hal from '@/common/halogger'
-
     import { useMainStore } from '@/stores/mainStore'
     import { useConnStore } from '@/stores/connStore'
     import { useColorStore } from '@/stores/colorStore'
@@ -19,7 +17,7 @@
     import { useHALog } from '@/composables/haLog'
 
     const { formatTimer } = useTimeformatter()
-    // const { log: hall } = useHALog()
+    const { hal } = useHALog()
 
     const { t } = useI18n({
         inheritLocale: true,
@@ -101,7 +99,6 @@
         }, 750)
     }
 
-
     watch(isConnectedToServer, (newVal, oldVal) => {
         if (newVal == false) {
             waitBeforeShowingLostConnection()
@@ -168,9 +165,9 @@
 
     async function init() {
         hal.log('app/init')
-        connStore.clearMessagesInQueue()
 
-        connStore.connectToServerIfNeeded()        
+        connStore.clearMessagesInQueue()
+        connStore.debounceConnectToServer()        
     }
 
     function applyPlatformSpecifics() {
@@ -189,9 +186,14 @@
             mainStore.isAndroid = true
         }
 
-        if (userAgent.indexOf('Safari') != -1 && userAgent.indexOf('Chrome') == -1) {
+        if (userAgent.indexOf('Chrome') > -1) {
+            mainStore.isChrome = true
+        }
+        // Chrome useragent have both Safari and Chrome in it 
+        else if (userAgent.indexOf('Safari') > -1 && userAgent.indexOf('Chrome') == -1) {
             mainStore.isSafari = true
-        } else if (navigator.userAgent.indexOf('Firefox') != -1) {
+        } 
+        else if (navigator.userAgent.indexOf('Firefox') > -1) {
             mainStore.isFirefox = true
         }
     }
@@ -294,7 +296,7 @@
 
         <div v-if="showNotConnectedToServer" class="noServerConnectionBanner">
             <span>Lost connection, please check if you have internet connectivity</span><br/>
-            <span class="manualRetry" @click="connStore.connectToServerIfNeeded()"><br/>Click here to retry now</span>
+            <span class="manualRetry" @click="connStore.debounceConnectToServer()"><br/>Click here to retry now</span>
         </div>
 
         <div v-else-if="showNotConnectedToMobile" class="noMobileConnectionBanner">

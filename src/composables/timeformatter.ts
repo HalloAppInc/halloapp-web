@@ -1,13 +1,9 @@
 import { DateTime } from 'luxon'
 import { useI18n } from 'vue-i18n'
-import halogger from '../common/halogger'
 
 export function useTimeformatter() {
 
-    const { t } = useI18n({
-        inheritLocale: true,
-        useScope: 'global'
-    })
+    const { t } = useI18n({ inheritLocale: true, useScope: 'global' })
     
     const minMs = 1000 * 60
     const hrMs = minMs * 60
@@ -48,18 +44,6 @@ export function useTimeformatter() {
             result = dt.toFormat("D", { locale: locale })                           // 6/20/2020
         }
         return result
-    }
-
-    function formatTimer(countDownDate: any) {
-        const now = new Date().getTime()
-        const timeDiffMs = countDownDate - now
-        const diffMinutes = Math.floor((timeDiffMs % hrMs) / minMs)
-        const diffSeconds = Math.floor((timeDiffMs % minMs) / 1000)
-        let displaySeconds = diffSeconds.toString()
-        if (diffSeconds < 10) {
-            displaySeconds = '0' + displaySeconds
-        }
-        return { display: diffMinutes + ":" + displaySeconds, timeDiffMs: timeDiffMs }
     }
 
     function formatTimeDateOnlyChat(seconds: number, locale: string) {
@@ -105,6 +89,24 @@ export function useTimeformatter() {
         return res
     }
 
+    // 2022-10-20 11:04 AM
+    function formatTimeEmailLogs(locale: string) {
+        const dt = DateTime.local()
+        return dt.toFormat('yyyy-L-dd t', { locale: locale }) 
+    }
+
+    function formatTimer(countDownDate: any) {
+        const now = new Date().getTime()
+        const timeDiffMs = countDownDate - now
+        const diffMinutes = Math.floor((timeDiffMs % hrMs) / minMs)
+        const diffSeconds = Math.floor((timeDiffMs % minMs) / 1000)
+        let displaySeconds = diffSeconds.toString()
+        if (diffSeconds < 10) {
+            displaySeconds = '0' + displaySeconds
+        }
+        return { display: diffMinutes + ":" + displaySeconds, timeDiffMs: timeDiffMs }
+    }    
+
     function timeDiffBiggerThanOneDay(timestampInSec: number, nextTimestampInSec: number) {
         const dt1 = DateTime.fromSeconds(timestampInSec)
 
@@ -115,12 +117,15 @@ export function useTimeformatter() {
         } else {
             return true
         }
-    }
+    }    
 
     return {    
-        formatTime, formatTimer, 
+        formatTime,
         formatTimeDateOnlyChat, 
         formatTimeForGroupsList,
         formatTimeChat, 
-        formatTimeFullChat, timeDiffBiggerThanOneDay }
+        formatTimeFullChat,
+        formatTimeEmailLogs,
+        formatTimer, 
+        timeDiffBiggerThanOneDay }
 }

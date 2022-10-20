@@ -122,7 +122,7 @@
             qrCodeStylingWithOptions.update(options)
         }
 
-        connStore.connectToServerIfNeeded()
+        connStore.debounceConnectToServer()
     }
 
     function fakeAuth() {

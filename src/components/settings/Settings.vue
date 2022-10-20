@@ -162,33 +162,14 @@
 </template>
 
 <style scoped>
-    *::-webkit-scrollbar {
-        width: 5px;
-    }
-
-    *::-webkit-scrollbar-track {
-        background: white;      /* color of the tracking area */
-    }
-
-    *::-webkit-scrollbar-thumb {
-        background-color: rgb(172, 169, 169);      /* color of the scroll thumb */
-
-        border: 0px solid white;        /* creates padding around scroll thumb */
-    }
-
     .menu {
-        
         height: 100%;
     }
 
     .settingsHeader {
         flex: 0 0 50px;
-        
-     
         height: 50px;
     }
-
-
 
     .container {
         display: flex;
@@ -290,6 +271,20 @@
         flex-direction: row;
         align-items: center;
         justify-content: center;
+    }
+
+    *::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    *::-webkit-scrollbar-track {
+        background: white;      /* color of the tracking area */
+    }
+
+    *::-webkit-scrollbar-thumb {
+        background-color: rgb(172, 169, 169);      /* color of the scroll thumb */
+
+        border: 0px solid white;        /* creates padding around scroll thumb */
     }
 
     /* animation in from left to right, out from right to left */

@@ -1,12 +1,20 @@
 export function useHAUtils() {
 
-    const debounce = (fn: Function, waitMs: number) => {
+    const debounce = (cb: Function, waitMs: number) => {
         let timeoutID: ReturnType<typeof setTimeout>
-        return function (this: any, ...args: any[]) {
+        
+        const fn = function (this: any, ...args: any[]) {
             clearTimeout(timeoutID)
-            timeoutID = setTimeout(() => fn.apply(this, args), waitMs)
+            timeoutID = setTimeout(() => cb.apply(this, args), waitMs)
         }
-    }
+
+        fn.cancel = function() {
+            if (!timeoutID) { return }
+            clearTimeout(timeoutID)
+        }
+
+        return fn
+    }    
 
     return {
         debounce,    

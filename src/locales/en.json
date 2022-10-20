@@ -45,11 +45,12 @@
     },
     "help": {
         "help": "Help",
-        "helpCenter": "Help Center",
+        "helpCenter": "FAQ",
         "contactUs": "Contact Us",
         "licenses": "Licenses",
-        "terms": "Terms",
-        "privacyPolicy": "Privacy Policy"
+        "terms": "Terms of Service",
+        "privacyPolicy": "Privacy Policy",
+        "shareFeedbackAndLogs" : "Share Feedback & Logs"
     },
     "notifications": {
         "sounds": "Sounds",

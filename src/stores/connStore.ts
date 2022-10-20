@@ -1,9 +1,10 @@
 import { Ref, ref } from 'vue'
-import { defineStore } from 'pinia'
 import createNoise from 'noise-c.wasm'
+import { defineStore } from 'pinia'
 import { Base64 } from 'js-base64'
 
 import { useMainStore } from '@/stores/mainStore'
+import { db } from '@/db'
 
 import { server } from '@/proto/server.js'
 import { web } from '@/proto/web.js'
@@ -12,9 +13,8 @@ import { network } from '@/common/network'
 import hacrypto from '@/common/hacrypto'
 import hal from '@/common/halogger'
 
-import { useHAUtils } from '@/composables/haUtils'
 import { useHAFeed } from '@/composables/haFeed'
-import { db } from '@/db'
+import { useHAUtils } from '@/composables/haUtils'
 
 export const useConnStore = defineStore('conn', () => {
 
@@ -33,7 +33,6 @@ export const useConnStore = defineStore('conn', () => {
 
     const nextTimeToConnectToMobile: Ref<number> = ref(0)
 
-    const isNoiseReHandshakeCompleted = ref(false)
     const noiseReconnectHandshakeRetries: Ref<number> = ref(0)
     const fetchAbortController = ref(new AbortController())
  
@@ -45,68 +44,80 @@ export const useConnStore = defineStore('conn', () => {
     const devMode = false
     const isDebug = false
 
-    let connectionTimeoutID: any // used for debouncing multiple calls to connect
+    // let connectionTimeoutID: any // used for debouncing multiple calls to connect
     let isLoggingOut: boolean = false
 
     // todo: should switch automatically to prod/test servers
     let webSocketServer = 'wss://ws-test.halloapp.net/ws'
     let webSocket: WebSocket
     let webSocketConnectRetries: number = 0
-    let webSocketCloseTimeoutID: any // close socket if there are no activities/pings/etc.
+    // let webSocketCloseTimeoutID: any // close socket if there are no activities/pings/etc.
 
     let noise: any
     let handshakeState: any
     let cipherStateSend: any
     let cipherStateReceive: any
-    let mobileConnectionTimeoutID: any // retries mobile connection if there are no responses
+    // let mobileConnectionTimeoutID: any // retries mobile connection if there are no responses
 
-    let sendMessagesTimeoutID: any // used for debouncing multiple calls to send messages
+    // let sendMessagesTimeoutID: any // used for debouncing multiple calls to send messages
     let isSendingMessages: boolean = false
     let sendMessagesRetryNum: number = 0
 
-    logoutIfOld()
-
-    async function logoutIfOld() {
-        const oldItems = await db.feed.count()
-        if (oldItems && oldItems > 0) {
-            logout()
-        }
-    }
-    
     // closes websocket if there are no activity (msg, pings, etc.) for 60 seconds,
     // as web browser does not know if connection is lost or not
-    function debounceWebSocketClose() {
-        clearTimeout(webSocketCloseTimeoutID)
-        webSocketCloseTimeoutID = setTimeout(function() {
-            hal.log('connStore/debounceWebSocketClose/closing webSocket')
-            webSocket.close()
-        }, 60000)
-    }
+    const debounceCloseWebSocket = debounce(function() {
+        hal.log('connStore/debounceCloseWebSocket')
+        webSocket.close()
+    }, 60000)
 
-    // retry mobile connection if there are no responses for 60 seconds
-    function debounceMobileConnectionRetry() {
-        clearTimeout(mobileConnectionTimeoutID)
-        mobileConnectionTimeoutID = setTimeout(function() {
-            hal.log('connStore/debounceMobileConnectionRetry/no responses for 60 seconds')
-            isConnectedToMobile.value = false
-            connectToMobile()
-        }, 30000)
-    }
+    /* deprecated */
+    // function debounceWebSocketClose_old() {
+    //     clearTimeout(webSocketCloseTimeoutID)
+    //     webSocketCloseTimeoutID = setTimeout(function() {
+    //         hal.log('connStore/debounceWebSocketClose/closing webSocket')
+    //         webSocket.close()
+    //     }, 60000)
+    // }
 
-    async function connectToServerIfNeeded() {
-        // hal.log('connStore/connectToServerIfNeeded')
+    const debounceCloseAndConnectToMobile = debounce(function() {
+        hal.log('connStore/debounceMobileConnectionRetry/no responses for 30 seconds')
+        isConnectedToMobile.value = false
+        connectToMobile()
+    }, 30000)
 
+    // retry mobile connection if there are no responses for 30 seconds
+    // function debounceMobileConnectionRetry_old() {
+    //     hal.log('connStore/debounceMobileConnectionRetry')
+    //     clearTimeout(mobileConnectionTimeoutID)
+    //     mobileConnectionTimeoutID = setTimeout(function() {
+    //         hal.log('connStore/debounceMobileConnectionRetry/no responses for 30 seconds')
+    //         isConnectedToMobile.value = false
+    //         connectToMobile()
+    //     }, 30000)
+    // }
+
+    const debounceConnectToServer = debounce(async function() {
         if (isConnectedToServer.value) {
             hal.log('connStore/connectToServerIfNeeded/already connected: ' + isConnectedToServer.value)
             return
-        }
+        }        
+        connectToServer()
+    }, 100)
 
-        clearTimeout(connectionTimeoutID)
-        connectionTimeoutID = setTimeout(() => {
-            connectToServer()
-        }, 100)
-    }
+    /* deprecated */
+    // async function connectToServerIfNeeded_old() {
+    //     // hal.log('connStore/connectToServerIfNeeded')
 
+    //     if (isConnectedToServer.value) {
+    //         hal.log('connStore/connectToServerIfNeeded/already connected: ' + isConnectedToServer.value)
+    //         return
+    //     }
+
+    //     clearTimeout(connectionTimeoutID)
+    //     connectionTimeoutID = setTimeout(() => {
+    //         connectToServer()
+    //     }, 100)
+    // }
 
     async function wsOpen(event: any) {
         hal.log('connStore/wsOpen')
@@ -125,7 +136,7 @@ export const useConnStore = defineStore('conn', () => {
             connectToMobile()
         })
         
-        sendReadyMessagesInQueue()
+        debounceSendMessages()
     }
 
     async function wsCloseWillReconnect(event: any) {
@@ -133,7 +144,7 @@ export const useConnStore = defineStore('conn', () => {
         isConnectedToServer.value = false
 
         /* try to reconnect */
-        setTimeout(connectToServerIfNeeded, webSocketConnectRetries*3000)
+        setTimeout(debounceConnectToServer, webSocketConnectRetries*3000)
 
         if (webSocketConnectRetries < 20) {
             webSocketConnectRetries++
@@ -205,22 +216,22 @@ export const useConnStore = defineStore('conn', () => {
     async function connectToMobile() {
         if (!isConnectedToServer.value) { return }
         if (!mainStore.haveInitialHandshakeCompleted) { return }
+        hal.log('connStore/connectToMobile')
 
         if (noise == undefined) {
             noise = await initNoise()
         }
-
-        hal.log('connStore/connectToMobile')
-
+        
+        /* reset on each reconnect as we're using requestFeedItem for a ping,
+         * which will get the cipherstate out of sync, might have to revisit for a better method */
         resetHandshake()
         initHandshake(noise, 'KK', noise.constants.NOISE_ROLE_INITIATOR)
         handleNoiseHandshakeMsg('KK', noise.constants.NOISE_ROLE_INITIATOR)
-
+        
         // stop trying after 20 attempts
         if (noiseReconnectHandshakeRetries.value > 20) { return  }
 
         // set a timeout to retry in case web client can't connect to mobile
-
         noiseReconnectHandshakeRetries.value++
         const wait = noiseReconnectHandshakeRetries.value*5000
         let currentDate = new Date()
@@ -241,7 +252,7 @@ export const useConnStore = defineStore('conn', () => {
     }
 
     async function handleInbound(event: any) {
-        debounceWebSocketClose()
+        debounceCloseWebSocket()
 
         const eventDataBinArr = new Uint8Array(event.data)
         const packet = await decodePacket(eventDataBinArr)
@@ -283,7 +294,7 @@ export const useConnStore = defineStore('conn', () => {
         else if (webStanza) {
             hal.log('connStore/handleInbound/webStanza')
 
-            clearTimeout(mobileConnectionTimeoutID)
+            debounceCloseAndConnectToMobile()
 
             const noiseMessage = webStanza?.noiseMessage
 
@@ -375,10 +386,13 @@ export const useConnStore = defineStore('conn', () => {
     }
 
     function resetHandshake() {
+        console.log('resethandshake')
         for (let prop in handshakeState) {
             delete handshakeState[prop]
         }
-        handshakeState = undefined        
+        handshakeState = undefined
+        cipherStateSend = undefined
+        cipherStateReceive = undefined     
     }
 
     function findPacketInSendQueue(packet: any) {
@@ -502,20 +516,17 @@ export const useConnStore = defineStore('conn', () => {
             if (noisePattern == 'IK') {
                 hal.prod('handleNoiseHandshakeMsg/action/split/noise handshake successful, logging in')
                 mainStore.isPublicKeyAuthenticated = true
-                mainStore.haveInitialHandshakeCompleted = true
-                requestFeedItems('', 5, function() {})             
+                mainStore.haveInitialHandshakeCompleted = true    
                 login()
             } else if (noisePattern = 'KK') {
                 hal.prod('handleNoiseHandshakeMsg/action/split/noise rehandshake successful')
-                isNoiseReHandshakeCompleted.value = true
-                requestFeedItems('', 5, function() {})
             }
 
             isConnectedToMobile.value = true
             nextTimeToConnectToMobile.value = 0
             noiseReconnectHandshakeRetries.value = 0
-            sendReadyMessagesInQueue()
 
+            requestFeedItems('', 5, function() {})
         }
 
         else {
@@ -617,42 +628,44 @@ export const useConnStore = defineStore('conn', () => {
             needAuth: needAuth,
             callback: callback        
         })
-        sendReadyMessagesInQueue()
-        if (needAuth) {
-            debounceMobileConnectionRetry()
-        }
+        debounceSendMessages()
     }
 
-    async function sendReadyMessagesInQueue() {
-        clearTimeout(sendMessagesTimeoutID)
-        sendMessagesTimeoutID = setTimeout(() => {
-            sendMessagesInQueue()
-        }, 100)
-    }
+    const debounceSendMessages = debounce(async function() {
+        sendMessages()
+    }, 100)
 
-    async function sendMessagesInQueue() {
+    /* deprecated, will delete after new debounced function is tested thoroughly */
+    // async function sendReadyMessagesInQueue_old() {
+    //     clearTimeout(sendMessagesTimeoutID)
+    //     sendMessagesTimeoutID = setTimeout(() => {
+    //         sendMessages()
+    //     }, 100)
+    // }
+
+    async function sendMessages() {
         if (!isConnectedToServer.value) { return }
 
         if (isSendingMessages) {
-            hal.log('connStore/sendMessagesInQueue/still sending messages, skip run')
+            hal.log('connStore/sendMessages/still sending messages, skip run')
             return
         }
 
         isSendingMessages = true
 
-        hal.log('connStore/sendMessagesInQueue/num messages: ' + mainStore.messageQueue.length)
+        hal.log('connStore/sendMessages/num messages: ' + mainStore.messageQueue.length)
         for (let i = 0; i < mainStore.messageQueue.length; i++) {
             const message = mainStore.messageQueue[i]
             const packet = message.packet
 
             // certain packets like addKey do not need authentication
             if (!isConnectedToMobile.value && !mainStore.isPublicKeyAuthenticated && message.needAuth) {
-                hal.log('connStore/sendMessagesInQueue/' + i.toString() + '/not authenticated, skip: ' + packet.iq?.id)
+                hal.log('connStore/sendMessages/' + i.toString() + '/not authenticated, skip: ' + packet.iq?.id)
                 continue
             }
 
             if (packet.iq) {
-                hal.log('connStore/sendMessagesInQueue/' + i.toString() + '/send: ' + JSON.stringify(packet))
+                hal.log('connStore/sendMessages/' + i.toString() + '/send: ' + JSON.stringify(packet))
             }
 
             const encodedPacketBuf = server.Packet.encode(packet).finish()
@@ -668,16 +681,17 @@ export const useConnStore = defineStore('conn', () => {
         /* waits 1 second before checking if the message queue is empty or not, if not, retry sending messages */
         setTimeout(() => {
             if (mainStore.messageQueue.length > 0) { 
-                hal.log('connStore/sendMessagesInQueue/still have messages in queue, retry num: ' + sendMessagesRetryNum)
+                hal.log('connStore/sendMessages/still have messages in queue, retry num: ' + sendMessagesRetryNum)
 
                 if (sendMessagesRetryNum < 10) {
                     sendMessagesRetryNum++
                 }
                 setTimeout(() => {
-                    sendMessagesInQueue()
+                    sendMessages()
                 }, sendMessagesRetryNum * 3000)
             } else {
                 sendMessagesRetryNum = 0
+                debounceMobilePing()
             }
         }, 1000)
     }
@@ -698,6 +712,14 @@ export const useConnStore = defineStore('conn', () => {
         const packet = uploadMedia(size, isResumable)
         enqueue(packet, true, callback)
     }
+
+    /* using this as a ping to check if mobile is reachable or not */
+    const debounceMobilePing = debounce(function() {
+        requestFeedItems('', 1, function() {
+            if (!isConnectedToMobile) { return }
+            debounceMobilePing()
+        })
+    }, 20000)
 
     async function requestFeedItems(cursor: string, limit: number, callback?: Function) {
         console.log('connStore/requestFeedItems/cursor: ' + cursor)
@@ -763,12 +785,14 @@ export const useConnStore = defineStore('conn', () => {
 
         sendMessagesRetryNum = 0
     
-        handshakeState = undefined
-        cipherStateSend = undefined
-        cipherStateReceive = undefined
-        isNoiseReHandshakeCompleted.value = false
+        resetHandshake()
 
-        clearTimeout(webSocketCloseTimeoutID)
+        // clearTimeout(webSocketCloseTimeoutID)
+        debounceConnectToServer.cancel()
+        debounceCloseWebSocket.cancel()
+        debounceCloseAndConnectToMobile.cancel()
+        debounceSendMessages.cancel()
+        debounceMobilePing.cancel()
 
         /* wait to disconnect fully first as the login screen will connect right away */
         if (isConnectedToServer.value) {
@@ -788,7 +812,6 @@ export const useConnStore = defineStore('conn', () => {
         connectToMobile,
         nextTimeToConnectToMobile,
 
-        isNoiseReHandshakeCompleted,
         noiseReconnectHandshakeRetries,
         fetchAbortController,
 
@@ -798,7 +821,7 @@ export const useConnStore = defineStore('conn', () => {
         version,
         isDebug,
 
-        connectToServerIfNeeded, 
+        debounceConnectToServer, 
         disconnectFromServer, 
         generatePublicKeyIfNeeded,
         clearPublicKey, 
