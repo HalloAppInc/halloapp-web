@@ -371,7 +371,8 @@
                     alt="Post Image">
 
 
-                <div v-if='item.mediaType == MediaType.Video' class='playIconContainer'>
+                <div v-if='item.mediaType == MediaType.Video' class='playIconContainer'
+                    @click="$emit('openMedia', listData, index, props.contentID)">
                     <div class="playCircle">
                         <div class="playIcon">
                             <font-awesome-icon :icon="['fas', 'play']" size='2xs' />

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { computed, Ref, ref, onUnmounted } from 'vue'
+    import { computed, Ref, ref, onUnmounted, initCustomFormatter } from 'vue'
     import { liveQuery } from 'dexie'
     import { storeToRefs } from 'pinia'
 
@@ -11,14 +11,14 @@
     import hal from '@/common/halogger'
 
     import { useHAFeed } from '@/composables/haFeed'
+    import { useHAComment } from '@/composables/haComment'
     import { useHAText } from '@/composables/haText'
 
     import { useHAMediaResize } from '@/composables/haMediaResize'
 
-    
     const mainStore = useMainStore()
     const colorStore = useColorStore()
-    const { getComment } = useHAFeed()
+    const { getComment, requestAllComments } = useHAComment()
     const { processText } = useHAText()
 
     const { setQuoteMediaSize } = useHAMediaResize()
@@ -32,8 +32,18 @@
     let msgObservable: any
     let commentSubscription: any
 
-    // todo: only setup observer if the message is not in the database
-    setupMessageObserver()
+    init()
+        
+    async function init() {
+        const dbComment = await getComment(props.subjectID, props.contentID)
+
+        if (dbComment) {
+            quotedMessage.value = dbComment
+        } else {
+            requestAllComments(props.subjectID, 50, function () {})
+            setupMessageObserver()
+        }
+    }
 
     async function setupMessageObserver() {
         if (props.type == SubjectType.Comment) {
@@ -57,7 +67,6 @@
             })
         }
     }
-
 
     let mediaObservable: any
     let mediaSubscription: any
@@ -123,13 +132,12 @@
     <!-- Quote -->
     <div class='quoteContainer'>
 
-
-        <div class='attachMediaContainer' v-if='quotedMedia.previewImageBlobUrl'>
+        <div v-if='quotedMedia.previewImageBlobUrl' class='attachMediaContainer'>
             <img class='imgSmall' :src='quotedMedia.previewImageBlobUrl' :height='quotedMedia.height' :width='quotedMedia.width'/>
 
             <div v-if='quotedMedia.mediaType == MediaType.Video' class='playIconContainer'>
-                <div class="playCircle">
-                    <div class="playIcon">
+                <div class='playCircle'>
+                    <div class='playIcon'>
                         <font-awesome-icon :icon="['fas', 'play']" size='2xs' />
                     </div>
                 </div>
@@ -157,19 +165,17 @@
                     <div>{{ quotedMessage.value }}</div>
                     <span v-html='processText(quotedMessage.text, quotedMessage.mentions, true).html' class='noOverFlow'></span>
                 </div>
-                <div v-else-if='quotedMedia' class='iconContainer' >
+                <div v-else-if='quotedMedia.value' class='iconContainer' >
                     <font-awesome-icon v-if="quotedMedia.mediaType == MediaType.Image" :icon="['fas', 'camera']" size='sm' />
                     <font-awesome-icon v-else-if="quotedMedia.mediaType == MediaType.Video" :icon="['fas', 'video']" size='sm' />
                 </div>    
                 <div v-else-if='quotedMessage.voiceNote' class='iconContainer' >
-                    <font-awesome-icon :icon="['fas', 'microphone']" size='sm' />
+                    <font-awesome-icon :icon="['fas', 'microphone']" size='sm' /> <span>Audio note</span>
                 </div>                    
             </div>
 
         </div>
-        
-
-
+    
     </div>
 
 </template>
@@ -179,17 +185,11 @@
         height: fit-content;
         background-color: rgb(0, 0, 0, 0.05);
         border-radius: 5px;
+        padding-bottom: 5px;
 
         display: flex;
         flex-direction: row;
         justify-content: flex-end;
-    }
-
-    .quoteMessageContainer {
-        height: 60px;
-        width: calc(100% - 80px);
-        overflow: hidden;
-        flex-grow: 100;
     }
 
     .attachMediaContainer {
@@ -199,6 +199,17 @@
         background-color: #FFFFFF;
     }
 
+    .quoteMessageContainer {
+        height: 60px;
+        width: calc(100% - 80px);
+        overflow: hidden;
+        flex-grow: 100;
+
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+    }
+    
     .imgSmall {
         width: 100%;
         height: 100%;
@@ -209,8 +220,8 @@
     .contentHeader {
         margin: 10px 15px 5px 10px;
         width: fit-content;
-        display: flex;
 
+        display: flex;
         justify-content: flex-start;
     }
 
@@ -227,15 +238,15 @@
     }
 
     .contentBody {
-        margin: 5px 10px 20px 5px;
-        max-width: 60%;
-
+        margin: 0px 10px 20px 5px;
+        
         color: v-bind(textColor);
         font-size: small;
 
         display: flex;
-        flex-wrap: wrap;
         flex-direction: row;
+        flex-wrap: wrap;
+        
     }
 
     .iconContainer {

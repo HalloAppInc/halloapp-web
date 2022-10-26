@@ -10,8 +10,11 @@ export function useHALog() {
 
     const haConsoleLog = function(...arg: any[]) {
         // clean up
-        if (mainStore.savedLogs.length > 500) {
-            for (let i = 0; i <= 500; i++) {
+        // SavedLogs are sent via email in an url, so we should try not to exceed what email clients
+        // are willing to accept and what browsers will allow (ie. Chrome can accept up to 2 million chars
+        // and Apple Email accepts up to 500k chars)
+        if (mainStore.savedLogs.length > 5000) {
+            for (let i = 0; i <= 2000; i++) {
                 mainStore.savedLogs.pop()
             }
         }

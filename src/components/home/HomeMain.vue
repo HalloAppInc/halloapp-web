@@ -2,7 +2,7 @@
     import { Ref, ref, computed } from 'vue'
     import { useI18n } from 'vue-i18n'
   
-    import { db, Feed } from '@/db'
+    import { db } from '@/db'
     
     import { useMainStore } from '@/stores/mainStore'
     import { useConnStore } from '@/stores/connStore'

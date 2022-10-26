@@ -36,3 +36,9 @@ Note: Need version 7.x of protobufjs and uses protobufjs-cli
 Repeat (steps 1 to 4) for each proto file that's needed
 
 Note2: During web.js generation there's a bug where protobufjs redeclared end2 in the same block, modify web.js and change end2 to end3 to continue
+
+## Coding style guide
+
+1. 4 spaces for indents (tabs are 4 spaces)
+2. single quotes over double quotes (in VSCode preferences -> settings, search for double quotes to change them to single quotes, especially for HTML class and id autofills)
+3. camelcase naming

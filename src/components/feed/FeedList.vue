@@ -9,6 +9,8 @@
     import { useConnStore } from '@/stores/connStore'
     import { useColorStore } from '@/stores/colorStore'
 
+    import { useHAComment } from '@/composables/haComment'
+
     import hal from '@/common/halogger'
 
     import PostComponent from '@/components/feed/Post.vue'
@@ -17,6 +19,8 @@
     const mainStore = useMainStore()
     const connStore = useConnStore()
     const colorStore = useColorStore()
+
+    const { requestCommentsIfNeeded } = useHAComment()
 
     const listBoxWidth = ref('100%')
     const showComments = ref(false)
@@ -140,7 +144,7 @@
             if (inViewPostID.value == postID) {
                 toggleCommentsPanel(postID)
             } else {
-                getComments(postID)
+                loadComments(postID)
                 inViewPostID.value = postID
             }
 
@@ -148,7 +152,7 @@
         
         /* comments panel closed */
         else {
-            getComments(postID)
+            loadComments(postID)
             toggleCommentsPanel(postID)
         }
     }
@@ -158,15 +162,11 @@
     }
 
 
-    async function getComments(postID: string) {
+    async function loadComments(postID: string) {
      
         const numComments = await db.comment.where('postID').equals(postID).count()
         if (numComments < 30) {
-            let commentCursor = ''
-            if (mainStore.commentCursors[postID]) {
-                commentCursor = mainStore.commentCursors[postID]
-            }      
-            connStore.requestComments(postID, commentCursor, 20, function() {})
+            requestCommentsIfNeeded(postID, 20, function() {})
         }
              
     }

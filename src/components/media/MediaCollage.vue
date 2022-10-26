@@ -3,7 +3,7 @@
     import { storeToRefs } from 'pinia'
     import { liveQuery } from 'dexie'
 
-    import { db, Feed, CommonMedia, SubjectType, MediaType } from '@/db'
+    import { db, CommonMedia, SubjectType, MediaType } from '@/db'
 
     import { useColorStore } from '@/stores/colorStore'
 

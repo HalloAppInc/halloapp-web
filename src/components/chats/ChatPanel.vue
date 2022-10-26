@@ -313,14 +313,20 @@
         let splitter = new GraphemeSplitter()
         const graphemes = splitter.splitGraphemes(msg)
 
+        console.log('--> ' + msg)
         if (graphemes.length <= 3) {
 
             lessThanThreeEmoji = true // assume true to begin
     
             const emojiRegx = /(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])/i
 
+            // const emojiRegx = /<a?:.+?:\d{18}>|\p{Extended_Pictographic}/gu
+
             for (let i = 0; i < graphemes.length; i++) {
                 if (!emojiRegx.test(graphemes[i])) {
+
+                    console.log('--> ' + graphemes[i])
+
                     lessThanThreeEmoji = false
                     break
                 }

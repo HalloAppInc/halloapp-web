@@ -219,8 +219,6 @@
                                 <img class="imgSmall" :width='value.previewWidth' :height='value.previewHeight' 
                                     :src='value.previewImageBlobUrl' 
                                     draggable="false"/>
-
-
                             </div>
 
 

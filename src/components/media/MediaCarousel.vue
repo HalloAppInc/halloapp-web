@@ -449,13 +449,14 @@
                         :src="item.previewImageUrl" :width="item.width" :height="item.height" 
                         :style="'margin-left: ' + item.margin + 'px; margin-right: ' + item.margin + 'px;'"
                         @click="$emit('openMedia', listData, index, props.contentID)"
-                        alt="Video Preview Image">
+                        alt='Video Preview Image'>
 
 
-                    <div v-if='item.mediaType == MediaType.Video' class='playIconContainer'>
-                        <div class="playCircle">
-                            <div class="playIcon">
-                                <font-awesome-icon :icon="['fas', 'play']" size='xl' />
+                    <div v-if="item.mediaType == MediaType.Video" class='playIconContainer'
+                        @click="$emit('openMedia', listData, index, props.contentID)">
+                        <div class='playCircle'>
+                            <div class='playIcon'>
+                                <font-awesome-icon :icon="['fas', 'play']" size='xl'/>
                             </div>
                         </div>
                     </div>

@@ -4,7 +4,6 @@ import { defineStore } from 'pinia'
 import { Base64 } from 'js-base64'
 
 import { useMainStore } from '@/stores/mainStore'
-import { db } from '@/db'
 
 import { server } from '@/proto/server.js'
 import { web } from '@/proto/web.js'
@@ -22,11 +21,12 @@ export const useConnStore = defineStore('conn', () => {
     let { 
         createPingPacket, addKey, removeKey, check, createNoiseMessage, createWebStanzaPacket, 
         encodeFeedRequestWebContainer, encodeGroupFeedRequestWebContainer, encodeCommentsRequestWebContainer,
+        encodeGroupRequestWebContainer,
         uploadMedia 
     } = network()
 
     const { debounce } = useHAUtils()
-    const { processWebContainer } = useHAFeed()
+    const { processFeedResponse, processFeedUpdate } = useHAFeed()
 
     const isConnectedToServer = ref(false)
     const isConnectedToMobile = ref(false)
@@ -40,7 +40,7 @@ export const useConnStore = defineStore('conn', () => {
      // so we keep track of the user's first click
     const isUserFirstClickCompleted = ref(false)
 
-    const version = '36'
+    const version = '37'
     const devMode = false
     const isDebug = false
 
@@ -70,31 +70,11 @@ export const useConnStore = defineStore('conn', () => {
         webSocket.close()
     }, 60000)
 
-    /* deprecated */
-    // function debounceWebSocketClose_old() {
-    //     clearTimeout(webSocketCloseTimeoutID)
-    //     webSocketCloseTimeoutID = setTimeout(function() {
-    //         hal.log('connStore/debounceWebSocketClose/closing webSocket')
-    //         webSocket.close()
-    //     }, 60000)
-    // }
-
     const debounceCloseAndConnectToMobile = debounce(function() {
         hal.log('connStore/debounceMobileConnectionRetry/no responses for 30 seconds')
         isConnectedToMobile.value = false
         connectToMobile()
     }, 30000)
-
-    // retry mobile connection if there are no responses for 30 seconds
-    // function debounceMobileConnectionRetry_old() {
-    //     hal.log('connStore/debounceMobileConnectionRetry')
-    //     clearTimeout(mobileConnectionTimeoutID)
-    //     mobileConnectionTimeoutID = setTimeout(function() {
-    //         hal.log('connStore/debounceMobileConnectionRetry/no responses for 30 seconds')
-    //         isConnectedToMobile.value = false
-    //         connectToMobile()
-    //     }, 30000)
-    // }
 
     const debounceConnectToServer = debounce(async function() {
         if (isConnectedToServer.value) {
@@ -103,21 +83,6 @@ export const useConnStore = defineStore('conn', () => {
         }        
         connectToServer()
     }, 100)
-
-    /* deprecated */
-    // async function connectToServerIfNeeded_old() {
-    //     // hal.log('connStore/connectToServerIfNeeded')
-
-    //     if (isConnectedToServer.value) {
-    //         hal.log('connStore/connectToServerIfNeeded/already connected: ' + isConnectedToServer.value)
-    //         return
-    //     }
-
-    //     clearTimeout(connectionTimeoutID)
-    //     connectionTimeoutID = setTimeout(() => {
-    //         connectToServer()
-    //     }, 100)
-    // }
 
     async function wsOpen(event: any) {
         hal.log('connStore/wsOpen')
@@ -385,6 +350,24 @@ export const useConnStore = defineStore('conn', () => {
         
     }
 
+    async function processWebContainer(webContainer: any) {
+        const feedResponse = webContainer?.feedResponse
+        const feedUpdate = webContainer?.feedUpdate
+        const groupResponse = webContainer?.groupResponse
+        const privacyListResponse = webContainer?.privacyListResponse
+
+        if (feedResponse) { 
+            processFeedResponse(feedResponse)
+        } else if (feedUpdate) {
+            processFeedUpdate(feedUpdate)
+        } else if (groupResponse) {
+            // todo
+        } else if (privacyListResponse) {
+            // todo
+        }  
+    
+    }
+
     function resetHandshake() {
         console.log('resethandshake')
         for (let prop in handshakeState) {
@@ -620,7 +603,7 @@ export const useConnStore = defineStore('conn', () => {
         return webContainer
     }    
 
-    async function enqueue(packet: any, needAuth?: boolean, callback?: any) {
+    async function enqueueMessage(packet: any, needAuth?: boolean, callback?: any) {
         mainStore.messageQueue.push({ 
             iqID: packet.iq?.id, 
             msgID: packet.msg?.id,
@@ -696,6 +679,16 @@ export const useConnStore = defineStore('conn', () => {
         }, 1000)
     }
 
+    function encryptWebContainer(webContainerBinArr: any) {
+        if (!cipherStateSend) {
+            hal.log('connStore/encryptWebContainer/exit/undefined cipherStateSend')
+            return
+        }
+
+        const encryptedWebContainer = cipherStateSend.EncryptWithAd([], webContainerBinArr)
+        return encryptedWebContainer
+    }
+
     async function clearMessagesInQueue() {
         // hal.log('connStore/clearMessagesInQueue')
         mainStore.messageQueue.splice(0, mainStore.messageQueue.length)
@@ -704,13 +697,13 @@ export const useConnStore = defineStore('conn', () => {
     async function addKeyToServer(callback?: Function) {
         hal.log('connStore/addKeyToServer')
         const packet = addKey()
-        enqueue(packet, false, callback)
+        enqueueMessage(packet, false, callback)
     }
 
     async function getMediaUrl(size: number, isResumable: boolean, callback?: Function) {
         hal.log('connStore/getMediaUrl')
         const packet = uploadMedia(size, isResumable)
-        enqueue(packet, true, callback)
+        enqueueMessage(packet, true, callback)
     }
 
     /* using this as a ping to check if mobile is reachable or not */
@@ -734,7 +727,7 @@ export const useConnStore = defineStore('conn', () => {
 
         const packet = createWebStanzaPacket(encryptedWebContainer)
         
-        enqueue(packet, true, callback)            
+        enqueueMessage(packet, true, callback)            
     }
 
     async function requestGroupFeedItems(groupID: string, cursor: string, limit: number, callback?: Function) {
@@ -751,24 +744,7 @@ export const useConnStore = defineStore('conn', () => {
 
         const packet = createWebStanzaPacket(encryptedWebContainer)
         
-        enqueue(packet, true, callback)            
-    }
-
-    async function requestComments(postID: string, cursor: string, limit: number, callback?: Function) {
-        if (!isConnectedToMobile.value) { return }
-        console.log('connStore/requestComments/post: ' + postID + ', cursor: ' + cursor)
-        
-        if (!cipherStateSend) {
-            hal.log('connStore/requestComments/exit/undefined cipherStateSend')
-            return
-        }
-
-        const webContainerBinArr = encodeCommentsRequestWebContainer(postID, cursor, limit)        
-        const encryptedWebContainer = cipherStateSend.EncryptWithAd([], webContainerBinArr)
-
-        const packet = createWebStanzaPacket(encryptedWebContainer)
-        
-        enqueue(packet, true, callback)            
+        enqueueMessage(packet, true, callback)            
     }
 
     function login() {
@@ -830,12 +806,14 @@ export const useConnStore = defineStore('conn', () => {
         addKeyToServer,
 
         clearMessagesInQueue,
+        enqueueMessage,
 
         requestFeedItems,
         requestGroupFeedItems,
-        requestComments,
 
         getMediaUrl,
+
+        encryptWebContainer,
 
         login,
         logout

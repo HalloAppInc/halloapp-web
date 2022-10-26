@@ -1,16 +1,18 @@
-import { ref, watch } from 'vue'
-import { server } from '../proto/server.js'
-import { web } from '../proto/web.js'
+import { ref } from 'vue'
 import { nanoid } from 'nanoid'
 import { Base64 } from 'js-base64'
 
-import hal from './halogger'
+import { useMainStore } from '@/stores/mainStore'
 
-import { useMainStore } from '../stores/mainStore'
+import { server } from '@/proto/server.js'
+import { web } from '@/proto/web.js'
+
+import { useHALog } from '@/composables/haLog'
 
 export function network() {
 
     const mainStore = useMainStore()
+    const { hal } = useHALog()
 
     const createPingPacket = () => {
         const id = nanoid()
@@ -108,13 +110,15 @@ export function network() {
             feedRequest: feedRequest
         })
 
-        hal.log('network/encodeFeedRequestWebContainer:\n' + JSON.stringify(webContainer) + '\n\n')
+        // hal.log('network/encodeFeedRequestWebContainer:\n' + JSON.stringify(webContainer) + '\n\n')
 
-        const webContainerProto = web.WebContainer.encode(webContainer).finish()
-        const webContainerBuf = webContainerProto.buffer.slice(webContainerProto.byteOffset, webContainerProto.byteLength + webContainerProto.byteOffset)
-        const webContainerBinArr = new Uint8Array(webContainerBuf)
+        // const webContainerProto = web.WebContainer.encode(webContainer).finish()
+        // const webContainerBuf = webContainerProto.buffer.slice(webContainerProto.byteOffset, webContainerProto.byteLength + webContainerProto.byteOffset)
+        // const webContainerBinArr = new Uint8Array(webContainerBuf)
 
-        return webContainerBinArr
+        // return webContainerBinArr
+
+        return encodeWebContainer(webContainer)
     }
 
     const encodeGroupFeedRequestWebContainer = (groupID: string, cursor: string, limit: number) => {
@@ -132,15 +136,16 @@ export function network() {
             feedRequest: feedRequest
         })
 
-        hal.log('network/encodeGroupFeedRequestWebContainer:\n' + JSON.stringify(webContainer) + '\n\n')
+        // hal.log('network/encodeGroupFeedRequestWebContainer:\n' + JSON.stringify(webContainer) + '\n\n')
 
-        const webContainerProto = web.WebContainer.encode(webContainer).finish()
-        const webContainerBuf = webContainerProto.buffer.slice(webContainerProto.byteOffset, webContainerProto.byteLength + webContainerProto.byteOffset)
-        const webContainerBinArr = new Uint8Array(webContainerBuf)
+        // const webContainerProto = web.WebContainer.encode(webContainer).finish()
+        // const webContainerBuf = webContainerProto.buffer.slice(webContainerProto.byteOffset, webContainerProto.byteLength + webContainerProto.byteOffset)
+        // const webContainerBinArr = new Uint8Array(webContainerBuf)
 
-        return webContainerBinArr
+        // return webContainerBinArr
+
+        return encodeWebContainer(webContainer)
     }
-
 
     const encodeCommentsRequestWebContainer = (postID: string, cursor: string, limit: number) => {
         const id = nanoid()
@@ -157,8 +162,47 @@ export function network() {
             feedRequest: feedRequest
         })
 
-        hal.log('network/encodeCommentsRequestWebContainer:\n' + JSON.stringify(webContainer) + '\n\n')
+        // hal.log('network/encodeCommentsRequestWebContainer:\n' + JSON.stringify(webContainer) + '\n\n')
 
+        // const webContainerProto = web.WebContainer.encode(webContainer).finish()
+        // const webContainerBuf = webContainerProto.buffer.slice(webContainerProto.byteOffset, webContainerProto.byteLength + webContainerProto.byteOffset)
+        // const webContainerBinArr = new Uint8Array(webContainerBuf)
+
+        // return webContainerBinArr
+
+        return encodeWebContainer(webContainer)
+    }
+
+    const encodeGroupRequestWebContainer = () => {
+        const id = nanoid()
+
+        const groupRequest = web.GroupRequest.create({
+            id: id
+        })
+
+        const webContainer = web.WebContainer.create({
+            groupRequest: groupRequest
+        })
+
+        return encodeWebContainer(webContainer)
+    }
+
+    const encodePrivacyListRequestWebContainer = () => {
+        const id = nanoid()
+
+        const privacyListRequest = web.PrivacyListRequest.create({
+            id: id
+        })
+
+        const webContainer = web.WebContainer.create({
+            privacyListRequest: privacyListRequest
+        })
+
+        return encodeWebContainer(webContainer)
+    }    
+
+    function encodeWebContainer(webContainer: web.WebContainer) {
+        hal.log('network/encodeWebContainer:\n' + JSON.stringify(webContainer) + '\n\n')
         const webContainerProto = web.WebContainer.encode(webContainer).finish()
         const webContainerBuf = webContainerProto.buffer.slice(webContainerProto.byteOffset, webContainerProto.byteLength + webContainerProto.byteOffset)
         const webContainerBinArr = new Uint8Array(webContainerBuf)
@@ -241,6 +285,8 @@ export function network() {
         encodeFeedRequestWebContainer,
         encodeGroupFeedRequestWebContainer,
         encodeCommentsRequestWebContainer,
+        encodeGroupRequestWebContainer,
+        encodePrivacyListRequestWebContainer,
         uploadMedia 
     }
 }

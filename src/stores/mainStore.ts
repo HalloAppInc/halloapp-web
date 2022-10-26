@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
 
-import hal from '@/common/halogger'
-import { db } from '@/db'
 import { useConnStore } from '@/stores/connStore'
+import { db } from '@/db'
+import hal from '@/common/halogger'
 
 export const useMainStore = defineStore('main', {
     persist: {

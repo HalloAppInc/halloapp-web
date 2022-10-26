@@ -14,9 +14,10 @@
 
     import { web } from "@/proto/web.js"
 
-    import { useHACrypto } from '@/composables/haCrypto'
+    import { useHAComment } from '@/composables/haComment'
     import { useHACommonMedia } from '@/composables/haCommonMedia'
     import { useHAText } from '@/composables/haText'
+    import { useHACrypto } from '@/composables/haCrypto'
     import { useTimeformatter } from '@/composables/timeformatter'
 
     import hal from "@/common/halogger"
@@ -40,13 +41,15 @@
     const connStore = useConnStore()
     const colorStore = useColorStore()
     
+    const { requestCommentsIfNeeded } = useHAComment()
+
+    const { processText } = useHAText()
+    const { formatTime } = useTimeformatter()
+
     const { getDerivedKey, 
             decryptChunk, decryptBinArr, verifyHMAC,
             isUint8ArrayEqual, combineBinaryArrays 
     } = useHACrypto()
-    
-    const { processText } = useHAText()
-    const { formatTime } = useTimeformatter()
 
     const { primaryBlue: primaryBlueColor,
             primaryLightgray: primaryLightgrayColor,
@@ -471,11 +474,7 @@
          * so that the comment screen have less flicker
          */
         if (!isDeleted.value) {
-            let commentCursor = ''
-            if (mainStore.commentCursors[postID]) {
-                commentCursor = mainStore.commentCursors[postID]
-            }
-            connStore.requestComments(postID, commentCursor, 20, function() {})            
+            requestCommentsIfNeeded(postID, 20, function() {})            
         }
     }
 

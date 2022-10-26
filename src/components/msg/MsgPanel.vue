@@ -16,6 +16,7 @@
 
     import hal from '@/common/halogger'
 
+    import { useHAComment } from '@/composables/haComment'
     import { useTimeformatter } from '@/composables/timeformatter'
     import { useHAMediaResize } from '@/composables/haMediaResize'
     import { useHADatabase } from '@/composables/haDb'
@@ -36,6 +37,8 @@
     const mainStore = useMainStore()
     const connStore = useConnStore()
     const colorStore = useColorStore()
+
+    const { requestCommentsIfNeeded } = useHAComment()
 
     const count = ref(50)
 
@@ -440,16 +443,12 @@
         if (element.scrollTop < 100) {
             
             if (props.type == SubjectType.Comment) {
-                let commentCursor = ''
                 const postID = props.subjectID
-                if (mainStore.commentCursors[postID]) {
-                    commentCursor = mainStore.commentCursors[postID]
-                }
 
                 // debounce request separately since scrolling is debounced at 15 and that's too frequent for requests
                 clearTimeout(requestTimer)
                 requestTimer = setTimeout(() => {
-                    connStore.requestComments(postID, commentCursor, 30, function() {})
+                    requestCommentsIfNeeded(postID, 30, function() {})
                 }, 1000)               
                 
             }
@@ -959,7 +958,7 @@
     }
 
     .chatReplyContainer {
-        margin-bottom: 5px;
+        margin-bottom: 10px;
     }
 
     .chatReplyContainer:hover {

@@ -10,7 +10,7 @@
 
     import hal from '@/common/halogger'
 
-    import { useHAFeed } from '@/composables/haFeed'
+    import { useHAComment } from '@/composables/haComment'
     import { useHAText } from '@/composables/haText'
 
     import { useHAMediaResize } from '@/composables/haMediaResize'
@@ -19,7 +19,7 @@
     const mainStore = useMainStore()
     const colorStore = useColorStore()
 
-    const { getComment } = useHAFeed()
+    const { getComment } = useHAComment()
     const { processText } = useHAText()
 
     const { 

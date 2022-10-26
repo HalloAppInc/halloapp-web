@@ -9,8 +9,6 @@
     import { useMainStore } from '@/stores/mainStore'
     import { useColorStore } from '@/stores/colorStore'
 
-    import { LinkPreview } from '@/db'
-
     const props = defineProps({
         post: {
             type: Object,

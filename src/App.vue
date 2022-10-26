@@ -546,7 +546,7 @@
 
     .noServerConnectionBanner {
         position: absolute;
-        top: 20px;
+        top: 50px;
         right: 30px;
         z-index: 10;
         padding: 10px 15px 10px 15px;
@@ -560,7 +560,7 @@
 
     .noMobileConnectionBanner {
         position: absolute;
-        top: 20px;
+        top: 50px;
         right: 30px;
         z-index: 10;
         padding: 10px 15px 10px 15px;

@@ -6,7 +6,7 @@
     import { useMainStore } from '@/stores/mainStore'
     import { useColorStore } from '@/stores/colorStore'
 
-    import { db, Feed } from '@/db'
+    import { db } from '@/db'
 
     import GroupFeedHeader from '@/components/groups/GroupFeedHeader.vue'
     import FeedList from '@/components/feed/FeedList.vue'

@@ -10,34 +10,22 @@ import {    db,
 import { clients } from '@/proto/clients.js'
 import { web } from '@/proto/web.js'
 
+import { useHAComment } from '@/composables/haComment'
 import { useHAAvatar } from '@/composables/haAvatar'
 import { useHAText } from '@/composables/haText'
 import { useHACommonMedia } from '@/composables/haCommonMedia'
-
-import hal from '@/common/halogger'
-import { type } from 'os'
+import { useHALog } from '@/composables/haLog'
 
 export function useHAFeed() {
 
     const mainStore = useMainStore()
     const connStore = useConnStore()
     
+    const { requestCommentsIfNeeded, requestComments } = useHAComment()
     const { getAvatar, fetchGroupAvatar } = useHAAvatar()
     const { processText } = useHAText()
     const { insertCommonMedia } = useHACommonMedia()
-
-
-    async function processWebContainer(webContainer: any) {
-        const feedResponse = webContainer?.feedResponse
-        const feedUpdate = webContainer?.feedUpdate
-
-        if (feedResponse) { 
-            processFeedResponse(feedResponse)
-        } else if (feedUpdate) {
-            processFeedUpdate(feedUpdate)
-        }
-    
-    }
+    const { hal } = useHALog()
 
     async function processFeedResponse(feedResponse: any) {
         // hal.log('haFeed/processFeedResponse: ' + JSON.stringify(feedResponse))
@@ -74,7 +62,7 @@ export function useHAFeed() {
                 special case to not process posts as this is usually our first request upon browser refresh
                 to pre-emptively (for better UX) see if there are new posts, of which usually there isn't 
             */
-            if (firstItemPost.id == mainStore.mainFeedHeadPostID && [3, 5].includes(items.length)) {
+            if (firstItemPost.id == mainStore.mainFeedHeadPostID && [1, 3, 5].includes(items.length)) {
                 return
             }
     
@@ -98,6 +86,7 @@ export function useHAFeed() {
          * and record only after everything succeeds 
          */
         if (feedResponse.type == web.FeedType.HOME) {
+            // console.log("--> main feed: " + JSON.stringify(feedResponse, null, 2))
 
             /* record most recent main feed post */
             if (firstItemPost.timestamp >= mainStore.mainFeedHeadPostTimestamp) {
@@ -147,15 +136,57 @@ export function useHAFeed() {
         }
 
         if (feedResponse.type == web.FeedType.POST_COMMENTS) {
-            const lastItemComment = items[items.length - 1].comment
-            if (lastItemComment.postId) {
+            // console.log("--> " + JSON.stringify(feedResponse, null, 2))
 
-                // todo: check for timestamp also?
-                if (feedResponse.nextCursor) {
-                    mainStore.commentCursors[lastItemComment.postId] = feedResponse.nextCursor
+            const lastItemComment = items[items.length - 1].comment
+            if (!lastItemComment.postId) { return }
+
+            if (!mainStore.commentCursors[lastItemComment.postId]) {
+                mainStore.commentCursors[lastItemComment.postId] = {
+                    cursor: '',
+                    tailItemID: lastItemComment.commentId, // oldest known item
+                    tailItemTimestamp: lastItemComment.timestamp,
+                    isRequestingAllItems: false,
+                    isAllItemsComplete: false
+                }
+            }
+
+            const savedCommentCursor = mainStore.commentCursors[lastItemComment.postId]
+
+            if (feedResponse.nextCursor) {
+                
+                // There can be different items with the same timestamp
+                if (lastItemComment.timestamp <= savedCommentCursor.tailItemTimestamp) {
+
+                    if (lastItemComment.commentID != savedCommentCursor.tailItemID) {
+                        savedCommentCursor.cursor = feedResponse.nextCursor
+                        savedCommentCursor.tailItemID = lastItemComment.commentID
+                        savedCommentCursor.tailItemTimestamp = lastItemComment.timestamp
+
+                        if (savedCommentCursor.isRequestingAllItems && !savedCommentCursor.isAllItemsComplete) {
+                            setTimeout(function() {
+                                requestCommentsIfNeeded(lastItemComment.postId, 50, function() {})
+                            }, 1000)
+                            
+                        }
+
+                    }
                 }
 
+            } else {
+                mainStore.commentCursors[lastItemComment.postId].isAllItemsComplete = true
             }
+
+            // scenario where items are completed but there are more new items
+            if (savedCommentCursor.isAllItemsComplete) {
+                const dbComment = await db.comment.where('commentID').equals(lastItemComment.id).first()
+                if (dbComment) { return }
+                setTimeout(function() {
+                    requestComments(lastItemComment.postId, lastItemComment.id, 50, function() {})
+                }, 1000)
+                
+            }
+
         }
 
     }
@@ -849,27 +880,15 @@ export function useHAFeed() {
         return commentContainer
     }
 
-    async function getComments(postID: string) {
-        const arr = await db.comment.where('postID').equals(postID).toArray()
-        if (!arr || arr.length == 0) {
-            return undefined
-        }
-        return arr
-    }
-
-    async function getComment(postID: string, commentID: string) {
-        const commentArr = await db.comment.where('commentID').equals(commentID).and((item) => {
-            return item.postID == postID
-        }).toArray()
-        if (!commentArr || commentArr.length == 0) {
-            return undefined
-        }
-        return commentArr[0]
-    }
+    // async function getComments(postID: string) {
+    //     const arr = await db.comment.where('postID').equals(postID).toArray()
+    //     if (!arr || arr.length == 0) {
+    //         return undefined
+    //     }
+    //     return arr
+    // }
 
     return { 
-        processWebContainer, 
-        getComment,
-        getComments,
+        processFeedResponse, processFeedUpdate
     }
 }
