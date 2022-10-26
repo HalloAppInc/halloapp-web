@@ -79,7 +79,7 @@ export function useHAFeed() {
             }
         }
 
-        await processUserDisplayInfo(userInfo)
+        await processUserDisplayInfoList(userInfo)
 
         /* 
          * robustness: should make all processing async/awaits and bulk insert into db,
@@ -227,18 +227,18 @@ export function useHAFeed() {
             }
         }
 
-        await processUserDisplayInfo(userInfo)
+        await processUserDisplayInfoList(userInfo)
     }    
 
-    async function processUserDisplayInfo(userInfo: any) {
-        for (let j = 0; j < userInfo.length; j++) {
-            const info = userInfo[j]
+    async function processUserDisplayInfoList(userInfoList: any) {
+        for (let j = 0; j < userInfoList.length; j++) {
+            const info = userInfoList[j]
             if (!info) { continue }
-            processUserDisplayInfoItem(info)
-        }        
+            processUserDisplayInfo(info)
+        }
     }
 
-    async function processUserDisplayInfoItem(userInfo: any) {
+    async function processUserDisplayInfo(userInfo: any) {
         if (!mainStore.pushnames[userInfo.uid] || mainStore.pushnames[userInfo.uid] != userInfo.contactName) {
             mainStore.pushnames[userInfo.uid] = userInfo.contactName
         }
@@ -889,6 +889,7 @@ export function useHAFeed() {
     // }
 
     return { 
-        processFeedResponse, processFeedUpdate
+        processFeedResponse, processFeedUpdate,
+        processUserDisplayInfo
     }
 }

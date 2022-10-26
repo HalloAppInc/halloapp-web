@@ -26,10 +26,11 @@ export const useConnStore = defineStore('conn', () => {
     } = network()
 
     const { debounce } = useHAUtils()
-    const { processFeedResponse, processFeedUpdate } = useHAFeed()
+    const { processFeedResponse, processFeedUpdate, processUserDisplayInfo } = useHAFeed()
 
     const isConnectedToServer = ref(false)
     const isConnectedToMobile = ref(false)
+    const connectedTo = ref('Not Connected')
 
     const nextTimeToConnectToMobile: Ref<number> = ref(0)
 
@@ -40,7 +41,7 @@ export const useConnStore = defineStore('conn', () => {
      // so we keep track of the user's first click
     const isUserFirstClickCompleted = ref(false)
 
-    const version = '37'
+    const version = '38'
     const devMode = false
     const isDebug = false
 
@@ -318,7 +319,7 @@ export const useConnStore = defineStore('conn', () => {
             else {
                 if (mainStore.isPublicKeyAuthenticated && mainStore.haveInitialHandshakeCompleted) {
                     
-                    // temporary to get user's own userID
+                    // temporary to get user's own userID, can remove after Android also sends in connectionInfo
                     if (msg) {
                         if (mainStore.userID == 0) {
                             mainStore.userID = msg.toUid
@@ -440,12 +441,15 @@ export const useConnStore = defineStore('conn', () => {
 
         else if (action == noise.constants.NOISE_ACTION_READ_MESSAGE) { // 16642
             if (!contentBinArr) { return }
-
             // hal.prod('handleNoiseHandshakeMsg/action/read')
 
-            const fallbackSupported = false
             try {
-                handshakeState.ReadMessage(contentBinArr, fallbackSupported)
+                const isPayloadNeeded = true
+                const fallbackSupported = false
+                const payload = handshakeState.ReadMessage(contentBinArr, isPayloadNeeded, fallbackSupported)
+
+                if (payload) { processConnectionPayload(payload) }
+
             } catch (error) {
                 hal.prod('handleNoiseHandshakeMsg/action/read ' + error)
                 if (error == 'Error: NOISE_ERROR_MAC_FAILURE') {
@@ -561,8 +565,36 @@ export const useConnStore = defineStore('conn', () => {
         )
     }
 
-    async function decodeProtobufToPacket(binArray: Uint8Array) {
-        const err = server.Packet.verify(binArray)
+    async function processConnectionPayload(binArr: Uint8Array) {
+        const connectionInfo = await decodeConnectionInfo(binArr)
+        const mobileVersion = connectionInfo.version
+        hal.log("processConnectionPayload/mobileVersion: " + connectionInfo.version)
+        connectedTo.value = mobileVersion
+        const userDisplayInfo = connectionInfo.user
+        if (mainStore.userID == 0) {
+            mainStore.userID = userDisplayInfo.uid
+        }
+        processUserDisplayInfo(userDisplayInfo)
+    }
+
+    async function decodeConnectionInfo(binArr: Uint8Array) {
+        const err = web.ConnectionInfo.verify(binArr)
+        if (err) {
+            console.log('decodeConnectionInfo/verify/error ' + err)
+            throw err
+        }
+
+        let message: any
+        try {
+            message = web.ConnectionInfo.decode(binArr)
+        } catch(error) {
+            console.log('decodeConnectionInfo/decode/error ' + error)
+        }
+        return message
+    }
+
+    async function decodeProtobufToPacket(binArr: Uint8Array) {
+        const err = server.Packet.verify(binArr)
         if (err) {
             console.log('decodeProtobufToPacket/verify/error ' + err)
             throw err
@@ -570,15 +602,15 @@ export const useConnStore = defineStore('conn', () => {
 
         let message: any
         try {
-            message = server.Packet.decode(binArray)
+            message = server.Packet.decode(binArr)
         } catch(error) {
             console.log('decodeProtobufToPacket/decode/error ' + error)
         }
         return message
     }
 
-    async function decodeProtobufToWebContainer(binArray: Uint8Array) {
-        const err = web.WebContainer.verify(binArray)
+    async function decodeProtobufToWebContainer(binArr: Uint8Array) {
+        const err = web.WebContainer.verify(binArr)
         if (err) {
             console.log('decodeProtobufToWebContainer/verify/error ' + err)
             throw err
@@ -586,20 +618,20 @@ export const useConnStore = defineStore('conn', () => {
 
         let message: any
         try {
-            message = web.WebContainer.decode(binArray)
+            message = web.WebContainer.decode(binArr)
         } catch(error) {
             console.log('decodeProtobufToWebContainer/decode/error ' + error)
         }
         return message
     }
 
-    async function decodePacket(binArray: Uint8Array) {
-        const packet = await decodeProtobufToPacket(binArray)
+    async function decodePacket(binArr: Uint8Array) {
+        const packet = await decodeProtobufToPacket(binArr)
         return packet
     }
 
-    async function decodeWebContainer(binArray: Uint8Array) {
-        const webContainer = await decodeProtobufToWebContainer(binArray)
+    async function decodeWebContainer(binArr: Uint8Array) {
+        const webContainer = await decodeProtobufToWebContainer(binArr)
         return webContainer
     }    
 
@@ -784,6 +816,7 @@ export const useConnStore = defineStore('conn', () => {
     return {
         isConnectedToServer,
         isConnectedToMobile,
+        connectedTo,
 
         connectToMobile,
         nextTimeToConnectToMobile,

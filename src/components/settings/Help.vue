@@ -71,7 +71,7 @@
         const email = 'tony@halloapp.com'
         const subject = 'Web Client Feedback/Issue ' + formatTimeEmailLogs(locale.value as string)
         let body = '\n\n\n\nPlease leave feedback or a description of the issue in the space above.\n\n'
-        body += 'Ver: ' + connStore.version + ', Browser: ' + browser + '\n\n'
+        body += 'Ver: ' + connStore.version + ', Browser: ' + browser + ', Mobile: ' + connStore.connectedTo + '\n\n'
         body += 'Logs:\n'
 
         for (let i = 0; i < mainStore.savedLogs.length; i++) {
