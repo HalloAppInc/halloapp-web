@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang='ts'>
     import { Ref, ref, onUnmounted } from 'vue'
     import { storeToRefs } from 'pinia'
     import { liveQuery } from 'dexie'
@@ -25,9 +25,12 @@
 
     let subscription: any
 
-    setupObserver()
 
-    
+    const dbListData: Ref<Group[]> = ref([])
+    const listData: Ref<Group[]> = ref([])
+    const count = ref(15)
+
+    setupObserver()
 
     async function setupObserver() {
         if (!mainStore.allowDbTransactions) { return }
@@ -36,17 +39,56 @@
             next: result => { 
                 if (!mainStore.allowDbTransactions) { return }
                 if (result) {
-                    listData.value = result
+                    dbListData.value = result
                 }
-                
-                if (!mainStore.groupsPageGroupID && listData.value.length > 0) {
-                    mainStore.selectGroup(listData.value[0].groupID)
-                }
-
+                makeList()
+            
             },
             error: error => console.error(error)
         })
     }
+
+
+    function makeList() {
+
+        if (dbListData.value.length > count.value) {
+            listData.value = dbListData.value.slice(0, count.value)
+        } else {
+            listData.value = dbListData.value       
+        }
+
+        /* select the top group if there wasn't any group selected */
+        if (!mainStore.groupsPageGroupID && listData.value.length > 0) {
+            mainStore.selectGroup(listData.value[0].groupID)
+        }
+
+    }
+
+    const content = ref<HTMLElement | null>(null)
+    let handleScrollTimer: any
+
+    function handleScroll() {
+        clearTimeout(handleScrollTimer)
+        handleScrollTimer = setTimeout(debouncedHandleScroll, 200)
+    }
+
+
+    function debouncedHandleScroll() {
+        if (!content.value) { return }
+
+        /* fetch more posts before user gets to the end of their feed */
+        const element = content.value
+        const scrolled = element.scrollHeight - element.scrollTop
+        const nearEnd = element.clientHeight * 3 // 2 screens up, less than 3 doesn't seem to work well
+        if (scrolled < nearEnd) {
+            
+            makeList()
+            count.value += 15
+        }
+
+    }
+
+
 
     onUnmounted(() => {
         if (subscription) {
@@ -67,7 +109,7 @@
         secondaryBorder: secondaryBorderColor,
     } = storeToRefs(colorStore)  
 
-    const listData: Ref<Group[]> = ref([])
+    
 
 </script>
 
@@ -79,7 +121,7 @@
             <GroupsSidebarHeader></GroupsSidebarHeader>
         </div>
 
-        <div class="listBox"> 
+        <div class="listBox" ref='content' @scroll='handleScroll()'> 
             <div v-for="value in listData" :key="value.groupID"
                 :class="['container', {selected: mainStore.groupsPageGroupID == value.groupID}]"
                 @click="mainStore.gotoGroup(value.groupID)">

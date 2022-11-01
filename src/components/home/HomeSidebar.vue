@@ -1,124 +1,50 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+    import { ref } from 'vue'
 
 </script>
 
 <template>
 
-<div class="wrapper">
+    <div class='homeSidebarWrapper'>
 
-    <div id="listBox"> 
+        <div class='listBox'> 
 
+        </div>
     </div>
-</div>
 
 </template>
 
 <style scoped>
+    .homeSidebarWrapper {
+        height: 100%;
 
+        background-color: rgb(243, 243, 240);
 
-*::-webkit-scrollbar {
-  width: 5px;
-}
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
 
-*::-webkit-scrollbar-track {
-  background: white;        /* color of the tracking area */
-}
+        overflow: hidden;
+    }
 
-*::-webkit-scrollbar-thumb {
-  background-color: rgb(172, 169, 169);    /* color of the scroll thumb */
-  
-  border: 0px solid white;  /* creates padding around scroll thumb */
-}
+    .listBox {
+        overflow-y: auto;
+        overflow-x: hidden;
+        height: 100%;
+    }
 
-.wrapper {
-    height: 100%;
+    *::-webkit-scrollbar {
+    width: 5px;
+    }
 
-    background-color: rgb(243, 243, 240);
+    *::-webkit-scrollbar-track {
+    background: white;        /* color of the tracking area */
+    }
 
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-
-    overflow: hidden;
-}
-
-#header {
-    flex: 0 0 50px;
-    background-color: #f0f2f5;
-    padding: 10px;
-}
-
-#listBox {
-    overflow-y: auto;
-    overflow-x: hidden;
-    height: 100%;
-}
-
-.container {
-    display: flex;
-    flex-direction: horizontal;
-    padding: 0px;
-}
-.container:hover {
-    background-color: rgb(226, 226, 226);
-    cursor: pointer;
-}
-.avatarContainer {
-    flex: 0 0 70px;
-    padding: 10px 0px 10px 10px;
-}
-.avatar {
-    width: 50px;
-    height: 50px;
- 
-    background-color: lightgray;
-    border-radius: 50%;
-}
-.content {
-    margin-top: 5px;
-    width: 100%;
-    padding: 10px 10px 10px 5px;
-    border-bottom: 1px solid rgb(226, 224, 224);
-
-    color: #3b4a54;
-
-    display: flex;
-    width: 100%;
-    flex-direction: column;
-
-    user-select: none;
-
-    overflow: hidden;
-}
-
-.contentHeader {
-    padding-bottom: 3px;
-    display: flex;
+    *::-webkit-scrollbar-thumb {
+    background-color: rgb(172, 169, 169);    /* color of the scroll thumb */
     
-    justify-content: flex-start;
-}
-
-.contentTitle {
-    color: #111b21;
-    font-weight: 600; 
-
-    flex: 1 1 auto;
-
-    min-width: 0;
-    text-overflow: ellipsis;
-    white-space: nowrap; 
-
-    user-select: none;
-
-    overflow: hidden;
-}
-
-.contentTimestamp {
-    flex: 0 0 auto;
-    color: gray;
-
-    user-select: none;
-}
+    border: 0px solid white;  /* creates padding around scroll thumb */
+    }
 
 </style>
