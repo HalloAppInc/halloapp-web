@@ -26,6 +26,7 @@
     "mp4box": "^0.5.2",
     "nanoid": "^4.0.0",
     "noise-c.wasm": "^0.4.0",
+    "normalize.css": "^8.0.1",
     "pinia": "^2.0.13",
     "pinia-plugin-persistedstate": "^1.5.1",
     "protobufjs": "^7.0.0",

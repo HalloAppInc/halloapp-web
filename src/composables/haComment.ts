@@ -29,7 +29,7 @@ export function useHAComment() {
         uploadMedia 
     } = network()    
 
-    const { getAvatar, fetchGroupAvatar } = useHAAvatar()
+    const { insertOrModifyAvatar } = useHAAvatar()
     const { processText } = useHAText()
     const { insertCommonMedia } = useHACommonMedia()
     const { hal } = useHALog()

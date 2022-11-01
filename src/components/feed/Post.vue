@@ -2,12 +2,11 @@
     import { toRef, Ref, ref, onBeforeUnmount } from "vue"
     import { storeToRefs } from 'pinia'
     import { liveQuery } from "dexie"
-    import MP4Box from 'mp4box'
-    import { Base64 } from "js-base64"
     import { useI18n } from 'vue-i18n'
 
     import { useMainStore } from '@/stores/mainStore'
     import { useConnStore } from '@/stores/connStore'
+    import { useIconStore } from '@/stores/iconStore'
     import { useColorStore } from '@/stores/colorStore'
 
     import { db, SubjectType, Post, MediaType, CommonMedia } from '@/db'
@@ -17,7 +16,6 @@
     import { useHAComment } from '@/composables/haComment'
     import { useHACommonMedia } from '@/composables/haCommonMedia'
     import { useHAText } from '@/composables/haText'
-    import { useHACrypto } from '@/composables/haCrypto'
     import { useTimeformatter } from '@/composables/timeformatter'
 
     import hal from "@/common/halogger"
@@ -39,6 +37,7 @@
 
     const mainStore = useMainStore()
     const connStore = useConnStore()
+    const iconStore = useIconStore()
     const colorStore = useColorStore()
     
     const { requestCommentsIfNeeded } = useHAComment()
@@ -46,10 +45,8 @@
     const { processText } = useHAText()
     const { formatTime } = useTimeformatter()
 
-    const { getDerivedKey, 
-            decryptChunk, decryptBinArr, verifyHMAC,
-            isUint8ArrayEqual, combineBinaryArrays 
-    } = useHACrypto()
+    const { comment: commentIcon,
+    } = storeToRefs(iconStore)
 
     const { primaryBlue: primaryBlueColor,
             primaryLightgray: primaryLightgrayColor,
@@ -60,14 +57,8 @@
     } = storeToRefs(colorStore)
        
     const { 
-        getCommonMedia, fetchCommonMedia,
-        modifyCommonMedia, modifyCommonMediaIsCodecH265,
-        modifyPostVoiceNote, modifyPostLinkPreviewMedia
+        getCommonMedia, fetchLinkPreviewMedia, fetchVoiceNote
     } = useHACommonMedia()
-
-    const imageInfo         = Base64.fromBase64("SGFsbG9BcHAgaW1hZ2U=")
-    const videoInfo         = Base64.fromBase64("SGFsbG9BcHAgdmlkZW8=") 
-    const voiceNoteInfo     = Base64.fromBase64("SGFsbG9BcHAgYXVkaW8=") 
 
     const headerWidth = ref(450)
     const postWidth = ref(430)
@@ -103,281 +94,28 @@
     const selectedMediaIndex = ref(0)
     const selectMediaContentID = ref()
 
+    let mediaSubscription: any
 
     setPostSize()
     processPost(props.post)
+    setupObserver()
 
-
-    const mediaObservable = liveQuery (() => db.commonMedia.where('contentID').equals(props.postID).toArray())
-    const mediaSubscription = mediaObservable.subscribe({
-        next: resultList => { 
-            commonMedia.value = resultList
-        },
-        error: error => console.error(error)
-    })
+    async function setupObserver() {
+        if (!mainStore.allowDbTransactions) { return }
+        const mediaObservable = liveQuery (() => db.commonMedia.where('contentID').equals(props.postID).toArray())
+        mediaSubscription = mediaObservable.subscribe({
+            next: resultList => { 
+                commonMedia.value = resultList
+            },
+            error: error => console.error(error)
+        })
+    }
 
     onBeforeUnmount(() => {
-        mediaSubscription.unsubscribe()
+        if (mediaSubscription) {
+            mediaSubscription.unsubscribe()
+        }
     })
-
-    async function getMediaBlob(info: any, media: any) {
-        const ciphertextHash = media.hash
-        const encryptionKey = media.key
-        const downloadUrl = media.downloadURL
-
-        const derivedKeyObj = await getDerivedKey(encryptionKey, info)
-        const derivedKey = derivedKeyObj.key
-
-        const mediaBlob = await fetchAndDecrypt(derivedKey, downloadUrl, ciphertextHash)
-        return mediaBlob
-    }
-
-    async function getChunkedMediaBlob(media: any, info: string, chunkSize: number) {
-        const ciphertextHash = media.hash
-        const encryptionKey = media.key
-        const downloadUrl = media.downloadURL
-
-        /* download blob */
-        const response = await fetch(mainStore.devCORSWorkaroundUrlPrefix + downloadUrl)
-        const encryptedBuffer = await response.arrayBuffer()
-        const encryptedArray = new Uint8Array(encryptedBuffer)
-
-        /* check hash */
-        const hash = await crypto.subtle.digest("SHA-256", encryptedArray)
-        const isCorrectHash = isUint8ArrayEqual(new Uint8Array(hash), ciphertextHash)
-        if (!isCorrectHash) {
-            hal.log('getChunkedMediaBlob/hash does not match')
-        }
-
-        const chunksArr = []
-        let chunkCounter = 0
-        for (let i = 0; i < encryptedArray.length; i += chunkSize) {
-            const chunkWithMAC = encryptedArray.slice(i, i + chunkSize)
-            const chunkInfo = info + ' ' + chunkCounter
-            const decryptedBinArr = await decryptChunk(chunkWithMAC, encryptionKey, chunkInfo)
-            chunksArr.push(decryptedBinArr)
-            chunkCounter++
-        }
-
-        const combinedBinArr = combineBinaryArrays(chunksArr)
-        return new Blob([combinedBinArr])
-    }
-
-    async function fetchAndDecrypt(derivedKey: Uint8Array, url: any, ciphertextHash: any) {
-        const IV = derivedKey.slice(0, 16)
-        const AESKey = derivedKey.slice(16, 48)
-        const SHA256Key = derivedKey.slice(48, 80)
-
-        const response = await fetch(mainStore.devCORSWorkaroundUrlPrefix + url)
-
-        const encryptedBuffer = await response.arrayBuffer()
-        const encryptedArrayWithMAC = new Uint8Array(encryptedBuffer)
-
-        const hash = await crypto.subtle.digest("SHA-256", encryptedArrayWithMAC)
-
-        const isCorrectHash = isUint8ArrayEqual(new Uint8Array(hash), ciphertextHash)
-        if (!isCorrectHash) {
-            hal.log("fetchAndDecrypt/hash does not match: " + ciphertextHash)
-        }
-
-        const attachedMAC = encryptedArrayWithMAC.slice(-32)
-        const encryptedBinaryArray = encryptedArrayWithMAC.slice(0, -32)
-
-        const isHMACMatch = await verifyHMAC(SHA256Key, encryptedBinaryArray, attachedMAC)
-        if (!isHMACMatch) {
-            hal.log("fetchAndDecrypt/mismatch HMAC")
-        }
-
-        const decryptedBinaryArray = await decryptBinArr(AESKey, IV, encryptedBinaryArray)
-        if (!decryptedBinaryArray) return undefined
-        /* use blob instead of base64 string as converting to base64 is slow */
-        return new Blob([decryptedBinaryArray])
-    }
-
-    async function fetchAndDecryptStream(media: any, videoInfo: string, blobSize: any, chunkSize: number, mp4box: any) {
-        const ciphertextHash = media.hash
-        const encryptionKey = media.key
-        const downloadUrl = media.downloadURL
-
-        const response: any = await fetch(mainStore.devCORSWorkaroundUrlPrefix + downloadUrl)
-        const reader = response.body.getReader()
-
-        const fullBinArr = new Uint8Array(blobSize)
-        let fullBinArrOffset = 0
-        let chunkCounter = 0
-
-        let videoInfoCount  = 0 // info for decryption, starts at 0
-        let fileStartOffset = 0 // mp4box file offset, starts at 0
-
-        let saveToDB = []
-
-        while (true) {
-            const { value, done } = await reader.read()
-            if (done) {
-                hal.log('fetchAndDecryptStream/finish fetching')
-
-                // check hash of full binary array
-                const hash = await crypto.subtle.digest("SHA-256", fullBinArr)
-                const isCorrectHash = isUint8ArrayEqual(new Uint8Array(hash), ciphertextHash)
-                if (!isCorrectHash) {
-                    hal.log('fetchAndDecryptStream/hash does not match')
-                }
-        
-                let start = chunkCounter*chunkSize
-                let end = (chunkCounter + 1)*chunkSize
-                const chunkWithMAC = fullBinArr.slice(start, end)
-                const chunkInfo = videoInfo + ' ' + videoInfoCount
-                const decryptedBinArr = await decryptChunk(chunkWithMAC, encryptionKey, chunkInfo)
-                if (decryptedBinArr) {
-
-                    let buf: any = decryptedBinArr.buffer.slice(decryptedBinArr.byteOffset, decryptedBinArr.byteLength + decryptedBinArr.byteOffset)
-                    saveToDB.push(decryptedBinArr)
-
-                    buf.fileStart = fileStartOffset
-                    mp4box.appendBuffer(buf)
-
-                    const combine = combineBinaryArrays(saveToDB)
-                    const bb = new Blob([combine], {type: "video/mp4"})
-                    modifyCommonMedia(media.type, media.subjectID, media.contentID, media.order, bb)
-
-                } else {
-                    hal.log('fetchAndDecryptStream/done/error')
-                }
-
-                break
-            }
-
-            // copies received data to full binary array
-            fullBinArr.set(value, fullBinArrOffset)
-
-            const presetChunkedOffset = chunkCounter*chunkSize
-            const diffOffset = fullBinArrOffset - presetChunkedOffset
-
-            fullBinArrOffset += value.length
-
-            let chunksToProcess = Math.floor((diffOffset + value.length)/chunkSize)
-    
-            for(let i = 0; i < chunksToProcess; i++) {
-                // hal.log("fetchAndDecryptStream/chunk " + chunkCounter)
-            
-                let start = chunkCounter*chunkSize
-                let end = (chunkCounter + 1)*chunkSize
-                const chunkWithMAC = fullBinArr.slice(start, end)
-                const chunkInfo = videoInfo + ' ' + videoInfoCount
-                const decryptedBinArr = await decryptChunk(chunkWithMAC, encryptionKey, chunkInfo)
-
-                if (decryptedBinArr) {
-
-                    let buf: any = decryptedBinArr.buffer.slice(decryptedBinArr.byteOffset, decryptedBinArr.byteLength + decryptedBinArr.byteOffset)
-                    saveToDB.push(decryptedBinArr)
-
-                    buf.fileStart = fileStartOffset
-                    mp4box.appendBuffer(buf)
-                    
-                    chunkCounter++
-                    videoInfoCount++
-                    fileStartOffset += decryptedBinArr.length
-                } else {
-                    hal.log("fetchAndDecryptStream/chunk/" + chunkCounter + "/error")
-                    break
-                }
-            }
-        }
-    }
-
-    function setupStreamingMediaSource(mediaSource: any, media: any, videoInfo: any, blobSize: any, chunkSize: number) {
-        let tracks: any = {}
-        let mp4box = MP4Box.createFile()
-        
-        // wait for mediaSource to be ready
-        mediaSource.addEventListener('sourceopen', function () {
-            fetchAndDecryptStream(media, videoInfo, blobSize, chunkSize, mp4box)
-        })
-
-        mp4box.onError = function(error: any) {
-            console.error('setupStreamingMediaSource/mp4box/error: ', error)
-            mediaSource.endOfStream('decode')
-        }
-
-        mp4box.onReady = function(info: any) {
-            hal.log('setupStreamingMediaSource/mp4box/ready')
-            // console.dir(info)
-
-            info.tracks.forEach(function(track: any) {
-                const mime = 'video/mp4; codecs="' + track.codec + '"'
-
-                if (!mainStore.isMobile && !mainStore.isSafari) {
-                    const codecType = track.codec
-                    if (codecType.substring(0, 4) == 'hvc1') {
-                        hal.prod('setupStreamingMediaSource/video/streaming/can not play h265 video: ' + track.codec)
-                        modifyCommonMediaIsCodecH265(media.type, media.subjectID, media.contentID, media.order, true)
-                    }
-                }
-
-                if (MediaSource.isTypeSupported(mime)) {
-                    let mediaSourceBuffer = mediaSource.addSourceBuffer(mime)
-                    let trackEntry = {
-                        mediaSourceBuffer: mediaSourceBuffer,
-                        segBuffers: [],
-                        meta: track,
-                        ended: false
-                    }
-                    mediaSourceBuffer.addEventListener('updateend', popBuffer.bind(null, trackEntry))
-                    mp4box.setSegmentOptions(track.id, null, {
-                        nbSamples: 1000
-                    })
-                    tracks[track.id] = trackEntry
-                }
-            })
-
-            let initSegs = mp4box.initializeSegmentation()
-            initSegs.forEach(function(initSegment: any) {
-                appendBuffer(tracks[initSegment.id], initSegment.buffer, false)
-            })
-
-            mp4box.start()
-        }
-
-        mp4box.onSegment = async function (id: any, user: any, buffer: any, nextSample: any) {
-            hal.log("mp4box/onSegment/track " + id + "/buffer length: " + buffer.byteLength)
-            let track = tracks[id]
-            appendBuffer(track, buffer, nextSample === track.meta.nb_samples)
-        }
-
-        function appendBuffer(track: any, buffer: any, ended: any) {
-            track.segBuffers.push({
-                buffer: buffer,
-                ended: ended || false
-            })
-            popBuffer(track)
-        }
-
-        function popBuffer(track: any) {
-            endMediaSourceIfNeeded()
-            if (track.mediaSourceBuffer.updating || track.segBuffers.length === 0) { return }
-            let segBuffer = track.segBuffers.shift()
-            try {
-                track.mediaSourceBuffer.appendBuffer(segBuffer.buffer)
-                track.ended = segBuffer.ended
-            } catch (e) {
-                console.error('mp4box/popBuffers/error: ', e)
-            }
-            endMediaSourceIfNeeded()
-        }
-
-        function endMediaSourceIfNeeded() {
-            if (mediaSource.readyState !== 'open') { return }
-
-            let ended = Object.keys(tracks).every(function(id) {
-                let track = tracks[id]
-                return track.ended && !track.mediaSourceBuffer.updating
-            })
-
-            if (ended) {
-                mediaSource.endOfStream() 
-            }
-        }
-    }
 
     async function processPost(post: Post) {
         const postID = post.postID
@@ -403,19 +141,18 @@
             isVoiceNote = true
             voiceNoteMedia = post.voiceNote
             
-            let mediaBlob: Blob | undefined
 
-            if (voiceNoteMedia.blob) {
-                mediaBlob = voiceNoteMedia.blob
+            let arrBuf: ArrayBuffer | undefined
+
+            if (voiceNoteMedia.arrBuf) {
+                arrBuf = voiceNoteMedia.arrBuf
             } else {
-                mediaBlob = await getMediaBlob(voiceNoteInfo, voiceNoteMedia)
-                if (mediaBlob) {
-                    modifyPostVoiceNote(postID, mediaBlob)
-                }
+                arrBuf = await fetchVoiceNote(SubjectType.FeedPost, voiceNoteMedia) as any
             }
 
-            if (mediaBlob) {
-                postVoiceNoteSrc.value = URL.createObjectURL(mediaBlob)
+            if (arrBuf) {
+                const voiceNoteBlob = new Blob([arrBuf], {type: 'audio/mpeg'})
+                postVoiceNoteSrc.value = URL.createObjectURL(voiceNoteBlob)
                 showVoiceNote.value = true
 
                 if (!isAlbum.value) {
@@ -430,18 +167,16 @@
             if (post.linkPreview?.preview) {
                     const linkPreviewMedia = post.linkPreview.preview
 
-                    let mediaBlob: Blob | undefined
+                    let arrBuf: ArrayBuffer | undefined
 
-                    if (linkPreviewMedia.blob) {
-                        mediaBlob = linkPreviewMedia.blob
+                    if (linkPreviewMedia.arrBuf) {
+                        arrBuf = linkPreviewMedia.arrBuf
                     } else {
-                        mediaBlob = await getMediaBlob(imageInfo, linkPreviewMedia)
-                        if (mediaBlob) {
-                            modifyPostLinkPreviewMedia(postID, mediaBlob)
-                        }
+                        arrBuf = await fetchLinkPreviewMedia(SubjectType.FeedPost, linkPreviewMedia)
                     }
 
-                    if (mediaBlob) {
+                    if (arrBuf) {
+                        const mediaBlob = new Blob([arrBuf], {type: 'image/jpeg'})
                         previewImageSrc.value = URL.createObjectURL(mediaBlob)
                         showPreviewImage.value = true
 
@@ -559,13 +294,13 @@
 <template>
 
     <div>
-        <div v-if="!isDeleted" class="postRow">
+        <div v-if='!isDeleted' class='postRow'>
 
             <div :class="['post']">
 
                 <!-- postHeader row -->
                 <div id="postHeader">
-                    <Avatar :userID="props.post.userID" :width="45"></Avatar>
+                    <Avatar :userID='props.post.userID' :width='45'></Avatar>
                     <div id="nameBox">
                         <div class="name">
                             {{ mainStore.pushnames[props.post.userID] }}
@@ -583,7 +318,7 @@
                     </div>
                 </div>
 
-                <MediaCarousel v-if="!showPreviewImage"
+                <MediaCarousel v-if='!showPreviewImage'
                     :type="SubjectType.FeedPost"
                     :subjectID="subjectID"
                     :contentID="post.postID"
@@ -628,7 +363,7 @@
                 <!-- postFooter row -->
                 <div id="postFooter">
                     <div class="commentButton" @click="$emit('commentsClick')">
-                        <img class="commentIcon" src="https://d1efjkqerxchlh.cloudfront.net/es/assets/Comment.png" alt="Comment Icon">
+                        <img class="commentIcon" :src="commentIcon" alt="Comment Icon">
                         <div>
                             {{ t('post.comment') }}
                         </div>
@@ -899,10 +634,11 @@
         width: 14px;
         height: 14px;
         margin-right: 5px;
+        
     }
     @media (prefers-color-scheme: dark) {
         .commentIcon {
-            filter: invert(100%);
+            filter: brightness(0) saturate(100%) invert(98%) sepia(11%) saturate(426%) hue-rotate(171deg) brightness(99%) contrast(89%);
         }
     }
 

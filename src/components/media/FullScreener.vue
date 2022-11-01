@@ -81,26 +81,34 @@
         let list = dbListData
   
         for (let i = 0; i < list.value.length; i++) {
-            let media = list.value[i]
-            let res = setPreviewMediaSizes(media)
+            let med = list.value[i]
+            let res = setPreviewMediaSizes(med)
 
             let item: any = {
-                'mediaType': media.mediaType,
-                'width': media.width,
-                'height': media.height,
+                'mediaType': med.mediaType,
+                'width': med.width,
+                'height': med.height,
                 'previewWidth': res?.mediaItemWidth,
                 'previewHeight': res?.mediaItemHeight,
             }
 
-            if (media) {
-                if (media.blob) {
-                    const blobUrl = URL.createObjectURL(media.blob)
+            let type = 'image/jpeg'
+            if (med.mediaType == MediaType.Video) {
+                type = 'video/mp4'
+            }
+
+            if (med) {
+                if (med.arrBuf) {
+
+                    const mediaBlob = new Blob([med.arrBuf], {type: type})
+                    const blobUrl = URL.createObjectURL(mediaBlob)
                     if (blobUrl) { 
                         item.blobUrl = blobUrl
                     }
                 }
-                if (media.previewImage) {
-                    const previewImageBlobUrl = URL.createObjectURL(media.previewImage)
+                if (med.previewImageArrBuf) {
+                    const mediaBlob = new Blob([med.previewImageArrBuf], {type: 'image/jpeg'})
+                    const previewImageBlobUrl = URL.createObjectURL(mediaBlob)
                     if (previewImageBlobUrl) { 
                         item.previewImageBlobUrl = previewImageBlobUrl
                     }
@@ -176,7 +184,8 @@
                     
                     @click.stop>
                     <video id='videoFullScreener' :key="selectMediaIdx"
-                        :width='mediaUrlList[selectMediaIdx].width' 
+                        :width=mediaUrlList[selectMediaIdx].width
+                        
                         controls draggable="false">
                         <source :src='mediaUrlList[selectMediaIdx].blobUrl + "#t=1.0"'>
                     </video>
@@ -307,7 +316,7 @@
         height: fit-content;
     }
 
-    video {
+    .videoContainer video {
         max-width: 70vw;
         max-height: 70vh;
         background-color: v-bind(backgroundColor);
@@ -473,6 +482,9 @@
         height: 25px;
         backdrop-filter: blur(2px);
         -webkit-backdrop-filter: blur(2px);
+
+        /* using a bg allows the play button to show through better even when the image is white */
+        background:rgba(0, 0, 0, 0.1);         
         
         border-radius: 50%;
     }

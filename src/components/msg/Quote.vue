@@ -58,9 +58,7 @@
                 next: (result: any) => { 
                 
                     if (result && result.length > 0) {
-        
                         quotedMessage.value = result[0]
-
                     }
                 },
                 error: (error: any) => console.error(error)
@@ -84,8 +82,9 @@
                 if (result && result.length > 0) {
                     
                     quotedMedia.value = result[0]
-                    if (quotedMedia.value.previewImage) {
-                        quotedMedia.value.previewImageBlobUrl = URL.createObjectURL(quotedMedia.value.previewImage)
+                    if (quotedMedia.value.previewImageArrBuf) {
+                        const blob = new Blob([quotedMedia.value.previewImageArrBuf], {type: 'image/jpeg'})
+                        quotedMedia.value.previewImageBlobUrl = URL.createObjectURL(blob)
                     }
 
                 }
@@ -165,13 +164,19 @@
                     <div>{{ quotedMessage.value }}</div>
                     <span v-html='processText(quotedMessage.text, quotedMessage.mentions, true).html' class='noOverFlow'></span>
                 </div>
-                <div v-else-if='quotedMedia.value' class='iconContainer' >
-                    <font-awesome-icon v-if="quotedMedia.mediaType == MediaType.Image" :icon="['fas', 'camera']" size='sm' />
-                    <font-awesome-icon v-else-if="quotedMedia.mediaType == MediaType.Video" :icon="['fas', 'video']" size='sm' />
-                </div>    
                 <div v-else-if='quotedMessage.voiceNote' class='iconContainer' >
                     <font-awesome-icon :icon="['fas', 'microphone']" size='sm' /> <span>Audio note</span>
-                </div>                    
+                </div>                
+                <div v-else-if='quotedMedia' class='iconContainer' >
+                    <div v-if='quotedMedia.mediaType == MediaType.Image'>
+                        <font-awesome-icon  :icon="['fas', 'camera']" size='sm' /> <span>Photo</span>
+                    </div>
+                    <div v-else-if='quotedMedia.mediaType == MediaType.Video'>
+                        <font-awesome-icon :icon="['fas', 'video']" size='sm' /> <span>Video</span>
+                    </div>
+                    
+                </div>    
+               
             </div>
 
         </div>
@@ -185,7 +190,7 @@
         height: fit-content;
         background-color: rgb(0, 0, 0, 0.05);
         border-radius: 5px;
-        padding-bottom: 5px;
+        padding: 5px;
 
         display: flex;
         flex-direction: row;
@@ -215,6 +220,7 @@
         height: 100%;
         object-fit: cover;
         overflow: hidden;
+        border-radius: 3px;
     }
 
     .contentHeader {
@@ -296,6 +302,9 @@
         backdrop-filter: blur(2px);
         -webkit-backdrop-filter: blur(2px);
         
+        /* using a bg allows the play button to show through better even when the image is white */
+        background:rgba(0, 0, 0, 0.1); 
+
         border-radius: 50%;
     }
 

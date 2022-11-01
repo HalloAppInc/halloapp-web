@@ -17,10 +17,6 @@
             type: Number,
             required: true
         },
-        avatarID: {
-            type: String,
-            required: false
-        },
         width: {
             type: Number,
             required: true
@@ -39,11 +35,10 @@
     const mainStore = useMainStore()
     const colorStore = useColorStore()
 
-    const { getAvatar } = useHAAvatar()
+    const { fetchAndModifyAvatar } = useHAAvatar()
 
     const { 
-
-        primaryWhiteBlack: primaryWhiteBlackColor,
+        secondaryBg: secondaryBgColor
 
     } = storeToRefs(colorStore)  
 
@@ -59,31 +54,25 @@
         borderWidth.value = '2px'
     }
 
-    init()
-
-    async function init() {
-        const avatarImgBlob = await getAvatar(props.userID)
-
-        if (avatarImgBlob) {
-            const avatarImgBlobUrl = URL.createObjectURL(avatarImgBlob)
-            avatarImageUrl.value = avatarImgBlobUrl 
-        }
-
-        setupObserver()
-    }
+    setupObserver()
 
     async function setupObserver() {
-        const observable = liveQuery (() => db.avatar.where('userID').equals(props.userID).toArray())
+        const observable = liveQuery (() => db.avatar.where('userID').equals(props.userID).first())
         const avatarSubscription = observable.subscribe({
             next: result => {
                 if (!result) { return }
-                if (result.length == 0) { return }
-                if (!result[0].image) { return }
-                if (result[0].image.size == 0) { return }
+                if (!mainStore.allowDbTransactions) { return }
 
-                const avatarImgBlobUrl = URL.createObjectURL(result[0].image)
-                if (!avatarImgBlobUrl) { return }
-                avatarImageUrl.value = avatarImgBlobUrl
+                if (result.arrBuf) { 
+                    const blob = new Blob( [ result.arrBuf ], { type: 'image/jpeg' } )
+                    const avatarImgBlobUrl = URL.createObjectURL(blob)
+                    avatarImageUrl.value = avatarImgBlobUrl
+                } else {
+                    if (result.avatarID) {
+                        fetchAndModifyAvatar(result.userID, result.avatarID)
+                    }
+                }
+
             },
             error: error => console.error(error)
         })
@@ -112,7 +101,7 @@
         border-radius: 50%; 
         background-color: rgb(0, 0, 0, 0);
 
-        border: 2px solid v-bind(primaryWhiteBlackColor);
+        border: 2px solid v-bind(secondaryBgColor);
         border-width: v-bind(borderWidth);
     } 
 

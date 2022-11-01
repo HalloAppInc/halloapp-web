@@ -6,10 +6,11 @@ import MP4Box from 'mp4box'
 
 import { useMainStore } from '@/stores/mainStore'
 import { useConnStore } from '@/stores/connStore'
-import { db, SubjectType, MediaType } from '@/db'
+import { db, SubjectType, MediaType, CommonMedia } from '@/db'
 import hal from '@/common/halogger'
 
 import { useHACrypto } from '@/composables/haCrypto'
+import { web } from '@/proto/web'
 
 export function useHACommonMedia() {
 
@@ -35,38 +36,45 @@ export function useHACommonMedia() {
             needWatching: false
         }
         
-        for (let [index, mediaInfo] of mediaList.entries()) {
+        for (let [index, med] of mediaList.entries()) {
 
-            if (mediaInfo.mediaType == MediaType.Image) {
-                
-                if (mediaInfo.previewImage) { continue } 
+            if (med.mediaType == MediaType.Image) {
+                if (med.previewImageArrBuf) { 
+                    continue 
+                } 
 
                 result.needWatching = true
 
-                let mediaBlob: Blob | undefined
+                let mediaArrBuf: ArrayBuffer | undefined
+                hal.log('fetchCommonMedia/image/fetch ' + med.contentID)
+                mediaArrBuf = await fetchMediaArrBuf(imageInfo, med)
 
-                mediaBlob = await fetchMediaBlob(imageInfo, mediaInfo)
-
-                if (mediaBlob) {
-
+                if (mediaArrBuf) {
                     // todo: preview image can be much smaller and less resolution
-                    const previewImageBlob = mediaBlob
-                    modifyCommonMedia(mediaInfo.type, mediaInfo.subjectID, mediaInfo.contentID, index, mediaBlob, previewImageBlob)
+                    const previewImageArrBuf = mediaArrBuf
+                    modifyCommonMedia(med.type, med.subjectID, med.contentID, index, mediaArrBuf, previewImageArrBuf)
                 }
             }
 
-            if (mediaInfo.mediaType == MediaType.Video) {
-                
-                if (mediaInfo.previewImage) { continue } 
-
-                let mediaBlob: Blob | undefined
-                
+            if (med.mediaType == MediaType.Video) {
+                if (med.previewImageArrBuf) { continue } 
                 result.needWatching = true
 
-                const chunkSize = mediaInfo.chunkSize
+                let mediaArrBuf: ArrayBuffer | undefined
+                
+                const chunkSize = med.chunkSize
                 if (chunkSize) {
-                    hal.log("fetchCommonMedia/video/fetch streaming")
+                    hal.log("fetchCommonMedia/video/fetch chunked video")
                     
+                    mediaArrBuf = await fetchChunkedMediaArrBuf(med, videoInfo, chunkSize)
+
+                    if (mediaArrBuf) {
+                        const mediaBlob = new Blob([mediaArrBuf], {type: 'video/mp4'})
+                        const previewImageBlob = await grabPreviewFromVideo(mediaBlob)
+                        const previewImageArrBuf = await (previewImageBlob as Blob).arrayBuffer()
+                        modifyCommonMedia(med.type, med.subjectID, med.contentID, index, mediaArrBuf, previewImageArrBuf)
+                    }
+
 
                     // MediaSource is not supported on iOS yet
                     // if ('MediaSource' in window) {
@@ -78,18 +86,23 @@ export function useHACommonMedia() {
 
                     // } else {
                         
-                        mediaBlob = await getChunkedMediaBlob(mediaInfo, videoInfo, chunkSize)
+                        // mediaArrBuf = await fetchChunkedMediaArrBuf(med, videoInfo, chunkSize)
 
-                        const previewImageBlob = await grabPreviewFromVideo(mediaBlob)
-                        modifyCommonMedia(mediaInfo.type, mediaInfo.subjectID, mediaInfo.contentID, index, mediaBlob, previewImageBlob as Blob)
+                        // if (mediaArrBuf) {
+
+                        //     const mediaBlob = new Blob([mediaArrBuf], {type: 'video/mp4'})
+                        //     const previewImageBlob = await grabPreviewFromVideo(mediaBlob)
+                        //     const previewImageArrBuf = await (previewImageBlob as Blob).arrayBuffer()
+                        //     modifyCommonMedia(med.type, med.subjectID, med.contentID, index, mediaArrBuf, previewImageArrBuf)
+                        // }
 
                     // }
                                             
                 } else {
-                    hal.log("fetchCommonMedia/video/fetch entire media")
+                    hal.log('haCommonMedia/fetchCommonMedia/video/fetch not chunked media (should not reach this code block)')
 
-                    mediaBlob = await fetchMediaBlob(videoInfo, mediaInfo)
-                    if (mediaBlob) {
+                    mediaArrBuf = await fetchMediaArrBuf(videoInfo, med)
+                    if (mediaArrBuf) {
 
                         /* todo: check if this is needed */
                         /* h265 video is not supported on desktop browsers except for Safari */
@@ -122,29 +135,33 @@ export function useHACommonMedia() {
                         // album.value[index].mediaBlob = mediaBlobUrl
                         // album.value[index].isReady = true    
                         
+
+                        const mediaBlob = new Blob([mediaArrBuf], {type: 'video/mp4'})
                         const previewImageBlob = await grabPreviewFromVideo(mediaBlob)
+                        const previewImageArrBuf = await (previewImageBlob as Blob).arrayBuffer()                   
                         
-                        modifyCommonMedia(mediaInfo.type, mediaInfo.subjectID, mediaInfo.contentID, index, mediaBlob, previewImageBlob as Blob)
+                        modifyCommonMedia(med.type, med.subjectID, med.contentID, index, mediaArrBuf, previewImageArrBuf)
                     
                     }
                 }
                 
             }       
             
-            if (mediaInfo.mediaType == MediaType.Audio) {
-                if (mediaInfo.blob) { continue }
-                result.needWatching = true
-                let mediaBlob: Blob | undefined
+            // todo: not used yet but can be unified for all commonMedia fetching, fetchVoiceNote can be removed when done 
+            // if (med.mediaType == MediaType.Audio) {
+            //     if (med.blob) { continue }
+            //     result.needWatching = true
+            //     let mediaArrBuf: ArrayBuffer | undefined
 
-                mediaBlob = await fetchMediaBlob(voiceNoteInfo, mediaInfo)
-                if (mediaBlob) {
-                    /* voicenotes are stored directly with their subjects and not in the commonMedia table */
-                    if (mediaInfo.type == SubjectType.Comment) {
-                        modifyCommentVoiceNote(mediaInfo.subjectID, mediaInfo.contentID, mediaBlob)
-                    }
-                }
+            //     mediaArrBuf = await fetchMediaArrBuf(voiceNoteInfo, med)
+            //     if (mediaArrBuf) {
+            //         /* voicenotes are stored directly with their subjects and not in the commonMedia table */
+            //         if (med.type == SubjectType.Comment) {
+            //             modifyCommentVoiceNote(med.subjectID, med.contentID, mediaArrBuf)
+            //         }
+            //     }
 
-            }
+            // }
 
         }
 
@@ -152,54 +169,53 @@ export function useHACommonMedia() {
     }    
     
     async function fetchVoiceNote(type: SubjectType, voiceNote: any) {
+        if (voiceNote.mediaType != MediaType.Audio) { return undefined }
+
+        let mediaArrBuf: ArrayBuffer | undefined
   
-        let mediaBlob: Blob | undefined
-        
-        if (voiceNote.mediaType == MediaType.Audio) {
+        if (voiceNote.arrBuf) {
+            mediaArrBuf = voiceNote.arrBuf
+        } else {
 
-            if (voiceNote.blob) {
-                mediaBlob = voiceNote.blob
-            } else {
-
-                mediaBlob = await fetchMediaBlob(voiceNoteInfo, voiceNote)
-                if (mediaBlob) {
-                    /* voicenotes are stored directly with their subjects and not in the commonMedia table */
-                    if (voiceNote.type == SubjectType.Comment) {
-                        modifyCommentVoiceNote(voiceNote.subjectID, voiceNote.contentID, mediaBlob)
-                    }
+            mediaArrBuf = await fetchMediaArrBuf(voiceNoteInfo, voiceNote)
+            if (mediaArrBuf) {
+                /* voicenotes are stored directly with their subjects and not in the commonMedia table */
+                if (voiceNote.type == SubjectType.Comment) {
+                    modifyCommentVoiceNote(voiceNote.subjectID, voiceNote.contentID, mediaArrBuf)
+                } else if (voiceNote.type == SubjectType.FeedPost) {
+                    modifyPostVoiceNote(voiceNote.contentID, mediaArrBuf)
                 }
             }
-
         }
-
-        return mediaBlob
+        
+        return mediaArrBuf
     }  
 
     async function fetchLinkPreviewMedia(type: SubjectType, linkPreviewMedia: any) {
   
-        let mediaBlob: Blob | undefined
+        let mediaArrBuf: ArrayBuffer | undefined
         
         if (linkPreviewMedia.mediaType == MediaType.Image) {
 
-            if (linkPreviewMedia.blob) {
-                mediaBlob = linkPreviewMedia.blob
+            if (linkPreviewMedia.arrBuf) {
+                mediaArrBuf = linkPreviewMedia.arrBuf
             } else {
 
-                mediaBlob = await fetchMediaBlob(imageInfo, linkPreviewMedia)
-                if (mediaBlob) {
+                mediaArrBuf = await fetchMediaArrBuf(imageInfo, linkPreviewMedia)
+                if (mediaArrBuf) {
                     /* link preview media are stored directly with their subjects and not in the commonMedia table */
                     if (linkPreviewMedia.type == SubjectType.Comment) {
-                        modifyCommentLinkPreviewMedia(linkPreviewMedia.subjectID, linkPreviewMedia.contentID, mediaBlob)
+                        modifyCommentLinkPreviewMedia(linkPreviewMedia.subjectID, linkPreviewMedia.contentID, mediaArrBuf)
                     }
                 }
             }
 
         }
 
-        return mediaBlob
+        return mediaArrBuf
     }      
     
-    async function fetchMediaBlob(info: any, media: any) {
+    async function fetchMediaArrBuf(info: any, media: any) {
         const ciphertextHash = media.hash
         const encryptionKey = media.key
         const downloadUrl = media.downloadURL
@@ -207,9 +223,13 @@ export function useHACommonMedia() {
         const derivedKeyObj = await getDerivedKey(encryptionKey, info)
         const derivedKey = derivedKeyObj.key
 
-        const mediaBlob = await fetchAndDecrypt(derivedKey, downloadUrl, ciphertextHash)
-        if (!mediaBlob) { return undefined }
-        return mediaBlob
+        const decryptedBinArr = await fetchAndDecrypt(derivedKey, downloadUrl, ciphertextHash)
+        if (!decryptedBinArr) { return undefined }
+        // let type = 'image/jpeg'
+        // if (media.mediaType == MediaType.Video) { type = 'video/mp4'}
+        // else if (media.mediaType == MediaType.Audio) { type = 'audio/mpeg'}
+        // const mediaBlob = new Blob([decryptedBinArr], {type: type})
+        return decryptedBinArr.buffer
     }
 
     async function haFetch(url: any) {
@@ -234,27 +254,26 @@ export function useHACommonMedia() {
         const encryptedBuffer = await response.arrayBuffer()
         const encryptedArrayWithMAC = new Uint8Array(encryptedBuffer)
 
-        const hash = await crypto.subtle.digest("SHA-256", encryptedArrayWithMAC)
+        const hash = await crypto.subtle.digest('SHA-256', encryptedArrayWithMAC)
 
         const isCorrectHash = isUint8ArrayEqual(new Uint8Array(hash), ciphertextHash)
         if (!isCorrectHash) {
-            hal.log("fetchAndDecrypt/hash does not match: " + ciphertextHash)
+            hal.log('fetchAndDecrypt/hash does not match: ' + ciphertextHash)
         }
 
         const attachedMAC = encryptedArrayWithMAC.slice(-32)
-        const encryptedBinaryArray = encryptedArrayWithMAC.slice(0, -32)
+        const encryptedBinArr = encryptedArrayWithMAC.slice(0, -32)
 
-        const isHMACMatch = await verifyHMAC(SHA256Key, encryptedBinaryArray, attachedMAC)
+        const isHMACMatch = await verifyHMAC(SHA256Key, encryptedBinArr, attachedMAC)
         if (!isHMACMatch) {
-            hal.log("fetchAndDecrypt/mismatch HMAC")
+            hal.log('fetchAndDecrypt/mismatch HMAC')
         }
 
-        const decryptedBinaryArray = await decryptBinArr(AESKey, IV, encryptedBinaryArray)
-        if (!decryptedBinaryArray) return undefined
+        const decryptedBinArr = await decryptBinArr(AESKey, IV, encryptedBinArr)
+        if (!decryptedBinArr) return undefined
         /* use blob instead of base64 string as converting to base64 is slow */
-        return new Blob([decryptedBinaryArray])
+        return decryptedBinArr
     }
-
 
     async function fetchAndDecryptStream(type: SubjectType, subjectID: string, contentID: string, media: any, videoInfo: string, blobSize: any, chunkSize: number, mp4box: any) {
         const ciphertextHash = media.hash
@@ -276,13 +295,13 @@ export function useHACommonMedia() {
         while (true) {
             const { value, done } = await reader.read()
             if (done) {
-                hal.log('fetchAndDecryptStream/finish fetching')
+                hal.log('haCommonMedia/fetchAndDecryptStream/finish fetching')
 
                 // check hash of full binary array
                 const hash = await crypto.subtle.digest("SHA-256", fullBinArr)
                 const isCorrectHash = isUint8ArrayEqual(new Uint8Array(hash), ciphertextHash)
                 if (!isCorrectHash) {
-                    hal.log('fetchAndDecryptStream/hash does not match')
+                    hal.log('haCommonMedia/fetchAndDecryptStream/hash does not match')
                 }
         
                 let start = chunkCounter*chunkSize
@@ -298,14 +317,16 @@ export function useHACommonMedia() {
                     buf.fileStart = fileStartOffset
                     mp4box.appendBuffer(buf)
 
-                    const combine = combineBinaryArrays(saveToDB)
-                    const blob = new Blob([combine], {type: "video/mp4"})
+                    const combinedBinArr = combineBinaryArrays(saveToDB)
 
-                    const previewImageBlob = await grabPreviewFromVideo(blob)
-                    modifyCommonMedia(type, subjectID, contentID, media.order, blob, previewImageBlob as Blob)
+                    const mediaBlob = new Blob([combinedBinArr], {type: 'video/mp4'})
+                    const previewImageBlob = await grabPreviewFromVideo(mediaBlob)
+                    const previewImageArrBuf = await (previewImageBlob as Blob).arrayBuffer()
+
+                    modifyCommonMedia(type, subjectID, contentID, media.order, combinedBinArr, previewImageArrBuf)
 
                 } else {
-                    hal.log('fetchAndDecryptStream/done/error')
+                    hal.log('haCommonMedia/fetchAndDecryptStream/done/error')
                 }
 
                 break
@@ -322,7 +343,7 @@ export function useHACommonMedia() {
             let chunksToProcess = Math.floor((diffOffset + value.length)/chunkSize)
     
             for(let i = 0; i < chunksToProcess; i++) {
-                // hal.log("fetchAndDecryptStream/chunk " + chunkCounter)
+                // hal.log('haCommonMedia/fetchAndDecryptStream/chunk ' + chunkCounter)
             
                 let start = chunkCounter*chunkSize
                 let end = (chunkCounter + 1)*chunkSize
@@ -342,7 +363,7 @@ export function useHACommonMedia() {
                     videoInfoCount++
                     fileStartOffset += decryptedBinArr.length
                 } else {
-                    hal.log("fetchAndDecryptStream/chunk/" + chunkCounter + "/error")
+                    hal.log('haCommonMedia/fetchAndDecryptStream/chunk/' + chunkCounter + '/error')
                     break
                 }
             }
@@ -443,35 +464,41 @@ export function useHACommonMedia() {
         }
     }
 
-    async function getChunkedMediaBlob(media: any, info: string, chunkSize: number) {
+    async function fetchChunkedMediaArrBuf(media: any, info: string, chunkSize: number) {
         const ciphertextHash = media.hash
         const encryptionKey = media.key
         const downloadUrl = media.downloadURL
 
-        /* download blob */
+        /* download from AWS */
         const response = await fetch(mainStore.devCORSWorkaroundUrlPrefix + downloadUrl)
-        const encryptedBuffer = await response.arrayBuffer()
-        const encryptedArray = new Uint8Array(encryptedBuffer)
+        const encryptedArrBuf = await response.arrayBuffer()
+        const encryptedBinArr = new Uint8Array(encryptedArrBuf)
 
         /* check hash */
-        const hash = await crypto.subtle.digest("SHA-256", encryptedArray)
+        const hash = await crypto.subtle.digest('SHA-256', encryptedBinArr)
         const isCorrectHash = isUint8ArrayEqual(new Uint8Array(hash), ciphertextHash)
         if (!isCorrectHash) {
-            hal.log('getChunkedMediaBlob/hash does not match')
+            hal.log('haCommonMedia/fetchChunkedMediaArrBuf/hash does not match')
+            return undefined
         }
 
         const chunksArr = []
         let chunkCounter = 0
-        for (let i = 0; i < encryptedArray.length; i += chunkSize) {
-            const chunkWithMAC = encryptedArray.slice(i, i + chunkSize)
+        for (let i = 0; i < encryptedBinArr.length; i += chunkSize) {
+            const chunkWithMAC = encryptedBinArr.slice(i, i + chunkSize)
             const chunkInfo = info + ' ' + chunkCounter
             const decryptedBinArr = await decryptChunk(chunkWithMAC, encryptionKey, chunkInfo)
+            if (!decryptedBinArr) { 
+                console.log("----> decryptedBinArr " + decryptedBinArr)
+                return undefined 
+            }
+
             chunksArr.push(decryptedBinArr)
             chunkCounter++
         }
 
         const combinedBinArr = combineBinaryArrays(chunksArr)
-        return new Blob([combinedBinArr])
+        return combinedBinArr.buffer
     }
 
     async function grabPreviewFromVideo(blob: Blob) {
@@ -498,17 +525,20 @@ export function useHACommonMedia() {
                 reject(undefined)
             }
 
-            video.currentTime = 1.0
-            video.load()
-         
             video.addEventListener('loadedmetadata', function () {
-                
                 canvas.width = video.videoWidth
                 canvas.height = video.videoHeight
+
+                // Safari: need delay so seeked event will fire
+                setTimeout(() => {
+                    video.currentTime = 1.0
+                }, 200)
+
             })
 
-            video.addEventListener('loadeddata', function () {
-                hal.log("grabPreviewFromVideo/loadeddata")
+            video.addEventListener('seeked', function () {
+                // hal.log('haCommonMedia/grabPreviewFromVideo/seeked')
+
                 context?.drawImage(video, 0, 0, video.videoWidth, video.videoHeight)
                 canvas.toBlob((blob) => {
                     if (blob) {
@@ -516,8 +546,12 @@ export function useHACommonMedia() {
                     }
                     video.remove()
                     canvas.remove()
-                })
+                }, 
+                'image/jpeg', 
+                0.90) // Safari: does not use quality
             })
+
+            video.load()
         })
     }
 
@@ -533,31 +567,6 @@ export function useHACommonMedia() {
         }
         return arr
     }
-
-    async function insertCommonMedia_old(type: SubjectType, subjectID: string, contentID: string, commonMediaArr: any) {
-        if (commonMediaArr.length < 1) { 
-            return 
-        }
-
-        const dbCommonMedia = await getCommonMedia(type, subjectID, contentID)
-        
-        if (!dbCommonMedia) {
-            for (let i = 0; i < commonMediaArr.length; i++) {
-                let media = commonMediaArr[i]
-                
-                try {
-                    const id = await db.commonMedia.put(media)
-                    hal.log('haFeed/insertCommonMedia/put/' + media.order + '/' + media.contentID)
-                } catch (error) {
-                    hal.log('haFeed/insertCommonMedia/db/put/error ' + error)
-                }
-            }
-
-        } else {
-            // hal.log('haFeed/insertCommonMedia/exit/bbject already in db')
-        }       
-        return 
-    }    
 
     async function insertCommonMedia(type: SubjectType, subjectID: string, contentID: string, commonMediaArr: any) {
         if (commonMediaArr.length < 1) { 
@@ -575,27 +584,29 @@ export function useHACommonMedia() {
             })
 
         } else {
-            // hal.log('haFeed/insertCommonMedia/exit/bbject already in db')
+            // hal.log('haFeed/insertCommonMedia/exit/object already in db')
         }       
         return 
     }    
 
-    async function modifyCommonMedia(type: SubjectType, subjectID: string, contentID: string, order: number, blob: Blob, previewImage?: Blob) {
-        if (!db.isOpen()) { return }
+    async function modifyCommonMedia(type: SubjectType, subjectID: string, contentID: string, order: number, arrBuf: ArrayBuffer, previewImageArrBuf?: ArrayBuffer) {
+        if (!mainStore.allowDbTransactions) { return }
         
         await db.commonMedia.where('contentID').equals(contentID).and((commonMed) => {
             return commonMed.subjectID == subjectID && commonMed.type == type && commonMed.order == order
-        }).modify(function(med) {
-            med.blob = blob
-            if (previewImage) {
-                med.previewImage = previewImage
+        }).modify(function(med: CommonMedia) {
+            
+            med.arrBuf = arrBuf
+
+            if (previewImageArrBuf) {
+                med.previewImageArrBuf = previewImageArrBuf
             }
         })
         return        
     }
 
     async function modifyCommonMediaIsCodecH265(type: SubjectType, subjectID: string, contentID: string, order: number, isCodecH265: boolean) {
-        if (!db.isOpen()) { return }
+        if (!mainStore.allowDbTransactions) { return }
         await db.commonMedia.where('contentID').equals(contentID).and((commonMed) => {
             return commonMed.subjectID == subjectID && commonMed.type == type && commonMed.order == order
         }).modify({
@@ -615,41 +626,39 @@ export function useHACommonMedia() {
         return        
     }     
 
-    async function modifyPostVoiceNote(postID: string, blob: Blob) {
+    async function modifyPostVoiceNote(postID: string, arrBuf: ArrayBuffer) {
         await db.post.where('postID').equals(postID).modify(function(item) {
             if (item.voiceNote) {
-                item.voiceNote.blob = blob
+                item.voiceNote.arrBuf = arrBuf
             }
         })
         return        
     } 
 
-    async function modifyCommentLinkPreviewMedia(subjectID: string, commentID: string, blob: Blob) {
+    async function modifyCommentVoiceNote(subjectID: string, commentID: string, arrBuf: ArrayBuffer) {
+        await db.comment.where('commentID').equals(commentID).modify(function(item) {
+            if (item.postID == subjectID) {
+                if (item.voiceNote) {
+                    item.voiceNote.arrBuf = arrBuf
+                }
+            }
+        })
+        return        
+    }
+
+    async function modifyCommentLinkPreviewMedia(subjectID: string, commentID: string, arrBuf: ArrayBuffer) {
         await db.comment.where('commentID').equals(commentID).modify(function(item) {
             if (item.postID == subjectID) {
                 if (item.linkPreview?.preview) {
-                    item.linkPreview.preview.blob = blob
+                    item.linkPreview.preview.arrBuf = arrBuf
                 }
             }
         })
         return        
     }    
   
-    async function modifyCommentVoiceNote(subjectID: string, commentID: string, blob: Blob) {
-        await db.comment.where('commentID').equals(commentID).modify(function(item) {
-            if (item.postID == subjectID) {
-                if (item.voiceNote) {
-                    item.voiceNote.blob = blob
-                }
-            }
-        })
-        return        
-    }    
-
-
-
     return {
-        fetchCommonMedia, 
+        fetchCommonMedia,
         fetchVoiceNote,
         fetchLinkPreviewMedia,
 

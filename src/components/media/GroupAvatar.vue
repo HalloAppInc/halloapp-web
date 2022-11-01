@@ -32,38 +32,35 @@
 
     const mainStore = useMainStore()
 
-    const { fetchGroupAvatar } = useHAAvatar()
+    const { fetchAndModifyGroupAvatar } = useHAAvatar()
 
     const avatarWidth = props.width.toString() + 'px'
     const avatarHeight = props.width.toString() + 'px'
 
     const avatarImageUrl = ref(mainStore.devCORSWorkaroundUrlPrefix + "https://web.halloapp.com/assets/groupAvatar.svg")
 
-    init()
 
-    async function init() {
-        const avatarImgBlob = await fetchGroupAvatar(props.groupID)
+    setupObserver()
 
-        if (avatarImgBlob) {
-            const avatarImgBlobUrl = URL.createObjectURL(avatarImgBlob)
-            avatarImageUrl.value = avatarImgBlobUrl 
-        }
-
-        setupObserver()
-    }
 
     async function setupObserver() {
-        const observable = liveQuery (() => db.groupAvatar.where('groupID').equals(props.groupID).toArray())
+        if (!mainStore.allowDbTransactions) { return }
+        const observable = liveQuery (() => db.groupAvatar.where('groupID').equals(props.groupID).first())
         const subscription = observable.subscribe({
             next: result => {
+                if (!mainStore.allowDbTransactions) { return }
                 if (!result) { return }
-                if (result.length == 0) { return }
-                if (!result[0].image) { return }
-                if (result[0].image.size == 0) { return }
 
-                const avatarImgBlobUrl = URL.createObjectURL(result[0].image)
-                if (!avatarImgBlobUrl) { return }
-                avatarImageUrl.value = avatarImgBlobUrl
+                if (result.arrBuf) { 
+                    const blob = new Blob( [ result.arrBuf ], { type: 'image/jpeg' } )
+                    const avatarImgBlobUrl = URL.createObjectURL(blob)
+                    avatarImageUrl.value = avatarImgBlobUrl
+                } else {
+                    if (result.avatarID) {
+                        fetchAndModifyGroupAvatar(result.groupID, result.avatarID)
+                    }
+                }
+                
             },
             error: error => console.error(error)
         })

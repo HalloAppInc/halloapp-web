@@ -68,10 +68,11 @@
 
                         if (commonMedia.value) {
 
-                            const blob = await fetchLinkPreviewMedia(props.type, commonMedia.value)
+                            const arrBuf = await fetchLinkPreviewMedia(props.type, commonMedia.value)
 
-                            if (blob) {
-                                commonMedia.value.blobUrl = URL.createObjectURL(commonMedia.value.blob)
+                            if (arrBuf) {
+                                const mediaBlob = new Blob([arrBuf], {type: 'image/jpeg'})
+                                commonMedia.value.blobUrl = URL.createObjectURL(mediaBlob)
                             } 
 
                         }

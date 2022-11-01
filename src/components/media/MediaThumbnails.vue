@@ -57,7 +57,7 @@
 
         if (mediaList) {
             listData.value = mediaList
-            makeList
+            makeList()
         }
 
         if (!mediaList) { return }
@@ -89,11 +89,12 @@
 
     async function makeList() {
         for (let i = 0; i < listData.value.length; i++) {
-                    
             const med = listData.value[i]
-            if (!med.blob) { continue }
+            if (!med.arrBuf) { continue }
             if (med.previewImageBlobUrl) { continue }
-            const previewImageBlobUrl = URL.createObjectURL(med.previewImage)
+
+            const blob = new Blob([med.previewImageArrBuf], {type: 'image/jpeg'})
+            const previewImageBlobUrl = URL.createObjectURL(blob)
             med.previewImageBlobUrl = previewImageBlobUrl
         }
     }
@@ -551,7 +552,10 @@
         height: 25px;
         backdrop-filter: blur(2px);
         -webkit-backdrop-filter: blur(2px);
-        
+
+        /* using a bg allows the play button to show through better even when the image is white */
+        background:rgba(0, 0, 0, 0.1);         
+
         border-radius: 50%;
     }
 

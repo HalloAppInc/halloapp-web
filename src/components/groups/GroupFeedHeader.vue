@@ -38,17 +38,17 @@
 
         <div class='container'>
            
-            <div v-if="!mainStore.showGroupsSidebar" class='iconContainer' @click="$emit('toggleSidebar')">
+            <div v-show="!mainStore.showGroupsSidebar" class='iconContainer' @click="$emit('openGroupsSidebar')">
                 <div class='iconShadow'>
                     <font-awesome-icon :icon="['fas', 'angle-left']" style="font-size: 25px;"/>
                 </div>
             </div>
            
             <div class="avatarContainer">
-                <GroupAvatar v-if="mainStore.groupsPageGroupID" :groupID="mainStore.groupsPageGroupID" :width="30"></GroupAvatar>
+                <GroupAvatar v-show="mainStore.groupsPageGroupID" :groupID="mainStore.groupsPageGroupID" :width="30"></GroupAvatar>
             </div>           
 
-            <div v-if="mainStore.groupsPageGroupID" class='titleContainer'>
+            <div v-show="mainStore.groupsPageGroupID" class='titleContainer'>
                 {{ mainStore.groupnames[mainStore.groupsPageGroupID] }}
             </div>
 

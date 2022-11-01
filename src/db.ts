@@ -62,9 +62,9 @@ export interface CommonMedia {
     type: SubjectType       // Feed, Comment, Chat
     subjectID: string       // '', GroupID, PostID, ChatID
     contentID: string       // PostID, CommentID, MessageID
-    mediaType: MediaType    // Image, Video, VoiceNote
-    
     order: number
+
+    mediaType: MediaType    // Image, Video, VoiceNote
     width: number
     height: number
 
@@ -77,9 +77,12 @@ export interface CommonMedia {
     blobSize?: number | Long
     chunkSize?: number
     blob?: Blob
+    arrBuf?: ArrayBuffer // Use ArrayBuffer instead of Blob as Safari does not handle blobs in indexeddb well
+
+    previewImage?: Blob
+    previewImageArrBuf?: ArrayBuffer
 
     isCodecH265?: boolean // pertains to video only
-    previewImage?: Blob
 }
 
 export enum SubjectType {
@@ -114,12 +117,14 @@ export interface Avatar {
     userID: number
     avatarID?: string
     image?: Blob
+    arrBuf?: ArrayBuffer
 }
 
 export interface GroupAvatar {
     groupID: string
     avatarID?: string
     image?: Blob
+    arrBuf?: ArrayBuffer
 }
 
 export interface MessageList {
@@ -160,7 +165,7 @@ export class HADexie extends Dexie {
     
     constructor() {
         super('myDatabase')
-        this.version(13).stores({
+        this.version(14).stores({
             post: 'postID, userID, groupID, seenState, text, timestamp',
             comment: 'commentID, postID, timestamp',
             group: 'groupID, name',

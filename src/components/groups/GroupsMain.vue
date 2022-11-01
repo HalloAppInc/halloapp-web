@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { initCustomFormatter, Ref, ref } from 'vue'
+    import { Ref, ref } from 'vue'
     import { storeToRefs } from 'pinia'
     import { liveQuery } from 'dexie'
 
@@ -14,7 +14,6 @@
     const mainStore = useMainStore()
     const colorStore = useColorStore()
     
-
     const feedRef = ref<InstanceType<typeof FeedList>>()
 
     let groupID = mainStore.groupsPageGroupID
@@ -28,19 +27,8 @@
         secondaryBorder: secondaryBorderColor,
     } = storeToRefs(colorStore) 
 
-    function commentsClick() {
-        
-        mainStore.showGroupsSidebar = !mainStore.showGroupsSidebar
-    }
-
-    function toggleSidebar() {
+    function openGroupsSidebar() {
         feedRef.value?.closeCommentsPanel()
-        mainStore.showGroupsSidebar = !mainStore.showGroupsSidebar
-    }
-
-    init()
-
-    function init() {
         mainStore.showGroupsSidebar = true
     }
 
@@ -48,9 +36,9 @@
 
 <template>
 
-    <FeedList ref="feedRef" :atMainFeed='false' :groupID="groupID" @commentsClick="commentsClick()">
+    <FeedList ref="feedRef" :atMainFeed='false' :groupID="groupID">
         <template v-slot:header>
-            <GroupFeedHeader @toggleSidebar="toggleSidebar()"></GroupFeedHeader>
+            <GroupFeedHeader @openGroupsSidebar="openGroupsSidebar()"></GroupFeedHeader>
         </template>
     </FeedList>
 

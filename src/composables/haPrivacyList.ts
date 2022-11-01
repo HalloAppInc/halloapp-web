@@ -17,7 +17,7 @@ import { useHAText } from '@/composables/haText'
 import { useHACommonMedia } from '@/composables/haCommonMedia'
 import { useHALog } from '@/composables/haLog'
 
-export function useHAUser() {
+export function useHAPrivacyList() {
 
     const mainStore = useMainStore()
     const connStore = useConnStore()
@@ -37,7 +37,7 @@ export function useHAUser() {
 
     async function requestPrivacyList(callback?: Function) {
         if (!connStore.isConnectedToMobile) { return }
-        hal.log('haUser/requestPrivacyList')
+        hal.log('connStore/requestPrivacyList')
         
         const webContainerBinArr = encodePrivacyListRequestWebContainer()        
         const encryptedWebContainer = connStore.encryptWebContainer(webContainerBinArr)
@@ -47,7 +47,17 @@ export function useHAUser() {
         connStore.enqueueMessage(packet, true, callback)            
     }
     
+    async function processPrivacyListResponse(response: any) {
+        const privacyLists = response.privacyLists
+
+        console.log('privacyLists')
+        console.dir(privacyLists)
+
+        // mainStore.isPrivacyListCompleted = true
+    }
+
     return { 
-        requestPrivacyList, 
+        requestPrivacyList,
+        processPrivacyListResponse
     }
 }

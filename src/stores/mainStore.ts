@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { Dexie } from 'dexie'
 
 import { useConnStore } from '@/stores/connStore'
 import { db } from '@/db'
@@ -27,6 +28,8 @@ export const useMainStore = defineStore('main', {
 
         privateKeyBase64: '',
         publicKeyBase64: '',
+
+        allowDbTransactions: false,
 
         isLoggedIntoApp: false,
         haveAddedPublicKeyToServer: false,
@@ -59,6 +62,10 @@ export const useMainStore = defineStore('main', {
 
         showGroupsSidebar: true,
         showGroupsCommentsPanel: false,
+        showGroupsCommentsPostID: '',
+
+        isGroupsListCompleted: false,
+        isPrivacyListCompleted: false,
 
         showSettings: false,
 
@@ -129,51 +136,63 @@ export const useMainStore = defineStore('main', {
         gotoSettingsPage(page: string) {
             this.settingsPage = page
         },
-        loginMain() {
+        async loginMain() {
             if (!this.isLoggedIntoApp) {
+                this.allowDbTransactions = true
                 this.page = 'home'
                 this.isLoggedIntoApp = true
                 this.loginUserID = 'j_1H1YKQy74sDoCylPCEA'
             }
         },
-        logoutMain() {
-            // deletes the entire db and re-opens it
+        async logoutMain() {
             // todo: make sure all other dbs like chat is also deleted, test to see if delete/re-open is fast enough
-            db.delete().then(() => {
+
+            // todo: might have to stop in-flight messages
+            this.messageQueue.splice(0, this.messageQueue.length) // clear messages
+            this.allowDbTransactions = false
+
+            // give it one second for all the in-flight transactions to stop before deleting the database
+            setTimeout(async () => {
+
+                // deletes the entire db and re-opens it
+                await db.delete()
 
                 /* manual reset instead of $reset() so we can preserve the states we want */
                 this.privateKeyBase64 = ''
                 this.mobilePublicKeyBase64 = ''
                 this.isPublicKeyAuthenticated = false
                 this.haveInitialHandshakeCompleted = false
-    
+
+                // todo: remove public key from server? (what if there's no connection)
+
                 this.userID = 0
-    
+
                 this.mainFeedHeadPostID = ''
                 this.mainFeedHeadPostTimestamp = 0
                 this.mainFeedTailPostID = ''
                 this.mainFeedTailPostTimestamp = 0
                 this.mainFeedNextCursor = ''
-    
-                // todo: remove public key from server? (what if there's no connection)
-    
+
                 this.isLoggedIntoApp = false
-                this.loginUserID = ''
+                this.loginUserID = '' // deprecated, test and then remove
                 
                 this.page = 'home'
                 this.groupsPageGroupID = ''
                 this.settingsPage = ''
                 this.scrollToTop = ''
 
+                this.showGroupsSidebar = true
+                this.showGroupsCommentsPanel = false
+                this.showGroupsCommentsPostID = ''
+
+                this.isGroupsListCompleted = false
+                this.isPrivacyListCompleted = false
+
                 this.showSettings = false
 
-                this.sounds = true,
-                this.desktopAlerts = true,
+                this.sounds = true
+                this.desktopAlerts = true
 
-                // todo: might have to stop in-flight messages
-
-                this.messageQueue.splice(0, this.messageQueue.length) // clear messages
-    
                 for (const prop of Object.getOwnPropertyNames(this.pushnames)) {
                     delete this.pushnames[prop]
                 }
@@ -195,8 +214,10 @@ export const useMainStore = defineStore('main', {
                 this.shownNotificationsArr.splice(0, this.shownNotificationsArr.length)
 
                 hal.log('mainStore/logged out')
-                db.open() 
-            })
+                await db.open() // db needs to be manually re-opened after a delete
+
+            }, 1000)
+
         }        
     },
 })

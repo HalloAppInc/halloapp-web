@@ -3,7 +3,7 @@
     import { storeToRefs } from 'pinia'
     import { liveQuery } from 'dexie'
 
-    import { db, CommonMedia, SubjectType, MediaType } from '@/db'
+    import { db, SubjectType, MediaType } from '@/db'
 
     import { useColorStore } from '@/stores/colorStore'
 
@@ -28,66 +28,51 @@
 
     const numberOfMedia = props.mediaList.length
 
-    const firstMedia = computed(() => {
-        let med = listData.value[0] ? listData.value[0] : undefined
-        if (med && med.previewImage) {
-            const previewImageBlobUrl = URL.createObjectURL(med.previewImage)
+
+    function makeMed(med: any) {
+        if (med && med.previewImageArrBuf) {
+            const blob = new Blob([med.previewImageArrBuf, {type: 'image/jpeg'}])
+
+            const previewImageBlobUrl = URL.createObjectURL(blob)
             if (previewImageBlobUrl) { 
                 med.previewImageBlobUrl = previewImageBlobUrl
             }
-        }        
-
-        return med
-    })
-    const secondMedia = computed(() => {
-        let med = listData.value[1] ? listData.value[1] : undefined
-
-        if (med && med.blob) {
-            const blobUrl = URL.createObjectURL(med.blob)
-            if (blobUrl) { 
-                med.blobUrl = blobUrl
-            }
         }
         return med
+    }
+
+    const firstMedia = computed(() => {
+        let med = listData.value[0] ? listData.value[0] : undefined
+        return makeMed(med)
+    })
+    
+    const secondMedia = computed(() => {
+        let med = listData.value[1] ? listData.value[1] : undefined
+        return makeMed(med)
     })
     const thirdMedia = computed(() => {
         let med = listData.value[2] ? listData.value[2] : undefined
-        if (med && med.blob) {
-            const blobUrl = URL.createObjectURL(med.blob)
-            if (blobUrl) { 
-                med.blobUrl = blobUrl
-            }
-        }        
-        return med
+ 
+        return makeMed(med)
     })
 
     const fourthMedia = computed(() => {
         let med = listData.value[3] ? listData.value[3] : undefined
-        if (med && med.blob) {
-            const blobUrl = URL.createObjectURL(med.blob)
-            if (blobUrl) { 
-                med.blobUrl = blobUrl
-            }
-        }
-        return med
-    })    
 
+        return makeMed(med)
+    })    
 
     const listData: Ref<any[]> = ref([])
 
     init()
 
     async function init() {
-        const needWatching = await fetchCommonMedia(props.type, props.mediaList)
+        const result = await fetchCommonMedia(props.type, props.mediaList)
 
-        // if (avatarImgBlob) {
-        //     const avatarImgBlobUrl = URL.createObjectURL(avatarImgBlob)
-        //     avatarImageUrl.value = avatarImgBlobUrl 
-        // }
-
-        /* some/all media still need to be fetched from AWS and thus need to be watched */
-        if (needWatching) {
+        if (result.needWatching) {
             setupObserver()
+        } else {
+            listData.value = props.mediaList
         }
     }
 
@@ -99,12 +84,7 @@
             next: result => {
                 if (!result) { return }
                 if (result.length == 0) { return }
-                // if (!result[0].image) { return }
-                // if (result[0].image.size == 0) { return }
 
-                // const avatarImgBlobUrl = URL.createObjectURL(result[0].image)
-                // if (!avatarImgBlobUrl) { return }
-                // avatarImageUrl.value = avatarImgBlobUrl
                 listData.value = result
             },
             error: error => console.error(error)
@@ -119,11 +99,11 @@
     <div class="mediaCollage">
 
         <div v-if='numberOfMedia == 1' class='containerOneMedia'>
-            <div v-if='!firstMedia || !firstMedia.previewImage' class='loaderContainer'>
+            <div v-if='!firstMedia || !firstMedia.previewImageArrBuf' class='loaderContainer'>
                 <div class='loader'></div>
             </div>
 
-            <div v-if="firstMedia" :class="['imgBigContainer', { 'blur': !firstMedia.previewImage }]" @click="$emit('openMedia', mediaList, 0, props.contentID)">
+            <div v-if="firstMedia" :class="['imgBigContainer', { 'blur': !firstMedia.previewImageArrBuf }]" @click="$emit('openMedia', mediaList, 0, props.contentID)">
                 <img class="image" :src='firstMedia.previewImageBlobUrl' :width='firstMedia.width' :height='firstMedia.height' />
 
                 <div v-if='firstMedia.mediaType == MediaType.Video' class='playIconContainer'>
@@ -138,12 +118,12 @@
 
         </div>
 
-
+        <!-- todo: refactor, these are repetitive -->
         <div v-else-if='numberOfMedia == 2 && secondMedia' class='containerMoreThanOneMedia'>
 
             <div class='imgVerticalRectangleContainer' @click="$emit('openMedia', mediaList, 0, props.contentID)">
 
-                <img :src='firstMedia.blobUrl' :height='firstMedia.hieght' :width='firstMedia.width' />
+                <img class='image' :src='firstMedia.previewImageBlobUrl' :height='firstMedia.hieght' :width='firstMedia.width' />
                 <div class='iconContainer' v-if='firstMedia.type == "video"'>
                     <font-awesome-icon :icon="['fas', 'play']" size='2x' />
                 </div>
@@ -152,7 +132,7 @@
 
             <div class='imgVerticalRectangleContainer lastElementInLine' @click="$emit('openMedia', mediaList, 1, props.contentID)">
 
-                <img :src='secondMedia.blobUrl' :height='secondMedia.height' :width='secondMedia.width' />
+                <img class='image' :src='secondMedia.previewImageBlobUrl' :height='secondMedia.height' :width='secondMedia.width' />
                 <div class='iconContainer' v-if='secondMedia.type == "video"'>
                     <font-awesome-icon :icon="['fas', 'play']" size='2x' />
                 </div>
@@ -166,7 +146,7 @@
 
             <div class='imgSquareContainer' @click="$emit('openMedia', mediaList, 0, props.contentID)">
 
-                <img :src='firstMedia.blobUrl' :height='firstMedia.height' :width='firstMedia.width' />
+                <img :src='firstMedia.previewImageBlobUrl' :height='firstMedia.height' :width='firstMedia.width' />
                 <div class='iconContainer' v-if='firstMedia.type == "video"'>
                     <font-awesome-icon :icon="['fas', 'play']" size='2x' />
                 </div>
@@ -175,7 +155,7 @@
 
             <div class='imgSquareContainer imgSquareContainerLastElementInRow' @click="$emit('openMedia', mediaList, 1, props.contentID)">
 
-                <img :src='secondMedia.blobUrl' :height='secondMedia.height' :width='secondMedia.width' />
+                <img :src='secondMedia.previewImageBlobUrl' :height='secondMedia.height' :width='secondMedia.width' />
                 <div class='iconContainer' v-if='secondMedia.type == "video"'>
                     <font-awesome-icon :icon="['fas', 'play']" size='2x' />
                 </div>
@@ -184,7 +164,7 @@
 
             <div class='imgHorizontalRectangleContainer' @click="$emit('openMedia', mediaList, 2, props.contentID)">
 
-                <img :src='thirdMedia.blobUrl' :height='thirdMedia.height' :width='thirdMedia.width' />
+                <img :src='thirdMedia.previewImageBlobUrl' :height='thirdMedia.height' :width='thirdMedia.width' />
                 <div class='iconContainer' v-if='thirdMedia.type == "video"'>
                     <font-awesome-icon :icon="['fas', 'play']" size='2x' />
                 </div>
@@ -199,7 +179,7 @@
 
             <div class='imgSquareContainer' @click="$emit('openMedia', mediaList, 0, props.contentID)">
 
-                <img :src='firstMedia.blobUrl' :height='firstMedia.hieght' :width='firstMedia.width' />
+                <img :src='firstMedia.previewImageBlobUrl' :height='firstMedia.hieght' :width='firstMedia.width' />
                 <div class='iconContainer' v-if='firstMedia.type == "video"'>
                     <font-awesome-icon :icon="['fas', 'play']" size='2x' />
                 </div>
@@ -208,7 +188,7 @@
 
             <div class='imgSquareContainer imgSquareContainerLastElementInRow' @click="$emit('openMedia', mediaList, 1, props.contentID)">
 
-                <img :src='secondMedia.blobUrl' :height='secondMedia.hieght' :width='secondMedia.width' />
+                <img :src='secondMedia.previewImageBlobUrl' :height='secondMedia.hieght' :width='secondMedia.width' />
                 <div class='iconContainer' v-if='secondMedia.type == "video"'>
                     <font-awesome-icon :icon="['fas', 'play']" size='2x' />
                 </div>
@@ -217,7 +197,7 @@
 
             <div class='imgSquareContainer imgSquareContainerLastElementInCol' @click="$emit('openMedia', mediaList, 2, props.contentID)">
 
-                <img :src='thirdMedia.blobUrl' :height='thirdMedia.height' :width='thirdMedia.width' />
+                <img :src='thirdMedia.previewImageBlobUrl' :height='thirdMedia.height' :width='thirdMedia.width' />
                 <div class='iconContainer' v-if='thirdMedia.type == "video"'>
                     <font-awesome-icon :icon="['fas', 'play']" size='2x' />
                 </div>
@@ -228,7 +208,7 @@
             <div v-if='numberOfMedia == 4' class='imgSquareContainer imgSquareContainerLastElementInRow imgSquareContainerLastElementInCol'
                 @click="$emit('openMedia', mediaList, 3, props.contentID)">
 
-                <img :src='fourthMedia.blobUrl' :height='fourthMedia.height' :width='fourthMedia.width' />
+                <img :src='fourthMedia.previewImageBlobUrl' :height='fourthMedia.height' :width='fourthMedia.width' />
                 <div class='iconContainer' v-if='fourthMedia.type == "video"'>
                     <font-awesome-icon :icon="['fas', 'play']" size='2x' />
                 </div>
@@ -239,7 +219,7 @@
             <div v-else-if='numberOfMedia > 4' @click="$emit('openMedia', mediaList, 3, props.contentID)">
                 <div class='imgSquareContainer imgSquareContainerLastElementInRow imgSquareContainerLastElementInCol'>
 
-                    <img class='blurImg' :src='fourthMedia.blobUrl' :height='fourthMedia.height' :width='fourthMedia.width' />
+                    <img class='blurImg' :src='fourthMedia.previewImageBlobUrl' :height='fourthMedia.height' :width='fourthMedia.width' />
                     <div class='iconContainer'>
                         <font-awesome-icon :icon="['fas', 'plus']" size='2x' />
                     </div>
@@ -301,6 +281,12 @@
         border-radius: 5px;
 
         position: relative;
+    }
+
+    .imgVerticalRectangleContainer .image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
     }
 
     .lastElementInLine {
@@ -381,6 +367,9 @@
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
         
+        /* using a bg allows the play button to show through better even when the image is white */
+        background:rgba(0, 0, 0, 0.1); 
+
         border-radius: 50%;
     }
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { Ref, ref, watchEffect, onActivated, onBeforeUnmount } from 'vue'
+    import { Ref, ref, watchEffect, onActivated, onBeforeUnmount, onMounted } from 'vue'
     import { liveQuery } from 'dexie'
     import { storeToRefs } from 'pinia'
 
@@ -10,6 +10,7 @@
     import { useColorStore } from '@/stores/colorStore'
 
     import { useHAComment } from '@/composables/haComment'
+    import { useHAGroup } from '@/composables/haGroup'
 
     import hal from '@/common/halogger'
 
@@ -21,6 +22,7 @@
     const colorStore = useColorStore()
 
     const { requestCommentsIfNeeded } = useHAComment()
+    const { requestGroupFeedItems } = useHAGroup()
 
     const listBoxWidth = ref('100%')
     const showComments = ref(false)
@@ -139,15 +141,14 @@
 
         /* comments panel already opened */
         if (showComments.value) {
-          
             // close comment if user clicked on the same post after open
             if (inViewPostID.value == postID) {
                 toggleCommentsPanel(postID)
             } else {
                 loadComments(postID)
                 inViewPostID.value = postID
+                mainStore.showGroupsCommentsPostID = postID
             }
-
         } 
         
         /* comments panel closed */
@@ -174,29 +175,41 @@
     function toggleCommentsPanel(postID: string) {
 
         if (listBoxWidth.value == '100%') {
-            let width = '500px'
-            if (mainStore.isMobile) {
-                width = '0px'
-            }
-            listBoxWidth.value = width
-
-            inViewPostID.value = postID
-            showComments.value = true
-            mainStore.mobileNavlessPanel = 'comments'
+            openCommentsPanel(postID)
         } 
         else {
-            inViewPostID.value = undefined
-
             closeCommentsPanel()
         }
 
-        emit('commentsClick', postID)
+        // emit('commentsClick', postID)
+    }
+
+    function openCommentsPanel(postID: string) {
+
+        inViewPostID.value = postID
+        if (!props.atMainFeed) {
+            
+            mainStore.showGroupsCommentsPostID = postID
+
+        }
+        let width = '500px'
+            if (mainStore.isMobile) {
+                width = '0px'
+            }
+        listBoxWidth.value = width
+
+        showComments.value = true
+        mainStore.mobileNavlessPanel = 'comments'
+        mainStore.showGroupsSidebar = false
+        mainStore.showGroupsCommentsPanel = true
     }
 
     function closeCommentsPanel() {
         listBoxWidth.value = '100%'
         showComments.value = false
-        mainStore.mobileNavlessPanel = ''        
+        mainStore.mobileNavlessPanel = ''
+        mainStore.showGroupsSidebar = true
+        mainStore.showGroupsCommentsPanel = false
     }
 
     function handleScroll() {
@@ -240,7 +253,7 @@
                 if (mainStore.groupFeedCursors[groupID]) {
                     groupCursor = mainStore.groupFeedCursors[groupID]
                 }      
-                connStore.requestGroupFeedItems(groupID, groupCursor, 50, function() {})
+                requestGroupFeedItems(groupID, groupCursor, 50, function() {})
             }
 
             count.value += 5
@@ -257,6 +270,14 @@
 
     }
 
+    onMounted(() => {
+        if (mainStore.showGroupsCommentsPanel) {
+            if (!props.atMainFeed) {
+                openCommentsPanel(mainStore.showGroupsCommentsPostID)
+            }
+        }
+    })
+
     onActivated(() => {
         if (!content.value) { return }
         let element = content.value
@@ -272,7 +293,7 @@
         if (!mainStore.groupFeedCursors[groupID]) {
             let groupCursor = ''
             groupCursor = mainStore.groupFeedCursors[groupID]
-            connStore.requestGroupFeedItems(groupID, groupCursor, 10, function() {})
+            requestGroupFeedItems(groupID, groupCursor, 10, function() {})
         }
     }    
 
@@ -292,7 +313,6 @@
                 <div class="newPostsText">
                     New Posts
                 </div>
-                
             </div>
         </transition>
 

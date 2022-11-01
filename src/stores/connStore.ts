@@ -13,7 +13,10 @@ import hacrypto from '@/common/hacrypto'
 import hal from '@/common/halogger'
 
 import { useHAFeed } from '@/composables/haFeed'
+import { useHAGroup } from '@/composables/haGroup'
+import { useHAPrivacyList } from '@/composables/haPrivacyList'
 import { useHAUtils } from '@/composables/haUtils'
+import { db } from '@/db'
 
 export const useConnStore = defineStore('conn', () => {
 
@@ -27,6 +30,8 @@ export const useConnStore = defineStore('conn', () => {
 
     const { debounce } = useHAUtils()
     const { processFeedResponse, processFeedUpdate, processUserDisplayInfo } = useHAFeed()
+    const { requestGroupsList, processGroupResponse } = useHAGroup()
+    const { requestPrivacyList, processPrivacyListResponse } = useHAPrivacyList()
 
     const isConnectedToServer = ref(false)
     const isConnectedToMobile = ref(false)
@@ -126,7 +131,7 @@ export const useConnStore = defineStore('conn', () => {
 
         if (isLoggingOut) {
             isLoggingOut = false
-            mainStore.logoutMain()
+            await mainStore.logoutMain()
         }
     }    
 
@@ -345,7 +350,7 @@ export const useConnStore = defineStore('conn', () => {
             hal.log('connStore/handleInbound/errorStanza: ' + errorStanza.reason)
             if (errorStanza.reason == 'not_authenticated') {
                 hal.log('(mobile client was disconnected?  Disconnected showing on Manage Web Client page?)')
-                logout()
+                await logout()
             }
         }
         
@@ -362,9 +367,9 @@ export const useConnStore = defineStore('conn', () => {
         } else if (feedUpdate) {
             processFeedUpdate(feedUpdate)
         } else if (groupResponse) {
-            // todo
+            processGroupResponse(groupResponse)
         } else if (privacyListResponse) {
-            // todo
+            processPrivacyListResponse(privacyListResponse)
         }  
     
     }
@@ -429,7 +434,7 @@ export const useConnStore = defineStore('conn', () => {
     }
 
     /* tested only for IK and KK handshakes */
-    function handleNoiseHandshakeMsg(noisePattern: any, role?: any, contentBinArr?: Uint8Array) {
+    async function handleNoiseHandshakeMsg(noisePattern: any, role?: any, contentBinArr?: Uint8Array) {
         if (!handshakeState) { return }
 
         let action = handshakeState.GetAction()
@@ -448,7 +453,10 @@ export const useConnStore = defineStore('conn', () => {
                 const fallbackSupported = false
                 const payload = handshakeState.ReadMessage(contentBinArr, isPayloadNeeded, fallbackSupported)
 
-                if (payload) { processConnectionPayload(payload) }
+                if (Object.keys(payload).length > 0) { 
+                    mainStore.allowDbTransactions = true // access must be allowed before app login as connection info needs the db
+                    await processConnectionPayload(payload) 
+                }
 
             } catch (error) {
                 hal.prod('handleNoiseHandshakeMsg/action/read ' + error)
@@ -513,7 +521,15 @@ export const useConnStore = defineStore('conn', () => {
             nextTimeToConnectToMobile.value = 0
             noiseReconnectHandshakeRetries.value = 0
 
-            requestFeedItems('', 5, function() {})
+            requestFeedItems('', 5, function() {
+                if (!mainStore.isGroupsListCompleted) {
+                    hal.log('connStore/request entire groups list')
+                    requestGroupsList(function() {
+                        
+                    })
+                }
+                requestPrivacyList(function() {})
+            })
         }
 
         else {
@@ -551,8 +567,10 @@ export const useConnStore = defineStore('conn', () => {
             if (mainStore.mobilePublicKeyBase64) {
                 remotePublicKey = Base64.toUint8Array(mainStore.mobilePublicKeyBase64)
             } else {
-                handshakeState = undefined
+                resetHandshake()
                 hal.log('connStore/initHandshake/KK/no mobile key')
+                // corner case where app's initialhandshake is completed but mobile key is lost (not reproducible yet)
+                logout()
                 return
             }
         }
@@ -567,14 +585,17 @@ export const useConnStore = defineStore('conn', () => {
 
     async function processConnectionPayload(binArr: Uint8Array) {
         const connectionInfo = await decodeConnectionInfo(binArr)
+        // console.dir(connectionInfo)
         const mobileVersion = connectionInfo.version
         hal.log("processConnectionPayload/mobileVersion: " + connectionInfo.version)
         connectedTo.value = mobileVersion
         const userDisplayInfo = connectionInfo.user
         if (mainStore.userID == 0) {
+            hal.log("processConnectionPayload/assigning " + userDisplayInfo.uid)
             mainStore.userID = userDisplayInfo.uid
         }
-        processUserDisplayInfo(userDisplayInfo)
+
+        await processUserDisplayInfo(userDisplayInfo)
     }
 
     async function decodeConnectionInfo(binArr: Uint8Array) {
@@ -762,28 +783,11 @@ export const useConnStore = defineStore('conn', () => {
         enqueueMessage(packet, true, callback)            
     }
 
-    async function requestGroupFeedItems(groupID: string, cursor: string, limit: number, callback?: Function) {
-        if (!isConnectedToMobile.value) { return }
-        console.log('connStore/requestGroupFeedItems/group: ' + groupID + ', cursor: ' + cursor)
-        
-        if (!cipherStateSend) {
-            hal.log('connStore/requestGroupFeedItems/exit/undefined cipherStateSend')
-            return
-        }
-
-        const webContainerBinArr = encodeGroupFeedRequestWebContainer(groupID, cursor, limit)        
-        const encryptedWebContainer = cipherStateSend.EncryptWithAd([], webContainerBinArr)
-
-        const packet = createWebStanzaPacket(encryptedWebContainer)
-        
-        enqueueMessage(packet, true, callback)            
-    }
-
     function login() {
         mainStore.loginMain()
     }
 
-    function logout() {
+    async function logout() {
         hal.log('connStore/logout/logging out...')
 
         nextTimeToConnectToMobile.value = 0
@@ -795,12 +799,13 @@ export const useConnStore = defineStore('conn', () => {
     
         resetHandshake()
 
-        // clearTimeout(webSocketCloseTimeoutID)
         debounceConnectToServer.cancel()
         debounceCloseWebSocket.cancel()
         debounceCloseAndConnectToMobile.cancel()
         debounceSendMessages.cancel()
         debounceMobilePing.cancel()
+
+        isConnectedToMobile.value = false
 
         /* wait to disconnect fully first as the login screen will connect right away */
         if (isConnectedToServer.value) {
@@ -809,7 +814,7 @@ export const useConnStore = defineStore('conn', () => {
             return
         } else {
             /* user can log out even if not connected to server in offline mode */
-            mainStore.logoutMain()
+            await mainStore.logoutMain()
         }
     }
 
@@ -842,7 +847,6 @@ export const useConnStore = defineStore('conn', () => {
         enqueueMessage,
 
         requestFeedItems,
-        requestGroupFeedItems,
 
         getMediaUrl,
 

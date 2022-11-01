@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { Ref, ref } from 'vue'
+    import { Ref, ref, onUnmounted } from 'vue'
     import { storeToRefs } from 'pinia'
     import { liveQuery } from 'dexie'
     import { useI18n } from 'vue-i18n'
@@ -23,19 +23,35 @@
     const colorStore = useColorStore()
     const { formatTimeForGroupsList } = useTimeformatter()
 
-    const feedObservable = liveQuery (() => db.group.reverse().sortBy('lastChangeTimestamp'))
-    const subscription = feedObservable.subscribe({
-        next: result => { 
-            if (result) {
-                listData.value = result
-            }
+    let subscription: any
 
-            if (!mainStore.groupsPageGroupID && listData.value.length > 0) {
-                mainStore.selectGroup(listData.value[0].groupID)
-            }
+    setupObserver()
 
-        },
-        error: error => console.error(error)
+    
+
+    async function setupObserver() {
+        if (!mainStore.allowDbTransactions) { return }
+        const feedObservable = liveQuery (() => db.group.reverse().sortBy('lastChangeTimestamp'))
+        subscription = feedObservable.subscribe({
+            next: result => { 
+                if (!mainStore.allowDbTransactions) { return }
+                if (result) {
+                    listData.value = result
+                }
+                
+                if (!mainStore.groupsPageGroupID && listData.value.length > 0) {
+                    mainStore.selectGroup(listData.value[0].groupID)
+                }
+
+            },
+            error: error => console.error(error)
+        })
+    }
+
+    onUnmounted(() => {
+        if (subscription) {
+            subscription.unsubscribe()
+        }
     })
 
     const { 

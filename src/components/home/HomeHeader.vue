@@ -19,6 +19,11 @@
     const colorStore = useColorStore()
 
     const { 
+        userID: refUserID,
+
+    } = storeToRefs(mainStore)    
+
+    const { 
         background: backgroundColor,
         hover: hoverColor, 
         icon: iconColor,
@@ -33,7 +38,7 @@
         <div class='container'>
             
             <div class="avatarContainer">
-                <Avatar :userID="mainStore.userID" :width="30" :key="mainStore.userID"></Avatar>
+                <Avatar :userID="refUserID" :width="30" :key="refUserID"></Avatar>
             </div>
 
             <div class="titleContainer">

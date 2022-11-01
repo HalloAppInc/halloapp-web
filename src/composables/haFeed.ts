@@ -11,6 +11,7 @@ import { clients } from '@/proto/clients.js'
 import { web } from '@/proto/web.js'
 
 import { useHAComment } from '@/composables/haComment'
+import { useHAGroup } from '@/composables/haGroup'
 import { useHAAvatar } from '@/composables/haAvatar'
 import { useHAText } from '@/composables/haText'
 import { useHACommonMedia } from '@/composables/haCommonMedia'
@@ -22,7 +23,8 @@ export function useHAFeed() {
     const connStore = useConnStore()
     
     const { requestCommentsIfNeeded, requestComments } = useHAComment()
-    const { getAvatar, fetchGroupAvatar } = useHAAvatar()
+    const { processGroupDisplayInfoList } = useHAGroup()
+    const { insertOrModifyAvatar } = useHAAvatar()
     const { processText } = useHAText()
     const { insertCommonMedia } = useHACommonMedia()
     const { hal } = useHALog()
@@ -36,7 +38,7 @@ export function useHAFeed() {
         const groupInfo = feedResponse.groupDisplayInfo
 
         /* processs groups first and wait for it to finish as processItems might need to modify groups list */
-        await processGroupDisplayInfo(groupInfo)
+        await processGroupDisplayInfoList(groupInfo)
 
         if (items.length < 1) { return }
 
@@ -200,7 +202,7 @@ export function useHAFeed() {
         const groupInfo = feedUpdate.groupDisplayInfo
 
         /* processs groups first and wait for it to finish as processItems might need to modify groups list */
-        await processGroupDisplayInfo(groupInfo)  
+        await processGroupDisplayInfoList(groupInfo)  
 
         hal.log('haFeed/processFeedUpdate/process num items: ' + items.length)
         for (let i = 0; i < items.length; i++) {
@@ -242,44 +244,9 @@ export function useHAFeed() {
         if (!mainStore.pushnames[userInfo.uid] || mainStore.pushnames[userInfo.uid] != userInfo.contactName) {
             mainStore.pushnames[userInfo.uid] = userInfo.contactName
         }
-        getAvatar(userInfo.uid, userInfo.avatarId)
+        await insertOrModifyAvatar(userInfo.uid, userInfo.avatarId)
     }
 
-    async function processGroupDisplayInfo(groupInfo: any) {
-        for (let j = 0; j < groupInfo.length; j++) {
-            const info = groupInfo[j]
-            if (!info) { continue }
-            await processGroupDisplayInfoItem(info)
-        }     
-    }
-
-    async function processGroupDisplayInfoItem(info: any) {
-        const groupID = info.id
-        const name = info.name
-
-        const dbGroupsList = await db.post.where('groupID').equals(groupID).toArray()
-        
-        if (dbGroupsList.length == 0) {
-            
-            let group: Group = { 
-                groupID: info.id,
-                name: info.name,
-                description: info.description,
-                background: info.background,
-                lastChangeTimestamp: 0
-            }            
-            await insertGroup(group)
-        } else {
-            const dbGroup = dbGroupsList[0]
-            // todo: modify appropriate based on changes
-        }   
-
-        if (!mainStore.groupnames[groupID] || mainStore.groupnames[groupID] != name) {
-            mainStore.groupnames[groupID] = name
-        }
-        fetchGroupAvatar(groupID, info.avatarId)
-    }    
-    
     function processFeedItem(feedItem: any, postInfo: any) {
 
         const groupID = feedItem.groupId
@@ -837,29 +804,6 @@ export function useHAFeed() {
         return        
     }
 
-    // async function setPostMediaIsCodecH265(postID: string, order: number, isCodecH265: boolean) {
-    //     await db.postMedia.where('postID').equals(postID).and((postMedia) => {
-    //         return postMedia.order == order
-    //     }).modify({
-    //         isCodecH265: isCodecH265
-    //     })
-        
-    //     return        
-    // }
-
-    async function insertGroup(group: any) {
-
-        return new Promise(async function (resolve, reject) {
-            try {
-                const id = await db.group.put(group)
-                return resolve(id)
-            } catch (error) {
-                hal.log('haFeed/insertGroup/put/error ' + error)
-                return reject(error)
-            }
-        })
-    }
-
     function decodeToPostContainer(binArray: Uint8Array) {
         const err = clients.Container.verify(binArray)
         if (err) {
@@ -879,14 +823,6 @@ export function useHAFeed() {
         const commentContainer = container.commentContainer
         return commentContainer
     }
-
-    // async function getComments(postID: string) {
-    //     const arr = await db.comment.where('postID').equals(postID).toArray()
-    //     if (!arr || arr.length == 0) {
-    //         return undefined
-    //     }
-    //     return arr
-    // }
 
     return { 
         processFeedResponse, processFeedUpdate,

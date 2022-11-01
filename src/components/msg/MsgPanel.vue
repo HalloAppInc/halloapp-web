@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang='ts'>
     import { Ref, ref, computed, nextTick, watch, onMounted, onUnmounted, onUpdated, onActivated } from 'vue'
     import { number } from '@intlify/core-base'
     import { liveQuery } from 'dexie'
@@ -40,7 +40,7 @@
 
     const { requestCommentsIfNeeded } = useHAComment()
 
-    const count = ref(50)
+    const count = ref(20)
 
     const { t, locale } = useI18n({
         inheritLocale: true,
@@ -97,8 +97,6 @@
         
     const commonMediaLists = ref({} as any) // contain arrays of commonMedia per data item
 
-    const isInitialized = ref(false)
-
     async function makeList() {
 
         listData.value = await processDBCommentList(dbListData, count.value) as any
@@ -110,8 +108,6 @@
             if (props.type == SubjectType.Comment) {
                 if (!commonMediaLists.value[element.commentID]) {
 
-                    const num = await db.commonMedia.toArray()
-
                     const mediaArr = await getCommonMedia(SubjectType.Comment, props.subjectID, element.commentID)
                     if (mediaArr) {
                         commonMediaLists.value[element.commentID] = mediaArr
@@ -122,15 +118,6 @@
             }
         }
 
-        if (!isInitialized.value) {
-            isInitialized.value = true
-            // nextTick(() => {
-                
-            //     shouldScrollToBottom = false
-            // })
-            
-        }
-
         /* don't scroll to the bottom if user has scrolled up */
         if (!showJumpDownButton.value) {
             gotoBottom('auto')
@@ -138,8 +125,6 @@
 
     }
 
-
-    
 
     const menu = ref<HTMLElement | null>(null)
     const content = ref<HTMLElement | null>(null)
@@ -260,6 +245,8 @@
             const message = messageListFromDB.value[i]
     
             let formattedTime = formatTimeChat(message.timestamp, locale.value as string)
+            message.formattedTime = formattedTime
+
             let type = (message.userID == mainStore.userID) ? 'outBound' : 'inBound'
             // not delete
             if ( message.text != undefined) {
@@ -276,15 +263,15 @@
 
                 message.textHtml = textHtml
                 message.textFont = resMsg[1]
-            
-                message.formattedTime = formattedTime
             }
 
             if (message.voiceNote) {
                
-                const voiceNoteBlob = await fetchVoiceNote(props.type, message.voiceNote) as any
+                const voiceNoteArrBuf = await fetchVoiceNote(props.type, message.voiceNote) as any
 
-                if (voiceNoteBlob) {
+                if (voiceNoteArrBuf) {
+
+                    const voiceNoteBlob = new Blob([voiceNoteArrBuf], {type: 'audio/mpeg'})                    
                     message.voiceNoteBlobUrl = URL.createObjectURL(voiceNoteBlob)
                 }
             }
@@ -598,8 +585,8 @@
     }
 
     function openMedia(mediaList: any, idx: number, contentID: string) {
-        console.log("msgPanel/openMedia " + idx)
-        console.dir(mediaList)
+        // console.log("msgPanel/openMedia " + idx)
+        // console.dir(mediaList)
         selectMediaList.value = mediaList
         selectMediaIdx.value = idx
         selectMediaContentID.value = contentID
@@ -663,7 +650,6 @@
 
     function gotoQuoteMessage(commentID: string) {
         
-
         const targetElement = document.getElementById('messageBubble' + commentID)
         if (targetElement) {
             
@@ -673,7 +659,6 @@
                 targetElement.classList.add('chatBubbleAnimation')
 
                 setTimeout(() => {
-                    
                     targetElement.classList.remove('chatBubbleAnimation')
                 }, 1800)
             }, 300)
@@ -681,15 +666,14 @@
       
     }
 
-
 </script>
 
 <template>
 
     <div class='msgPanelContent' ref='content' @scroll='handleScroll()'>
         <slot name="subHeader"></slot>
-        <!-- chat msg -->
-        <div v-if="isInitialized && listData.length > 0" v-for='(value, idx) in listData' class="containerChat">
+
+        <div v-for='(value, idx) in listData' class="containerChat">
 
             <!-- inbound msg -->
             <div v-if="value.type != 'timestamp' && value.userID != mainStore.userID" class='contentTextBody contentTextBodyInBound'
@@ -727,24 +711,20 @@
                     </div>
 
                     <div v-if="value.voiceNoteBlobUrl">
-
                         <audio autobuffer="autobuffer" ref="$postVoiceNote" id="postVoiceNote" preload="metadata" controls controlsList="nodownload">
                             <source :src="value.voiceNoteBlobUrl" type="audio/mpeg">
                             <p>{{ t('post.noAudioSupportText') }}</p>
                         </audio>
-
                     </div>                    
 
                     <!-- text -->
-                    <!-- <div class='chatTextContainer' :class='{ bigChatTextContainer: value.font == "onlyEmoji" }'> -->
                     <div class='chatTextContainer'>
                         <span v-html='value.textHtml' :class='value.textFont'>
                         </span>
-                         <!-- <span v-html='processText(value.text, value.mentions, false).html'> -->
-                    </div>                    
+                    </div>        
 
                     <!-- timestamp -->
-                    <div class='msgInfoContainer' v-if='value.timestamp'>
+                    <div v-if='value.timestamp' class='msgInfoContainer'>
                         <div class='msgInfoContent'>
                             <div class='timestamp' :data-msg-timestamp='value.timestamp'>
                                 {{ value.formattedTime }}
@@ -854,7 +834,6 @@
             </div>
         </transition>
 
-
         <!-- message bubble sub menu -->
         <div class='chatSettingsContanier' v-if='showMenu' @click.stop>
             <div class='menu' ref='menu'>
@@ -918,22 +897,7 @@
 </template>
 
 <style scoped>
-    *::-webkit-scrollbar {
-        width: 10px;
-    }
-
-    *::-webkit-scrollbar-track {
-        background: v-bind(tertiaryBgColor);
-    }
-
-    *::-webkit-scrollbar-thumb {
-        background-color: rgb(172, 169, 169);
-
-        border: 0px solid white;
-    }
-
     .msgPanelContent {
-
         width: 100%;
         height: 100%;
 
@@ -945,7 +909,6 @@
         flex-direction: column;
 
         background-color: v-bind(tertiaryBgColor);
-
     }
 
     .containerChat {
@@ -954,7 +917,6 @@
 
         display: flex;
         flex-direction: column;
-
     }
 
     .chatReplyContainer {
@@ -1222,6 +1184,10 @@
     }
 
     .mediaContainer {
+        width: 300px;
+        height: 300px;
+
+
         padding-bottom: 10px;
         overflow-y: hidden;
 
@@ -1340,6 +1306,20 @@
 
     .closeIcon:hover {
         cursor: pointer;
+    }
+
+    *::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    *::-webkit-scrollbar-track {
+        background: v-bind(tertiaryBgColor);
+    }
+
+    *::-webkit-scrollbar-thumb {
+        background-color: rgb(172, 169, 169);
+
+        border: 0px solid white;
     }
 
     /* animation for button */

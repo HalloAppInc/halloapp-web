@@ -46,7 +46,6 @@
         previewImageSrc: string,
         postWidth: number,
         selectedMediaIndex: number,
-       
     }
     const props = defineProps<Props>()
 
@@ -91,6 +90,8 @@
     }
 
     async function setupObserver() {
+        if (!mainStore.allowDbTransactions) { return }
+        
         const observable = liveQuery (() => db.commonMedia.where('contentID').equals(props.contentID).and((commonMed) => {
             return commonMed.subjectID == props.subjectID && commonMed.type == props.type
         }).toArray())
@@ -113,11 +114,13 @@
         setMediaSizes(listData)
         // todo: optimize by not redo-ing the entire list
         for (let i = 0; i < listData.value.length; i++) {
-            const med = listData.value[i]
-            if (!med.previewImage) { continue }
-            if (med.previewImageUrl) { continue }
-            const previewImageUrl = URL.createObjectURL(med.previewImage)
-            med.previewImageUrl = previewImageUrl
+            const med = listData.value[i]  
+            if (!med.previewImageArrBuf) { continue }
+            if (med.previewImageBlobUrl) { continue }
+
+            const previewImageBlob = new Blob([med.previewImageArrBuf], {type: 'image/jpeg'})
+            const previewImageBlobUrl = URL.createObjectURL(previewImageBlob)
+            med.previewImageBlobUrl = previewImageBlobUrl
         }
 
     }
@@ -434,23 +437,15 @@
                         <div :class="['mediaErrorMsg']">{{ t('post.noH265VideoSupportText') }}</div>
                     </div>
 
-                    <div v-else-if="!item.previewImageUrl" class="mediaLoaderBox">
+                    <div v-else-if="!item.previewImageBlobUrl" class="mediaLoaderBox">
                         <div class="loader"></div>
                     </div>
                     
-                    <img v-else-if="item.mediaType == MediaType.Image" class="postImage" 
-                        :src="item.previewImageUrl" :width="item.width" :height="item.height" 
+                    <img v-else class="postImage" 
+                        :src="item.previewImageBlobUrl" :width="item.width" :height="item.height" 
                         :style="'margin-left: ' + item.margin + 'px; margin-right: ' + item.margin + 'px;'"
                         @click="$emit('openMedia', listData, index, props.contentID)"
-                        alt="Post Image">
-
-
-                    <img v-else-if="item.mediaType == MediaType.Video" class="postImage" 
-                        :src="item.previewImageUrl" :width="item.width" :height="item.height" 
-                        :style="'margin-left: ' + item.margin + 'px; margin-right: ' + item.margin + 'px;'"
-                        @click="$emit('openMedia', listData, index, props.contentID)"
-                        alt='Video Preview Image'>
-
+                        alt="Image">
 
                     <div v-if="item.mediaType == MediaType.Video" class='playIconContainer'
                         @click="$emit('openMedia', listData, index, props.contentID)">
@@ -461,7 +456,6 @@
                         </div>
                     </div>
 
-                    
                     <!-- <video v-else-if="item.mediaType == MediaType.Video" class="postVideo" 
                         :width="item.width" :height="item.height"
                         :style="'margin-left: ' + item.margin + 'px; margin-right: ' + item.margin + 'px;'" 
@@ -656,6 +650,7 @@
         transform: translate(-50%, 50%);
 
         color: v-bind(primaryWhiteBlackColor);
+
     }
 
     .playIconContainer .playCircle {
@@ -670,6 +665,9 @@
         height: 70px;
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
+      
+        /* using a bg allows the play button to show through better even when the image is white */
+        background:rgba(0, 0, 0, 0.1); 
         
         border-radius: 50%;
     }

@@ -5,6 +5,7 @@
 
     import { useMainStore } from '@/stores/mainStore'
     import { useConnStore } from '@/stores/connStore'
+    import { useIconStore } from '@/stores/iconStore'
     import { useColorStore } from '@/stores/colorStore'
 
     import MainPanel from '@/components/MainPanel.vue'
@@ -26,6 +27,7 @@
 
     const mainStore = useMainStore()
     const connStore = useConnStore()
+    const iconStore = useIconStore()
     const colorStore = useColorStore()
 
     const { 
@@ -160,6 +162,7 @@
     applyPlatformSpecifics()
     loadFonts()
 
+    iconStore.init() 
     colorStore.init() // initialize color scheme
     init()
 
@@ -167,7 +170,14 @@
         hal.log('app/init')
 
         connStore.clearMessagesInQueue()
-        connStore.debounceConnectToServer()        
+        connStore.debounceConnectToServer()
+
+        /* temporary: for older clients that do not have allowDbTransactions, can remove after some builds from 38) */
+        if (mainStore.isLoggedIntoApp) {
+            if (!mainStore.allowDbTransactions) {
+                mainStore.allowDbTransactions = true
+            }
+        }
     }
 
     function applyPlatformSpecifics() {
@@ -330,7 +340,6 @@
 
 <!-- Global Styles -->
 <style>
-
     * {
         box-sizing: border-box;
     }

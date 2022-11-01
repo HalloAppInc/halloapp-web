@@ -1,8 +1,8 @@
-import { defineStore } from 'pinia';
+import { defineStore } from 'pinia'
 
-import colors from '../common/colors';
+import colors from '@/common/colors'
 
-import { useMainStore } from './mainStore';
+import { useMainStore } from '@/stores/mainStore'
 
 export const useColorStore = defineStore('color', {
     state: () => ({

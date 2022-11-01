@@ -58,8 +58,8 @@
     let savedScrollTop = 0 // store scroll position
 
     function openMedia(mediaList: any, idx: number, contentID: string) {
-        console.log("commentMain/openMedia " + idx)
-        console.dir(mediaList)
+        // console.log("commentMain/openMedia " + idx)
+        // console.dir(mediaList)
         selectMediaList.value = mediaList
         selectedMediaIndex.value = idx
         selectMediaContentID.value = contentID
@@ -68,22 +68,18 @@
     }
 
     function clickPrevious() {
-        console.log('pre')
         if (selectedMediaIndex.value > 0) {
             selectedMediaIndex.value -= 1
         }
     }
 
     function clickNext() {
-        console.log('next')
         if (selectedMediaIndex.value < selectMediaList.value.length - 1) {
             selectedMediaIndex.value += 1
-            console.log('next ' + selectedMediaIndex.value)
         }
     }
 
     function selectMedia(index: number) {
-        console.log('select')
         if (index < 0) {
             selectedMediaIndex.value = 0
         } else if (index > selectMediaList.value.length) {
@@ -125,8 +121,13 @@
                         subjectID.value = post.value.groupID
                     }
                 } else if (post.value.voiceNote) {
-                    const blob = post.value.voiceNote.blob
-                    post.value.voiceNote.blobUrl = URL.createObjectURL(blob)
+
+                    const arrBuf = post.value.voiceNote.arrBuf
+
+                    if (arrBuf) {
+                        const blob = new Blob([arrBuf], {type: 'audio/mpeg'})
+                        post.value.voiceNote.blobUrl = URL.createObjectURL(blob)
+                    }
                 }
             },
             error: error => console.error(error)
@@ -198,7 +199,7 @@
                         <div v-else-if="post.voiceNote?.blobUrl">
 
                             <audio autobuffer="autobuffer" preload="metadata" controls controlsList="nodownload">
-                                <source :src="post.voiceNote?.blobUrl" type="audio/mpeg">
+                                <source :src="post.voiceNote?.blobUrl" type='audio/mpeg'>
                                 <p>{{ t('post.noAudioSupportText') }}</p>
                             </audio>
 
@@ -213,7 +214,6 @@
 
         </MsgPanel>
 
-
         <FullScreener v-if="selectMediaContentID && selectMediaList" :key="selectMediaContentID"
             :showFullScreener='showFullScreener'
             :type="SubjectType.FeedPost"
@@ -224,7 +224,6 @@
             @clickPrevious="clickPrevious"
             @clickNext="clickNext"
             @selectMedia="selectMedia" />
-
        
         <!-- input tray -->
         <!-- <div class='footer'>

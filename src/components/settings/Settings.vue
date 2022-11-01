@@ -5,6 +5,7 @@
 
     import { useMainStore } from '@/stores/mainStore'
     import { useConnStore } from '@/stores/connStore'
+    import { useIconStore } from '@/stores/iconStore'
     import { useColorStore } from '@/stores/colorStore'
 
     import Popup from '@/components/chats/Popup.vue'
@@ -14,6 +15,7 @@
 
     const mainStore = useMainStore()
     const connStore = useConnStore()
+    const iconStore = useIconStore()
     const colorStore = useColorStore()
 
     const { t } = useI18n({
@@ -52,6 +54,7 @@
     }
 
     function changePreferColorScheme(mode: string) {
+        iconStore.changePreferColorSchema(mode)
         colorStore.changePreferColorSchema(mode)
     }
 </script>

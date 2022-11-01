@@ -40,7 +40,9 @@
         </div>
 
         <div v-if="mainStore.groupsPageGroupID" class="mainPanel">
-            <GroupsMain :key="mainStore.groupsPageGroupID"/>
+            <keep-alive>
+                <GroupsMain :key="mainStore.groupsPageGroupID"/>
+            </keep-alive>
         </div>
 
     </div>
