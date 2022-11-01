@@ -34,8 +34,8 @@
 
     async function setupObserver() {
         if (!mainStore.allowDbTransactions) { return }
-        const feedObservable = liveQuery (() => db.group.reverse().sortBy('lastChangeTimestamp'))
-        subscription = feedObservable.subscribe({
+        const observable = liveQuery (() => db.group.reverse().sortBy('lastChangeTimestamp'))
+        subscription = observable.subscribe({
             next: result => { 
                 if (!mainStore.allowDbTransactions) { return }
                 if (result) {

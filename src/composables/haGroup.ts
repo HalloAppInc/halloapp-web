@@ -63,7 +63,7 @@ export function useHAGroup() {
         for (let j = 0; j < groupInfoList.length; j++) {
             const info = groupInfoList[j]
             if (!info) { continue }
-            await processGroupDisplayInfo(info)
+            await processGroupDisplayInfo(info) // awaiting seems faster than not to, though nothing needs to wait on it
         }
         hal.log('haGroup/groups list complete')
         mainStore.isGroupsListCompleted = true
@@ -74,38 +74,49 @@ export function useHAGroup() {
             const info = groupInfoList[j]
             if (!info) { continue }
 
-            // try not awaiting to see if it's more performant as nothing need to wait on the process
-            processGroupDisplayInfo(info)
+            await processGroupDisplayInfo(info)
         }
     }
 
-    async function processGroupDisplayInfo(info: any) {
+    async function processGroupDisplayInfo(groupInfo: any) {
         if (!mainStore.allowDbTransactions) { return }
-        const groupID = info.id
-        const name = info.name
+        const groupID = groupInfo.id
+        const name = groupInfo.name
 
-        const dbGroupsList = await db.post.where('groupID').equals(groupID).toArray()
+        const dbGroup = await db.group.where('groupID').equals(groupID).first()
         
-        if (dbGroupsList.length == 0) {
+        if (!dbGroup) {
             
             let group: Group = { 
-                groupID: info.id,
-                name: info.name,
-                description: info.description,
-                background: info.background,
+                groupID: groupInfo.id,
+                name: groupInfo.name,
+                description: groupInfo.description,
+                background: groupInfo.background,
                 lastChangeTimestamp: 0
             }            
-            await insertGroup(group)
+            const insertion = await insertGroup(group)
         } else {
-            const dbGroup = dbGroupsList[0]
-            // todo: modify appropriate based on changes
+            
+            db.group.where('groupID').equals(groupID).modify(function(grp: any) {
+                if (grp.name != groupInfo.name) {
+                    grp.name = groupInfo.name
+                }
+                if (grp.description != groupInfo.description) {
+                    grp.description = groupInfo.description
+                }     
+                if (grp.background != groupInfo.background) {
+                    grp.background = groupInfo.background
+                }                             
+            })
+
+            
         }   
 
         if (!mainStore.groupnames[groupID] || mainStore.groupnames[groupID] != name) {
             mainStore.groupnames[groupID] = name
         }
-        if (info.avatarId) {
-            await insertOrModifyGroupAvatar(groupID, info.avatarId)
+        if (groupInfo.avatarId) {
+            await insertOrModifyGroupAvatar(groupID, groupInfo.avatarId)
         }
     }        
     
@@ -113,10 +124,10 @@ export function useHAGroup() {
 
         return new Promise(async function (resolve, reject) {
             try {
-                const id = await db.group.put(group)
+                const id = await db.group.add(group)
                 return resolve(id)
             } catch (error) {
-                hal.log('haFeed/insertGroup/put/error ' + error)
+                hal.log('haFeed/insertGroup/add/error ' + error)
                 return reject(error)
             }
         })
