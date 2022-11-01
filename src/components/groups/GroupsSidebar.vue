@@ -50,7 +50,6 @@
 
 
     function makeList() {
-
         if (dbListData.value.length > count.value) {
             listData.value = dbListData.value.slice(0, count.value)
         } else {
@@ -81,11 +80,9 @@
         const scrolled = element.scrollHeight - element.scrollTop
         const nearEnd = element.clientHeight * 3 // 2 screens up, less than 3 doesn't seem to work well
         if (scrolled < nearEnd) {
-            
-            makeList()
             count.value += 15
+            makeList()
         }
-
     }
 
 
