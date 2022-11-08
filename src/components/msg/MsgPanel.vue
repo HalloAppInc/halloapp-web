@@ -16,6 +16,7 @@
 
     import hal from '@/common/halogger'
 
+    import { useHAFeed } from '@/composables/haFeed'
     import { useHAComment } from '@/composables/haComment'
     import { useTimeformatter } from '@/composables/timeformatter'
     import { useHAMediaResize } from '@/composables/haMediaResize'
@@ -38,6 +39,7 @@
     const connStore = useConnStore()
     const colorStore = useColorStore()
 
+    const { updateReceipt } = useHAFeed()
     const { requestCommentsIfNeeded } = useHAComment()
 
     const count = ref(20)
@@ -106,6 +108,7 @@
             if (element.type == 'timestamp') { continue }
 
             if (props.type == SubjectType.Comment) {
+
                 if (!commonMediaLists.value[element.commentID]) {
 
                     const mediaArr = await getCommonMedia(SubjectType.Comment, props.subjectID, element.commentID)
@@ -241,6 +244,7 @@
             listLength = numMsgToShow
         }
 
+        /* goes from most recent to oldest */
         for(let i = 0; i < listLength; i++) {
             const message = messageListFromDB.value[i]
     

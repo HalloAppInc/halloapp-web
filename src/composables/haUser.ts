@@ -23,28 +23,22 @@ export function useHAUser() {
     const connStore = useConnStore()
     
     let { 
-        createPingPacket, addKey, removeKey, check, createNoiseMessage, createWebStanzaPacket, 
-        encodeFeedRequestWebContainer, encodeGroupFeedRequestWebContainer, encodeCommentsRequestWebContainer,
-        encodeGroupRequestWebContainer,
-        encodePrivacyListRequestWebContainer,
-        uploadMedia 
+        createWebStanzaPacket, 
+        createPrivacyListRequestWebContainer,
     } = network()    
 
-    const { insertOrModifyAvatar } = useHAAvatar()
-    const { processText } = useHAText()
-    const { insertCommonMedia } = useHACommonMedia()
     const { hal } = useHALog()
 
     async function requestPrivacyList(callback?: Function) {
         if (!connStore.isConnectedToMobile) { return }
         hal.log('haUser/requestPrivacyList')
         
-        const webContainerBinArr = encodePrivacyListRequestWebContainer()        
-        const encryptedWebContainer = connStore.encryptWebContainer(webContainerBinArr)
+        const createdWebContainer = createPrivacyListRequestWebContainer()        
+        const encryptedWebContainer = connStore.encryptWebContainer(createdWebContainer.webContainerBinArr)
 
         const packet = createWebStanzaPacket(encryptedWebContainer)
         
-        connStore.enqueueMessage(packet, true, callback)            
+        connStore.enqueueMessage(packet, createdWebContainer.webContainer, true, callback)            
     }
     
     return { 

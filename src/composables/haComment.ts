@@ -23,15 +23,10 @@ export function useHAComment() {
     const connStore = useConnStore()
     
     let { 
-        createPingPacket, addKey, removeKey, check, createNoiseMessage, createWebStanzaPacket, 
-        encodeFeedRequestWebContainer, encodeGroupFeedRequestWebContainer, encodeCommentsRequestWebContainer,
-        encodeGroupRequestWebContainer,
-        uploadMedia 
+        createWebStanzaPacket, 
+        createCommentsRequestWebContainer
     } = network()    
 
-    const { insertOrModifyAvatar } = useHAAvatar()
-    const { processText } = useHAText()
-    const { insertCommonMedia } = useHACommonMedia()
     const { hal } = useHALog()
 
     async function requestCommentsIfNeeded(postID: string, limit: number, callback?: Function) {
@@ -70,12 +65,14 @@ export function useHAComment() {
 
         console.log('connStore/requestComments/post: ' + postID + ', cursor: ' + cursor)
 
-        const webContainerBinArr = encodeCommentsRequestWebContainer(postID, cursor, limit)        
-        const encryptedWebContainer = connStore.encryptWebContainer(webContainerBinArr)
+        const createdWebContainer = createCommentsRequestWebContainer(postID, cursor, limit)        
+        const encryptedWebContainer = connStore.encryptWebContainer(createdWebContainer.webContainerBinArr)
 
         const packet = createWebStanzaPacket(encryptedWebContainer)
         
-        connStore.enqueueMessage(packet, true, callback)            
+        const needAuth = true
+        const webContainer = createdWebContainer.webContainer
+        connStore.enqueueMessage(packet, webContainer, needAuth, callback)            
     }
 
     async function getComment(postID: string, commentID: string) {

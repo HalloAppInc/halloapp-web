@@ -23,8 +23,7 @@ export const useConnStore = defineStore('conn', () => {
     const mainStore = useMainStore()
     let { 
         createPingPacket, addKey, removeKey, check, createNoiseMessage, createWebStanzaPacket, 
-        encodeFeedRequestWebContainer, encodeGroupFeedRequestWebContainer, encodeCommentsRequestWebContainer,
-        encodeGroupRequestWebContainer,
+        createFeedRequestWebContainer,
         uploadMedia 
     } = network()
 
@@ -46,8 +45,8 @@ export const useConnStore = defineStore('conn', () => {
      // so we keep track of the user's first click
     const isUserFirstClickCompleted = ref(false)
 
-    const version = '38'
-    const devMode = false
+    const version = '39'
+    const devMode = true
     const isDebug = false
 
     // let connectionTimeoutID: any // used for debouncing multiple calls to connect
@@ -80,7 +79,7 @@ export const useConnStore = defineStore('conn', () => {
         hal.log('connStore/debounceMobileConnectionRetry/no responses for 30 seconds')
         isConnectedToMobile.value = false
         connectToMobile()
-    }, 30000)
+    }, 60000)
 
     const debounceConnectToServer = debounce(async function() {
         if (isConnectedToServer.value) {
@@ -124,8 +123,6 @@ export const useConnStore = defineStore('conn', () => {
 
     async function wsClose(event: any) {
         hal.log('connStore/wsOnclose ' + event)
-        fetchAbortController.value.abort()
-        fetchAbortController.value = new AbortController() // once aborted, controller is consumed, need to refresh
 
         isConnectedToServer.value = false
 
@@ -528,7 +525,7 @@ export const useConnStore = defineStore('conn', () => {
                         
                     })
                 }
-                requestPrivacyList(function() {})
+                // requestPrivacyList(function() {})
             })
         }
 
@@ -656,11 +653,12 @@ export const useConnStore = defineStore('conn', () => {
         return webContainer
     }    
 
-    async function enqueueMessage(packet: any, needAuth?: boolean, callback?: any) {
+    async function enqueueMessage(packet: server.Packet, webContainer?: web.WebContainer, needAuth?: boolean, callback?: Function) {
         mainStore.messageQueue.push({ 
             iqID: packet.iq?.id, 
             msgID: packet.msg?.id,
             packet: packet,
+            webContainer: webContainer, // extra info for logging what is being sent at the time of sending
             needAuth: needAuth,
             callback: callback        
         })
@@ -695,19 +693,27 @@ export const useConnStore = defineStore('conn', () => {
             const packet = message.packet
 
             // certain packets like addKey do not need authentication
-            if (!isConnectedToMobile.value && !mainStore.isPublicKeyAuthenticated && message.needAuth) {
-                hal.log('connStore/sendMessages/' + i.toString() + '/not authenticated, skip: ' + packet.iq?.id)
+            if ((message.needAuth && !isConnectedToMobile.value)) {
+                hal.log('connStore/sendMessages/' + i.toString() + '/not connected to mobile, skip: ' + packet.msg?.id)
                 continue
             }
 
-            if (packet.iq) {
-                hal.log('connStore/sendMessages/' + i.toString() + '/send: ' + JSON.stringify(packet))
-            }
+            // if (packet.iq) {
+            //     hal.log('connStore/sendMessages/' + i.toString() + '/send: ' + JSON.stringify(packet))
+            // }
 
             const encodedPacketBuf = server.Packet.encode(packet).finish()
             const buf = encodedPacketBuf.buffer.slice(encodedPacketBuf.byteOffset, encodedPacketBuf.byteLength + encodedPacketBuf.byteOffset)
             
             if (isConnectedToServer.value) {
+
+                if (packet.iq || packet.msg) {
+                    hal.log('connStore/sendMessages/' + i.toString() + '/send: ' + JSON.stringify(packet))
+                    if (message.webContainer) {
+                        hal.log('content: ' + JSON.stringify(message.webContainer) + '\n\n')
+                    }
+                }
+                
                 webSocket.send(buf)
             }
         }
@@ -750,13 +756,13 @@ export const useConnStore = defineStore('conn', () => {
     async function addKeyToServer(callback?: Function) {
         hal.log('connStore/addKeyToServer')
         const packet = addKey()
-        enqueueMessage(packet, false, callback)
+        enqueueMessage(packet, undefined, false, callback)
     }
 
     async function getMediaUrl(size: number, isResumable: boolean, callback?: Function) {
         hal.log('connStore/getMediaUrl')
         const packet = uploadMedia(size, isResumable)
-        enqueueMessage(packet, true, callback)
+        enqueueMessage(packet, undefined, true, callback)
     }
 
     /* using this as a ping to check if mobile is reachable or not */
@@ -765,7 +771,7 @@ export const useConnStore = defineStore('conn', () => {
             if (!isConnectedToMobile) { return }
             debounceMobilePing()
         })
-    }, 20000)
+    }, 30000)
 
     async function requestFeedItems(cursor: string, limit: number, callback?: Function) {
         console.log('connStore/requestFeedItems/cursor: ' + cursor)
@@ -775,12 +781,12 @@ export const useConnStore = defineStore('conn', () => {
             return
         }
 
-        const webContainerBinArr = encodeFeedRequestWebContainer(cursor, limit)        
-        const encryptedWebContainer = cipherStateSend.EncryptWithAd([], webContainerBinArr)
+        const craetedWebContainer = createFeedRequestWebContainer(cursor, limit)        
+        const encryptedWebContainer = cipherStateSend.EncryptWithAd([], craetedWebContainer.webContainerBinArr)
 
         const packet = createWebStanzaPacket(encryptedWebContainer)
         
-        enqueueMessage(packet, true, callback)            
+        enqueueMessage(packet, craetedWebContainer.webContainer, true, callback)            
     }
 
     function login() {
@@ -789,6 +795,9 @@ export const useConnStore = defineStore('conn', () => {
 
     async function logout() {
         hal.log('connStore/logout/logging out...')
+
+        fetchAbortController.value.abort()
+        fetchAbortController.value = new AbortController() // once aborted, controller is consumed, need to refresh
 
         nextTimeToConnectToMobile.value = 0
         noiseReconnectHandshakeRetries.value = 0
@@ -809,9 +818,18 @@ export const useConnStore = defineStore('conn', () => {
 
         /* wait to disconnect fully first as the login screen will connect right away */
         if (isConnectedToServer.value) {
+
+            // const packet = removeKey()
+            // enqueueMessage(packet, false, function() {
+            //     isLoggingOut = true
+            //     disconnectFromServer()
+            //     return
+            // })
+
             isLoggingOut = true
             disconnectFromServer()
-            return
+            return            
+            
         } else {
             /* user can log out even if not connected to server in offline mode */
             await mainStore.logoutMain()

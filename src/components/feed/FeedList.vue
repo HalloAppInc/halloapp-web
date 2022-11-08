@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import { Ref, ref, watchEffect, onActivated, onBeforeUnmount, onMounted } from 'vue'
+    import { Ref, ref, watch, watchEffect, onActivated, onBeforeUnmount, onMounted } from 'vue'
     import { liveQuery } from 'dexie'
     import { storeToRefs } from 'pinia'
 
@@ -9,6 +9,7 @@
     import { useConnStore } from '@/stores/connStore'
     import { useColorStore } from '@/stores/colorStore'
 
+    import { gotNewPost } from '@/composables/haFeed'
     import { useHAComment } from '@/composables/haComment'
     import { useHAGroup } from '@/composables/haGroup'
 
@@ -21,8 +22,12 @@
     const connStore = useConnStore()
     const colorStore = useColorStore()
 
+    // const { gotNewPost } = useHAFeed()
     const { requestCommentsIfNeeded } = useHAComment()
     const { requestGroupFeedItems } = useHAGroup()
+
+
+ 
 
     const listBoxWidth = ref('100%')
     const showComments = ref(false)
@@ -32,6 +37,10 @@
         groupID?: string
     }
     const props = defineProps<Props>()
+
+    const { 
+        page: mainStorePage
+    } = storeToRefs(mainStore)  
 
     const { 
         background: backgroundColor
@@ -77,6 +86,28 @@
 
 
     const emit = defineEmits<{(e: 'commentsClick', postID: string): void}>()
+
+    /* revisit new post dot indicator to see if it's needed and if so, can it be simplified */
+    if (props.atMainFeed) {
+        watch(gotNewPost, (newVal, oldVal) => {
+            if (!content.value) { return }
+            const element = content.value
+            if (mainStore.page != 'home' || (mainStore.page == 'home' && element.scrollTop > 200)) {
+                mainStore.showNewPostsDotIndicator = true
+            }
+        })
+
+        watch(mainStorePage, (newVal, oldVal) => {
+            if (!content.value) { return }
+            const element = content.value
+            if (mainStore.page == 'home') {
+                if (element.scrollTop < 200) {
+                    mainStore.showNewPostsDotIndicator = false
+                }
+            }
+        })
+
+    }
 
     watchEffect(() => {
 
@@ -199,7 +230,6 @@
         listBoxWidth.value = width
 
         showComments.value = true
-        mainStore.mobileNavlessPanel = 'comments'
         mainStore.showGroupsSidebar = false
         mainStore.showGroupsCommentsPanel = true
     }
@@ -207,7 +237,6 @@
     function closeCommentsPanel() {
         listBoxWidth.value = '100%'
         showComments.value = false
-        mainStore.mobileNavlessPanel = ''
         mainStore.showGroupsSidebar = true
         mainStore.showGroupsCommentsPanel = false
     }
@@ -237,7 +266,7 @@
         // }
 
         /* fetch more posts before user gets to the end of their feed */
-        var element = content.value;
+        const element = content.value
         const scrolled = element.scrollHeight - element.scrollTop
         const nearEnd = element.clientHeight * 3 // 2 screens up
         if (scrolled < nearEnd) {
@@ -266,6 +295,12 @@
             showNewPostsButton.value = false
         }
 
+        if (props.atMainFeed) {
+            if (element.scrollTop < 200) {
+                mainStore.showNewPostsDotIndicator = false
+            }
+        }
+
         savedScrollTop = element.scrollTop
 
     }
@@ -282,7 +317,16 @@
         if (!content.value) { return }
         let element = content.value
         element.scrollTop = savedScrollTop
+
+        if (props.atMainFeed) {
+            if (element.scrollTop < 200) {
+                mainStore.showNewPostsDotIndicator = false
+            }
+        }
+
     })
+
+
 
     if (!props.atMainFeed && props.groupID) {
         initGroupFeed()

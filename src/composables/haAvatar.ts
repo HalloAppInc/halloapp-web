@@ -29,7 +29,6 @@ export function useHAAvatar() {
                     userID: userID,
                     avatarID: avatarID
                 })
-                hal.log('haAvatar/insertOrModifyAvatar/' + userID + '/add sucess')
             } catch (error) {
                 hal.log('haAvatar/insertOrModifyAvatar/' + userID + '/add/error ' + error)
             }
@@ -50,14 +49,21 @@ export function useHAAvatar() {
     async function fetchAndModifyAvatar(userID: number, avatarID: string) {
         if (!mainStore.allowDbTransactions) { return }
 
-        const avatarImageUrl = avatarImageUrlPrefix + avatarID
+        // const avatarImageUrl = avatarImageUrlPrefix + avatarID
 
-        const request = new Request(avatarImageUrl)
-        const response = await fetch(request)
+        // const request = new Request(avatarImageUrl)
+        // const response = await fetch(request)
+
+        const urlPath = avatarID
+        const response = await haFetch(urlPath)
+
+        if (!response) { return undefined }
+
         let avatarArrBuf = await response.arrayBuffer()
 
-        if (avatarArrBuf.byteLength < 1) {
-            hal.log('haAvatar/fetchAndModifyAvatar/' + userID + '/exit/arrbuf empty')
+        /* rough check to see if response is an actual image or an error message from server (which is around 243 bytes) */
+        if (avatarArrBuf.byteLength < 500) {
+            hal.log('haAvatar/fetchAndModifyAvatar/' + userID + '/exit/invalid image')
             return undefined
         }
 
@@ -100,13 +106,19 @@ export function useHAAvatar() {
     async function fetchAndModifyGroupAvatar(groupID: string, avatarID: string) {
         if (!mainStore.allowDbTransactions) { return }
 
-        const avatarImageUrl = avatarImageUrlPrefix + avatarID
+        // const avatarImageUrl = avatarImageUrlPrefix + avatarID
+        // const request = new Request(avatarImageUrl)
+        // const response = await fetch(request)
 
-        const request = new Request(avatarImageUrl)
-        const response = await fetch(request)
+        const urlPath = avatarID
+        const response = await haFetch(urlPath)
+
+        if (!response) { return undefined }
+
         let avatarArrBuf = await response.arrayBuffer()
 
-        if (avatarArrBuf.byteLength < 1) {
+        /* rough check to see if response is an actual image or an error message from server (which is around 243 bytes) */
+        if (avatarArrBuf.byteLength < 500) {
             hal.log('haAvatarfetchGroupAvatar/' + groupID + '/exit/arrbuf empty')
             return undefined
         }
@@ -117,6 +129,19 @@ export function useHAAvatar() {
         })
     }    
     
+    async function haFetch(urlPath: any) {
+        const avatarImageUrlPrefix = mainStore.devCORSWorkaroundUrlPrefix + 'https://avatar-cdn.halloapp.net/'
+        const url = avatarImageUrlPrefix + urlPath
+        const request = new Request(url, { signal: connStore.fetchAbortController.signal })
+        try {
+            const response = await fetch(request)
+            return response
+        } catch (err) {
+            console.log('haFetch/err: ' + err)
+            return undefined
+        }
+    }
+
     return {
         insertOrModifyAvatar, fetchAndModifyAvatar,
         insertOrModifyGroupAvatar, fetchAndModifyGroupAvatar }

@@ -44,26 +44,24 @@ export function network() {
         return packet
     }
 
-    function createWebStanzaPacket(content: Uint8Array) {
-        const id = nanoid()
-        const publicKey = Base64.toUint8Array(mainStore.publicKeyBase64)
-
-        const webStanza = server.WebStanza.create({
-            staticKey: publicKey, // web public key
-            content: content
-        })
-
-        const msg = server.Msg.create({
-            id: id,
-            type: server.Msg.Type.NORMAL,
-            webStanza: webStanza
-        })
+    // revisit: does not seem to be working from server side, no responses
+    function removeKey() {
+        let id = nanoid()
     
-        const packet = server.Packet.create({ msg: msg })
-        // hal.log('network/createWebStanzaPacket/packet:\n' + JSON.stringify(packet) + '\n\n')
+        let publicKey = Base64.toUint8Array(mainStore.publicKeyBase64)
+        let webClientInfo = server.WebClientInfo.create({
+            action: server.WebClientInfo.Action.REMOVE_KEY,
+            staticKey: publicKey
+        })
+        let iq = server.Iq.create({
+            id: id,
+            type: server.Iq.Type.SET,
+            webClientInfo: webClientInfo
+        })
 
-        return packet       
-    }
+        const packet = server.Packet.create({ iq: iq })
+        return packet
+    }    
 
     const createNoiseMessage = (contentBuf: ArrayBuffer, messageType: any) => {
         const contentBinArr = new Uint8Array(contentBuf)
@@ -96,7 +94,7 @@ export function network() {
         return packetBuf
     }
 
-    const encodeFeedRequestWebContainer = (cursor: string, limit: number) => {
+    const createFeedRequestWebContainer = (cursor: string, limit: number) => {
         const id = nanoid()
 
         const feedRequest = web.FeedRequest.create({
@@ -110,18 +108,13 @@ export function network() {
             feedRequest: feedRequest
         })
 
-        // hal.log('network/encodeFeedRequestWebContainer:\n' + JSON.stringify(webContainer) + '\n\n')
-
-        // const webContainerProto = web.WebContainer.encode(webContainer).finish()
-        // const webContainerBuf = webContainerProto.buffer.slice(webContainerProto.byteOffset, webContainerProto.byteLength + webContainerProto.byteOffset)
-        // const webContainerBinArr = new Uint8Array(webContainerBuf)
-
-        // return webContainerBinArr
-
-        return encodeWebContainer(webContainer)
+        return {
+            webContainer: webContainer,
+            webContainerBinArr: encodeWebContainer(webContainer)
+        }
     }
 
-    const encodeGroupFeedRequestWebContainer = (groupID: string, cursor: string, limit: number) => {
+    const createGroupFeedRequestWebContainer = (groupID: string, cursor: string, limit: number) => {
         const id = nanoid()
 
         let feedRequest = web.FeedRequest.create({
@@ -136,18 +129,13 @@ export function network() {
             feedRequest: feedRequest
         })
 
-        // hal.log('network/encodeGroupFeedRequestWebContainer:\n' + JSON.stringify(webContainer) + '\n\n')
-
-        // const webContainerProto = web.WebContainer.encode(webContainer).finish()
-        // const webContainerBuf = webContainerProto.buffer.slice(webContainerProto.byteOffset, webContainerProto.byteLength + webContainerProto.byteOffset)
-        // const webContainerBinArr = new Uint8Array(webContainerBuf)
-
-        // return webContainerBinArr
-
-        return encodeWebContainer(webContainer)
+        return {
+            webContainer: webContainer,
+            webContainerBinArr: encodeWebContainer(webContainer)
+        }
     }
 
-    const encodeCommentsRequestWebContainer = (postID: string, cursor: string, limit: number) => {
+    const createCommentsRequestWebContainer = (postID: string, cursor: string, limit: number) => {
         const id = nanoid()
 
         let feedRequest = web.FeedRequest.create({
@@ -162,18 +150,13 @@ export function network() {
             feedRequest: feedRequest
         })
 
-        // hal.log('network/encodeCommentsRequestWebContainer:\n' + JSON.stringify(webContainer) + '\n\n')
-
-        // const webContainerProto = web.WebContainer.encode(webContainer).finish()
-        // const webContainerBuf = webContainerProto.buffer.slice(webContainerProto.byteOffset, webContainerProto.byteLength + webContainerProto.byteOffset)
-        // const webContainerBinArr = new Uint8Array(webContainerBuf)
-
-        // return webContainerBinArr
-
-        return encodeWebContainer(webContainer)
+        return {
+            webContainer: webContainer,
+            webContainerBinArr: encodeWebContainer(webContainer)
+        }
     }
 
-    const encodeGroupRequestWebContainer = () => {
+    const createGroupRequestWebContainer = () => {
         const id = nanoid()
 
         const groupRequest = web.GroupRequest.create({
@@ -184,10 +167,13 @@ export function network() {
             groupRequest: groupRequest
         })
 
-        return encodeWebContainer(webContainer)
+        return {
+            webContainer: webContainer,
+            webContainerBinArr: encodeWebContainer(webContainer)
+        }
     }
 
-    const encodePrivacyListRequestWebContainer = () => {
+    const createPrivacyListRequestWebContainer = () => {
         const id = nanoid()
 
         const privacyListRequest = web.PrivacyListRequest.create({
@@ -198,11 +184,39 @@ export function network() {
             privacyListRequest: privacyListRequest
         })
 
-        return encodeWebContainer(webContainer)
+        return {
+            webContainer: webContainer,
+            webContainerBinArr: encodeWebContainer(webContainer)
+        }
     }    
 
+    const createReceiptUpdateWebContainer = (contentID: string, userID: number, timestamp: number) => {
+        const id = nanoid()
+
+        let receiptInfo = web.ReceiptInfo.create({
+            uid: userID,
+            status: web.ReceiptInfo.Status.SEEN,
+            timestamp: timestamp
+        })
+
+        let receiptUpdate = web.ReceiptUpdate.create({
+            id: id,
+            contentId: contentID,
+            receipt: receiptInfo
+        })
+
+        const webContainer = web.WebContainer.create({
+            receiptUpdate: receiptUpdate
+        })
+
+        return {
+            webContainer: webContainer,
+            webContainerBinArr: encodeWebContainer(webContainer)
+        }
+    }
+
     function encodeWebContainer(webContainer: web.WebContainer) {
-        hal.log('network/encodeWebContainer:\n' + JSON.stringify(webContainer) + '\n\n')
+        // hal.log('network/encodeWebContainer:\n' + JSON.stringify(webContainer) + '\n\n')
         const webContainerProto = web.WebContainer.encode(webContainer).finish()
         const webContainerBuf = webContainerProto.buffer.slice(webContainerProto.byteOffset, webContainerProto.byteLength + webContainerProto.byteOffset)
         const webContainerBinArr = new Uint8Array(webContainerBuf)
@@ -210,28 +224,27 @@ export function network() {
         return webContainerBinArr
     }
 
-    function removeKey(websocket: any) {
-        let id = nanoid()
-    
-        let publicKey = Base64.toUint8Array(mainStore.publicKeyBase64)
-        let webClientInfo = server.WebClientInfo.create({
-            action: server.WebClientInfo.Action.REMOVE_KEY,
-            staticKey: publicKey
-        })
-        let iq = server.Iq.create({
-            id: id,
-            type: server.Iq.Type.SET,
-            webClientInfo: webClientInfo
+    function createWebStanzaPacket(content: Uint8Array) {
+        const id = nanoid()
+        const publicKey = Base64.toUint8Array(mainStore.publicKeyBase64)
+
+        const webStanza = server.WebStanza.create({
+            staticKey: publicKey, // web public key
+            content: content
         })
 
-        // packet -> iq -> webClientInfo
-        let message = server.Packet.create({ iq: iq })
-        let buffer = server.Packet.encode(message).finish()
+        const msg = server.Msg.create({
+            id: id,
+            type: server.Msg.Type.NORMAL,
+            webStanza: webStanza
+        })
     
-        websocket.send(buffer.buffer)
-        hal.log('network/removeKey ' + id)
+        const packet = server.Packet.create({ msg: msg })
+        // hal.log('network/createWebStanzaPacket/packet:\n' + JSON.stringify(packet) + '\n\n')
+
+        return packet       
     }
-    
+
     function check(websocket: any) {
         let id = nanoid()
     
@@ -271,10 +284,6 @@ export function network() {
         const packet = server.Packet.create({ iq: iq })
 
         return packet
-
-        // const packetProto = server.Packet.encode(packet).finish()
-        // mainStore.messageQueue.push({ id: id, packet: packet, callback: callback })
-        // websocket.send(packetProto.buffer)
     }
 
     return { 
@@ -282,11 +291,12 @@ export function network() {
         check,
         createNoiseMessage, 
         createWebStanzaPacket, 
-        encodeFeedRequestWebContainer,
-        encodeGroupFeedRequestWebContainer,
-        encodeCommentsRequestWebContainer,
-        encodeGroupRequestWebContainer,
-        encodePrivacyListRequestWebContainer,
-        uploadMedia 
+        createFeedRequestWebContainer,
+        createGroupFeedRequestWebContainer,
+        createCommentsRequestWebContainer,
+        createGroupRequestWebContainer,
+        createPrivacyListRequestWebContainer,
+        createReceiptUpdateWebContainer,
+        uploadMedia,
     }
 }

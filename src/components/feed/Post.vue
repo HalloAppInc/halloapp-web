@@ -1,18 +1,22 @@
 <script setup lang="ts">
-    import { toRef, Ref, ref, onBeforeUnmount } from "vue"
+    import { toRef, Ref, ref, onBeforeUnmount, watch } from "vue"
     import { storeToRefs } from 'pinia'
     import { liveQuery } from "dexie"
     import { useI18n } from 'vue-i18n'
+    import { useIntersectionObserver } from '@vueuse/core'
 
     import { useMainStore } from '@/stores/mainStore'
     import { useConnStore } from '@/stores/connStore'
     import { useIconStore } from '@/stores/iconStore'
     import { useColorStore } from '@/stores/colorStore'
 
-    import { db, SubjectType, Post, MediaType, CommonMedia } from '@/db'
+    import { db, SubjectType, Post, CommonMedia } from '@/db'
+
+    import { network } from '@/common/network'
 
     import { web } from "@/proto/web.js"
 
+    import { useHAFeed } from '@/composables/haFeed'
     import { useHAComment } from '@/composables/haComment'
     import { useHACommonMedia } from '@/composables/haCommonMedia'
     import { useHAText } from '@/composables/haText'
@@ -40,6 +44,11 @@
     const iconStore = useIconStore()
     const colorStore = useColorStore()
     
+    let { 
+        createReceiptUpdateWebContainer
+    } = network()
+
+    const { updateReceipt } = useHAFeed()
     const { requestCommentsIfNeeded } = useHAComment()
 
     const { processText } = useHAText()
@@ -120,7 +129,6 @@
     async function processPost(post: Post) {
         const postID = post.postID
 
-        let isVoiceNote = false
         let voiceNoteMedia: any
 
         if (props.post.retractState == web.PostDisplayInfo.RetractState.RETRACTED) {
@@ -138,10 +146,8 @@
 
         /* voiceNote */
         if (post.voiceNote) {
-            isVoiceNote = true
             voiceNoteMedia = post.voiceNote
             
-
             let arrBuf: ArrayBuffer | undefined
 
             if (voiceNoteMedia.arrBuf) {
@@ -289,6 +295,37 @@
         }
     }
 
+    const postEl = ref(null)
+    const isVisible = ref(false)
+
+    if (post.value.seenState == web.PostDisplayInfo.SeenState.UNSEEN) {
+       
+        watch(isVisible, (newVal, oldVal) => {
+            if (newVal) {
+                const timestamp = Math.round(Date.now() / 1000)
+
+                updateReceipt(props.post.postID, mainStore.userID, timestamp, function() {
+                    stop()
+                    return
+                })
+                
+            }
+        })    
+
+        const { stop } = useIntersectionObserver(
+            postEl,
+            ([{ isIntersecting } ], observerElement) => {
+                    isVisible.value = isIntersecting
+            },
+            {
+                threshold: 0.3,
+            }
+        )
+
+    }
+    
+
+
 </script>
 
 <template>
@@ -296,7 +333,7 @@
     <div>
         <div v-if='!isDeleted' class='postRow'>
 
-            <div :class="['post']">
+            <div :class="['post']" ref='postEl'>
 
                 <!-- postHeader row -->
                 <div id="postHeader">
@@ -365,7 +402,7 @@
                     <div class="commentButton" @click="$emit('commentsClick')">
                         <img class="commentIcon" :src="commentIcon" alt="Comment Icon">
                         <div>
-                            {{ t('post.comment') }}
+                            {{ t('post.comments') }}
                         </div>
                         <div v-if="post.unreadComments" class="newCommentIndicator">
                         </div>

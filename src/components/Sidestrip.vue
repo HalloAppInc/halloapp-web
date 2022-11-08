@@ -46,7 +46,7 @@
 
     async function setupObserver() {
         const observable = liveQuery (() => db.post.where('seenState').equals(web.PostDisplayInfo.SeenState.UNSEEN).toArray())
-        const avatarSubscription = observable.subscribe({
+        const subscription = observable.subscribe({
             next: result => {
                 if (!result) { return }
                 
@@ -79,6 +79,8 @@
                      * goes to the top of the main feed, even when there are still unseen posts
                      */
                     haveUnseenPosts.value = true
+                } else {
+                    mainStore.showNewPostsDotIndicator = false
                 }
 
 
@@ -175,7 +177,7 @@
                 <div class="sideIconLabel">
                     {{ t('general.home') }} 
                 </div>
-                <div v-if="haveUnseenPosts" class="newHomeFeedIndicator"></div>
+                <div v-if="mainStore.showNewPostsDotIndicator" class="newHomeFeedIndicator"></div>
             </div>
         </div>
 

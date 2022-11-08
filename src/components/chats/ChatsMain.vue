@@ -49,12 +49,12 @@
 
         <!-- chatting area -->
         <div class='content'>
-            <ChatPanel :replyQuoteIdx='replyQuoteIdx'/>
+            <!-- <ChatPanel :replyQuoteIdx='replyQuoteIdx'/> -->
         </div>
 
         <!-- input tray -->
         <div class='footer'>
-            <ChatFooter :replyQuoteIdx='replyQuoteIdx'/>
+            <!-- <ChatFooter :replyQuoteIdx='replyQuoteIdx'/> -->
         </div>
 
     </div>

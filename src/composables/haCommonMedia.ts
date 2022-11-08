@@ -47,6 +47,7 @@ export function useHACommonMedia() {
 
                 let mediaArrBuf: ArrayBuffer | undefined
                 hal.log('fetchCommonMedia/image/fetch ' + med.contentID)
+
                 mediaArrBuf = await fetchMediaArrBuf(imageInfo, med)
 
                 if (mediaArrBuf) {
@@ -489,7 +490,6 @@ export function useHACommonMedia() {
             const chunkInfo = info + ' ' + chunkCounter
             const decryptedBinArr = await decryptChunk(chunkWithMAC, encryptionKey, chunkInfo)
             if (!decryptedBinArr) { 
-                console.log("----> decryptedBinArr " + decryptedBinArr)
                 return undefined 
             }
 
@@ -577,7 +577,7 @@ export function useHACommonMedia() {
         
         if (!dbCommonMedia) {
 
-            db.commonMedia.bulkPut(commonMediaArr).then(function(lastKey) {
+            db.commonMedia.bulkAdd(commonMediaArr).then(function(lastKey) {
                 // hal.log('haFeed/insertCommonMedia/bulkPut/success')
             }).catch(Dexie.BulkError, function (e) {
                 hal.log('haFeed/insertCommonMedia/bulkPut/error ' + e)

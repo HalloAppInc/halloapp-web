@@ -1,3 +1,4 @@
+import { ref } from 'vue'
 import { Dexie, liveQuery } from 'dexie'
 
 import { useMainStore } from '@/stores/mainStore.js'
@@ -10,12 +11,16 @@ import {    db,
 import { clients } from '@/proto/clients.js'
 import { web } from '@/proto/web.js'
 
+import { network } from '@/common/network'
+
 import { useHAComment } from '@/composables/haComment'
 import { useHAGroup } from '@/composables/haGroup'
 import { useHAAvatar } from '@/composables/haAvatar'
 import { useHAText } from '@/composables/haText'
 import { useHACommonMedia } from '@/composables/haCommonMedia'
 import { useHALog } from '@/composables/haLog'
+
+export const gotNewPost = ref(false)
 
 export function useHAFeed() {
 
@@ -28,6 +33,27 @@ export function useHAFeed() {
     const { processText } = useHAText()
     const { insertCommonMedia } = useHACommonMedia()
     const { hal } = useHALog()
+
+    let { 
+        createReceiptUpdateWebContainer,
+        createWebStanzaPacket
+    } = network()    
+
+    
+
+    async function updateReceipt(contentID: string, userID: number, timestamp: number, callback?: Function) {
+        if (!connStore.isConnectedToMobile) { return }
+        console.log('haFeed/updateReceipt')
+        
+        const receiptUpdateWebContainer = createReceiptUpdateWebContainer(contentID, userID, timestamp)        
+        const encryptedWebContainer = connStore.encryptWebContainer(receiptUpdateWebContainer.webContainerBinArr)
+
+        const packet = createWebStanzaPacket(encryptedWebContainer)
+        
+        const needAuth = true
+        connStore.enqueueMessage(packet, receiptUpdateWebContainer.webContainer, needAuth, callback)            
+    }
+
 
     async function processFeedResponse(feedResponse: any) {
         // hal.log('haFeed/processFeedResponse: ' + JSON.stringify(feedResponse))
@@ -194,8 +220,6 @@ export function useHAFeed() {
     }
 
     async function processFeedUpdate(feedUpdate: any) {
-        // hal.log('haFeed/processFeedUpdate: ' + JSON.stringify(feedUpdate))
-
         const items = feedUpdate.items
         const userInfo = feedUpdate.userDisplayInfo
         const postInfoList = feedUpdate.postDisplayInfo
@@ -207,10 +231,12 @@ export function useHAFeed() {
         hal.log('haFeed/processFeedUpdate/process num items: ' + items.length)
         for (let i = 0; i < items.length; i++) {
             const item = items[i]
+            console.dir(item)
             const serverPost = item.post
             const serverComment = item.comment
 
             if (serverComment) {
+                hal.log('haFeed/processFeedUpdate/comment')
                 const postID = serverComment.postId
                 const infoIdx = postInfoList.findIndex((info: any) => info.id === postID)
                 const postInfo = postInfoList[infoIdx]
@@ -220,7 +246,7 @@ export function useHAFeed() {
                 modifyPostHaveCommentIfNeeded(postID)
             }
             else if (serverPost) {
-
+                hal.log('haFeed/processFeedUpdate/post')
                 const postID = item.post.id
                 const infoIdx = postInfoList.findIndex((info: any) => info.id === postID)
                 const postInfo = postInfoList[infoIdx]
@@ -248,6 +274,8 @@ export function useHAFeed() {
     }
 
     function processFeedItem(feedItem: any, postInfo: any) {
+        hal.log('postinfo')
+        console.dir(postInfo)
 
         const groupID = feedItem.groupId
 
@@ -298,9 +326,7 @@ export function useHAFeed() {
 
         let commonMediaArr: CommonMedia[] = []
 
-        let text = ''
         let isTextPost = false
-        let isTextPostTextOnly = false
         let isAlbum = false
         let isVoiceNote = false
     
@@ -411,13 +437,10 @@ export function useHAFeed() {
                 postContainer.text.link.preview[0] &&
                 postContainer.text.link.preview[0].img
                 ) {
-                    const linkPreview = processCommonMediaLinkPreview(SubjectType.FeedPost, subjectID, postObject.postID, postContainer.text.link)
-                    if (linkPreview) {
-                        postObject.linkPreview = linkPreview
-                    }
-
-            } else {
-                isTextPostTextOnly = true
+                const linkPreview = processCommonMediaLinkPreview(SubjectType.FeedPost, subjectID, postObject.postID, postContainer.text.link)
+                if (linkPreview) {
+                    postObject.linkPreview = linkPreview
+                }
             }
     
             /* process text after checking if it's text only */
@@ -450,9 +473,7 @@ export function useHAFeed() {
         insertCommonMedia(SubjectType.FeedPost, subjectID, postObject.postID, commonMediaArr)
     }
 
-    
     function processFeedItemComment(feedItem: any, postInfo: any) {
-
         const serverComment = feedItem.comment
         if (!serverComment) { return }
         
@@ -486,9 +507,7 @@ export function useHAFeed() {
     
         if (!commentContainer) { return }
     
-        let text = ''
         let isTextComment = false
-        let isTextCommentTextOnly = false
         let isAlbum = false
         let isVoiceNote = false
     
@@ -595,21 +614,13 @@ export function useHAFeed() {
     
         if (isTextComment) {
             /* link preview */
-            if (commentContainer?.text?.link &&
-                commentContainer.text.link.preview &&
-                commentContainer.text.link.preview[0] &&
+            if (commentContainer?.text?.link?.preview &&
                 commentContainer.text.link.preview[0].img
                 ) {
-                    const previewImage = commentContainer.text.link.preview[0]
-                    const media = previewImage.img
-
-                    const linkPreview = processCommonMediaLinkPreview(SubjectType.Comment, commentObject.postID, commentObject.commentID, commentContainer.text.link)
-                    if (linkPreview) {
-                        commentObject.linkPreview = linkPreview
-                    }
-
-            } else {
-                isTextCommentTextOnly = true
+                const linkPreview = processCommonMediaLinkPreview(SubjectType.Comment, commentObject.postID, commentObject.commentID, commentContainer.text.link)
+                if (linkPreview) {
+                    commentObject.linkPreview = linkPreview
+                }
             }
     
             /* process text after checking if it's text only */
@@ -735,18 +746,30 @@ export function useHAFeed() {
             if (post.retractState == web.PostDisplayInfo.RetractState.RETRACTED) { return }
 
             try {
-                await db.post.put(post)
-                // hal.log('haFeed/insertOrModifyPost/db/put/inserted: ' + post.postID)
+                await db.post.add(post)
+
+                if (mainStore.userID != post.uid) {
+                    console.log('---> adding post')
+                    gotNewPost.value = true
+                } else {
+                    console.log('---> not adding post')
+                }
+                // hal.log('haFeed/insertOrModifyPost/db/add/inserted: ' + post.postID)
             } catch (error) {
-                hal.log('haFeed/insertOrModifyPost/db/put/error ' + error)
+                hal.log('haFeed/insertOrModifyPost/db/add/error ' + error)
             }
             return
         } 
 
         hal.log('haFeed/insertOrModifyPost/post exists: ' + post.postID)
+
+        // might need to revisit with a better comparison
         if (post.seenState != dbPost.seenState || 
             post.transferState != dbPost.transferState ||
-            post.retractState != dbPost.retractState) {
+            post.retractState != dbPost.retractState || 
+            post.unreadComments != dbPost.unreadComments ||
+            JSON.stringify(post.userReceipts) != JSON.stringify(dbPost.userReceipts)
+        ) {
 
             await db.post.where('postID').equals(postID).modify(function(item) {
                 if (item.seenState != post.seenState) {
@@ -757,7 +780,13 @@ export function useHAFeed() {
                 }
                 if (item.retractState != post.retractState) {
                     item.retractState = post.retractState
-                }                
+                }              
+                if (item.unreadComments != post.unreadComments) {
+                    item.unreadComments = post.unreadComments
+                }                     
+                if (JSON.stringify(item.userReceipts) != JSON.stringify(post.userReceipts)) {
+                    item.userReceipts = post.userReceipts
+                }
             })
         }
     }
@@ -824,8 +853,10 @@ export function useHAFeed() {
         return commentContainer
     }
 
-    return { 
+    return {
+        
         processFeedResponse, processFeedUpdate,
-        processUserDisplayInfo
+        processUserDisplayInfo,
+        updateReceipt
     }
 }

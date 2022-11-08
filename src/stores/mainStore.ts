@@ -52,14 +52,16 @@ export const useMainStore = defineStore('main', {
         shownNotificationsArr: [] as string[],      // used mainly for fast clean up of shownNotifications
 
         showSidebar: true,
-        animateSidebar: false,
 
         page: 'home',
-        groupsPageGroupID: '',
-        settingsPage: '',
+        
         scrollToTop: '',
-        mobileNavlessPanel: '',
 
+        /* page: home, main feed */
+        showNewPostsDotIndicator: false,
+
+        /* page: groups */
+        groupsPageGroupID: '',
         showGroupsSidebar: true,
         showGroupsCommentsPanel: false,
         showGroupsCommentsPostID: '',
@@ -67,8 +69,14 @@ export const useMainStore = defineStore('main', {
         isGroupsListCompleted: false,
         isPrivacyListCompleted: false,
 
+        /* page: settings */
         showSettings: false,
-
+        settingsPage: '',
+        sounds: true,
+        desktopAlerts: true,
+        preferColorScheme: '',
+        
+        /* cursors */
         mainFeedHeadPostID: '',
         mainFeedHeadPostTimestamp: 0,
         mainFeedTailPostID: '',
@@ -78,12 +86,7 @@ export const useMainStore = defineStore('main', {
         groupFeedCursors: <any>{},
         commentCursors: <any>{}, // keys are postIDs
 
-        sounds: true,
-        desktopAlerts: true,
-
         test: false, // test for upload&download, reload database
-
-        preferColorScheme: '',
 
         loginUserID: '',
         chatID: '',
@@ -147,7 +150,7 @@ export const useMainStore = defineStore('main', {
         async logoutMain() {
             // todo: make sure all other dbs like chat is also deleted, test to see if delete/re-open is fast enough
 
-            // todo: might have to stop in-flight messages
+            // todo: might have to stop in-flight messages also
             this.messageQueue.splice(0, this.messageQueue.length) // clear messages
             this.allowDbTransactions = false
 
@@ -162,8 +165,6 @@ export const useMainStore = defineStore('main', {
                 this.mobilePublicKeyBase64 = ''
                 this.isPublicKeyAuthenticated = false
                 this.haveInitialHandshakeCompleted = false
-
-                // todo: remove public key from server? (what if there's no connection)
 
                 this.userID = 0
 
@@ -180,6 +181,8 @@ export const useMainStore = defineStore('main', {
                 this.groupsPageGroupID = ''
                 this.settingsPage = ''
                 this.scrollToTop = ''
+
+                this.showNewPostsDotIndicator = false
 
                 this.showGroupsSidebar = true
                 this.showGroupsCommentsPanel = false

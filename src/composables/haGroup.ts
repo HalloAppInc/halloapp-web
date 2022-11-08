@@ -13,8 +13,6 @@ import { web } from '@/proto/web.js'
 import { network } from '@/common/network'
 
 import { useHAAvatar } from '@/composables/haAvatar'
-import { useHAText } from '@/composables/haText'
-import { useHACommonMedia } from '@/composables/haCommonMedia'
 import { useHALog } from '@/composables/haLog'
 
 export function useHAGroup() {
@@ -23,39 +21,36 @@ export function useHAGroup() {
     const connStore = useConnStore()
     
     let { 
-        createPingPacket, addKey, removeKey, check, createNoiseMessage, createWebStanzaPacket, 
-        encodeFeedRequestWebContainer, encodeGroupFeedRequestWebContainer, encodeCommentsRequestWebContainer,
-        encodeGroupRequestWebContainer,
-        uploadMedia 
+        createWebStanzaPacket, 
+        createGroupFeedRequestWebContainer,
+        createGroupRequestWebContainer,
     } = network()    
 
     const { insertOrModifyGroupAvatar } = useHAAvatar()
-    const { processText } = useHAText()
-    const { insertCommonMedia } = useHACommonMedia()
     const { hal } = useHALog()
 
     async function requestGroupFeedItems(groupID: string, cursor: string, limit: number, callback?: Function) {
         if (!connStore.isConnectedToMobile) { return }
         console.log('connStore/requestGroupFeedItems/group: ' + groupID + ', cursor: ' + cursor)
         
-        const webContainerBinArr = encodeGroupFeedRequestWebContainer(groupID, cursor, limit)        
-        const encryptedWebContainer = connStore.encryptWebContainer(webContainerBinArr)
+        const createdWebContainer = createGroupFeedRequestWebContainer(groupID, cursor, limit)        
+        const encryptedWebContainer = connStore.encryptWebContainer(createdWebContainer.webContainerBinArr)
 
         const packet = createWebStanzaPacket(encryptedWebContainer)
         
-        connStore.enqueueMessage(packet, true, callback)            
+        connStore.enqueueMessage(packet, createdWebContainer.webContainer, true, callback)            
     }
 
     async function requestGroupsList(callback?: Function) {
         if (!connStore.isConnectedToMobile) { return }
         hal.log('connStore/requestGroupsList')
         
-        const webContainerBinArr = encodeGroupRequestWebContainer()        
-        const encryptedWebContainer = connStore.encryptWebContainer(webContainerBinArr)
+        const createdWebContainer = createGroupRequestWebContainer()        
+        const encryptedWebContainer = connStore.encryptWebContainer(createdWebContainer.webContainerBinArr)
 
         const packet = createWebStanzaPacket(encryptedWebContainer)
         
-        connStore.enqueueMessage(packet, true, callback)            
+        connStore.enqueueMessage(packet, createdWebContainer.webContainer, true, callback)            
     }
     
     async function processGroupResponse(response: any) {

@@ -143,10 +143,6 @@
     const showBottomNav: ComputedRef<boolean> = computed((): boolean => {
         if (!mainStore.isMobile) { return false }
 
-        if (mainStore.mobileNavlessPanel == 'comments') {
-            return false
-        }
-
         return true
     })
 

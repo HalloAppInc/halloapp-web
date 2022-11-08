@@ -47,29 +47,24 @@ export function useTimeformatter() {
     }
 
     function formatTimeDateOnlyChat(seconds: number, locale: string) {
-        let result = ""
         const dt = DateTime.fromSeconds(seconds)
         const currentTime = DateTime.local()
-        
-        // TODAY
+
+        // Today
         if (currentTime.hasSame(dt, 'day')) {
-            result = t('timestampFormatter.today')
+            return t('timestampFormatter.today')
         }
-        // YESTERDAY
-        else if (currentTime.diff(dt, 'days').days < 2) {
-            result = t('timestampFormatter.yesterday')
+        const yesterday = DateTime.local().minus({days: 1})
+        // Yesterday
+        if (dt.hasSame(yesterday, 'day')) {
+             return t('timestampFormatter.yesterday')
         }
-        // Day of week: TUESDAY
-        else if (currentTime.diff(dt, 'days').days < 5) {
-            result = dt.toFormat("EEEE", { locale: locale }).toUpperCase()
+        // Day of week: Monday
+        if (currentTime.diff(dt, 'days').days < 5) {
+            return dt.toFormat("EEEE", { locale: locale })
         }
-
         // Date: localized numeric date
-        else {
-            result = dt.toFormat("D", { locale: locale }) 
-        }
-
-        return result
+        return dt.toFormat('D', { locale: locale }) 
     }
 
     function formatTimeChat(seconds: number, locale: string) {
