@@ -90,7 +90,7 @@ export function useHAFeed() {
                 to pre-emptively (for better UX) see if there are new posts, of which usually there isn't 
             */
             if (firstItemPost.id == mainStore.mainFeedHeadPostID && [1, 3, 5].includes(items.length)) {
-                hal.log('haFeed/processFeedResponse/redundant, should exit in the future, item: ' + items.length)
+                hal.log('haFeed/processFeedResponse/redundant, should return in the future, item: ' + items.length)
                 // return
             }
     

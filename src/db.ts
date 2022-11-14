@@ -59,6 +59,7 @@ export interface Contact {
 }
 
 export interface CommonMedia {
+    id?: number
     type: SubjectType       // Feed, Comment, Chat
     subjectID: string       // '', GroupID, PostID, ChatID
     contentID: string       // PostID, CommentID, MessageID
@@ -165,12 +166,12 @@ export class HADexie extends Dexie {
     
     constructor() {
         super('myDatabase')
-        this.version(15).stores({
+        this.version(18).stores({
             post: 'postID, userID, groupID, seenState, text, timestamp',
             comment: 'commentID, postID, timestamp',
             group: 'groupID, name',
             
-            commonMedia: '[subjectID+contentID+order], contentID, subjectID',
+            commonMedia: '++id, [subjectID+contentID+order], contentID, subjectID',
             
             avatar: 'userID',
             groupAvatar: 'groupID',
