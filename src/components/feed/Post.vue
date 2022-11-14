@@ -105,10 +105,6 @@
 
     let mediaSubscription: any
 
-    setPostSize()
-    processPost(props.post)
-    setupObserver()
-
     async function setupObserver() {
         if (!mainStore.allowDbTransactions) { return }
         const mediaObservable = liveQuery (() => db.commonMedia.where('contentID').equals(props.postID).toArray())
@@ -321,10 +317,11 @@
                 threshold: 0.3,
             }
         )
-
     }
     
-
+    setPostSize()
+    processPost(props.post)
+    setupObserver()
 
 </script>
 

@@ -85,13 +85,13 @@ export function useHAFeed() {
                 modifyPostHaveCommentIfNeeded(postID)
             }
         } else {
-
             /* 
                 special case to not process posts as this is usually our first request upon browser refresh
                 to pre-emptively (for better UX) see if there are new posts, of which usually there isn't 
             */
             if (firstItemPost.id == mainStore.mainFeedHeadPostID && [1, 3, 5].includes(items.length)) {
-                return
+                hal.log('haFeed/processFeedResponse/redundant, should exit in the future, item: ' + items.length)
+                // return
             }
     
             /* 
@@ -274,9 +274,6 @@ export function useHAFeed() {
     }
 
     function processFeedItem(feedItem: any, postInfo: any) {
-        hal.log('postinfo')
-        console.dir(postInfo)
-
         const groupID = feedItem.groupId
 
         const serverPost = feedItem.post
@@ -313,7 +310,7 @@ export function useHAFeed() {
         if (!payloadBinArr) { return }
         const postContainer = decodeToPostContainer(payloadBinArr)
     
-        // hal.log('haFeed/processServerPost/postContainer:')
+        hal.log('haFeed/processFeedItem/postContainer: \n' + JSON.stringify(postContainer) + '\n\n')
         // console.dir(postContainer)
     
         if (!postContainer) { return }
@@ -749,11 +746,9 @@ export function useHAFeed() {
                 await db.post.add(post)
 
                 if (mainStore.userID != post.uid) {
-                    console.log('---> adding post')
                     gotNewPost.value = true
-                } else {
-                    console.log('---> not adding post')
                 }
+
                 // hal.log('haFeed/insertOrModifyPost/db/add/inserted: ' + post.postID)
             } catch (error) {
                 hal.log('haFeed/insertOrModifyPost/db/add/error ' + error)

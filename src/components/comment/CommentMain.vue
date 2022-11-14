@@ -98,8 +98,6 @@
 
     const numMedia = ref(0)
 
-    setupObserver()
-
     async function setupObserver() {
         if (subscription) { subscription.unsubscribe() }
         const observable = liveQuery (() => db.post.where('postID').equals(props.postID).toArray())
@@ -148,6 +146,8 @@
 
         savedScrollTop = scrollTop
     }
+
+    setupObserver()
 
 </script>
 

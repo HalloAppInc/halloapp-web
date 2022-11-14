@@ -16,10 +16,13 @@
 
     import { Howl } from 'howler'
 
+    import { useHAGroup } from '@/composables/haGroup'
+
     const mainStore = useMainStore()
     const connStore = useConnStore()
     const colorStore = useColorStore()
 
+    const { modifyGroupNumUnseen } = useHAGroup() 
 
     const { t } = useI18n({
         inheritLocale: true,
@@ -83,6 +86,10 @@
                     mainStore.showNewPostsDotIndicator = false
                 }
 
+
+                for (const [key, value] of Object.entries(unseenGroupsMap.value)) {
+                    modifyGroupNumUnseen(key, value as number)
+                }
 
             },
             error: error => console.error(error)

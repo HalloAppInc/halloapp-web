@@ -87,7 +87,8 @@ export function useHAGroup() {
                 name: groupInfo.name,
                 description: groupInfo.description,
                 background: groupInfo.background,
-                lastChangeTimestamp: 0
+                lastChangeTimestamp: 0,
+                numUnseen: 0
             }            
             const insertion = await insertGroup(group)
         } else {
@@ -128,10 +129,21 @@ export function useHAGroup() {
         })
     }
 
+    async function modifyGroupNumUnseen(groupID: string, numUnseen: number) {
+        if (!mainStore.allowDbTransactions) { return }
+    
+        db.group.where('groupID').equals(groupID).modify(function(grp: any) {
+            if (grp.numUnseen != numUnseen) {
+                grp.numUnseen = numUnseen
+            }                      
+        })
+    }    
+
     return { 
         requestGroupFeedItems,
         requestGroupsList,
         processGroupResponse,
-        processGroupDisplayInfoList
+        processGroupDisplayInfoList,
+        modifyGroupNumUnseen
     }
 }

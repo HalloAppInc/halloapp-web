@@ -46,7 +46,7 @@ export const useConnStore = defineStore('conn', () => {
     const isUserFirstClickCompleted = ref(false)
 
     const version = '39'
-    const devMode = true
+    const devMode = false
     const isDebug = false
 
     // let connectionTimeoutID: any // used for debouncing multiple calls to connect

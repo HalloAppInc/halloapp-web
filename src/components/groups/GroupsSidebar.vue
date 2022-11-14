@@ -30,8 +30,6 @@
     const listData: Ref<Group[]> = ref([])
     const count = ref(15)
 
-    setupObserver()
-
     async function setupObserver() {
         if (!mainStore.allowDbTransactions) { return }
         const observable = liveQuery (() => db.group.reverse().sortBy('lastChangeTimestamp'))
@@ -47,7 +45,6 @@
             error: error => console.error(error)
         })
     }
-
 
     function makeList() {
         if (dbListData.value.length > count.value) {
@@ -106,7 +103,7 @@
         secondaryBorder: secondaryBorderColor,
     } = storeToRefs(colorStore)  
 
-    
+    setupObserver()
 
 </script>
 
@@ -144,8 +141,14 @@
                         <div v-else-if="value.lastContentMediaType == MediaType.Video" class="iconBox" >
                             <font-awesome-icon :icon="['fas', 'video']" />
                         </div>
-                        <div :class="['text', {'paddingLeft': value.lastContentMediaType != 0}]" v-html="value.lastContent">
+                        <div class='textBox'>
+                            <div :class="['text', {'paddingLeft': value.lastContentMediaType != 0}]" v-html="value.lastContent">
+                            </div>
+                            <!-- <div class='numUnseen'>
+                                {{ value.numUnseen }}
+                            </div> -->
                         </div>
+
                     </div>
                 </div>
                 
@@ -278,7 +281,12 @@
         left: 0;
     }
 
-    .contentBody .text {
+    .contentBody .textBox {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+    }
+    .contentBody .textBox .text {
         display: -webkit-box;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -286,7 +294,7 @@
         -webkit-box-orient: vertical;
     }
 
-    .contentBody .paddingLeft {
+    .contentBody .textBox .paddingLeft {
         padding-left: 25px;
     }    
 

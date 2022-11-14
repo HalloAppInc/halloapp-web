@@ -43,7 +43,8 @@ export interface Group {
     background?: string
     lastContent?: string
     lastContentMediaType?: MediaType
-    lastChangeTimestamp: number
+    lastChangeTimestamp: number,
+    numUnseen?: number
 }
 
 export interface Chat {

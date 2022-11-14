@@ -392,19 +392,7 @@
 
 <style scoped>
 
-    *::-webkit-scrollbar {
-        width: 10px;
-    }
 
-    *::-webkit-scrollbar-track {
-        background: v-bind(backgroundColor);        /* color of the tracking area */
-    }
-
-    *::-webkit-scrollbar-thumb {
-        background-color: rgb(172, 169, 169);    /* color of the scroll thumb */
-
-        border: 0px solid white;  /* creates padding around scroll thumb */
-    }
 
     .feedWrapper {
         position: relative;
