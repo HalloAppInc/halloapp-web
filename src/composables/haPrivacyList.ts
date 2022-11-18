@@ -31,7 +31,7 @@ export function useHAPrivacyList() {
 
     async function requestPrivacyList(callback?: Function) {
         if (!connStore.isConnectedToMobile) { return }
-        hal.log('connStore/requestPrivacyList')
+        hal('connStore/requestPrivacyList')()
         
         const createdWebContainer = createPrivacyListRequestWebContainer()        
         const encryptedWebContainer = connStore.encryptWebContainer(createdWebContainer.webContainerBinArr)

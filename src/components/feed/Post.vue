@@ -49,7 +49,7 @@
     } = network()
 
     const { updateReceipt } = useHAFeed()
-    const { requestCommentsIfNeeded } = useHAComment()
+    const { requestCommentsIfNeeded, requestComments } = useHAComment()
 
     const { processText } = useHAText()
     const { formatTime } = useTimeformatter()
@@ -133,6 +133,12 @@
         }
 
         postTimestamp.value = formatTime(post.timestamp, locale.value as string)
+
+        if (postTimestamp.value == 'Now') {
+            setTimeout(() => {
+                postTimestamp.value = formatTime(post.timestamp, locale.value as string)
+            }, 90000)
+        }
 
         const dbCommonMedia = await getCommonMedia(SubjectType.FeedPost, subjectID.value, postID)
         if (dbCommonMedia) {
@@ -629,10 +635,9 @@
         }
     }
 
-    /* different than figma spec, changed font to 21 instead of 24 */
     .textOnlySize {
-        font-size: 21px;
-        line-height: 31px;
+        font-size: 18px;
+        line-height: 24px;
         font-weight: 400;
     }
 

@@ -40,7 +40,7 @@
     const colorStore = useColorStore()
 
     const { updateReceipt } = useHAFeed()
-    const { requestCommentsIfNeeded } = useHAComment()
+    const { requestCommentsIfNeeded, requestComments } = useHAComment()
 
     const count = ref(20)
 
@@ -200,6 +200,9 @@
     //     handleScroll()
     // })
 
+    const { 
+        isConnectedToMobile
+    } = storeToRefs(connStore)  
 
     const { 
         background: backgroundColor,
@@ -669,6 +672,19 @@
         }
       
     }
+
+    /* get potentially missed updates from the current opened comments page */
+    if (props.type == SubjectType.Comment) {
+        watch(isConnectedToMobile, (newVal, oldVal) => {
+            if (newVal === true && oldVal === false) {
+                if (mainStore.showGroupsCommentsPanel && mainStore.showGroupsCommentsPostID) {
+                    console.log("---> " + newVal + ' ' + oldVal)
+                    requestComments(mainStore.showGroupsCommentsPostID, '', 3, () => {} )
+                }
+            }
+        })
+    }
+
 
 </script>
 

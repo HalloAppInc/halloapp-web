@@ -9,6 +9,7 @@
     import { useMainStore } from '@/stores/mainStore'
     import { useColorStore } from '@/stores/colorStore'
 
+    import { useHAGroup } from '@/composables/haGroup'
     import { useTimeformatter } from '@/composables/timeformatter'
     
     import GroupsSidebarHeader from '@/components/groups/GroupsSidebarHeader.vue'
@@ -21,10 +22,10 @@
     
     const mainStore = useMainStore()
     const colorStore = useColorStore()
+    const { requestGroupFeedItems, modifyGroupHaveRequestedPosts } = useHAGroup()
     const { formatTimeForGroupsList } = useTimeformatter()
 
     let subscription: any
-
 
     const dbListData: Ref<Group[]> = ref([])
     const listData: Ref<Group[]> = ref([])
@@ -32,7 +33,32 @@
 
     async function setupObserver() {
         if (!mainStore.allowDbTransactions) { return }
-        const observable = liveQuery (() => db.group.reverse().sortBy('lastChangeTimestamp'))
+        // const observable = liveQuery (() => db.group.orderBy('numUnseen').toArray())
+
+        function compareTimestamp(a: any, b: any) {
+            if (a.numUnseen == b.numUnseen) {
+                if (a.lastChangeTimestamp > b.lastChangeTimestamp) {
+                    return -1
+                } else if (a.lastChangeTimestamp < b.lastChangeTimestamp) {
+                    return 1
+                } else {
+
+                    if (a.name > b.name) {
+                        return 1
+                    } else {
+                        return -1
+                    } 
+
+                }
+            } else {
+                return 0
+            }
+        }
+
+        const observable = liveQuery (() => db.group.reverse().sortBy('numUnseen').then(result => {
+            return result.sort(compareTimestamp)
+        }))
+
         subscription = observable.subscribe({
             next: result => { 
                 if (!mainStore.allowDbTransactions) { return }
@@ -144,9 +170,11 @@
                         <div class='textBox'>
                             <div :class="['text', {'paddingLeft': value.lastContentMediaType != 0}]" v-html="value.lastContent">
                             </div>
-                            <!-- <div class='numUnseen'>
-                                {{ value.numUnseen }}
-                            </div> -->
+                            <div v-if='value.numUnseen' class='numUnseen'>
+                                <div class='num'>
+                                    {{ value.numUnseen }}
+                                </div>
+                            </div>
                         </div>
 
                     </div>
@@ -292,6 +320,23 @@
         text-overflow: ellipsis;
         -webkit-line-clamp: 1;
         -webkit-box-orient: vertical;
+    }
+    .contentBody .textBox .numUnseen {
+        border-radius: 99999px;
+        background-color:orangered;
+        border:none;
+        color:white;
+        font-size: 12px;
+
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .contentBody .textBox .numUnseen .num {
+        min-width: 18px;
+        text-align: center;
     }
 
     .contentBody .textBox .paddingLeft {

@@ -17,6 +17,7 @@ message WebContainer {
     PrivacyListRequest privacy_list_request = 6;
     PrivacyListResponse privacy_list_response = 7;
     ReceiptUpdate receipt_update = 8;
+    MomentStatus moment_status = 9;
   }
 }
 
@@ -24,6 +25,7 @@ message WebContainer {
 message ConnectionInfo {
   string version = 1;
   UserDisplayInfo user = 2;
+  MomentStatus moment_status = 3;
 }
 
 message ReceiptInfo {
@@ -44,12 +46,19 @@ message UserDisplayInfo {
 }
 
 message GroupDisplayInfo {
+  enum MembershipStatus {
+    UNKNOWN = 0;
+    NOT_MEMBER = 1;
+    MEMBER = 2;
+    ADMIN = 3;
+  }
   string id = 1;
   string name = 2;
   string avatar_id = 3;
   string description = 4;
   string background = 5;
   server.ExpiryInfo expiry_info = 6;
+  MembershipStatus membership_status = 7;
 }
 
 message PostDisplayInfo {
@@ -84,6 +93,7 @@ enum FeedType {
   HOME = 0;
   GROUP = 1;
   POST_COMMENTS = 2;
+  MOMENTS = 3;
 }
 
 message FeedRequest {
@@ -147,4 +157,9 @@ message ReceiptUpdate {
   string id = 1;
   string content_id = 2;
   ReceiptInfo receipt = 3;
+}
+
+message MomentStatus {
+  bool is_locked = 1;
+  int64 expiry_timestamp = 2;
 }

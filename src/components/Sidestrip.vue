@@ -86,11 +86,6 @@
                     mainStore.showNewPostsDotIndicator = false
                 }
 
-
-                for (const [key, value] of Object.entries(unseenGroupsMap.value)) {
-                    modifyGroupNumUnseen(key, value as number)
-                }
-
             },
             error: error => console.error(error)
         })
@@ -305,7 +300,6 @@
         top: -8px;
         right: -5px;
 
-        
         padding: 0px 3px 0px 3px;
   
         text-align: center;
@@ -315,8 +309,6 @@
         border:none;
         color:white;
         font-size: 11px;
-        
-
     }
 
 
@@ -333,15 +325,11 @@
     }
 
     .newHomeFeedIndicator {
-        
         width: 5px;
         height: 5px;
         border-radius: 50%;
         background-color: orange;
-    
     }
-
-
 
     .version {
         margin-top: 15px;

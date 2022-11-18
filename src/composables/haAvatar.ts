@@ -12,7 +12,12 @@ export function useHAAvatar() {
     const avatarImageUrlPrefix = mainStore.devCORSWorkaroundUrlPrefix + 'https://avatar-cdn.halloapp.net/'
 
     async function getAvatar(userID: number) {
-        return await db.avatar.where('userID').equals(userID).first()
+        try {
+            return await db.avatar.where('userID').equals(userID).first()
+        } catch (error) {
+            hal.log('haAvatar/insertOrModifyAvatar/' + userID + '/add/error ' + error)
+            return undefined
+        }
     }
 
     async function insertOrModifyAvatar(userID: number, avatarID: string) {

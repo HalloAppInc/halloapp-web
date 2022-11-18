@@ -89,7 +89,7 @@ export function network() {
         const packetProto = server.Packet.encode(packet).finish()
         const packetBuf = packetProto.buffer.slice(packetProto.byteOffset, packetProto.byteLength + packetProto.byteOffset)
 
-        hal.log('network/createNoiseMessage/packet:\n' + JSON.stringify(packet) + '\n\n')
+        hal('network/createNoiseMessage/packet:\n' + JSON.stringify(packet) + '\n\n')()
 
         return packetBuf
     }
@@ -263,7 +263,7 @@ export function network() {
         let buffer = server.Packet.encode(message).finish()
     
         websocket.send(buffer.buffer)
-        hal.log('network/check ' + id)
+        hal('network/check ' + id)()
     }
 
     const uploadMedia = (size: number, isResumable: boolean) => {

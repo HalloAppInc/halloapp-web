@@ -7,12 +7,11 @@
     import { useMainStore } from '@/stores/mainStore'
     import { useColorStore } from '@/stores/colorStore'
 
-    import hal from '@/common/halogger'
-
     import { useTimeformatter } from '@/composables/timeformatter'
     import { useHAMediaResize } from '@/composables/haMediaResize'
     import { useHADatabase } from '@/composables/haDb'
     import { useHAText } from '@/composables/haText'
+    import { useHALog } from '@/composables/haLog'
 
     import Popup from '@/components/chats/Popup.vue'
     import Quote from '@/components/msg/Quote.vue'
@@ -36,6 +35,7 @@
     const { getMessageByID, deleteMessageByID, cleanMessageContentByID, 
             loadMessageList, notifyWhenChanged, getMedia, 
             getContactByName, getContacts } = useHADatabase()
+    const { hal } = useHALog()
 
 
     fetchContactList()
@@ -269,7 +269,7 @@
     }
 
     async function listenerFunction(type: string) {
-        hal.log('ChatPanel/notifyWhenChanged/' + type)
+        hal('ChatPanel/notifyWhenChanged/' + type)()
         loadMessageListIntoChatPanel()
     }
 
@@ -425,7 +425,7 @@
     async function gotoChatWith(event: any) {
         let contactName = event.target.innerText.substring(1)
         // go to chat with that user
-        hal.log('ChatPanel/gotoChatWith/' + contactName)
+        hal('ChatPanel/gotoChatWith/' + contactName)()
         const contact = await getContactByName(contactName)
         if (contact) {
             mainStore.chatID = contact.userID
@@ -517,12 +517,12 @@
     function deleteMessage(id: number, deleteForEveryone: boolean) {
         // delete for everyone: delete message content in db
         if (deleteForEveryone) {
-            hal.log('ChatPanel/deleteMessage/delete for everyone')
+            hal('ChatPanel/deleteMessage/delete for everyone')()
             cleanMessageContentByID(id)
         }
         // delete for me: delete whole record in db
         else {
-            hal.log('ChatPanel/deleteMessage/delete for me')
+            hal('ChatPanel/deleteMessage/delete for me')()
             deleteMessageByID(id)
         }
     }
@@ -602,19 +602,19 @@
         getMessageByID(quoteIdx)
         .then((message) => {
             if (!message) {
-                hal.log('ChatPanel/gotoQuoteMessage/Quoted message has been deleted')
+                hal('ChatPanel/gotoQuoteMessage/Quoted message has been deleted')()
                 // message has been deleted!
                 NotificationQueue.value.push(t('chatNotification.messageDeleted'))
             }
             else if (!message.timestamp) {
-                hal.log('ChatPanel/gotoQuoteMessage/Quoted message has been deleted')
+                hal('ChatPanel/gotoQuoteMessage/Quoted message has been deleted')()
                 // message has been deleted!
                 NotificationQueue.value.push(t('chatNotification.messageDeleted'))
             }
             else {
                 const targetElement = document.getElementById('messageBubble' + quoteIdx)
                 if (targetElement) {
-                    hal.log('ChatPanel/gotoQuoteMessage/Go to quoted message')
+                    hal('ChatPanel/gotoQuoteMessage/Go to quoted message')()
                     const offsetTop = targetElement.offsetTop - targetElement.offsetHeight
                     content.value?.scrollTo({ left: 0, top: offsetTop, behavior: 'smooth' })
                     setTimeout(() => {

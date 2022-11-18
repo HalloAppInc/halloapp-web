@@ -14,9 +14,11 @@
 
     import QRCode from '@/components/login/QRCode.vue'
 
+    import { useHAFeed } from '@/composables/haFeed'
     import { useTimeformatter } from '@/composables/timeformatter'
     import { useHALog } from '@/composables/haLog'
 
+    const { deleteExpiredPosts } = useHAFeed()
     const { formatTimer } = useTimeformatter()
     const { hal } = useHALog()
 
@@ -163,7 +165,7 @@
     init()
 
     async function init() {
-        hal.log('app/init')
+        hal('app/init')()
 
         connStore.clearMessagesInQueue()
         connStore.debounceConnectToServer()
@@ -173,7 +175,13 @@
             if (!mainStore.allowDbTransactions) {
                 mainStore.allowDbTransactions = true
             }
+
+            cleanupExpiredPosts()
         }
+    }
+
+    async function cleanupExpiredPosts() {
+        deleteExpiredPosts()
     }
 
     function applyPlatformSpecifics() {

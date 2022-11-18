@@ -45,7 +45,7 @@ export const useConnStore = defineStore('conn', () => {
      // so we keep track of the user's first click
     const isUserFirstClickCompleted = ref(false)
 
-    const version = '39'
+    const version = '40'
     const devMode = false
     const isDebug = false
 
@@ -521,9 +521,7 @@ export const useConnStore = defineStore('conn', () => {
             requestFeedItems('', 5, function() {
                 if (!mainStore.isGroupsListCompleted) {
                     hal.log('connStore/request entire groups list')
-                    requestGroupsList(function() {
-                        
-                    })
+                    requestGroupsList(function() {})
                 }
                 // requestPrivacyList(function() {})
             })

@@ -9,7 +9,8 @@ export interface Post {
     text?: string
     mentions?: Mention[]
     linkPreview?: CommonMediaLinkPreview
-    timestamp: number
+    timestamp: number,
+    expiryTimestamp?: number,
 
     seenState?: web.PostDisplayInfo.SeenState
     transferState?: web.PostDisplayInfo.TransferState
@@ -41,10 +42,15 @@ export interface Group {
     name?: string,  // will need this for search, maybe
     description?: string
     background?: string
+    membershipStatus?: web.GroupDisplayInfo.MembershipStatus
+    expiryInfo?: server.ExpiryInfo
+
     lastContent?: string
     lastContentMediaType?: MediaType
     lastChangeTimestamp: number,
-    numUnseen?: number
+    numUnseen?: number,
+
+    haveRequestedPosts?: boolean
 }
 
 export interface Chat {
@@ -166,11 +172,11 @@ export class HADexie extends Dexie {
     
     constructor() {
         super('myDatabase')
-        this.version(18).stores({
-            post: 'postID, userID, groupID, seenState, text, timestamp',
+        this.version(20).stores({
+            post: 'postID, userID, groupID, seenState, text, timestamp, expiryTimestamp',
             comment: 'commentID, postID, timestamp',
-            group: 'groupID, name',
-            
+            group: 'groupID, name, numUnseen, lastChangeTimestamp',
+
             commonMedia: '++id, [subjectID+contentID+order], contentID, subjectID',
             
             avatar: 'userID',

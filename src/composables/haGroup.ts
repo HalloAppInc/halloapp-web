@@ -43,7 +43,7 @@ export function useHAGroup() {
 
     async function requestGroupsList(callback?: Function) {
         if (!connStore.isConnectedToMobile) { return }
-        hal.log('connStore/requestGroupsList')
+        hal('connStore/requestGroupsList')()
         
         const createdWebContainer = createGroupRequestWebContainer()        
         const encryptedWebContainer = connStore.encryptWebContainer(createdWebContainer.webContainerBinArr)
@@ -52,15 +52,23 @@ export function useHAGroup() {
         
         connStore.enqueueMessage(packet, createdWebContainer.webContainer, true, callback)            
     }
-    
+
     async function processGroupResponse(response: any) {
         const groupInfoList = response.groups
-        for (let j = 0; j < groupInfoList.length; j++) {
-            const info = groupInfoList[j]
-            if (!info) { continue }
-            await processGroupDisplayInfo(info) // awaiting seems faster than not to, though nothing needs to wait on it
+        for (const group of groupInfoList) {
+            sleep(100) // put in some delay as db can get stuck when too many transactions happen at the same time (ie. over 400 trx)
+            await processGroupDisplayInfo(group)
+
+            if (group.membershipStatus != web.GroupDisplayInfo.MembershipStatus.NOT_MEMBER) {
+                const groupID = group.id
+                const groupCursor = ''
+                await requestGroupFeedItems(groupID, groupCursor, 10, async function() {
+                    await modifyGroupHaveRequestedPosts(groupID)
+                })
+            }
+
         }
-        hal.log('haGroup/groups list complete')
+        hal('haGroup/groups list complete')()
         mainStore.isGroupsListCompleted = true
     }
 
@@ -87,10 +95,14 @@ export function useHAGroup() {
                 name: groupInfo.name,
                 description: groupInfo.description,
                 background: groupInfo.background,
+                membershipStatus: groupInfo.membershipStatus,
+                expiryInfo: groupInfo.expiryInfo,
                 lastChangeTimestamp: 0,
-                numUnseen: 0
-            }            
+                numUnseen: 0,
+                haveRequestedPosts: false
+            } 
             const insertion = await insertGroup(group)
+
         } else {
             
             db.group.where('groupID').equals(groupID).modify(function(grp: any) {
@@ -102,10 +114,12 @@ export function useHAGroup() {
                 }     
                 if (grp.background != groupInfo.background) {
                     grp.background = groupInfo.background
-                }                             
+                }             
+                if (grp.membershipStatus != groupInfo.membershipStatus) {
+                    grp.membershipStatus = groupInfo.membershipStatus
+                }                          
             })
 
-            
         }   
 
         if (!mainStore.groupnames[groupID] || mainStore.groupnames[groupID] != name) {
@@ -114,6 +128,7 @@ export function useHAGroup() {
         if (groupInfo.avatarId) {
             await insertOrModifyGroupAvatar(groupID, groupInfo.avatarId)
         }
+
     }        
     
     async function insertGroup(group: any) {
@@ -123,11 +138,19 @@ export function useHAGroup() {
                 const id = await db.group.add(group)
                 return resolve(id)
             } catch (error) {
-                hal.log('haFeed/insertGroup/add/error ' + error)
+                hal('haFeed/insertGroup/add/error ' + error)()
                 return reject(error)
             }
         })
     }
+
+    async function modifyGroupHaveRequestedPosts(groupID: string) {
+        if (!mainStore.allowDbTransactions) { return }
+    
+        db.group.where('groupID').equals(groupID).modify(function(grp: any) {
+            grp.haveRequestedPosts = true                   
+        })
+    }    
 
     async function modifyGroupNumUnseen(groupID: string, numUnseen: number) {
         if (!mainStore.allowDbTransactions) { return }
@@ -139,11 +162,14 @@ export function useHAGroup() {
         })
     }    
 
+    const sleep = (m: any) => new Promise(r => setTimeout(r, m))
+
     return { 
         requestGroupFeedItems,
         requestGroupsList,
         processGroupResponse,
         processGroupDisplayInfoList,
-        modifyGroupNumUnseen
+        modifyGroupNumUnseen,
+        modifyGroupHaveRequestedPosts
     }
 }

@@ -219,7 +219,7 @@ export const useMainStore = defineStore('main', {
                 hal.log('mainStore/logged out')
                 await db.open() // db needs to be manually re-opened after a delete
 
-            }, 1000)
+            }, 500)
 
         }        
     },

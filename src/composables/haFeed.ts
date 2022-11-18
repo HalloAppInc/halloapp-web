@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import { Dexie, liveQuery } from 'dexie'
+import { DateTime } from 'luxon'
 
 import { useMainStore } from '@/stores/mainStore.js'
 import { useConnStore } from '@/stores/connStore.js'
@@ -28,7 +29,7 @@ export function useHAFeed() {
     const connStore = useConnStore()
     
     const { requestCommentsIfNeeded, requestComments } = useHAComment()
-    const { processGroupDisplayInfoList } = useHAGroup()
+    const { processGroupDisplayInfoList, modifyGroupNumUnseen } = useHAGroup()
     const { insertOrModifyAvatar } = useHAAvatar()
     const { processText } = useHAText()
     const { insertCommonMedia } = useHACommonMedia()
@@ -71,7 +72,7 @@ export function useHAFeed() {
         const firstItemPost = items[0].post
         const lastItemPost = items[items.length - 1].post
 
-        hal.log('haFeed/processFeedResponse/process num items: ' + items.length)
+        hal('haFeed/processFeedResponse/process num items: ' + items.length)()
         if (feedResponse.type == web.FeedType.POST_COMMENTS) {
             for (let i = 0; i < items.length; i++) {
                 const item = items[i]
@@ -90,7 +91,7 @@ export function useHAFeed() {
                 to pre-emptively (for better UX) see if there are new posts, of which usually there isn't 
             */
             if (firstItemPost.id == mainStore.mainFeedHeadPostID && [1, 3, 5].includes(items.length)) {
-                hal.log('haFeed/processFeedResponse/redundant, should return in the future, item: ' + items.length)
+                hal('haFeed/processFeedResponse/redundant, should return in the future, item: ' + items.length)()
                 // return
             }
     
@@ -228,7 +229,7 @@ export function useHAFeed() {
         /* processs groups first and wait for it to finish as processItems might need to modify groups list */
         await processGroupDisplayInfoList(groupInfo)  
 
-        hal.log('haFeed/processFeedUpdate/process num items: ' + items.length)
+        hal('haFeed/processFeedUpdate/process num items: ' + items.length)()
         for (let i = 0; i < items.length; i++) {
             const item = items[i]
             console.dir(item)
@@ -236,7 +237,7 @@ export function useHAFeed() {
             const serverComment = item.comment
 
             if (serverComment) {
-                hal.log('haFeed/processFeedUpdate/comment')
+                hal('haFeed/processFeedUpdate/comment')()
                 const postID = serverComment.postId
                 const infoIdx = postInfoList.findIndex((info: any) => info.id === postID)
                 const postInfo = postInfoList[infoIdx]
@@ -246,7 +247,7 @@ export function useHAFeed() {
                 modifyPostHaveCommentIfNeeded(postID)
             }
             else if (serverPost) {
-                hal.log('haFeed/processFeedUpdate/post')
+                hal('haFeed/processFeedUpdate/post')()
                 const postID = item.post.id
                 const infoIdx = postInfoList.findIndex((info: any) => info.id === postID)
                 const postInfo = postInfoList[infoIdx]
@@ -273,7 +274,7 @@ export function useHAFeed() {
         await insertOrModifyAvatar(userInfo.uid, userInfo.avatarId)
     }
 
-    function processFeedItem(feedItem: any, postInfo: any) {
+    async function processFeedItem(feedItem: any, postInfo: any) {
         const groupID = feedItem.groupId
 
         const serverPost = feedItem.post
@@ -292,6 +293,7 @@ export function useHAFeed() {
             transferState: postInfo.transferState,
             retractState: postInfo.retractState,
             unreadComments: postInfo.unreadComments,
+            expiryTimestamp: feedItem.expiryTimestamp
         }
 
         if (postInfo.userReceipts) {
@@ -310,12 +312,12 @@ export function useHAFeed() {
         if (!payloadBinArr) { return }
         const postContainer = decodeToPostContainer(payloadBinArr)
     
-        hal.log('haFeed/processFeedItem/postContainer: \n' + JSON.stringify(postContainer) + '\n\n')
+        hal('haFeed/processFeedItem/postContainer: \n' + JSON.stringify(postContainer) + '\n\n')()
         // console.dir(postContainer)
     
         if (!postContainer) { return }
         if (postContainer.moment) {
-            hal.log('haFeed/processFeedItem/postContainer is a moment, skip')
+            hal('haFeed/processFeedItem/postContainer is a moment, skip')()
             return
         }
     
@@ -454,8 +456,11 @@ export function useHAFeed() {
         // console.log("haFeed/processServerPost/postObject: ")
         // console.dir(postObject)
 
-        /* only modify groups list if the post is not deleted */
-        if (groupID && postObject.retractState != web.PostDisplayInfo.RetractState.RETRACTED) {
+        insertCommonMedia(SubjectType.FeedPost, subjectID, postObject.postID, commonMediaArr)
+        await insertOrModifyPost(postObject)
+
+        /* modify groups list with numUnseen, which depends on post to be added or modified first */
+        if (groupID) {
          
             let mediaType: MediaType = 0
             if (commonMediaArr.length > 0) {
@@ -466,8 +471,6 @@ export function useHAFeed() {
             modifyGroupIfNeeded(postObject, mediaType, isVoiceNote)
         }
 
-        insertOrModifyPost(postObject)
-        insertCommonMedia(SubjectType.FeedPost, subjectID, postObject.postID, commonMediaArr)
     }
 
     function processFeedItemComment(feedItem: any, postInfo: any) {
@@ -705,29 +708,36 @@ export function useHAFeed() {
 
     async function modifyGroupIfNeeded(post: any, mediaType: MediaType, isVoiceNote: boolean) {
 
+        const numUnseen = await db.post.where('groupID').equals(post.groupID).and(item => {
+            return item.seenState == web.PostDisplayInfo.SeenState.UNSEEN
+        }).toArray()
 
-        await db.group.where('groupID').equals(post.groupID).modify(group => {
-            if (group.lastChangeTimestamp < post.timestamp) {
-                group.lastChangeTimestamp = post.timestamp
+        await db.group.where('groupID').equals(post.groupID).modify(async (group: any) => {
 
-                group.lastContentMediaType = mediaType
-                
-                if (post.text) {
-                    const truncateText = true
-                    const maxCharsWhenTruncated = 500
-                    const processedText = processText(post.text, post.mentions, truncateText, maxCharsWhenTruncated)
-                    group.lastContent = processedText.html
+            if (post.retractState != web.PostDisplayInfo.RetractState.RETRACTED) {
+                if (group.lastChangeTimestamp < post.timestamp) {
+                    group.lastChangeTimestamp = post.timestamp
+
+                    group.lastContentMediaType = mediaType
+                    
+                    if (post.text) {
+                        const truncateText = true
+                        const maxCharsWhenTruncated = 500
+                        const processedText = processText(post.text, post.mentions, truncateText, maxCharsWhenTruncated)
+                        group.lastContent = processedText.html
+                    }
+
+                    // todo: figure out if voicenote display is actually needed            
                 }
-
-                // todo: figure out if voicenote display is actually needed
-
             }
 
-            return
+            /* update group numUnseen */
+            if (group.numUnseen != numUnseen.length) {
+                group.numUnseen = numUnseen.length
+            }            
 
-        })
-        
-                    
+            return
+        })  
     }
 
     async function insertOrModifyPost(post: any) {
@@ -749,17 +759,21 @@ export function useHAFeed() {
                     gotNewPost.value = true
                 }
 
+                const isUnseen = post.seenState == web.PostDisplayInfo.SeenState.UNSEEN
+
                 // hal.log('haFeed/insertOrModifyPost/db/add/inserted: ' + post.postID)
             } catch (error) {
-                hal.log('haFeed/insertOrModifyPost/db/add/error ' + error)
+                hal('haFeed/insertOrModifyPost/db/add/error ' + error)()
             }
             return
         } 
 
-        hal.log('haFeed/insertOrModifyPost/post exists: ' + post.postID)
+        hal('haFeed/insertOrModifyPost/post exists: ' + post.postID)()
+
+        const isSeenStateChanged = post.seenState != dbPost.seenState
 
         // might need to revisit with a better comparison
-        if (post.seenState != dbPost.seenState || 
+        if (isSeenStateChanged || 
             post.transferState != dbPost.transferState ||
             post.retractState != dbPost.retractState || 
             post.unreadComments != dbPost.unreadComments ||
@@ -784,6 +798,7 @@ export function useHAFeed() {
                 }
             })
         }
+
     }
 
     async function insertComment(comment: Comment) {
@@ -794,16 +809,28 @@ export function useHAFeed() {
         if (dbCommentsList.length == 0) {
             try {
                 const id = await db.comment.put(comment)
-                hal.log('haFeed/insertComment/post: ' + comment.postID + ', comment: ' + comment.commentID)
+                hal('haFeed/insertComment/post: ' + comment.postID + ', comment: ' + comment.commentID)()
             } catch (error) {
-                hal.log('haFeed/insertComment/post: ' + comment.postID + ', ' + 'error: ' + error)
+                hal('haFeed/insertComment/post: ' + comment.postID + ', ' + 'error: ' + error)()
             }
         } else {
-            hal.log('haFeed/insertComment/post: ' + comment.postID + ', comment: ' + comment.commentID + ' already exists: ' + comment.commentID)
+            hal('haFeed/insertComment/post: ' + comment.postID + ', comment: ' + comment.commentID + ' already exists: ' + comment.commentID)()
         }
         
     }    
     
+    async function deleteExpiredPosts () {
+        const currentTime = DateTime.local()
+        const currentTimeInSeconds: number = Math.round(currentTime.toSeconds())
+        try {
+            /* use between as some older mobile clients seem to have expiryTimestamp set to 0 */
+            const deleteCount = await db.post.where('expiryTimestamp').between(1, currentTimeInSeconds).delete()
+            hal('haFeed/deleteExpiredPosts/deleted: ' + deleteCount)()
+        } catch (error) {
+            hal('haFeed/deleteExpiredPosts/error: ' + error)()
+        }
+    }
+
     function handleDbError(error: any) {
         let result = {
             continue: true
@@ -852,6 +879,7 @@ export function useHAFeed() {
         
         processFeedResponse, processFeedUpdate,
         processUserDisplayInfo,
-        updateReceipt
+        updateReceipt,
+        deleteExpiredPosts
     }
 }

@@ -47,6 +47,7 @@
     const post: Ref<any | undefined> = ref()
     const subjectID = ref('')
     const postText = ref('')
+    const postTimestamp = ref('')
     
     let subscription: any
 
@@ -127,6 +128,14 @@
                         post.value.voiceNote.blobUrl = URL.createObjectURL(blob)
                     }
                 }
+
+                postTimestamp.value = formatTime(post.value.timestamp, locale.value as string)
+                if (postTimestamp.value == 'Now') {
+                    setTimeout(() => {
+                        postTimestamp.value = formatTime(post.value.timestamp, locale.value as string)
+                    }, 90000)
+                }
+
             },
             error: error => console.error(error)
         })
@@ -206,7 +215,7 @@
                         </div>                        
 
                         <div class='timestamp'>
-                            {{ formatTime(post.timestamp, locale as string) }}
+                            {{ postTimestamp }}
                         </div>
                     </div>
                 </div>

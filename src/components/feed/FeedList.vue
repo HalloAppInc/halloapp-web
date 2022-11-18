@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang='ts'>
     import { Ref, ref, watch, watchEffect, onActivated, onBeforeUnmount, onMounted } from 'vue'
     import { liveQuery } from 'dexie'
     import { storeToRefs } from 'pinia'
@@ -23,11 +23,8 @@
     const colorStore = useColorStore()
 
     // const { gotNewPost } = useHAFeed()
-    const { requestCommentsIfNeeded } = useHAComment()
+    const { requestCommentsIfNeeded, requestComments } = useHAComment()
     const { requestGroupFeedItems } = useHAGroup()
-
-
- 
 
     const listBoxWidth = ref('100%')
     const showComments = ref(false)
@@ -41,6 +38,10 @@
     const { 
         page: mainStorePage
     } = storeToRefs(mainStore)  
+
+    const { 
+        isConnectedToMobile
+    } = storeToRefs(connStore)  
 
     const { 
         background: backgroundColor
@@ -193,7 +194,6 @@
         toggleCommentsPanel('')
     }
 
-
     async function loadComments(postID: string) {
      
         const numComments = await db.comment.where('postID').equals(postID).count()
@@ -205,7 +205,8 @@
 
     function toggleCommentsPanel(postID: string) {
 
-        if (listBoxWidth.value == '100%') {
+        if (listBoxWidth.value == '100%') {            
+            requestComments(postID, '', 3, function() {}) // manual check for missed updates, might not be needed after we have a key to mark our last update
             openCommentsPanel(postID)
         } 
         else {
@@ -281,7 +282,7 @@
                 let groupCursor = ''
                 if (mainStore.groupFeedCursors[groupID]) {
                     groupCursor = mainStore.groupFeedCursors[groupID]
-                }      
+                }
                 requestGroupFeedItems(groupID, groupCursor, 50, function() {})
             }
 
@@ -326,13 +327,15 @@
 
     })
 
-
+    defineExpose({
+        closeCommentsPanel
+    })
 
     if (!props.atMainFeed && props.groupID) {
         initGroupFeed()
     }
 
-    function initGroupFeed() {
+    async function initGroupFeed() {
         const groupID = mainStore.groupsPageGroupID
         if (!mainStore.groupFeedCursors[groupID]) {
             let groupCursor = ''
@@ -340,10 +343,6 @@
             requestGroupFeedItems(groupID, groupCursor, 10, function() {})
         }
     }    
-
-    defineExpose({
-        closeCommentsPanel
-    })
 
 </script>
 
