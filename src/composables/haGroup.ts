@@ -56,7 +56,12 @@ export function useHAGroup() {
     async function processGroupResponse(response: any) {
         const groupInfoList = response.groups
         for (const group of groupInfoList) {
-            sleep(100) // put in some delay as db can get stuck when too many transactions happen at the same time (ie. over 400 trx)
+            /* 
+                put in some delay as db can get stuck when too many transactions happen at the same time,
+                100ms is not enough
+                (ie. over 400 trx)
+             */
+            sleep(200) 
             await processGroupDisplayInfo(group)
 
             if (group.membershipStatus != web.GroupDisplayInfo.MembershipStatus.NOT_MEMBER) {

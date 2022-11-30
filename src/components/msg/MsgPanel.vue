@@ -691,14 +691,15 @@
 <template>
 
     <div class='msgPanelContent' ref='content' @scroll='handleScroll()'>
-        <slot name="subHeader"></slot>
+        <slot name='subHeader'></slot>
 
-        <div v-for='(value, idx) in listData' class="containerChat">
+        <div v-for='(value, idx) in listData' class='containerChat'>
 
             <!-- inbound msg -->
             <div v-if="value.type != 'timestamp' && value.userID != mainStore.userID" class='contentTextBody contentTextBodyInBound'
                 :class="idx == 0 || (idx != 0 && listData[idx - 1].userID == mainStore.userID) ? 'chatBubbleBigMargin' : 'chatBubbleSmallMargin'">
-                <div class="chatBubble chatBubbleInBound" :id="'messageBubble' + value.commentID">
+                <div :id='"messageBubble" + value.commentID'
+                    :class='["chatBubble", "chatBubbleInBound", {imageBubble: commonMediaLists && commonMediaLists[value.commentID]} ]'>
 
                     <!-- toggler -->
                     <div class='menuToggler menuTogglerInBound'>
@@ -758,7 +759,8 @@
             <!-- outBound msg -->
             <div v-else-if="value.type !== 'timestamp'" class='contentTextBody contentTextBodyOutBound'
                 :class="idx == 0 || (idx != 0 && listData[idx - 1].userID != mainStore.userID) ? 'chatBubbleBigMargin' : 'chatBubbleSmallMargin'">
-                <div class='chatBubble chatBubbleoutBound' :id='"messageBubble" + value.commentID'>
+                <div :id='"messageBubble" + value.commentID'
+                    :class='["chatBubble", "chatBubbleoutBound", {imageBubble: commonMediaLists && commonMediaLists[value.commentID]} ]'>
 
                     <!-- toggler -->
                     <div class='menuToggler menuTogglerOutBound'>
@@ -1004,6 +1006,10 @@
         min-width: 65px; /* can't be less than 65 */
         background: v-bind(outBoundMsgBubbleColor);
         overflow-x: hidden;
+    }
+
+    .imageBubble {
+        max-width: 310px;
     }
 
     .chatBubbleTime {

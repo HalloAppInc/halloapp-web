@@ -313,7 +313,6 @@
         let splitter = new GraphemeSplitter()
         const graphemes = splitter.splitGraphemes(msg)
 
-        console.log('--> ' + msg)
         if (graphemes.length <= 3) {
 
             lessThanThreeEmoji = true // assume true to begin
@@ -324,9 +323,6 @@
 
             for (let i = 0; i < graphemes.length; i++) {
                 if (!emojiRegx.test(graphemes[i])) {
-
-                    console.log('--> ' + graphemes[i])
-
                     lessThanThreeEmoji = false
                     break
                 }

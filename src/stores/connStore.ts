@@ -46,7 +46,7 @@ export const useConnStore = defineStore('conn', () => {
     const isUserFirstClickCompleted = ref(false)
 
     const version = '40'
-    const devMode = false
+    const devMode = true
     const isDebug = false
 
     // let connectionTimeoutID: any // used for debouncing multiple calls to connect
@@ -322,11 +322,11 @@ export const useConnStore = defineStore('conn', () => {
                 if (mainStore.isPublicKeyAuthenticated && mainStore.haveInitialHandshakeCompleted) {
                     
                     // temporary to get user's own userID, can remove after Android also sends in connectionInfo
-                    if (msg) {
-                        if (mainStore.userID == 0) {
-                            mainStore.userID = msg.toUid
-                        }
-                    }
+                    // if (msg) {
+                    //     if (mainStore.userID == 0) {
+                    //         mainStore.userID = msg.toUid
+                    //     }
+                    // }
 
                     if (webStanza.content) {
 

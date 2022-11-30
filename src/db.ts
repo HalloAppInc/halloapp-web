@@ -1,16 +1,26 @@
 import Dexie, { Table } from 'dexie'
 import { server, web } from '@/proto/web.js'
 
+export interface Moment {
+    image: CommonMedia
+    selfieImage?: CommonMedia
+    selfieLeading?: boolean
+    location?: string
+}
+
 export interface Post {
     postID: string
     userID: number
     groupID?: string
+
     voiceNote?: CommonMedia
     text?: string
     mentions?: Mention[]
     linkPreview?: CommonMediaLinkPreview
     timestamp: number,
     expiryTimestamp?: number,
+
+    moment?: Moment,
 
     seenState?: web.PostDisplayInfo.SeenState
     transferState?: web.PostDisplayInfo.TransferState
@@ -64,14 +74,22 @@ export interface Contact {
     userID: string,
 }
 
+/*              
+                    subjectID   contentID
+    Moments:        ''          postID
+    Main Feed:      ''          postID
+    Group Feed:     groupID     postID
+    Comments:       postID      commentID
+    Chat:           chatID      messageID
+ */
 export interface CommonMedia {
     id?: number
-    type: SubjectType       // Feed, Comment, Chat
+    type: SubjectType       // Moment, Feed, Comment, Chat
     subjectID: string       // '', GroupID, PostID, ChatID
     contentID: string       // PostID, CommentID, MessageID
     order: number
 
-    mediaType: MediaType    // Image, Video, VoiceNote
+    mediaType: MediaType    // Image, Video, Audio
     width: number
     height: number
 
@@ -83,10 +101,10 @@ export interface CommonMedia {
     blobVersion?: number
     blobSize?: number | Long
     chunkSize?: number
-    blob?: Blob
+    blob?: Blob // deprecated, can remove after some builds from 40
     arrBuf?: ArrayBuffer // Use ArrayBuffer instead of Blob as Safari does not handle blobs in indexeddb well
 
-    previewImage?: Blob
+    previewImage?: Blob // deprecated, can remove after some builds from 40
     previewImageArrBuf?: ArrayBuffer
 
     isCodecH265?: boolean // pertains to video only
@@ -95,7 +113,8 @@ export interface CommonMedia {
 export enum SubjectType {
     FeedPost = 0,
     Comment = 1,
-    Chat = 2
+    Chat = 2,
+    Moment = 3
 }
 
 export enum MediaType {
@@ -177,7 +196,7 @@ export class HADexie extends Dexie {
             comment: 'commentID, postID, timestamp',
             group: 'groupID, name, numUnseen, lastChangeTimestamp',
 
-            commonMedia: '++id, [subjectID+contentID+order], contentID, subjectID',
+            commonMedia: '++id, &[subjectID+contentID+order], contentID, subjectID',
             
             avatar: 'userID',
             groupAvatar: 'groupID',

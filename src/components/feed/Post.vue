@@ -32,10 +32,12 @@
     interface Props {
         post: Post,
         postID: string,
-        atMainFeed: boolean
+        postWidth: number,
+        atMainFeed: boolean,
     }
     const props = defineProps<Props>()
     const post = toRef(props, 'post')
+    const postWidth = toRef(props, 'postWidth')
 
     const { t, locale } = useI18n({ inheritLocale: true, useScope: 'global' })
 
@@ -69,8 +71,7 @@
         getCommonMedia, fetchLinkPreviewMedia, fetchVoiceNote
     } = useHACommonMedia()
 
-    const headerWidth = ref(450)
-    const postWidth = ref(430)
+    // const postWidth = ref(420)
 
     const isDeleted = ref(false)
 
@@ -221,28 +222,26 @@
         }
     }
 
-    function setPostSize() {
-        const maxPostWidth = 400    // max width of entire card allowed
-        const minPostWidth = 200    // min width of card
+    /* can be moved to a higher level component, to avoid multiple runs */
+    // function setPostSize() {
+    //     const maxPostWidth = 420    // max width of entire card allowed
+    //     const minPostWidth = 200    // min width of card
 
-        const sideGutters = 60
+    //     const sideGutters = 60
 
-        // limit post to maxPostWidth if window is large
-        if (window.innerWidth >= maxPostWidth) {
-            headerWidth.value = maxPostWidth - 10
-            postWidth.value = maxPostWidth - sideGutters
+    //     // limit post to maxPostWidth if window is large
+    //     if (window.innerWidth >= maxPostWidth) {
+    //         postWidth.value = maxPostWidth - sideGutters
 
-        // size post to window's size
-        } else if (window.innerWidth < maxPostWidth && window.innerWidth >= minPostWidth) {
-            headerWidth.value = window.innerWidth - 30
-            postWidth.value = window.innerWidth - 80
+    //     // size post to window's size
+    //     } else if (window.innerWidth < maxPostWidth && window.innerWidth >= minPostWidth) {
+    //         postWidth.value = window.innerWidth - 80
 
-        // if window is too small, keep post to minPostWidth
-        } else if (window.innerWidth < minPostWidth) {
-            headerWidth.value = minPostWidth
-            postWidth.value = minPostWidth
-        }
-    }
+    //     // if window is too small, keep post to minPostWidth
+    //     } else if (window.innerWidth < minPostWidth) {
+    //         postWidth.value = minPostWidth
+    //     }
+    // }
 
     function processPostText(text: string, mentions: any, truncateText: boolean = true, isTextPostTextOnly: boolean) {        
         // rough estimate of 330 chars for 12 lines and 110 for 3 lines
@@ -325,7 +324,7 @@
         )
     }
     
-    setPostSize()
+    // setPostSize()
     processPost(props.post)
     setupObserver()
 
@@ -490,14 +489,13 @@
         font-size: 14px;
         color: gray;
         text-align: center;
-        
     }
 
     .post {
         position: relative;
         width: v-bind(postWidth + 'px');
 
-        margin: 20px 0px 20px 0px;
+        margin: 0px 0px 0px 0px;
         padding: 10px 10px 15px 10px;
     
         border-radius: 15px;

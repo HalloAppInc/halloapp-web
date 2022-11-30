@@ -15,6 +15,7 @@
 
     import hal from '@/common/halogger'
 
+    import MomentComponent from '@/components/moment/Moment.vue'
     import PostComponent from '@/components/feed/Post.vue'
     import Comment from '@/components/comment/CommentMain.vue'
     
@@ -51,7 +52,11 @@
     const listData: Ref<Post[]> = ref([])
     const count = ref(5)
 
+    const momentsListData: Ref<Post[]> = ref([])
+
     const inViewPostID: Ref<string | undefined> = ref()
+
+    const postWidth = ref(420)
 
     let savedScrollTop = 0 // store scroll position
 
@@ -154,12 +159,16 @@
             
         // }
 
+        const normalPosts = dbListData.value.filter( item => !item.moment )
+        momentsListData.value = dbListData.value.filter( item => item.moment )
 
+        /* temporary, for testing only */
+        momentsListData.value = normalPosts.slice(3, 10)
 
-        if (dbListData.value.length > count.value) {
-            listData.value = dbListData.value.slice(0, count.value)
+        if (normalPosts.length > count.value) {
+            listData.value = normalPosts.slice(0, count.value)
         } else {
-            listData.value = dbListData.value
+            listData.value = normalPosts
         }
     }
 
@@ -331,6 +340,27 @@
         closeCommentsPanel
     })
 
+    function setPostSize() {
+        const maxPostWidth = 420    // max width of entire card allowed
+        const minPostWidth = 200    // min width of card
+
+        const sideGutters = 60
+
+        // limit post to maxPostWidth if window is large
+        if (window.innerWidth >= maxPostWidth) {
+            postWidth.value = maxPostWidth - sideGutters
+
+        // size post to window's size
+        } else if (window.innerWidth < maxPostWidth && window.innerWidth >= minPostWidth) {
+            postWidth.value = window.innerWidth - 80
+
+        // if window is too small, keep post to minPostWidth
+        } else if (window.innerWidth < minPostWidth) {
+            postWidth.value = minPostWidth
+        }
+    }
+
+    setPostSize()
     if (!props.atMainFeed && props.groupID) {
         initGroupFeed()
     }
@@ -359,27 +389,34 @@
             </div>
         </transition>
 
-        <div class="listBox" ref='content' @scroll='handleScroll()'>
+        <div class='listBox' ref='content' @scroll='handleScroll()'>
 
-            <slot name="header"></slot>
+            <slot name='header'></slot>
 
-            <div v-for="value in listData" class="container">
+            <div name='momentRow' class='momentRow'>
+                
+                <!-- <MomentComponent
+                    :moment='momentsListData'
+                    :postWidth='postWidth'>
+                </MomentComponent> -->
+               
+            </div>
+
+            <div v-for='value in listData' class='container'>
                 <!-- data-ha-postID is used only for detecting post while scrolling -->
-                <PostComponent
-                    :post="value"
-                    :postID="value.postID"
-                    userID="value.userID"
-                    :atMainFeed="props.atMainFeed"
-                    @commentsClick="openCommentsIfNeeded(value.postID)" 
-                    :data-ha-postID="value.postID"
-                    
-                    :key="value.postID"
-                    > 
+                <PostComponent :key='value.postID'
+                    :post='value'
+                    :postID='value.postID'
+                    :userID='value.userID'
+                    :atMainFeed='props.atMainFeed'
+                    :postWidth='postWidth'
+                    @commentsClick='openCommentsIfNeeded(value.postID)'
+                    :data-ha-postID='value.postID'> 
                 </PostComponent>
             </div>
         </div>
     
-        <div v-if="inViewPostID" v-show="showComments" class="comments">
+        <div v-if="inViewPostID" v-show="showComments" class='comments'>
             <keep-alive>
                 <Comment :postID="inViewPostID" @backClick="commentsBackClick" :key="inViewPostID"></Comment>
             </keep-alive>
@@ -390,9 +427,6 @@
 </template>
 
 <style scoped>
-
-
-
     .feedWrapper {
         position: relative;
         width: 100%;
@@ -414,6 +448,9 @@
         overflow-x: hidden;
 
         transition: flex 300ms ease-in-out;
+
+        /* display: flex;
+        flex-direction: column; */
     }
 
     .newPostsButton {
@@ -454,6 +491,14 @@
         height: 50px;
         background-color: rgb(243, 243, 240);
         z-index: 2;
+    }
+
+    .momentRow {
+
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
     }
 
     .comments {

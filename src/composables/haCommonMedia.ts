@@ -7,9 +7,10 @@ import MP4Box from 'mp4box'
 import { useMainStore } from '@/stores/mainStore'
 import { useConnStore } from '@/stores/connStore'
 import { db, SubjectType, MediaType, CommonMedia } from '@/db'
-import hal from '@/common/halogger'
 
+import { useHALog } from '@/composables/haLog'
 import { useHACrypto } from '@/composables/haCrypto'
+
 import { web } from '@/proto/web'
 
 export function useHACommonMedia() {
@@ -29,6 +30,8 @@ export function useHACommonMedia() {
             isUint8ArrayEqual, combineBinaryArrays 
     } = useHACrypto()
 
+    const { hal } = useHALog()
+
     async function fetchCommonMedia(type: SubjectType, mediaList: any) {
         // hal.log("fetchCommonMedia")
 
@@ -46,7 +49,7 @@ export function useHACommonMedia() {
                 result.needWatching = true
 
                 let mediaArrBuf: ArrayBuffer | undefined
-                hal.log('fetchCommonMedia/image/fetch ' + med.contentID)
+                hal('fetchCommonMedia/image/fetch ' + med.contentID)()
 
                 mediaArrBuf = await fetchMediaArrBuf(imageInfo, med)
 
@@ -65,7 +68,7 @@ export function useHACommonMedia() {
                 
                 const chunkSize = med.chunkSize
                 if (chunkSize) {
-                    hal.log("fetchCommonMedia/video/fetch chunked video")
+                    hal("fetchCommonMedia/video/fetch chunked video")()
                     
                     mediaArrBuf = await fetchChunkedMediaArrBuf(med, videoInfo, chunkSize)
 
@@ -100,7 +103,7 @@ export function useHACommonMedia() {
                     // }
                                             
                 } else {
-                    hal.log('haCommonMedia/fetchCommonMedia/video/fetch not chunked media (should not reach this code block)')
+                    hal('haCommonMedia/fetchCommonMedia/video/fetch not chunked media (should not reach this code block)')()
 
                     mediaArrBuf = await fetchMediaArrBuf(videoInfo, med)
                     if (mediaArrBuf) {
@@ -259,7 +262,7 @@ export function useHACommonMedia() {
 
         const isCorrectHash = isUint8ArrayEqual(new Uint8Array(hash), ciphertextHash)
         if (!isCorrectHash) {
-            hal.log('fetchAndDecrypt/hash does not match: ' + ciphertextHash)
+            hal('fetchAndDecrypt/hash does not match: ' + ciphertextHash)()
         }
 
         const attachedMAC = encryptedArrayWithMAC.slice(-32)
@@ -267,7 +270,7 @@ export function useHACommonMedia() {
 
         const isHMACMatch = await verifyHMAC(SHA256Key, encryptedBinArr, attachedMAC)
         if (!isHMACMatch) {
-            hal.log('fetchAndDecrypt/mismatch HMAC')
+            hal('fetchAndDecrypt/mismatch HMAC')()
         }
 
         const decryptedBinArr = await decryptBinArr(AESKey, IV, encryptedBinArr)
@@ -296,13 +299,13 @@ export function useHACommonMedia() {
         while (true) {
             const { value, done } = await reader.read()
             if (done) {
-                hal.log('haCommonMedia/fetchAndDecryptStream/finish fetching')
+                hal('haCommonMedia/fetchAndDecryptStream/finish fetching')()
 
                 // check hash of full binary array
                 const hash = await crypto.subtle.digest("SHA-256", fullBinArr)
                 const isCorrectHash = isUint8ArrayEqual(new Uint8Array(hash), ciphertextHash)
                 if (!isCorrectHash) {
-                    hal.log('haCommonMedia/fetchAndDecryptStream/hash does not match')
+                    hal('haCommonMedia/fetchAndDecryptStream/hash does not match')()
                 }
         
                 let start = chunkCounter*chunkSize
@@ -327,7 +330,7 @@ export function useHACommonMedia() {
                     modifyCommonMedia(type, subjectID, contentID, media.order, combinedBinArr, previewImageArrBuf)
 
                 } else {
-                    hal.log('haCommonMedia/fetchAndDecryptStream/done/error')
+                    hal('haCommonMedia/fetchAndDecryptStream/done/error')()
                 }
 
                 break
@@ -364,7 +367,7 @@ export function useHACommonMedia() {
                     videoInfoCount++
                     fileStartOffset += decryptedBinArr.length
                 } else {
-                    hal.log('haCommonMedia/fetchAndDecryptStream/chunk/' + chunkCounter + '/error')
+                    hal('haCommonMedia/fetchAndDecryptStream/chunk/' + chunkCounter + '/error')()
                     break
                 }
             }
@@ -386,7 +389,7 @@ export function useHACommonMedia() {
         }
 
         mp4box.onReady = function(info: any) {
-            hal.log('setupStreamingMediaSource/mp4box/ready')
+            hal('setupStreamingMediaSource/mp4box/ready')()
             // console.dir(info)
 
             info.tracks.forEach(function(track: any) {
@@ -395,7 +398,7 @@ export function useHACommonMedia() {
                 if (!mainStore.isMobile && !mainStore.isSafari) {
                     const codecType = track.codec
                     if (codecType.substring(0, 4) == 'hvc1') {
-                        hal.prod('setupStreamingMediaSource/video/streaming/can not play h265 video: ' + track.codec)
+                        hal('setupStreamingMediaSource/video/streaming/can not play h265 video: ' + track.codec)()
                         modifyCommonMediaIsCodecH265(type, subjectID, contentID, media.order, true)
                     }
                 }
@@ -425,7 +428,7 @@ export function useHACommonMedia() {
         }
 
         mp4box.onSegment = async function (id: any, user: any, buffer: any, nextSample: any) {
-            hal.log("mp4box/onSegment/track " + id + "/buffer length: " + buffer.byteLength)
+            hal("mp4box/onSegment/track " + id + "/buffer length: " + buffer.byteLength)()
             let track = tracks[id]
             appendBuffer(track, buffer, nextSample === track.meta.nb_samples)
         }
@@ -479,7 +482,7 @@ export function useHACommonMedia() {
         const hash = await crypto.subtle.digest('SHA-256', encryptedBinArr)
         const isCorrectHash = isUint8ArrayEqual(new Uint8Array(hash), ciphertextHash)
         if (!isCorrectHash) {
-            hal.log('haCommonMedia/fetchChunkedMediaArrBuf/hash does not match')
+            hal('haCommonMedia/fetchChunkedMediaArrBuf/hash does not match')()
             return undefined
         }
 
@@ -580,7 +583,7 @@ export function useHACommonMedia() {
             db.commonMedia.bulkAdd(commonMediaArr).then(function(lastKey) {
                 // hal.log('haFeed/insertCommonMedia/bulkPut/success')
             }).catch(Dexie.BulkError, function (e) {
-                hal.log('haFeed/insertCommonMedia/bulkPut/error ' + e)
+                hal('haFeed/insertCommonMedia/bulkPut/error ' + e)()
             })
 
         } else {
@@ -595,7 +598,8 @@ export function useHACommonMedia() {
         await db.commonMedia.where('contentID').equals(contentID).and((commonMed) => {
             return commonMed.subjectID == subjectID && commonMed.type == type && commonMed.order == order
         }).modify(function(med: CommonMedia) {
-            
+            hal('haCommonMedia/modifyCommonMedia')()      
+
             med.arrBuf = arrBuf
 
             if (previewImageArrBuf) {

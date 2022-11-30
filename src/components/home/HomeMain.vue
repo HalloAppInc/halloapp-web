@@ -1,5 +1,5 @@
-<script setup lang="ts">
-    import { Ref, ref, computed } from 'vue'
+<script setup lang='ts'>
+    import { Ref, ref } from 'vue'
     import { useI18n } from 'vue-i18n'
   
     import { db } from '@/db'
@@ -26,7 +26,7 @@
 
 <template>
 
-    <FeedList ref="feedRef" :atMainFeed='true' >
+    <FeedList :atMainFeed='true' >
         <template v-slot:header>
             <div class='header'>
                 <HomeHeader/>
@@ -44,4 +44,5 @@
         height: 50px;
         z-index: 2;
     }
+
 </style>

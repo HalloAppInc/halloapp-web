@@ -139,7 +139,6 @@ export function useHAText() {
             } else if (Grapheme == '[' && ((i + 5) < GraphemesList.length)) { // check for [ first to save some compute cycles
 
                 const openStr = GraphemesList.slice(i, i + 6).join('')
-                hal.log('--> openStr mention: ' + openStr + ' ' + i)
                 const openingMentionTag = '[[am]]'
 
                 if (openStr == openingMentionTag) {

@@ -53,6 +53,7 @@
     const showNotConnectedToMobile = ref(false)
     const showMobileReconnectCountdown = ref(false)
     const connectToMobileCountdown = ref('')
+    let connectToMobileCountdownInterval: any
     let serverConnectionTimeoutID: any
     let mobileConnectionTimeoutID: any
 
@@ -91,10 +92,11 @@
     function setCountdown(countDownDate: number) {
         connectToMobileCountdown.value = formatTimer(countDownDate).display // run once first so re-runs won't show 00:00
 
-        let countdownInterval = setInterval(function() {
+        clearInterval(connectToMobileCountdownInterval)
+        connectToMobileCountdownInterval = setInterval(function() {
             const formattedTimer = formatTimer(countDownDate)
             if (formattedTimer.timeDiffMs <= 1000) {
-                clearInterval(countdownInterval)
+                clearInterval(connectToMobileCountdownInterval)
                 showMobileReconnectCountdown.value = false
             } else {
                 connectToMobileCountdown.value = formattedTimer.display
@@ -308,12 +310,12 @@
             <BottomNav/>
         </div>
 
-        <div v-if="showNotConnectedToServer" class="noServerConnectionBanner">
+        <div v-if='showNotConnectedToServer' class='noServerConnectionBanner'>
             <span>Lost connection, please check if you have internet connectivity</span><br/>
             <span class="manualRetry" @click="connStore.debounceConnectToServer()"><br/>Click here to retry now</span>
         </div>
 
-        <div v-else-if="showNotConnectedToMobile" class="noMobileConnectionBanner">
+        <div v-else-if='showNotConnectedToMobile' class='noMobileConnectionBanner'>
             <span>Lost connection, please open HalloApp on your mobile device</span><br/>
             <span v-if="showMobileReconnectCountdown && noiseReconnectHandshakeRetries < 20">Will retry again in {{ connectToMobileCountdown }}<br/></span>
             <span v-else-if="noiseReconnectHandshakeRetries < 20">Trying to connect...<br/></span>
@@ -561,7 +563,7 @@
         position: absolute;
         top: 50px;
         right: 30px;
-        z-index: 10;
+        z-index: 20;
         padding: 10px 15px 10px 15px;
         border-radius: 5px;
         color: white;
@@ -575,7 +577,7 @@
         position: absolute;
         top: 50px;
         right: 30px;
-        z-index: 10;
+        z-index: 20;
         padding: 10px 15px 10px 15px;
         border-radius: 5px;
         color: white;

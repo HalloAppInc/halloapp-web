@@ -221,6 +221,8 @@ export function useHAFeed() {
     }
 
     async function processFeedUpdate(feedUpdate: any) {
+        hal('haFeed/processFeedUpdate/feedUpdate: ' + JSON.stringify(feedUpdate))()
+
         const items = feedUpdate.items
         const userInfo = feedUpdate.userDisplayInfo
         const postInfoList = feedUpdate.postDisplayInfo

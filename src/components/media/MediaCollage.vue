@@ -28,10 +28,6 @@
 
     const numberOfMedia = props.mediaList.length
 
-
-    console.log('--> media collage: ' + props.subjectID + ' ' + JSON.stringify(props.mediaList))
-
-
     function makeMed(med: any) {
         if (med && med.previewImageArrBuf) {
             const blob = new Blob([med.previewImageArrBuf, {type: 'image/jpeg'}])
