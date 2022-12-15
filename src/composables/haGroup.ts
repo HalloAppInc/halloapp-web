@@ -54,20 +54,30 @@ export function useHAGroup() {
     }
 
     async function processGroupResponse(response: any) {
+        // temporary
+        return
         const groupInfoList = response.groups
         for (const group of groupInfoList) {
+
             /* 
                 put in some delay as db can get stuck when too many transactions happen at the same time,
                 100ms is not enough
                 (ie. over 400 trx)
              */
-            sleep(200) 
+            sleep(500) 
+
+            const groupID = group.id
+
             await processGroupDisplayInfo(group)
 
+            const dbGroup = await db.group.where('groupID').equals(groupID).first()
+            if (dbGroup?.haveRequestedPosts) { continue }
+
             if (group.membershipStatus != web.GroupDisplayInfo.MembershipStatus.NOT_MEMBER) {
-                const groupID = group.id
+                hal('haGroup/processGroupResponse/' + groupID + '/requestGroupFeedItems')()
                 const groupCursor = ''
                 await requestGroupFeedItems(groupID, groupCursor, 10, async function() {
+                    hal('haGroup/processGroupResponse/' + groupID + '/modifyGroupHaveRequestedPosts')()
                     await modifyGroupHaveRequestedPosts(groupID)
                 })
             }

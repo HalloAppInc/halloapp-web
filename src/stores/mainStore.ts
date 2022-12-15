@@ -86,6 +86,8 @@ export const useMainStore = defineStore('main', {
         groupFeedCursors: <any>{},
         commentCursors: <any>{}, // keys are postIDs
 
+        isMomentsLocked: true,
+
         test: false, // test for upload&download, reload database
 
         loginUserID: '',
@@ -195,6 +197,8 @@ export const useMainStore = defineStore('main', {
 
                 this.sounds = true
                 this.desktopAlerts = true
+
+                this.isMomentsLocked = true
 
                 for (const prop of Object.getOwnPropertyNames(this.pushnames)) {
                     delete this.pushnames[prop]

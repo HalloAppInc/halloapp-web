@@ -417,7 +417,7 @@
                             class="userReceiptsAvatar" :style="{ 'z-index': (idx*-1 + 100) }">
                     
                             <Avatar :style="{ 'margin-right': '-8px' }"
-                                :userID="(value.uid as number)" :width="20" :useBorder=true>
+                                :userID="(value.uid as number)" :width='20' :useBorder=true>
                             </Avatar>
                         </div>
 

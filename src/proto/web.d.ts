@@ -11925,11 +11925,11 @@ export namespace server {
         /** Iq publicFeedResponse */
         publicFeedResponse?: (server.IPublicFeedResponse|null);
 
-        /** Iq toUid */
-        toUid?: (number|Long|null);
+        /** Iq relationshipAction */
+        relationshipAction?: (server.IRelationshipAction|null);
 
-        /** Iq fromUid */
-        fromUid?: (number|Long|null);
+        /** Iq relationshipList */
+        relationshipList?: (server.IRelationshipList|null);
     }
 
     /** Represents an Iq. */
@@ -12076,14 +12076,14 @@ export namespace server {
         /** Iq publicFeedResponse. */
         public publicFeedResponse?: (server.IPublicFeedResponse|null);
 
-        /** Iq toUid. */
-        public toUid: (number|Long);
+        /** Iq relationshipAction. */
+        public relationshipAction?: (server.IRelationshipAction|null);
 
-        /** Iq fromUid. */
-        public fromUid: (number|Long);
+        /** Iq relationshipList. */
+        public relationshipList?: (server.IRelationshipList|null);
 
         /** Iq payload. */
-        public payload?: ("uploadMedia"|"contactList"|"uploadAvatar"|"avatar"|"avatars"|"clientMode"|"clientVersion"|"pushRegister"|"whisperKeys"|"ping"|"feedItem"|"privacyList"|"privacyLists"|"groupStanza"|"groupsStanza"|"clientLog"|"name"|"errorStanza"|"props"|"invitesRequest"|"invitesResponse"|"notificationPrefs"|"groupFeedItem"|"groupAvatar"|"deleteAccount"|"groupInviteLink"|"historyResend"|"exportData"|"contactSyncError"|"clientOtpRequest"|"clientOtpResponse"|"whisperKeysCollection"|"getCallServers"|"getCallServersResult"|"startCall"|"startCallResult"|"truncWhisperKeysCollection"|"externalSharePost"|"externalSharePostContainer"|"webClientInfo"|"reportUserContent"|"publicFeedRequest"|"publicFeedResponse");
+        public payload?: ("uploadMedia"|"contactList"|"uploadAvatar"|"avatar"|"avatars"|"clientMode"|"clientVersion"|"pushRegister"|"whisperKeys"|"ping"|"feedItem"|"privacyList"|"privacyLists"|"groupStanza"|"groupsStanza"|"clientLog"|"name"|"errorStanza"|"props"|"invitesRequest"|"invitesResponse"|"notificationPrefs"|"groupFeedItem"|"groupAvatar"|"deleteAccount"|"groupInviteLink"|"historyResend"|"exportData"|"contactSyncError"|"clientOtpRequest"|"clientOtpResponse"|"whisperKeysCollection"|"getCallServers"|"getCallServersResult"|"startCall"|"startCallResult"|"truncWhisperKeysCollection"|"externalSharePost"|"externalSharePostContainer"|"webClientInfo"|"reportUserContent"|"publicFeedRequest"|"publicFeedResponse"|"relationshipAction"|"relationshipList");
 
         /**
          * Creates a new Iq instance using the specified properties.
@@ -12330,6 +12330,9 @@ export namespace server {
         /** Msg momentNotification */
         momentNotification?: (server.IMomentNotification|null);
 
+        /** Msg relationshipAction */
+        relationshipAction?: (server.IRelationshipAction|null);
+
         /** Msg retryCount */
         retryCount?: (number|null);
 
@@ -12499,6 +12502,9 @@ export namespace server {
         /** Msg momentNotification. */
         public momentNotification?: (server.IMomentNotification|null);
 
+        /** Msg relationshipAction. */
+        public relationshipAction?: (server.IRelationshipAction|null);
+
         /** Msg retryCount. */
         public retryCount: number;
 
@@ -12506,7 +12512,7 @@ export namespace server {
         public rerequestCount: number;
 
         /** Msg payload. */
-        public payload?: ("contactList"|"avatar"|"whisperKeys"|"seenReceipt"|"deliveryReceipt"|"chatStanza"|"feedItem"|"feedItems"|"contactHash"|"groupStanza"|"groupChat"|"name"|"errorStanza"|"groupchatRetract"|"chatRetract"|"groupFeedItem"|"rerequest"|"silentChatStanza"|"groupFeedItems"|"endOfQueue"|"inviteeNotice"|"groupFeedRerequest"|"historyResend"|"playedReceipt"|"requestLogs"|"wakeup"|"homeFeedRerequest"|"incomingCall"|"callRinging"|"answerCall"|"endCall"|"iceCandidate"|"marketingAlert"|"iceRestartOffer"|"iceRestartAnswer"|"groupFeedHistory"|"preAnswerCall"|"holdCall"|"muteCall"|"incomingCallPush"|"callSdp"|"webStanza"|"contentMissing"|"screenshotReceipt"|"savedReceipt"|"groupChatStanza"|"momentNotification");
+        public payload?: ("contactList"|"avatar"|"whisperKeys"|"seenReceipt"|"deliveryReceipt"|"chatStanza"|"feedItem"|"feedItems"|"contactHash"|"groupStanza"|"groupChat"|"name"|"errorStanza"|"groupchatRetract"|"chatRetract"|"groupFeedItem"|"rerequest"|"silentChatStanza"|"groupFeedItems"|"endOfQueue"|"inviteeNotice"|"groupFeedRerequest"|"historyResend"|"playedReceipt"|"requestLogs"|"wakeup"|"homeFeedRerequest"|"incomingCall"|"callRinging"|"answerCall"|"endCall"|"iceCandidate"|"marketingAlert"|"iceRestartOffer"|"iceRestartAnswer"|"groupFeedHistory"|"preAnswerCall"|"holdCall"|"muteCall"|"incomingCallPush"|"callSdp"|"webStanza"|"contentMissing"|"screenshotReceipt"|"savedReceipt"|"groupChatStanza"|"momentNotification"|"relationshipAction");
 
         /**
          * Creates a new Msg instance using the specified properties.
@@ -12751,9 +12757,6 @@ export namespace server {
 
         /** ChatState fromUid */
         fromUid?: (number|Long|null);
-
-        /** ChatState toUid */
-        toUid?: (number|Long|null);
     }
 
     /** Represents a ChatState. */
@@ -12776,9 +12779,6 @@ export namespace server {
 
         /** ChatState fromUid. */
         public fromUid: (number|Long);
-
-        /** ChatState toUid. */
-        public toUid: (number|Long);
 
         /**
          * Creates a new ChatState instance using the specified properties.
@@ -12881,12 +12881,6 @@ export namespace server {
 
         /** Ack timestamp */
         timestamp?: (number|Long|null);
-
-        /** Ack toUid */
-        toUid?: (number|Long|null);
-
-        /** Ack fromUid */
-        fromUid?: (number|Long|null);
     }
 
     /** Represents an Ack. */
@@ -12903,12 +12897,6 @@ export namespace server {
 
         /** Ack timestamp. */
         public timestamp: (number|Long);
-
-        /** Ack toUid. */
-        public toUid: (number|Long);
-
-        /** Ack fromUid. */
-        public fromUid: (number|Long);
 
         /**
          * Creates a new Ack instance using the specified properties.
@@ -18287,6 +18275,375 @@ export namespace server {
             UNKNOWN = 0,
             INVITE_FRIENDS = 1,
             SHARE_POST = 2
+        }
+    }
+
+    /** FriendStatus enum. */
+    enum FriendStatus {
+        NONE = 0,
+        OUTGOING = 1,
+        INCOMING = 2,
+        FRIENDS = 3
+    }
+
+    /** Properties of a UserInfo. */
+    interface IUserInfo {
+
+        /** UserInfo uid */
+        uid?: (number|Long|null);
+
+        /** UserInfo username */
+        username?: (string|null);
+
+        /** UserInfo name */
+        name?: (string|null);
+
+        /** UserInfo avatarId */
+        avatarId?: (string|null);
+
+        /** UserInfo status */
+        status?: (server.FriendStatus|null);
+    }
+
+    /** Represents a UserInfo. */
+    class UserInfo implements IUserInfo {
+
+        /**
+         * Constructs a new UserInfo.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: server.IUserInfo);
+
+        /** UserInfo uid. */
+        public uid: (number|Long);
+
+        /** UserInfo username. */
+        public username: string;
+
+        /** UserInfo name. */
+        public name: string;
+
+        /** UserInfo avatarId. */
+        public avatarId: string;
+
+        /** UserInfo status. */
+        public status: server.FriendStatus;
+
+        /**
+         * Creates a new UserInfo instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns UserInfo instance
+         */
+        public static create(properties?: server.IUserInfo): server.UserInfo;
+
+        /**
+         * Encodes the specified UserInfo message. Does not implicitly {@link server.UserInfo.verify|verify} messages.
+         * @param message UserInfo message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: server.IUserInfo, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified UserInfo message, length delimited. Does not implicitly {@link server.UserInfo.verify|verify} messages.
+         * @param message UserInfo message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: server.IUserInfo, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a UserInfo message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns UserInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): server.UserInfo;
+
+        /**
+         * Decodes a UserInfo message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns UserInfo
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): server.UserInfo;
+
+        /**
+         * Verifies a UserInfo message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a UserInfo message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns UserInfo
+         */
+        public static fromObject(object: { [k: string]: any }): server.UserInfo;
+
+        /**
+         * Creates a plain object from a UserInfo message. Also converts values to other types if specified.
+         * @param message UserInfo
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: server.UserInfo, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this UserInfo to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for UserInfo
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a RelationshipAction. */
+    interface IRelationshipAction {
+
+        /** RelationshipAction action */
+        action?: (server.RelationshipAction.Action|null);
+
+        /** RelationshipAction uid */
+        uid?: (number|Long|null);
+
+        /** RelationshipAction status */
+        status?: (server.FriendStatus|null);
+
+        /** RelationshipAction userInfo */
+        userInfo?: (server.IUserInfo|null);
+    }
+
+    /** Represents a RelationshipAction. */
+    class RelationshipAction implements IRelationshipAction {
+
+        /**
+         * Constructs a new RelationshipAction.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: server.IRelationshipAction);
+
+        /** RelationshipAction action. */
+        public action: server.RelationshipAction.Action;
+
+        /** RelationshipAction uid. */
+        public uid: (number|Long);
+
+        /** RelationshipAction status. */
+        public status: server.FriendStatus;
+
+        /** RelationshipAction userInfo. */
+        public userInfo?: (server.IUserInfo|null);
+
+        /**
+         * Creates a new RelationshipAction instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns RelationshipAction instance
+         */
+        public static create(properties?: server.IRelationshipAction): server.RelationshipAction;
+
+        /**
+         * Encodes the specified RelationshipAction message. Does not implicitly {@link server.RelationshipAction.verify|verify} messages.
+         * @param message RelationshipAction message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: server.IRelationshipAction, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified RelationshipAction message, length delimited. Does not implicitly {@link server.RelationshipAction.verify|verify} messages.
+         * @param message RelationshipAction message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: server.IRelationshipAction, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a RelationshipAction message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns RelationshipAction
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): server.RelationshipAction;
+
+        /**
+         * Decodes a RelationshipAction message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns RelationshipAction
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): server.RelationshipAction;
+
+        /**
+         * Verifies a RelationshipAction message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a RelationshipAction message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns RelationshipAction
+         */
+        public static fromObject(object: { [k: string]: any }): server.RelationshipAction;
+
+        /**
+         * Creates a plain object from a RelationshipAction message. Also converts values to other types if specified.
+         * @param message RelationshipAction
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: server.RelationshipAction, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this RelationshipAction to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for RelationshipAction
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    namespace RelationshipAction {
+
+        /** Action enum. */
+        enum Action {
+            ADD = 0,
+            REMOVE = 1,
+            BLOCK = 2,
+            UNBLOCK = 3
+        }
+    }
+
+    /** Properties of a RelationshipList. */
+    interface IRelationshipList {
+
+        /** RelationshipList type */
+        type?: (server.RelationshipList.Type|null);
+
+        /** RelationshipList users */
+        users?: (server.IUserInfo[]|null);
+    }
+
+    /** Represents a RelationshipList. */
+    class RelationshipList implements IRelationshipList {
+
+        /**
+         * Constructs a new RelationshipList.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: server.IRelationshipList);
+
+        /** RelationshipList type. */
+        public type: server.RelationshipList.Type;
+
+        /** RelationshipList users. */
+        public users: server.IUserInfo[];
+
+        /**
+         * Creates a new RelationshipList instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns RelationshipList instance
+         */
+        public static create(properties?: server.IRelationshipList): server.RelationshipList;
+
+        /**
+         * Encodes the specified RelationshipList message. Does not implicitly {@link server.RelationshipList.verify|verify} messages.
+         * @param message RelationshipList message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: server.IRelationshipList, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified RelationshipList message, length delimited. Does not implicitly {@link server.RelationshipList.verify|verify} messages.
+         * @param message RelationshipList message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: server.IRelationshipList, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a RelationshipList message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns RelationshipList
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): server.RelationshipList;
+
+        /**
+         * Decodes a RelationshipList message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns RelationshipList
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): server.RelationshipList;
+
+        /**
+         * Verifies a RelationshipList message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a RelationshipList message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns RelationshipList
+         */
+        public static fromObject(object: { [k: string]: any }): server.RelationshipList;
+
+        /**
+         * Creates a plain object from a RelationshipList message. Also converts values to other types if specified.
+         * @param message RelationshipList
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: server.RelationshipList, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this RelationshipList to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for RelationshipList
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    namespace RelationshipList {
+
+        /** Type enum. */
+        enum Type {
+            NORMAL = 0,
+            INCOMING = 1,
+            OUTGOING = 2,
+            BLOCKED = 3
         }
     }
 

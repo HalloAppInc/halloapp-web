@@ -162,9 +162,6 @@
         const normalPosts = dbListData.value.filter( item => !item.moment )
         momentsListData.value = dbListData.value.filter( item => item.moment )
 
-        /* temporary, for testing only */
-        momentsListData.value = normalPosts.slice(3, 10)
-
         if (normalPosts.length > count.value) {
             listData.value = normalPosts.slice(0, count.value)
         } else {
@@ -393,12 +390,12 @@
 
             <slot name='header'></slot>
 
-            <div name='momentRow' class='momentRow'>
+            <div v-if='momentsListData.length > 0' class='momentRow'>
                 
-                <!-- <MomentComponent
-                    :moment='momentsListData'
+                <MomentComponent
+                    :momentPosts='momentsListData'
                     :postWidth='postWidth'>
-                </MomentComponent> -->
+                </MomentComponent>
                
             </div>
 

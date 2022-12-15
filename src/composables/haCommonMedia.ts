@@ -172,6 +172,64 @@ export function useHACommonMedia() {
         return result
     }    
     
+    async function fetchMomentMedia(postID: string, image: any, selfie?: any, blurredImage?: any, blurredSelfieImage?: any) {
+        
+        let arrBuf: ArrayBuffer | undefined
+        let selfieArrBuf: ArrayBuffer | undefined
+        let blurredArrBuf: ArrayBuffer | undefined
+        let blurredSelfieArrBuf: ArrayBuffer | undefined
+
+        let needSaving: boolean = false
+  
+        if (image.arrBuf) {
+            arrBuf = image.arrBuf
+            if (blurredImage?.arrBuf) {
+                blurredArrBuf = blurredImage.arrBuf
+            }
+        } else {
+            needSaving = true
+            arrBuf = await fetchMediaArrBuf(imageInfo, image)
+
+            if (arrBuf) {
+                const blob = new Blob([arrBuf], {type: 'image/jpeg'})
+                const blurredBlob = await makeBlurredPreview(blob)
+                blurredArrBuf = await (blurredBlob as Blob).arrayBuffer()
+            }
+            
+        }
+
+        if (selfie) {
+            if (selfie.arrBuf) {
+                selfieArrBuf = selfie.arrBuf
+                if (blurredSelfieImage?.arrBuf) {
+                    blurredSelfieArrBuf = blurredSelfieImage.arrBuf
+                }
+
+            } else {
+                needSaving = true
+                selfieArrBuf = await fetchMediaArrBuf(imageInfo, selfie)
+
+                if (selfieArrBuf) {
+                    const blob = new Blob([selfieArrBuf], {type: 'image/jpeg'})
+                    const blurredBlob = await makeBlurredPreview(blob)
+                    blurredSelfieArrBuf = await (blurredBlob as Blob).arrayBuffer()
+                }
+
+            }
+        }
+
+        if (needSaving && arrBuf) {
+            modifyPostMoment(postID, arrBuf, selfieArrBuf, blurredArrBuf, blurredSelfieArrBuf)
+        }
+        
+        return {
+            imageArrBuf: arrBuf,
+            selfieArrBuf: selfieArrBuf,
+            blurredImageArrBuf: blurredArrBuf,
+            blurredSelfieArrBuf: blurredSelfieArrBuf
+        }
+    }  
+
     async function fetchVoiceNote(type: SubjectType, voiceNote: any) {
         if (voiceNote.mediaType != MediaType.Audio) { return undefined }
 
@@ -504,6 +562,54 @@ export function useHACommonMedia() {
         return combinedBinArr.buffer
     }
 
+    async function makeBlurredPreview(blob: Blob) {
+        return new Promise(function(resolve, reject) {
+
+            const canvas = document.createElement('canvas')
+            var image = new Image()
+
+            const url = URL.createObjectURL(blob)
+            const urlRef = url
+
+            image.style.display = 'none'
+            canvas.style.display = 'none'
+
+            document.body.appendChild(canvas)
+
+            image.src = urlRef
+    
+            image.onload = function(ev) {
+
+                canvas.width = image.width
+                canvas.height = image.height
+
+                const context = canvas.getContext('2d')
+                
+                if (!context) {
+                    reject(undefined)
+                    return
+                }
+
+                let blurPercent = Math.abs(image.width * 0.10)
+
+                context.filter = 'blur(' + blurPercent + 'px)'
+
+                console.log('***> ' + context.filter)
+
+                context.drawImage(image, 0, 0, image.width, image.height)
+                canvas.toBlob((blob) => {
+                    if (blob) {
+                        resolve(blob)
+                    }
+                    canvas.remove()
+                }, 
+                'image/jpeg', 
+                0.90) // Safari: does not use quality
+            }
+           
+        })
+    }
+
     async function grabPreviewFromVideo(blob: Blob) {
         return new Promise(function(resolve, reject) {
 
@@ -621,6 +727,27 @@ export function useHACommonMedia() {
     }
 
     /* table specific functions */
+    async function modifyPostMoment(postID: string, arrBuf: ArrayBuffer, selfieArrBuf?: ArrayBuffer, blurredArrBuf?: ArrayBuffer, blurredSelfieArrBuf?: ArrayBuffer) {
+        await db.post.where('postID').equals(postID).modify(function(item) {
+            if (item.moment) {
+                item.moment.image.arrBuf = arrBuf
+
+                if (item.moment.selfieImage && selfieArrBuf) {
+                    item.moment.selfieImage.arrBuf = selfieArrBuf
+                }
+
+                if (item.moment.blurredImage && blurredArrBuf) {
+                    item.moment.blurredImage.arrBuf = blurredArrBuf
+                }
+
+                if (item.moment.blurredSelfieImage && blurredSelfieArrBuf) {
+                    item.moment.blurredSelfieImage.arrBuf = blurredSelfieArrBuf
+                }                
+            }
+        })
+        return        
+    } 
+
     async function modifyPostLinkPreviewMedia(postID: string, blob: Blob) {
         await db.post.where('postID').equals(postID).modify(function(item) {
             if (item.linkPreview?.preview) {
@@ -662,6 +789,7 @@ export function useHACommonMedia() {
     }    
   
     return {
+        fetchMomentMedia,
         fetchCommonMedia,
         fetchVoiceNote,
         fetchLinkPreviewMedia,

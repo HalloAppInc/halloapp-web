@@ -3,10 +3,16 @@ import { useI18n } from 'vue-i18n'
 
 export function useTimeformatter() {
 
-    const { t } = useI18n({ inheritLocale: true, useScope: 'global' })
+    const { t, locale } = useI18n({ inheritLocale: true, useScope: 'global' })
     
     const minMs = 1000 * 60
     const hrMs = minMs * 60
+
+    /* used for dev purposes */
+    function formatFullTime(seconds: number) {
+        const dt = DateTime.fromSeconds(seconds)
+        return dt.toFormat('yyyy-L-dd t') 
+    }
 
     function formatTime(seconds: number, locale: string) {
         let result = ""
@@ -102,6 +108,22 @@ export function useTimeformatter() {
         return { display: diffMinutes + ":" + displaySeconds, timeDiffMs: timeDiffMs }
     }    
 
+    function formatTimeDayOnly(seconds: number, locale: string) {
+        const dt = DateTime.fromSeconds(seconds)
+        return dt.toFormat('EEEE', { locale: locale })
+    }    
+
+    function isPast24Hours(timestampInSec: number, ) {
+        const dt = DateTime.fromSeconds(timestampInSec)
+        const currentTime = DateTime.local()
+
+        if (currentTime.diff(dt, 'hours').hours > 24) {
+            return true
+        } else {
+            return false
+        }
+    }    
+
     function timeDiffBiggerThanOneDay(timestampInSec: number, nextTimestampInSec: number) {
         const dt1 = DateTime.fromSeconds(timestampInSec)
 
@@ -112,15 +134,26 @@ export function useTimeformatter() {
         } else {
             return true
         }
-    }    
+    }
+
+    function diffInSeconds(seconds: number) {
+        const dt = DateTime.fromSeconds(seconds)
+        const currentTime = DateTime.local()
+        return Math.round(dt.diff(currentTime, 'seconds').seconds)
+    }        
 
     return {    
+        formatFullTime,
+
         formatTime,
         formatTimeDateOnlyChat, 
         formatTimeForGroupsList,
         formatTimeChat, 
         formatTimeFullChat,
         formatTimeEmailLogs,
-        formatTimer, 
-        timeDiffBiggerThanOneDay }
+        formatTimer,
+        formatTimeDayOnly,
+        timeDiffBiggerThanOneDay,
+        isPast24Hours,
+        diffInSeconds }
 }

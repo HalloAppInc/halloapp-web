@@ -1,19 +1,37 @@
 <script setup lang='ts'>
-    import { Ref, ref, toRef } from 'vue'
+    import { Ref, ref, toRef, watch } from 'vue'
     import { Base64 } from 'js-base64'
     import { useI18n } from 'vue-i18n'
+    import { liveQuery } from 'dexie'
 
     import { db, CommonMedia, SubjectType, MediaType } from '@/db'
+    import { useMainStore } from '@/stores/mainStore'
     
     import hal from '@/common/halogger'
+
+    import { useTimeformatter } from '@/composables/timeformatter'
+    
+    import { useHAMoments } from '@/composables/haMoments'
     import { useHACommonMedia } from '@/composables/haCommonMedia'
+    import { useHAUtils } from '@/composables/haUtils'
+
+    import MomentCard from '@/components/moment/MomentCard.vue'
+
+    const mainStore = useMainStore()
+
+    const { isPast24Hours, diffInSeconds } = useTimeformatter()
 
     const { 
+        requestMoments,
+    } = useHAMoments()
+
+    const { 
+        fetchMomentMedia,
         getCommonMedia,
         fetchCommonMedia
     } = useHACommonMedia()
 
-    const { t } = useI18n({
+    const { t, locale } = useI18n({
         inheritLocale: true,
         useScope: 'global'
     })
@@ -21,11 +39,15 @@
     const imageInfo = Base64.fromBase64("SGFsbG9BcHAgaW1hZ2U=")
 
     interface Props {
-        moment: any,
+        momentPosts: any,
         postWidth: number,
     }
 
     const props = defineProps<Props>()
+
+    const { debounce } = useHAUtils()
+
+    const refMomentPosts = toRef(props, 'momentPosts')
 
     const mediaBoxWidth     = ref(0)
     const mediaBoxHeight    = ref(0)
@@ -34,219 +56,203 @@
 
     const list: Ref<any[]> = ref([])
 
-    const showImage = ref(false)
+
+    let currentMoment = 0
+    const animateCardIndex = ref(-1)
+    let animateRight = true
+
+    let removeTimers: any = {}
 
 
-    async function processMomentList(moment: any) {
+    formList(props.momentPosts)
 
-        const image = moment.image
-        const selfieImage = moment.selfieImage
-        let isSplit = false
-       
-        if (image) {
-            mediaList.value.push(image)
-        }
+    async function makeList() {
 
-        if (selfieImage) {
-            if (moment.selfieLeading) {
-                mediaList.value.unshift(selfieImage)
-            } else {
-                mediaList.value.push(selfieImage)
-            }
-        }
+        let isRotated = false
 
-        setMediaSizes(mediaList.value)
+        let zIndex = 10 + list.value.length - 1
+        for (let i = 0; i < list.value.length; i++) {
+            let item = list.value[i]
 
-        // mediaList.value.forEach(async (med) => {
-
-        //     const mediaBinArr = await getMediaBinArr(imageInfo, med.img)
-        //     if (!mediaBinArr) return
-        //     const mediaBlob = new Blob([mediaBinArr], {type: 'image/jpeg'})
-        //     const blobUrl = URL.createObjectURL(mediaBlob)
-
-        //     med.blobUrl = blobUrl
-        // })
-
-        /* showImage and timeout used as a quick attempt to show both images at once */
-        setTimeout(function() {
-            showImage.value = true 
-        }, 500)       
-
-    }
-
-
-    async function processMoment(moment: any) {
-        const image = moment.image
-        const selfieImage = moment.selfieImage
-        let isSplit = false
-       
-        if (image) {
-            mediaList.value.push(image)
-        }
-
-        if (selfieImage) {
-            if (moment.selfieLeading) {
-                mediaList.value.unshift(selfieImage)
-            } else {
-                mediaList.value.push(selfieImage)
-            }
-        }
-
-        setMediaSizes(mediaList.value)
-
-        // mediaList.value.forEach(async (med) => {
-
-        //     const mediaBinArr = await getMediaBinArr(imageInfo, med.img)
-        //     if (!mediaBinArr) return
-        //     const mediaBlob = new Blob([mediaBinArr], {type: 'image/jpeg'})
-        //     const blobUrl = URL.createObjectURL(mediaBlob)
-
-        //     med.blobUrl = blobUrl
-        // })
-
-        /* showImage and timeout used as a quick attempt to show both images at once */
-        setTimeout(function() {
-            showImage.value = true 
-        }, 500)       
-
-    }
-
-    function setMediaSizes(postAlbum: any) {
-
-        const defaultRatio = 1 // square
-
-        mediaBoxWidth.value = props.postWidth - 20
-        mediaBoxHeight.value = mediaBoxWidth.value/defaultRatio
-
-        let maxWidth = mediaBoxWidth.value
-        const maxHeight = (maxWidth/defaultRatio)
-
-        let tallestMediaItemHeight = 0
-
-        for (let med of postAlbum) {
+            item.isRotated = isRotated
+            isRotated = !isRotated
             
-            let width = med.width
-            let height = med.height
+            item.zIndex = zIndex
+            zIndex--
+        }
 
-            if (height > maxHeight) {
-                
-                const medRatio = med.width/med.height
-                if (medRatio > defaultRatio) {
-                    width = maxWidth
-                    height = width/medRatio
-                } else {
-                    height = maxHeight
-                    width = height*medRatio
+    }
+
+
+    watch(refMomentPosts, async (newVal, oldVal) => {
+
+        formList(newVal)
+    })
+
+    
+
+    async function formList(newVal: any) {
+        const emptyList = list.value.length == 0
+
+        let map: any = {}
+
+        for (let [index, val] of list.value.entries()) {
+            map[val.userID] = list.value[index]
+        }
+
+        for (let i = 0; i < newVal.length; i++) {
+            let item = newVal[i]
+            if (isPast24Hours(item.timestamp)) { continue }
+
+            const timeToRemove = Math.abs(diffInSeconds(item.timestamp))
+
+            clearTimeout(removeTimers[item.userID])
+            removeTimers[item.userID] = setTimeout(function () {
+                console.log('Moment/formList/removing moment: ' + item.userID)
+                const index = list.value.indexOf(item)
+                if (index > -1) {
+                    list.value.splice(index, 1)
+                }
+            }, timeToRemove*1000)
+
+            if (map[item.userID]) {
+                if (map[item.userID].timestamp == item.timestamp) {
+                    continue
+                } else if (map[item.userID].timestamp < item.timestamp) {
+
+                    // delete old moment
+                    const index = list.value.indexOf(map[item.userID])
+                    if (index > -1) {
+                        list.value.splice(index, 1)
+                    }
+
                 }
             }
 
-            med.adjustedWidth = width
-            med.adjustedHeight = height
-
-            if (height > tallestMediaItemHeight) {
-                tallestMediaItemHeight = height
-            }
+            const lastIndex = list.value.length - 1
+            item.zIndex = 10 + lastIndex
+            list.value.push(item)
+            map[item.userID] = list.value[lastIndex]
         }
 
-        /* set container height shorter if the tallest media is shorter than the default */
-        if (tallestMediaItemHeight < mediaBoxHeight.value) {
-            mediaBoxHeight.value = tallestMediaItemHeight
+        if (emptyList) {
+            await makeList()
         }
     }
 
-    // processMomentList(props.moment)
+    const flip = debounce(function(isAnimateRight: boolean) {
 
-    init()
-
-    async function makeList() {
-        for (let i = 0; i < list.value.length; i++) {
-            const med = list.value[i]  
-            if (!med.previewImageArrBuf) { continue }
-            if (med.previewImageBlobUrl) { continue }
-
-            const previewImageBlob = new Blob([med.previewImageArrBuf], {type: 'image/jpeg'})
-            const previewImageBlobUrl = URL.createObjectURL(previewImageBlob)
-            med.previewImageBlobUrl = previewImageBlobUrl
-
-            if (i%2 != 0) {
-                med.isRotated = true
-            }
-
-            med.zIndex = 10 + i
-        }
-    }
-
-
-    async function init() {
-
-        const mediaList = await getCommonMedia(SubjectType.FeedPost, '', '9nxVj-dVlKZx7pXECG4Rh7Tk')
-
-        if (mediaList) {
-            list.value = mediaList
+        if (isAnimateRight) {
+            animateRight = true
+            debouncedFlipRight()
+        } else {
+            animateRight = false
+            debouncedFlipLeft()
         }
 
-        await makeList()
+    }, 500)
 
-        // const needWatching = await fetchCommonMedia(SubjectType.Moment, mediaList)
 
-        // if (needWatching) {   
-        //     // setupObserver()
-        // }
+    function debouncedFlipRight() {
 
-    }
-
-    // async function setupObserver() {
-    //     if (!mainStore.allowDbTransactions) { return }
-        
-    //     const observable = liveQuery (() => db.commonMedia.where('contentID').equals(props.contentID).and((commonMed) => {
-    //         return commonMed.subjectID == props.subjectID && commonMed.type == props.type
-    //     }).toArray())
-
-    //     const subscription = observable.subscribe({
-    //         next: async result => {
-    //             if (!result) { return }
-    //             if (result.length == 0) { return }
-                
-    //             listData.value = result
-
-    //             await makeList()
-
-    //         },
-    //         error: error => console.error(error)
-    //     })
-    // }
-
-    const animateCardIndex = ref(-1)
-
-    function flip(index: number) {
+        const index = currentMoment
         animateCardIndex.value = index
-    
-        setTimeout(function() {
 
-            let zIndex = 10
+        let previousMomentIndex = index - 1
+        if (previousMomentIndex < 0) {
+            previousMomentIndex = list.value.length - 1
+        }
 
-            /* right side of index, inclusive */
-            for (let i = index; i < list.value.length; i++) {
-                const med = list.value[i]  
+        list.value[previousMomentIndex].zIndex = 10 + list.value.length - 2
 
-                med.zIndex = zIndex
-                zIndex++
+        let zIndex = 10 + list.value.length - 1
+
+        /* right side of index, inclusive */
+        for (let i = previousMomentIndex; i < list.value.length; i++) {
+            if (i == index) { 
+                zIndex--
+                continue 
             }
+            const item = list.value[i]  
 
-            /* left side of index */
-            for (let i = 0; i < index; i++) {
-                const med = list.value[i]  
+            item.zIndex = zIndex 
+            zIndex--
+        }
 
-                med.zIndex = zIndex
-                zIndex++
-            }            
+        /* left side of index */
+        for (let i = 0; i < previousMomentIndex; i++) {
+            if (i == index) { 
+                zIndex--
+                continue 
+            }
+            const item = list.value[i]  
+
+            item.zIndex = zIndex
+            zIndex--
             
-            
-        }, 850)
+        }           
+
+        setTimeout(function() {
+            list.value[index].zIndex = 10 + list.value.length - 2
+        }, 900)
 
         setTimeout(function() {
             animateCardIndex.value = -1
-        }, 1000)
+            
+            currentMoment--
+            if (currentMoment < 0) {
+                currentMoment = list.value.length - 1
+            }      
+        }, 900)
+
+    }
+
+    function debouncedFlipLeft() {
+
+        const index = currentMoment
+        animateCardIndex.value = index
+
+        setTimeout(function() {
+
+            let zIndex = 10 + list.value.length - 1
+
+            list.value[index].zIndex = 10
+
+            
+            let nextMoment = index + 1
+            if (nextMoment >= list.value.length) {
+                nextMoment = 0
+            }        
+
+            /* right side of index, inclusive */
+            for (let i = nextMoment; i < list.value.length; i++) {
+                if (i == index) { continue }
+                const item = list.value[i]  
+
+                item.zIndex = zIndex
+                zIndex--
+            }
+
+            /* left side of index */
+            for (let i = 0; i < nextMoment; i++) {
+                if (i == index) { continue }
+                const item = list.value[i]  
+
+                item.zIndex = zIndex
+                zIndex--
+            }            
+            
+        }, 900)
+
+        setTimeout(function() {
+            animateCardIndex.value = -1
+            
+            currentMoment++
+            if (currentMoment >= list.value.length) {
+                currentMoment = 0
+            }            
+
+        }, 900)
 
     }
 
@@ -254,24 +260,33 @@
 
 <template>
 
-    <div class='momentComponent'>
+    <div v-if='list.length > 0' class='momentComponent'>
 
         <div class='momentContainer'>
 
+            <div>{{list.length}}</div>
             <div v-for="(item, index) in list" class='momentWrapper'>
 
-                <div :class='["momentCard", {momentCardRotate: item.isRotated, momentCardAnimate: animateCardIndex == index}]'
-                    :style='{ zIndex: item.zIndex }'
-                    @click='flip(index)'>
-                    <div :class='["moment"]' >
-                        <!-- {{ item }} -->
-                        <img v-if='item.previewImageBlobUrl' class="image" :src="item.previewImageBlobUrl"
-                            alt="Post Image">
-                    </div>
-                </div>
+                <div :class='["momentCard", {momentCardRotate: item.isRotated, 
+                        momentCardAnimateRight: animateCardIndex == index && animateRight,
+                        momentCardAnimateLeft: animateCardIndex == index && !animateRight}]'
+                    :style='{ zIndex: item.zIndex }'>
+                    
+                    <MomentCard v-if='(item.zIndex > (10 + list.length - 3)) || (item.zIndex == 10)'
+                        :postID='item.postID'>
+                    </MomentCard>
 
+                </div>
+                
             </div>
        
+            <button v-if='list.length > 1' class="carouselButton carouselButtonPrevious" @click="flip(false)">
+                <font-awesome-icon :icon="['fas', 'chevron-left']" />
+            </button>
+            <button v-if='list.length > 1' class="carouselButton carouselButtonNext" @click="flip(true)">
+                <font-awesome-icon :icon="['fas', 'chevron-right']" />
+            </button> 
+
         </div>
         
     </div>
@@ -298,7 +313,6 @@
         flex-direction: row;
         justify-content: center;
         align-items: center;
-        
     }
 
     .momentContainer {
@@ -306,7 +320,6 @@
         
         flex: 0 0 320px; 
         height: 370px;
-
     }
 
     .momentCard {
@@ -323,8 +336,6 @@
 
         box-shadow: rgb(230, 230, 230) 0px 0px 7px;
         
-        
-
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
@@ -337,13 +348,13 @@
         transform: rotate(-2deg);
     }
 
-    .momentCardAnimate {
-        animation : flipX 1s cubic-bezier(.73,0,.33,1);
+    .momentCardAnimateRight {
+        animation: flipRight 1s cubic-bezier(.73,0,.33,1);
+    }
 
+    .momentCardAnimateLeft {
+        animation: flipLeft 1s cubic-bezier(.73,0,.33,1);
     }    
-    /* .moment:active {
-        animation : flipY 1s cubic-bezier(.73,0,.33,1);
-    } */
 
     .image {
         display: block; /* use block as images by default are inline and have an unsightly gap of 5px below it */
@@ -359,6 +370,42 @@
             background-color: rgba(47, 46, 42, 1);
         }
     }
+
+    .carouselButton {
+        position: absolute;
+        top: 50%;
+
+        width: 50px;
+        height: 50px;
+
+        transform: translateY(-130%);
+        z-index: 0;
+
+        padding: 0px;
+        margin: 0.5rem;
+        border: none;
+
+        font-size: 1.5rem;
+        cursor: pointer;
+
+        transition: color 0.2s;
+        /* background-color: rgb(171, 165, 165); */
+        color: rgba(0, 0, 0, 0.5);
+        opacity: 0.9;
+    }
+    .carouselButton:hover {
+        color: rgba(0, 0, 0, 0.9);
+        opacity: 1;
+    }
+
+    .carouselButtonPrevious {
+        left: -70px;
+        border-radius: 50%;
+    }
+    .carouselButtonNext {
+        right: -70px;
+        border-radius: 50%;
+    }    
 
     .mediaLoaderBox {
         min-width: v-bind(mediaBoxWidth + 'px');
@@ -384,65 +431,28 @@
         animation: spin 2s linear infinite;
     }
 
-
-    @keyframes flipX {
+    @keyframes flipRight {
         0% {
             z-index: 20;
         }
         50% {
-            transform: translateX(340px);
-           
-        }
-        70% {
+            transform: rotate(-3deg) translateX(350px);
+        }     
+        90% {
             z-index: 1;
         }
-        /* 100% {
-            z-index: 1;
-            opacity: 1;
-        } */
-
-        /* 40% {
-            transform: translate(120px, 0px, 120, 0);
-           
-        }
-        60% {
-            transform: translate(-60px, 0px, 180, 0);
-           
-        }
-        80% {
-            transform: translate(-60px, 0px, 120, 0);
-           
-        }               
-        100% {
-            transform: translate(60px, 0px, 60, 0);
-            
-        } */
     }
 
-    @keyframes flipY {
+    @keyframes flipLeft {
+        0% {
+            z-index: 20;
+        }
         50% {
-            transform: translateY(-20px);
-            
-        }
-        /* 100% {
+            transform: rotate(3deg) translateX(-350px);
+        }     
+        90% {
             z-index: 1;
-        }         */
-        /* 40% {
-            transform: translate(120px, 0px, 120, 0);
-           
         }
-        60% {
-            transform: translate(-60px, 0px, 180, 0);
-           
-        }
-        80% {
-            transform: translate(-60px, 0px, 120, 0);
-           
-        }               
-        100% {
-            transform: translate(60px, 0px, 60, 0);
-            
-        } */
     }
 
 </style>

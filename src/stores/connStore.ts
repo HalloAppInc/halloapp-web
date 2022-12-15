@@ -12,10 +12,12 @@ import { network } from '@/common/network'
 import hacrypto from '@/common/hacrypto'
 import hal from '@/common/halogger'
 
+import { useHAMoments } from '@/composables/haMoments'
 import { useHAFeed } from '@/composables/haFeed'
 import { useHAGroup } from '@/composables/haGroup'
 import { useHAPrivacyList } from '@/composables/haPrivacyList'
 import { useHAUtils } from '@/composables/haUtils'
+import { useTimeformatter } from '@/composables/timeformatter'
 import { db } from '@/db'
 
 export const useConnStore = defineStore('conn', () => {
@@ -28,9 +30,11 @@ export const useConnStore = defineStore('conn', () => {
     } = network()
 
     const { debounce } = useHAUtils()
+    const { requestMoments, processMomentStatus } = useHAMoments()
     const { processFeedResponse, processFeedUpdate, processUserDisplayInfo } = useHAFeed()
     const { requestGroupsList, processGroupResponse } = useHAGroup()
     const { requestPrivacyList, processPrivacyListResponse } = useHAPrivacyList()
+    const { diffInSeconds } = useTimeformatter()
 
     const isConnectedToServer = ref(false)
     const isConnectedToMobile = ref(false)
@@ -40,12 +44,14 @@ export const useConnStore = defineStore('conn', () => {
 
     const noiseReconnectHandshakeRetries: Ref<number> = ref(0)
     const fetchAbortController = ref(new AbortController())
+
+    const momentsLockTimer: Ref<any> = ref()
  
      // audio is not allowed to be played (browsers AutoPlay policy) until the user have clicked on something per refresh,
      // so we keep track of the user's first click
     const isUserFirstClickCompleted = ref(false)
 
-    const version = '40'
+    const version = '41'
     const devMode = false
     const isDebug = false
 
@@ -358,6 +364,7 @@ export const useConnStore = defineStore('conn', () => {
         const feedUpdate = webContainer?.feedUpdate
         const groupResponse = webContainer?.groupResponse
         const privacyListResponse = webContainer?.privacyListResponse
+        const momentStatus = webContainer?.momentStatus
 
         if (feedResponse) { 
             processFeedResponse(feedResponse)
@@ -367,7 +374,9 @@ export const useConnStore = defineStore('conn', () => {
             processGroupResponse(groupResponse)
         } else if (privacyListResponse) {
             processPrivacyListResponse(privacyListResponse)
-        }  
+        } else if (momentStatus) {
+            processMomentStatus(momentStatus)
+        }
     
     }
 
@@ -518,13 +527,19 @@ export const useConnStore = defineStore('conn', () => {
             nextTimeToConnectToMobile.value = 0
             noiseReconnectHandshakeRetries.value = 0
 
-            requestFeedItems('', 5, function() {
-                if (!mainStore.isGroupsListCompleted) {
-                    hal.log('connStore/request entire groups list')
-                    requestGroupsList(function() {})
-                }
-                // requestPrivacyList(function() {})
+            requestMoments('', 50, function() {
+
+                requestFeedItems('', 5, function() {
+                    if (!mainStore.isGroupsListCompleted) {
+                        hal.log('connStore/request entire groups list')
+                        requestGroupsList(function() {})
+                    }
+                    // requestPrivacyList(function() {})
+                })                
+
             })
+
+
         }
 
         else {
@@ -591,6 +606,10 @@ export const useConnStore = defineStore('conn', () => {
         }
 
         await processUserDisplayInfo(userDisplayInfo)
+
+        const momentStatus = connectionInfo.momentStatus
+
+        processMomentStatus(momentStatus)
     }
 
     async function decodeConnectionInfo(binArr: Uint8Array) {
@@ -812,6 +831,8 @@ export const useConnStore = defineStore('conn', () => {
         debounceSendMessages.cancel()
         debounceMobilePing.cancel()
 
+        clearTimeout(momentsLockTimer.value)
+
         isConnectedToMobile.value = false
 
         /* wait to disconnect fully first as the login screen will connect right away */
@@ -850,6 +871,8 @@ export const useConnStore = defineStore('conn', () => {
         devMode,
         version,
         isDebug,
+
+        momentsLockTimer,
 
         debounceConnectToServer, 
         disconnectFromServer, 

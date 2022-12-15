@@ -114,6 +114,26 @@ export function network() {
         }
     }
 
+    const createMomentsRequestWebContainer = (cursor: string, limit: number) => {
+        const id = nanoid()
+
+        let feedRequest = web.FeedRequest.create({
+            id: id,
+            type: web.FeedType.MOMENTS,
+            cursor: cursor,
+            limit: limit
+        })
+
+        const webContainer = web.WebContainer.create({
+            feedRequest: feedRequest
+        })
+
+        return {
+            webContainer: webContainer,
+            webContainerBinArr: encodeWebContainer(webContainer)
+        }
+    }
+
     const createGroupFeedRequestWebContainer = (groupID: string, cursor: string, limit: number) => {
         const id = nanoid()
 
@@ -290,7 +310,8 @@ export function network() {
         addKey, removeKey, createPingPacket,
         check,
         createNoiseMessage, 
-        createWebStanzaPacket, 
+        createWebStanzaPacket,
+        createMomentsRequestWebContainer,
         createFeedRequestWebContainer,
         createGroupFeedRequestWebContainer,
         createCommentsRequestWebContainer,

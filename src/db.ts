@@ -6,6 +6,11 @@ export interface Moment {
     selfieImage?: CommonMedia
     selfieLeading?: boolean
     location?: string
+
+    blurredImage?: CommonMedia
+    blurredSelfieImage?: CommonMedia
+
+    isOpened?: boolean
 }
 
 export interface Post {

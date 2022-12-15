@@ -5,7 +5,7 @@ import { DateTime } from 'luxon'
 import { useMainStore } from '@/stores/mainStore.js'
 import { useConnStore } from '@/stores/connStore.js'
 
-import {    db, 
+import {    db, Moment,
             Post, Comment, Group, Mention, CommonMediaLinkPreview,
             CommonMedia, SubjectType, MediaType } from '@/db'
 
@@ -73,6 +73,7 @@ export function useHAFeed() {
         const lastItemPost = items[items.length - 1].post
 
         hal('haFeed/processFeedResponse/process num items: ' + items.length)()
+        console.dir(feedResponse)
         if (feedResponse.type == web.FeedType.POST_COMMENTS) {
             for (let i = 0; i < items.length; i++) {
                 const item = items[i]
@@ -84,6 +85,15 @@ export function useHAFeed() {
             if (items.length > 0) {
                 const postID = items[0].comment.postId
                 modifyPostHaveCommentIfNeeded(postID)
+            }
+        } else if (feedResponse.type == web.FeedType.MOMENTS) {
+
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i]
+                let infoIdx = postInfoList.findIndex((info: any) => info.id === item.comment.postId)
+                const postInfo = postInfoList[infoIdx]
+                processFeedItemMoment(items[i], postInfo)
+                postInfoList.splice(infoIdx, 1)
             }
         } else {
             /* 
@@ -317,142 +327,144 @@ export function useHAFeed() {
         hal('haFeed/processFeedItem/postContainer: \n' + JSON.stringify(postContainer) + '\n\n')()
         // console.dir(postContainer)
     
-        if (!postContainer) { return }
-        if (postContainer.moment) {
-            hal('haFeed/processFeedItem/postContainer is a moment, skip')()
-            return
-        }
-    
         const subjectID = postObject.groupID ? postObject.groupID : ''
-
         let commonMediaArr: CommonMedia[] = []
-
-        let isTextPost = false
-        let isAlbum = false
         let isVoiceNote = false
-    
-        let postMentions: any
-    
-        if (postContainer.album) {
-            isAlbum = true
-        }
-    
-        if (postContainer.text) {
-            isTextPost = true
-        }
-    
-        if (postContainer.voiceNote) {
-            isVoiceNote = true
 
-            const voiceNoteMedia = processCommonMediaVoiceNote(SubjectType.FeedPost, subjectID, postObject.postID, postContainer.voiceNote)
-            if (voiceNoteMedia) {
-                postObject.voiceNote = voiceNoteMedia
+        /* technically, payload (postContainer) can be null for feedUpdates but currently we have iOS/Android send in an empty container */
+        if (postContainer) {
+            if (postContainer.moment) {
+                hal('haFeed/processFeedItem/postContainer is a moment, hand off to momentProcessor')()
+                processFeedItemMoment(feedItem, postInfo)
+                return
             }
-        }
-    
-        if (isAlbum) {
-            /* text */
-            if (postContainer.album?.text) {
-                if (postContainer.album.text.text) {
-                    postObject.text = postContainer.album.text.text
-                }
-                postMentions = postContainer.album.text.mentions            
-            }
-    
-            /* media */
-            if (postContainer.album?.media) {
-    
-                for (const [index, mediaInfo] of postContainer.album.media.entries()) {
-                    
-                    if (mediaInfo.image && mediaInfo.image.width && mediaInfo.image.height) {
-                        const encryptedResourceInfo = mediaInfo.image.img
-                        if (encryptedResourceInfo?.encryptionKey && encryptedResourceInfo?.ciphertextHash && encryptedResourceInfo?.downloadUrl) {
-                            let commonMedia: CommonMedia = {
-                                type: SubjectType.FeedPost,
-                                subjectID: subjectID,
-                                contentID: postObject.postID,
-                                mediaType: MediaType.Image,
-                                order: index,
-                                width: mediaInfo.image.width,
-                                height: mediaInfo.image.height,
-                                key: encryptedResourceInfo.encryptionKey,
-                                hash: encryptedResourceInfo.ciphertextHash,
-                                downloadURL: encryptedResourceInfo.downloadUrl,
-                            }
-                            commonMediaArr.push(commonMedia)
-                        }
-                    }
-    
-                    else if (mediaInfo.video && mediaInfo.video.width && mediaInfo.video.height) {
-                        const encryptedResourceInfo = mediaInfo.video.video
-                        if (encryptedResourceInfo?.encryptionKey && encryptedResourceInfo?.ciphertextHash && encryptedResourceInfo?.downloadUrl) {
-                            let commonMedia: CommonMedia = {
-                                type: SubjectType.FeedPost,
-                                subjectID: subjectID,
-                                contentID: postObject.postID,
-                                mediaType: MediaType.Video,
-                                order: index,
-                                width: mediaInfo.video.width,
-                                height: mediaInfo.video.height,
-                                key: encryptedResourceInfo.encryptionKey,
-                                hash: encryptedResourceInfo.ciphertextHash,
-                                downloadURL: encryptedResourceInfo.downloadUrl,
-                            }
 
-                            const isStream = JSON.stringify(mediaInfo.video.streamingInfo) !== '{}'
-                            if (isStream) {
-                                const blobVersion = mediaInfo.video.streamingInfo?.blobVersion
-                                const chunkSize = mediaInfo.video.streamingInfo?.chunkSize
-                                const blobSize = mediaInfo.video.streamingInfo?.blobSize
-                                if (chunkSize) {
-                                    commonMedia.chunkSize = chunkSize                             
-                                }
-                                if (blobSize) {
-                                    commonMedia.blobSize = blobSize
-                                }    
-                                if (blobVersion) {
-                                    commonMedia.blobVersion = blobVersion
-                                }   
-                            }
-                            commonMediaArr.push(commonMedia)
-                        }
-                    }                
-                }
-            }
-    
-            /* voiceNote inside album */
-            if (postContainer.album?.voiceNote) {
-                isVoiceNote = true
+            let isTextPost = false
+            let isAlbum = false
             
-                const voiceNoteMedia = processCommonMediaVoiceNote(SubjectType.FeedPost, subjectID, postObject.postID, postContainer.album.voiceNote)
+            let postMentions: any
+        
+            if (postContainer.album) {
+                isAlbum = true
+            }
+        
+            if (postContainer.text) {
+                isTextPost = true
+            }
+        
+            if (postContainer.voiceNote) {
+                isVoiceNote = true
+
+                const voiceNoteMedia = processCommonMediaVoiceNote(SubjectType.FeedPost, subjectID, postObject.postID, postContainer.voiceNote)
                 if (voiceNoteMedia) {
                     postObject.voiceNote = voiceNoteMedia
                 }
-            }     
-        }
-    
-        if (isTextPost) {
-            /* link preview */
-            if (postContainer?.text?.link &&
-                postContainer.text.link.preview &&
-                postContainer.text.link.preview[0] &&
-                postContainer.text.link.preview[0].img
-                ) {
-                const linkPreview = processCommonMediaLinkPreview(SubjectType.FeedPost, subjectID, postObject.postID, postContainer.text.link)
-                if (linkPreview) {
-                    postObject.linkPreview = linkPreview
-                }
             }
-    
-            /* process text after checking if it's text only */
-            if (postContainer.text?.text) {
-                postObject.text = postContainer.text.text
-                postMentions = postContainer.text.mentions     
-            }        
-        }
+        
+            if (isAlbum) {
+                /* text */
+                if (postContainer.album?.text) {
+                    if (postContainer.album.text.text) {
+                        postObject.text = postContainer.album.text.text
+                    }
+                    postMentions = postContainer.album.text.mentions            
+                }
+        
+                /* media */
+                if (postContainer.album?.media) {
+        
+                    for (const [index, mediaInfo] of postContainer.album.media.entries()) {
+                        
+                        if (mediaInfo.image && mediaInfo.image.width && mediaInfo.image.height) {
+                            const encryptedResourceInfo = mediaInfo.image.img
+                            if (encryptedResourceInfo?.encryptionKey && encryptedResourceInfo?.ciphertextHash && encryptedResourceInfo?.downloadUrl) {
+                                let commonMedia: CommonMedia = {
+                                    type: SubjectType.FeedPost,
+                                    subjectID: subjectID,
+                                    contentID: postObject.postID,
+                                    mediaType: MediaType.Image,
+                                    order: index,
+                                    width: mediaInfo.image.width,
+                                    height: mediaInfo.image.height,
+                                    key: encryptedResourceInfo.encryptionKey,
+                                    hash: encryptedResourceInfo.ciphertextHash,
+                                    downloadURL: encryptedResourceInfo.downloadUrl,
+                                }
+                                commonMediaArr.push(commonMedia)
+                            }
+                        }
+        
+                        else if (mediaInfo.video && mediaInfo.video.width && mediaInfo.video.height) {
+                            const encryptedResourceInfo = mediaInfo.video.video
+                            if (encryptedResourceInfo?.encryptionKey && encryptedResourceInfo?.ciphertextHash && encryptedResourceInfo?.downloadUrl) {
+                                let commonMedia: CommonMedia = {
+                                    type: SubjectType.FeedPost,
+                                    subjectID: subjectID,
+                                    contentID: postObject.postID,
+                                    mediaType: MediaType.Video,
+                                    order: index,
+                                    width: mediaInfo.video.width,
+                                    height: mediaInfo.video.height,
+                                    key: encryptedResourceInfo.encryptionKey,
+                                    hash: encryptedResourceInfo.ciphertextHash,
+                                    downloadURL: encryptedResourceInfo.downloadUrl,
+                                }
 
-        if (postMentions) {
-            postObject.mentions = processMentions(postMentions)
+                                const isStream = JSON.stringify(mediaInfo.video.streamingInfo) !== '{}'
+                                if (isStream) {
+                                    const blobVersion = mediaInfo.video.streamingInfo?.blobVersion
+                                    const chunkSize = mediaInfo.video.streamingInfo?.chunkSize
+                                    const blobSize = mediaInfo.video.streamingInfo?.blobSize
+                                    if (chunkSize) {
+                                        commonMedia.chunkSize = chunkSize                             
+                                    }
+                                    if (blobSize) {
+                                        commonMedia.blobSize = blobSize
+                                    }    
+                                    if (blobVersion) {
+                                        commonMedia.blobVersion = blobVersion
+                                    }   
+                                }
+                                commonMediaArr.push(commonMedia)
+                            }
+                        }                
+                    }
+                }
+        
+                /* voiceNote inside album */
+                if (postContainer.album?.voiceNote) {
+                    isVoiceNote = true
+                
+                    const voiceNoteMedia = processCommonMediaVoiceNote(SubjectType.FeedPost, subjectID, postObject.postID, postContainer.album.voiceNote)
+                    if (voiceNoteMedia) {
+                        postObject.voiceNote = voiceNoteMedia
+                    }
+                }     
+            }
+        
+            if (isTextPost) {
+                /* link preview */
+                if (postContainer?.text?.link &&
+                    postContainer.text.link.preview &&
+                    postContainer.text.link.preview[0] &&
+                    postContainer.text.link.preview[0].img
+                    ) {
+                    const linkPreview = processCommonMediaLinkPreview(SubjectType.FeedPost, subjectID, postObject.postID, postContainer.text.link)
+                    if (linkPreview) {
+                        postObject.linkPreview = linkPreview
+                    }
+                }
+        
+                /* process text after checking if it's text only */
+                if (postContainer.text?.text) {
+                    postObject.text = postContainer.text.text
+                    postMentions = postContainer.text.mentions     
+                }        
+            }
+
+            if (postMentions) {
+                postObject.mentions = processMentions(postMentions)
+            }
         }
 
         // console.log("haFeed/processServerPost/postObject: ")
@@ -472,6 +484,154 @@ export function useHAFeed() {
 
             modifyGroupIfNeeded(postObject, mediaType, isVoiceNote)
         }
+
+    }
+
+    async function processFeedItemMoment(feedItem: any, postInfo: any) {
+
+        const serverPost = feedItem.post
+        if (!serverPost) { return }
+        
+        const publisherUID = serverPost.publisherUid
+
+        // console.log("haFeed/processFeedItemMoment/serverPost: ")
+        // console.dir(serverPost)
+
+        let postObject: Post = { 
+            postID: serverPost.id,
+            userID: publisherUID,
+            timestamp: serverPost.timestamp,
+            seenState: postInfo.seenState,
+            transferState: postInfo.transferState,
+            retractState: postInfo.retractState,
+            expiryTimestamp: feedItem.expiryTimestamp
+        }
+
+        if (postInfo.userReceipts) {
+            postObject.userReceipts = postInfo.userReceipts
+        }
+
+        if (publisherUID) {
+            postObject.userID = publisherUID
+        }
+
+        const payloadBinArr = serverPost.payload
+        if (!payloadBinArr) { return }
+        const postContainer = decodeToPostContainer(payloadBinArr)
+    
+        hal('haFeed/processFeedItemMoment/postContainer: \n' + JSON.stringify(postContainer) + '\n\n')()
+        // console.dir(postContainer)
+    
+        let commonMediaArr: CommonMedia[] = []
+  
+        /* technically, payload (postContainer) can be null for feedUpdates but currently we have iOS/Android send in an empty container */
+        if (postContainer) {
+            if (!postContainer.moment) {
+                hal('haFeed/processFeedItemMoment/exit/missing moment')()
+                return
+            } 
+
+            const moment = postContainer.moment
+
+            let momentImage
+            let blurredImage
+
+            if (moment.image && moment.image.width && moment.image.height) {
+                const encryptedResourceInfo = moment.image.img
+                if (encryptedResourceInfo?.encryptionKey && encryptedResourceInfo?.ciphertextHash && encryptedResourceInfo?.downloadUrl) {
+                    let commonMedia: CommonMedia = {
+                        type: SubjectType.Moment,
+                        subjectID: '',
+                        contentID: postObject.postID,
+                        mediaType: MediaType.Image,
+                        order: 0,
+                        width: moment.image.width,
+                        height: moment.image.height,
+                        key: encryptedResourceInfo.encryptionKey,
+                        hash: encryptedResourceInfo.ciphertextHash,
+                        downloadURL: encryptedResourceInfo.downloadUrl,
+                    }
+                    momentImage = commonMedia
+
+                    let commonMedia2: CommonMedia = {
+                        type: SubjectType.Moment,
+                        subjectID: '',
+                        contentID: postObject.postID,
+                        mediaType: MediaType.Image,
+                        order: 0,
+                        width: moment.image.width,
+                        height: moment.image.height,
+                        key: encryptedResourceInfo.encryptionKey,
+                        hash: encryptedResourceInfo.ciphertextHash,
+                        downloadURL: encryptedResourceInfo.downloadUrl,
+                    }               
+                    blurredImage = commonMedia2
+                }
+            }
+
+            if (!momentImage) {
+                return
+            }
+
+            const isOwnMoment = postObject.userID == mainStore.userID
+            if (isOwnMoment) {
+                mainStore.isMomentsLocked = false
+            }
+
+            let momentObject: Moment = {
+                image: momentImage,
+                blurredImage: blurredImage,
+                isOpened: isOwnMoment
+            }
+
+            if (moment.selfieImage && moment.selfieImage.width && moment.selfieImage.height) {
+                const encryptedResourceInfo = moment.selfieImage.img
+                if (encryptedResourceInfo?.encryptionKey && encryptedResourceInfo?.ciphertextHash && encryptedResourceInfo?.downloadUrl) {
+                    let commonMedia: CommonMedia = {
+                        type: SubjectType.Moment,
+                        subjectID: '',
+                        contentID: postObject.postID,
+                        mediaType: MediaType.Image,
+                        order: 0,
+                        width: moment.selfieImage.width,
+                        height: moment.selfieImage.height,
+                        key: encryptedResourceInfo.encryptionKey,
+                        hash: encryptedResourceInfo.ciphertextHash,
+                        downloadURL: encryptedResourceInfo.downloadUrl,
+                    }
+                    let commonMedia2: CommonMedia = {
+                        type: SubjectType.Moment,
+                        subjectID: '',
+                        contentID: postObject.postID,
+                        mediaType: MediaType.Image,
+                        order: 0,
+                        width: moment.selfieImage.width,
+                        height: moment.selfieImage.height,
+                        key: encryptedResourceInfo.encryptionKey,
+                        hash: encryptedResourceInfo.ciphertextHash,
+                        downloadURL: encryptedResourceInfo.downloadUrl,
+                    }                    
+                    momentObject.selfieImage = commonMedia
+                    momentObject.blurredSelfieImage = commonMedia2
+                }
+            }
+
+            if (moment.selfieLeading) {
+                momentObject.selfieLeading = moment.selfieLeading
+            }
+
+            if (moment.location) {
+                momentObject.location = moment.location
+            }
+
+            postObject.moment = momentObject
+    
+        }
+
+        // console.log("haFeed/processServerPost/postObject: ")
+        // console.dir(postObject)
+
+        await insertOrModifyPost(postObject)
 
     }
 
@@ -760,8 +920,6 @@ export function useHAFeed() {
                 if (mainStore.userID != post.uid) {
                     gotNewPost.value = true
                 }
-
-                const isUnseen = post.seenState == web.PostDisplayInfo.SeenState.UNSEEN
 
                 // hal.log('haFeed/insertOrModifyPost/db/add/inserted: ' + post.postID)
             } catch (error) {

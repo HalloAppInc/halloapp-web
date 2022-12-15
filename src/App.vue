@@ -563,7 +563,7 @@
         position: absolute;
         top: 50px;
         right: 30px;
-        z-index: 20;
+        z-index: 30;
         padding: 10px 15px 10px 15px;
         border-radius: 5px;
         color: white;
@@ -577,7 +577,7 @@
         position: absolute;
         top: 50px;
         right: 30px;
-        z-index: 20;
+        z-index: 30;
         padding: 10px 15px 10px 15px;
         border-radius: 5px;
         color: white;
