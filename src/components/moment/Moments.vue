@@ -1,42 +1,18 @@
 <script setup lang='ts'>
     import { Ref, ref, toRef, watch } from 'vue'
-    import { Base64 } from 'js-base64'
     import { useI18n } from 'vue-i18n'
-    import { liveQuery } from 'dexie'
-
-    import { db, CommonMedia, SubjectType, MediaType } from '@/db'
-    import { useMainStore } from '@/stores/mainStore'
-    
-    import hal from '@/common/halogger'
 
     import { useTimeformatter } from '@/composables/timeformatter'
-    
-    import { useHAMoments } from '@/composables/haMoments'
-    import { useHACommonMedia } from '@/composables/haCommonMedia'
     import { useHAUtils } from '@/composables/haUtils'
 
     import MomentCard from '@/components/moment/MomentCard.vue'
 
-    const mainStore = useMainStore()
-
     const { isPast24Hours, diffInSeconds } = useTimeformatter()
-
-    const { 
-        requestMoments,
-    } = useHAMoments()
-
-    const { 
-        fetchMomentMedia,
-        getCommonMedia,
-        fetchCommonMedia
-    } = useHACommonMedia()
 
     const { t, locale } = useI18n({
         inheritLocale: true,
         useScope: 'global'
     })
-
-    const imageInfo = Base64.fromBase64("SGFsbG9BcHAgaW1hZ2U=")
 
     interface Props {
         momentPosts: any,
@@ -50,9 +26,6 @@
     const refMomentPosts = toRef(props, 'momentPosts')
 
     const mediaBoxWidth     = ref(0)
-    const mediaBoxHeight    = ref(0)
-
-    const mediaList: Ref<any[]> = ref([])
 
     const list: Ref<any[]> = ref([])
 
@@ -64,10 +37,50 @@
     let removeTimers: any = {}
 
 
-    formList(props.momentPosts)
+    makeList(props.momentPosts)
 
-    async function makeList() {
+    watch(refMomentPosts, async (newVal, oldVal) => {
+        makeList(newVal)
+    })
 
+    async function makeList(newVal: any) {
+
+        let haveNewMoments = false
+
+        for (let i = newVal.length - 1; i >= 0; i--) {
+            let item = newVal[i]
+            
+            if (isPast24Hours(item.timestamp)) { continue }
+
+            const timeToRemove = Math.abs(diffInSeconds(item.timestamp))
+
+            clearTimeout(removeTimers[item.userID])
+            removeTimers[item.userID] = setTimeout(function () {
+                console.log('Moment/makeList/removing moment: ' + item.userID)
+                const index = list.value.indexOf(item)
+                if (index > -1) {
+                    list.value.splice(index, 1)
+                }
+            }, timeToRemove*1000)
+
+
+            if (!needToAdd(item.userID, item.timestamp)) { continue } 
+
+            const lastIndex = list.value.length - 1
+            item.zIndex = 10 + lastIndex
+
+            list.value.unshift(item)
+
+            haveNewMoments = true
+        }
+
+        if (haveNewMoments) {
+            currentMoment = 0
+            await decorateList()
+        }
+    }
+
+    async function decorateList() {
         let isRotated = false
 
         let zIndex = 10 + list.value.length - 1
@@ -80,65 +93,26 @@
             item.zIndex = zIndex
             zIndex--
         }
-
     }
 
+    function needToAdd(userID: string, timestamp: number) {
+        if (list.value.length == 0) { return true }
 
-    watch(refMomentPosts, async (newVal, oldVal) => {
+        for (let i = list.value.length - 1; i >= 0; i--) {
+            const listItem = list.value[i]
+            if (userID != listItem.userID) { continue }
 
-        formList(newVal)
-    })
-
-    
-
-    async function formList(newVal: any) {
-        const emptyList = list.value.length == 0
-
-        let map: any = {}
-
-        for (let [index, val] of list.value.entries()) {
-            map[val.userID] = list.value[index]
-        }
-
-        for (let i = 0; i < newVal.length; i++) {
-            let item = newVal[i]
-            if (isPast24Hours(item.timestamp)) { continue }
-
-            const timeToRemove = Math.abs(diffInSeconds(item.timestamp))
-
-            clearTimeout(removeTimers[item.userID])
-            removeTimers[item.userID] = setTimeout(function () {
-                console.log('Moment/formList/removing moment: ' + item.userID)
-                const index = list.value.indexOf(item)
-                if (index > -1) {
-                    list.value.splice(index, 1)
-                }
-            }, timeToRemove*1000)
-
-            if (map[item.userID]) {
-                if (map[item.userID].timestamp == item.timestamp) {
-                    continue
-                } else if (map[item.userID].timestamp < item.timestamp) {
-
-                    // delete old moment
-                    const index = list.value.indexOf(map[item.userID])
-                    if (index > -1) {
-                        list.value.splice(index, 1)
-                    }
-
-                }
+            if (timestamp > listItem.timestamp) {
+                // delete old moment
+                list.value.splice(i, 1)
+                return true
+            } else {
+                return false
             }
-
-            const lastIndex = list.value.length - 1
-            item.zIndex = 10 + lastIndex
-            list.value.push(item)
-            map[item.userID] = list.value[lastIndex]
         }
 
-        if (emptyList) {
-            await makeList()
-        }
-    }
+        return true        
+    }    
 
     const flip = debounce(function(isAnimateRight: boolean) {
 
@@ -264,7 +238,6 @@
 
         <div class='momentContainer'>
 
-            <div>{{list.length}}</div>
             <div v-for="(item, index) in list" class='momentWrapper'>
 
                 <div :class='["momentCard", {momentCardRotate: item.isRotated, 
@@ -273,6 +246,7 @@
                     :style='{ zIndex: item.zIndex }'>
                     
                     <MomentCard v-if='(item.zIndex > (10 + list.length - 3)) || (item.zIndex == 10)'
+                        :key='item.postID'
                         :postID='item.postID'>
                     </MomentCard>
 

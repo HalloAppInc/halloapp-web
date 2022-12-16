@@ -15,7 +15,7 @@
 
     import hal from '@/common/halogger'
 
-    import MomentComponent from '@/components/moment/Moment.vue'
+    import MomentComponent from '@/components/moment/Moments.vue'
     import PostComponent from '@/components/feed/Post.vue'
     import Comment from '@/components/comment/CommentMain.vue'
     

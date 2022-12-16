@@ -573,15 +573,15 @@ export function useHAFeed() {
                 return
             }
 
+            let momentObject: Moment = {
+                image: momentImage,
+                blurredImage: blurredImage
+            }
+
             const isOwnMoment = postObject.userID == mainStore.userID
             if (isOwnMoment) {
                 mainStore.isMomentsLocked = false
-            }
-
-            let momentObject: Moment = {
-                image: momentImage,
-                blurredImage: blurredImage,
-                isOpened: isOwnMoment
+                postObject.seenState = web.PostDisplayInfo.SeenState.SEEN
             }
 
             if (moment.selfieImage && moment.selfieImage.width && moment.selfieImage.height) {
@@ -1015,6 +1015,16 @@ export function useHAFeed() {
         return        
     }
 
+    async function modifyPostToSeen(postID: string) {
+
+        await db.post.where('postID').equals(postID).modify(function(post) {
+            if (post.seenState != web.PostDisplayInfo.SeenState.SEEN) {
+                post.seenState = web.PostDisplayInfo.SeenState.SEEN
+            }
+        })
+
+    }    
+
     function decodeToPostContainer(binArray: Uint8Array) {
         const err = clients.Container.verify(binArray)
         if (err) {
@@ -1040,6 +1050,7 @@ export function useHAFeed() {
         processFeedResponse, processFeedUpdate,
         processUserDisplayInfo,
         updateReceipt,
+        modifyPostToSeen,
         deleteExpiredPosts
     }
 }

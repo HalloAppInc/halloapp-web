@@ -14,6 +14,7 @@
 
     import { web } from "@/proto/web.js"
 
+    import { useHAFeed } from '@/composables/haFeed'
     import { useHAMoments } from '@/composables/haMoments'
     import { useHACommonMedia } from '@/composables/haCommonMedia'
     import { useHAUtils } from '@/composables/haUtils'
@@ -23,12 +24,12 @@
     const mainStore = useMainStore()
     const colorStore = useColorStore()
 
+    const { updateReceipt, modifyPostToSeen } = useHAFeed()
     const { formatTimeDayOnly } = useTimeformatter()
 
 
     const { 
-        requestMoments,
-        openMoment
+        requestMoments
     } = useHAMoments()
 
     const { 
@@ -115,7 +116,7 @@
         let image = moment.blurredImage
         let selfieImage = moment.blurredSelfieImage
 
-        if (post.moment.isOpened && !mainStore.isMomentsLocked) {
+        if (post.seenState == web.PostDisplayInfo.SeenState.SEEN && !mainStore.isMomentsLocked) {
             image = moment.image
             selfieImage = moment.selfieImage
         }
@@ -188,9 +189,13 @@
     }
 
     function clickOpenMoment() {
-        if (!mainStore.isMomentsLocked) {
-           openMoment(postData.value.postID)
-        }
+        if (mainStore.isMomentsLocked) { return }
+        if (postData.value.seenState == web.PostDisplayInfo.SeenState.SEEN) { return }
+      
+        modifyPostToSeen(postData.value.postID)
+
+        const timestamp = Math.round(Date.now() / 1000)
+        updateReceipt(postData.value.postID, mainStore.userID, timestamp, function() {})
     }
 
 </script>
@@ -198,7 +203,7 @@
 <template>
 
     <div v-if='postData' class='momentCardComponent'>
-        <div v-if='mainStore.isMomentsLocked || !postData.moment.isOpened' class='lockedInfo'>
+        <div v-if='mainStore.isMomentsLocked || postData.seenState != web.PostDisplayInfo.SeenState.SEEN' class='lockedInfo'>
            
             <Avatar :userID='postData.userID' :width='100'></Avatar>
             <div class='momentText'>
@@ -222,7 +227,7 @@
             <div v-for="(item, index) in mediaList">
 
                 <img v-if='showImage && item.previewImageBlobUrl' 
-                    :class='["image", {imageBlur: !postData.moment.isOpened || mainStore.isMomentsLocked}]' :src="item.previewImageBlobUrl" :width="item.adjustedWidth" :height="item.adjustedHeight"
+                    :class='["image", {imageBlur: postData.seenState != web.PostDisplayInfo.SeenState.SEEN || mainStore.isMomentsLocked}]' :src="item.previewImageBlobUrl" :width="item.adjustedWidth" :height="item.adjustedHeight"
                     alt='Image'>
 
             </div>

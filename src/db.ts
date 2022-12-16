@@ -9,8 +9,6 @@ export interface Moment {
 
     blurredImage?: CommonMedia
     blurredSelfieImage?: CommonMedia
-
-    isOpened?: boolean
 }
 
 export interface Post {

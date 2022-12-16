@@ -54,15 +54,13 @@ export function useHAGroup() {
     }
 
     async function processGroupResponse(response: any) {
-        // temporary
-        return
+
         const groupInfoList = response.groups
         for (const group of groupInfoList) {
 
             /* 
-                put in some delay as db can get stuck when too many transactions happen at the same time,
-                100ms is not enough
-                (ie. over 400 trx)
+                put in some delay as db can get stuck when too many transactions (ie. over 400 trx) happen at the same time,
+                note: 100ms is not enough
              */
             sleep(500) 
 

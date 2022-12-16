@@ -594,8 +594,6 @@ export function useHACommonMedia() {
 
                 context.filter = 'blur(' + blurPercent + 'px)'
 
-                console.log('***> ' + context.filter)
-
                 context.drawImage(image, 0, 0, image.width, image.height)
                 canvas.toBlob((blob) => {
                     if (blob) {

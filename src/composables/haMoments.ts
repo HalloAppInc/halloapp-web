@@ -65,24 +65,10 @@ export function useHAMoments() {
                 mainStore.isMomentsLocked = true
             }, timeDiff*1000)
         }
-        
-
     }
-
-    async function openMoment(postID: string) {
-
-        await db.post.where('postID').equals(postID).modify(function(post) {
-            if (post.moment && !post.moment.isOpened) {
-                post.moment.isOpened = true
-            }
-        })
-
-    }
-
 
     return { 
         requestMoments,
-        openMoment,
         processMomentStatus
     }
 }

@@ -51,7 +51,7 @@ export const useConnStore = defineStore('conn', () => {
      // so we keep track of the user's first click
     const isUserFirstClickCompleted = ref(false)
 
-    const version = '41'
+    const version = '42'
     const devMode = false
     const isDebug = false
 
