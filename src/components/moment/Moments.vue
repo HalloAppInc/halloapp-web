@@ -5,7 +5,12 @@
     import { useTimeformatter } from '@/composables/timeformatter'
     import { useHAUtils } from '@/composables/haUtils'
 
+    import { SubjectType } from '@/db'
+
+    import { useMainStore } from '@/stores/mainStore'
+
     import MomentCard from '@/components/moment/MomentCard.vue'
+    import MomentsFullScreener from '@/components/media/MomentsFullScreener.vue'
 
     const { isPast24Hours, diffInSeconds } = useTimeformatter()
 
@@ -19,22 +24,31 @@
         postWidth: number,
     }
 
+    const mainStore = useMainStore()
+
     const props = defineProps<Props>()
 
     const { debounce } = useHAUtils()
 
     const refMomentPosts = toRef(props, 'momentPosts')
 
-    const mediaBoxWidth     = ref(0)
+    const mediaBoxWidth = ref(0)
 
     const list: Ref<any[]> = ref([])
 
 
-    let currentMoment = 0
+    const currentMomentIdx = ref(0)
     const animateCardIndex = ref(-1)
-    let animateRight = true
+    const animateRight = ref(true)
 
     let removeTimers: any = {}
+
+
+    /* fullscreener */
+    const showFullScreener = ref({ 'value': false })
+    const selectMediaList = ref()
+    const selectedMediaIndex = ref(0)
+    const selectMediaContentID = ref()
 
 
     makeList(props.momentPosts)
@@ -75,7 +89,7 @@
         }
 
         if (haveNewMoments) {
-            currentMoment = 0
+            currentMomentIdx.value = 0
             await decorateList()
         }
     }
@@ -117,10 +131,10 @@
     const flip = debounce(function(isAnimateRight: boolean) {
 
         if (isAnimateRight) {
-            animateRight = true
+            animateRight.value = true
             debouncedFlipRight()
         } else {
-            animateRight = false
+            animateRight.value = false
             debouncedFlipLeft()
         }
 
@@ -129,7 +143,7 @@
 
     function debouncedFlipRight() {
 
-        const index = currentMoment
+        const index = currentMomentIdx.value
         animateCardIndex.value = index
 
         let previousMomentIndex = index - 1
@@ -173,9 +187,9 @@
         setTimeout(function() {
             animateCardIndex.value = -1
             
-            currentMoment--
-            if (currentMoment < 0) {
-                currentMoment = list.value.length - 1
+            currentMomentIdx.value--
+            if (currentMomentIdx.value < 0) {
+                currentMomentIdx.value = list.value.length - 1
             }      
         }, 900)
 
@@ -183,7 +197,7 @@
 
     function debouncedFlipLeft() {
 
-        const index = currentMoment
+        const index = currentMomentIdx.value
         animateCardIndex.value = index
 
         setTimeout(function() {
@@ -221,13 +235,34 @@
         setTimeout(function() {
             animateCardIndex.value = -1
             
-            currentMoment++
-            if (currentMoment >= list.value.length) {
-                currentMoment = 0
+            currentMomentIdx.value++
+            if (currentMomentIdx.value >= list.value.length) {
+                currentMomentIdx.value = 0
             }            
 
         }, 900)
 
+    }
+
+    function openMedia(mediaList: any, idx: number, contentID: string) {
+
+        // temporary: commented out to test
+        // if (mainStore.isMomentsLocked) { return }
+
+        mainStore.triggerFirstInteraction()
+
+        selectMediaList.value = mediaList
+        selectMediaContentID.value = contentID
+        // go to fullscreener
+        showFullScreener.value.value = true
+    }
+
+    function clickPrevious() {
+        flip(false)
+    }
+
+    function clickNext() {
+        flip(true)
     }
 
 </script>
@@ -238,7 +273,7 @@
 
         <div class='momentContainer'>
 
-            <div v-for="(item, index) in list" class='momentWrapper'>
+            <div v-for="(item, index) in list" class='momentWrapper' @click='openMedia(list, index, item.postID)'>
 
                 <div :class='["momentCard", {momentCardRotate: item.isRotated, 
                         momentCardAnimateRight: animateCardIndex == index && animateRight,
@@ -247,7 +282,8 @@
                     
                     <MomentCard v-if='(item.zIndex > (10 + list.length - 3)) || (item.zIndex == 10)'
                         :key='item.postID'
-                        :postID='item.postID'>
+                        :postID='item.postID'
+                        :cardWidth='300'>
                     </MomentCard>
 
                 </div>
@@ -264,6 +300,21 @@
         </div>
         
     </div>
+
+    <MomentsFullScreener v-if='selectMediaContentID && selectMediaList' :key='selectMediaContentID'
+            :showFullScreener='showFullScreener'
+            :type="SubjectType.Moment"
+            :subjectID='""'
+            :contentID="selectMediaContentID"
+            :selectedMediaIndex="currentMomentIdx"
+            :selectMediaList='selectMediaList' 
+            :animateCardIndex='animateCardIndex'
+            :animateRight='animateRight'
+            @clickPrevious='clickPrevious'
+            @clickNext='clickNext'
+            @selectMedia=""
+            />
+
 
 </template>
 
@@ -294,12 +345,14 @@
         
         flex: 0 0 320px; 
         height: 370px;
+        user-select: none;
     }
 
     .momentCard {
         position: absolute;
         top: 0;
         right: 0;
+
         width: 320px;
         height: 370px;
 

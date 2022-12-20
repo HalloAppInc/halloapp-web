@@ -1,23 +1,20 @@
 <script setup lang='ts'>
-    import { Ref, ref, toRef, watch } from 'vue'
-    import { Base64 } from 'js-base64'
+    import { Ref, ref } from 'vue'
     import { storeToRefs } from 'pinia'
     import { useI18n } from 'vue-i18n'
     import { liveQuery } from 'dexie'
 
-    import { db, CommonMedia, SubjectType, MediaType } from '@/db'
+    import { db } from '@/db'
     import { useMainStore } from '@/stores/mainStore'
     import { useColorStore } from '@/stores/colorStore'
     
     import Avatar from '@/components/media/Avatar.vue'
     import hal from '@/common/halogger'
 
-    import { web } from "@/proto/web.js"
+    import { web } from '@/proto/web.js'
 
     import { useHAFeed } from '@/composables/haFeed'
-    import { useHAMoments } from '@/composables/haMoments'
     import { useHACommonMedia } from '@/composables/haCommonMedia'
-    import { useHAUtils } from '@/composables/haUtils'
 
     import { useTimeformatter } from '@/composables/timeformatter'
 
@@ -27,20 +24,14 @@
     const { updateReceipt, modifyPostToSeen } = useHAFeed()
     const { formatTimeDayOnly } = useTimeformatter()
 
-
     const { 
-        requestMoments
-    } = useHAMoments()
-
-    const { 
-        fetchMomentMedia,
-        getCommonMedia,
-        fetchCommonMedia
+        fetchMomentMedia
     } = useHACommonMedia()
 
     const { 
         background: backgroundColor,
         primaryBlue: primaryBlueColor,
+        secondaryBg: secondaryBgColor,
         text: textColor,
     } = storeToRefs(colorStore)  
 
@@ -50,13 +41,14 @@
     })
 
     interface Props {
-        postID: string
+        postID: string,
+        cardWidth: number
     }
 
     const props = defineProps<Props>()
 
-    const mediaBoxWidth     = ref(0)
-    const mediaBoxHeight    = ref(0)
+    const mediaBoxWidth     = ref(props.cardWidth)
+    const mediaBoxHeight    = ref(props.cardWidth)
 
     const postData: Ref<any> = ref()
     const mediaList: Ref<any[]> = ref([])
@@ -65,13 +57,11 @@
 
     const userReceipts: Ref<web.ReceiptInfo[]> = ref([])
 
+    const avatarSelfieBlobUrl: Ref<any> = ref()
 
     function setMediaSizes(postAlbum: any) {
 
         const defaultRatio = 1 // square
-
-        mediaBoxWidth.value = 300
-        mediaBoxHeight.value = mediaBoxWidth.value/defaultRatio
 
         let maxWidth = mediaBoxWidth.value
         const maxHeight = (maxWidth/defaultRatio)
@@ -109,53 +99,79 @@
         }
     }
 
+    function convertArrBufToBlobUrl(arrBuf: ArrayBuffer) {
+        const blob = new Blob([arrBuf], {type: 'image/jpeg'})
+        const blobUrl = URL.createObjectURL(blob)
+        return blobUrl
+    }
+
     async function processMoment() {
         const post = postData.value
         const postID = post.postID
         const moment = post.moment
-        let image = moment.blurredImage
-        let selfieImage = moment.blurredSelfieImage
 
+        const media = await fetchMomentMedia(postID, moment.image, moment.selfieImage, moment.blurredImage, moment.blurredSelfieImage)
+
+        if (!avatarSelfieBlobUrl.value && media.selfieArrBuf) {
+            avatarSelfieBlobUrl.value = convertArrBufToBlobUrl(media.selfieArrBuf)
+        }
+
+        let img = moment.blurredImage
+        let selfieImg = moment.blurredSelfieImage
+
+        let useUnlockedImages = false
         if (post.seenState == web.PostDisplayInfo.SeenState.SEEN && !mainStore.isMomentsLocked) {
-            image = moment.image
-            selfieImage = moment.selfieImage
+            useUnlockedImages = true
         }
 
-        const media = await fetchMomentMedia(postID, image, selfieImage)
-        if (image && media.imageArrBuf) {
-            const previewImageBlob = new Blob([media.imageArrBuf], {type: 'image/jpeg'})
-            const previewImageBlobUrl = URL.createObjectURL(previewImageBlob)
-            image.previewImageBlobUrl = previewImageBlobUrl
+        if (useUnlockedImages) {
+            img = moment.image
+            selfieImg = moment.selfieImage
+        
+            if (img && media.imageArrBuf) {
+                img.previewImageBlobUrl = convertArrBufToBlobUrl(media.imageArrBuf)
+            }
+            if (selfieImg && media.selfieArrBuf) {
+                selfieImg.previewImageBlobUrl = convertArrBufToBlobUrl(media.selfieArrBuf)
+            }     
+        } else {
+            if (img && media.blurredImageArrBuf) {
+                img.previewImageBlobUrl = convertArrBufToBlobUrl(media.blurredImageArrBuf)
+            }
+            if (selfieImg && media.blurredSelfieArrBuf) {
+                selfieImg.previewImageBlobUrl = convertArrBufToBlobUrl(media.blurredSelfieArrBuf)
+            }    
         }
-        if (selfieImage && media.selfieArrBuf) {
-            const previewImageBlob = new Blob([media.selfieArrBuf], {type: 'image/jpeg'})
-            const previewImageBlobUrl = URL.createObjectURL(previewImageBlob)
-            selfieImage.previewImageBlobUrl = previewImageBlobUrl
-        }        
-
+   
         mediaList.value.splice(0, mediaList.value.length) // clear array
 
-        if (image) {
-            mediaList.value.push(image)
+        if (img) {
+            mediaList.value.push(img)
         }
 
-        if (selfieImage) {
+        if (selfieImg) {
             if (moment.selfieLeading) {
-                mediaList.value.unshift(selfieImage)
+                mediaList.value.unshift(selfieImg)
             } else {
-                mediaList.value.push(selfieImage)
+                mediaList.value.push(selfieImg)
             }
         }
 
         setMediaSizes(mediaList.value)
 
         /* showImage and timeout used as a quick attempt to show both images at once */
+        let delay = 50
+
+        if (mediaList.value.length > 1) {
+            delay = 100
+        }
+
         setTimeout(function() {
             showImage.value = true 
-        }, 500)
+        }, delay)
+        
 
         /* user receipts */
-
         if (post.userReceipts) {
             userReceipts.value = post.userReceipts.slice(0, 3)
         }
@@ -205,7 +221,10 @@
     <div v-if='postData' class='momentCardComponent'>
         <div v-if='mainStore.isMomentsLocked || postData.seenState != web.PostDisplayInfo.SeenState.SEEN' class='lockedInfo'>
            
-            <Avatar :userID='postData.userID' :width='100'></Avatar>
+            <div v-if='avatarSelfieBlobUrl'>
+                <img class="avatarSelfie" crossorigin="" :src="avatarSelfieBlobUrl" alt="Avatar"/>
+            </div>
+            <Avatar v-else :userID='postData.userID' :width='100'></Avatar>
             <div class='momentText'>
                 {{ mainStore.pushnames[postData.userID] }}'s Moment
             </div>
@@ -218,18 +237,14 @@
         </div>
 
         <div v-else class='avatar'>
-            
             <Avatar :userID='postData.userID' :width='40'></Avatar>
         </div>
 
-
         <div class='mediaContainer'>
             <div v-for="(item, index) in mediaList">
-
                 <img v-if='showImage && item.previewImageBlobUrl' 
                     :class='["image", {imageBlur: postData.seenState != web.PostDisplayInfo.SeenState.SEEN || mainStore.isMomentsLocked}]' :src="item.previewImageBlobUrl" :width="item.adjustedWidth" :height="item.adjustedHeight"
                     alt='Image'>
-
             </div>
         </div>
         
@@ -271,6 +286,15 @@
 
         overflow: hidden;
     }
+
+    .avatarSelfie {
+        height: 100px; 
+        width: 100px; 
+        object-fit: cover; 
+        border-radius: 50%; 
+        background-color: rgb(0, 0, 0, 0);
+    } 
+
 
     .avatar {
         position: absolute;
@@ -324,7 +348,7 @@
     .mediaContainer {
         border-radius: 4px;
 
-        height: 300px;
+        height: v-bind(cardWidth + 'px');
         
         display: flex;
         flex-direction: row;

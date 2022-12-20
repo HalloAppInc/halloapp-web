@@ -90,7 +90,7 @@ export function useHAFeed() {
 
             for (let i = 0; i < items.length; i++) {
                 const item = items[i]
-                let infoIdx = postInfoList.findIndex((info: any) => info.id === item.comment.postId)
+                let infoIdx = postInfoList.findIndex((info: any) => info.id === item.post.id)
                 const postInfo = postInfoList[infoIdx]
                 processFeedItemMoment(items[i], postInfo)
                 postInfoList.splice(infoIdx, 1)
