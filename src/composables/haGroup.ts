@@ -1,13 +1,8 @@
-import { Dexie, liveQuery } from 'dexie'
-
 import { useMainStore } from '@/stores/mainStore.js'
 import { useConnStore } from '@/stores/connStore.js'
 
-import {    db, 
-            Post, Comment, Group, Mention, CommonMediaLinkPreview,
-            CommonMedia, SubjectType, MediaType } from '@/db'
+import { db, Group } from '@/db'
 
-import { clients } from '@/proto/clients.js'
 import { web } from '@/proto/web.js'
 
 import { network } from '@/common/network'
@@ -56,13 +51,13 @@ export function useHAGroup() {
     async function processGroupResponse(response: any) {
 
         const groupInfoList = response.groups
-        for (const group of groupInfoList) {
+        for (let [index, group] of groupInfoList.entries()) {
 
             /* 
                 put in some delay as db can get stuck when too many transactions (ie. over 400 trx) happen at the same time,
                 note: 100ms is not enough
              */
-            sleep(500) 
+            await sleep(500) 
 
             const groupID = group.id
 
@@ -72,10 +67,10 @@ export function useHAGroup() {
             if (dbGroup?.haveRequestedPosts) { continue }
 
             if (group.membershipStatus != web.GroupDisplayInfo.MembershipStatus.NOT_MEMBER) {
-                hal('haGroup/processGroupResponse/' + groupID + '/requestGroupFeedItems')()
+                hal('haGroup/processGroupResponse/' + index + '/' + groupID + '/requestGroupFeedItems')()
                 const groupCursor = ''
                 await requestGroupFeedItems(groupID, groupCursor, 10, async function() {
-                    hal('haGroup/processGroupResponse/' + groupID + '/modifyGroupHaveRequestedPosts')()
+                    hal('haGroup/processGroupResponse/' + index + '/' + groupID + '/modifyGroupHaveRequestedPosts')()
                     await modifyGroupHaveRequestedPosts(groupID)
                 })
             }

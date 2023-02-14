@@ -15,7 +15,7 @@
 
     import hal from '@/common/halogger'
 
-    import MomentComponent from '@/components/moment/Moments.vue'
+    import Moments from '@/components/moment/Moments.vue'
     import PostComponent from '@/components/feed/Post.vue'
     import Comment from '@/components/comment/CommentMain.vue'
     
@@ -141,26 +141,20 @@
 
     function makeList() {
 
-        if (!content) { return }
-
-        // if (content.value) {
-
-        //     if (content.value.scrollTop > 200) {
-
-        //         const dbLatestItem = dbListData.value[0]
-        //         const latestItem = listData.value[0]
-
-        //         if (dbLatestItem.timestamp > latestItem.timestamp) {
-        //             showNewPostsButton.value = true
-        //             return
-        //         }
-
-        //     }
-            
-        // }
-
         const normalPosts = dbListData.value.filter( item => !item.moment )
         momentsListData.value = dbListData.value.filter( item => item.moment )
+
+        if (!content || !content.value) { return }
+
+        if (content.value) {
+            if (content.value.scrollTop > 200) {
+                const normalPostsLatestItem = normalPosts[0]
+                const latestItem = listData.value[0]
+                if (normalPostsLatestItem.timestamp > latestItem.timestamp) {
+                    showNewPostsButton.value = true
+                }
+            }
+        }
 
         if (normalPosts.length > count.value) {
             listData.value = normalPosts.slice(0, count.value)
@@ -390,16 +384,16 @@
 
             <slot name='header'></slot>
 
-            <div v-if='momentsListData.length > 0' class='momentRow'>
+            <div v-if='momentsListData.length > 0' class='momentsRow'>
                 
-                <MomentComponent
+                <Moments
                     :momentPosts='momentsListData'
                     :postWidth='postWidth'>
-                </MomentComponent>
+                </Moments>
                
             </div>
 
-            <div v-for='value in listData' class='container'>
+            <div v-for='value in listData' class='container' :key='value.postID'>
                 <!-- data-ha-postID is used only for detecting post while scrolling -->
                 <PostComponent :key='value.postID'
                     :post='value'
@@ -490,7 +484,8 @@
         z-index: 2;
     }
 
-    .momentRow {
+    .momentsRow {
+        margin-bottom: 10px;
 
         display: flex;
         flex-direction: row;
