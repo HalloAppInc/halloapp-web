@@ -1,6 +1,6 @@
 {
   "name": "haweb",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
@@ -11,10 +11,11 @@
     "@fortawesome/fontawesome-svg-core": "^6.1.1",
     "@fortawesome/free-solid-svg-icons": "^6.1.1",
     "@fortawesome/vue-fontawesome": "^3.0.0-5",
-    "@intlify/vite-plugin-vue-i18n": "^6.0.1",
+    "@intlify/unplugin-vue-i18n": "^0.8.1",
     "@types/long": "^4.0.0",
     "@types/luxon": "^3.0.0",
-    "@vitejs/plugin-basic-ssl": "^0.1.1",
+    "@vitejs/plugin-basic-ssl": "^1.0.1",
+    "@vitejs/plugin-vue": "^4.0.0",
     "@vueuse/components": "^9.4.0",
     "@vueuse/core": "^9.4.0",
     "autolinker": "^3.15.0",
@@ -45,9 +46,8 @@
     "@types/howler": "^2.2.7",
     "@types/node": "^18.8.0",
     "@types/seedrandom": "^3.0.2",
-    "@vitejs/plugin-vue": "^3.0.1",
     "typescript": "^4.4.4",
-    "vite": "^3.1.0",
+    "vite": "^4.0.4",
     "vue-tsc": "^0.39.0"
   }
 }
